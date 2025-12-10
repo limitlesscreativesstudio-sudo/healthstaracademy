@@ -24,15 +24,19 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         
-        // Brand Colors
+        // Brand Colors - Purple/Cyan Theme
         charcoal: "hsl(var(--charcoal))",
-        teal: {
-          DEFAULT: "hsl(var(--teal))",
-          dark: "hsl(var(--teal-dark))",
+        purple: {
+          DEFAULT: "hsl(var(--purple))",
+          dark: "hsl(var(--purple-dark))",
         },
-        coral: {
-          DEFAULT: "hsl(var(--coral))",
-          dark: "hsl(var(--coral-dark))",
+        cyan: {
+          DEFAULT: "hsl(var(--cyan))",
+          dark: "hsl(var(--cyan-dark))",
+        },
+        magenta: {
+          DEFAULT: "hsl(var(--magenta))",
+          dark: "hsl(var(--magenta-dark))",
         },
         "neutral-light": "hsl(var(--neutral-light))",
         "gray-medium": "hsl(var(--gray-medium))",

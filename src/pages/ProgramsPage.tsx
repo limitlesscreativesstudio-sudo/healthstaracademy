@@ -6,7 +6,6 @@ import {
   BookOpen,
   Stethoscope,
   FileCheck,
-  Briefcase,
   ArrowRight,
   CheckCircle,
   DollarSign,
@@ -15,59 +14,40 @@ import trainingLab from "@/assets/training-lab.jpg";
 
 const ProgramsPage = () => {
   const programDetails = [
-    { label: "Program Length", value: "120 Hours Total | 4-8 Weeks", icon: Clock },
-    { label: "Class Size", value: "Maximum 12 Students", icon: BookOpen },
-    { label: "Clinical Hours", value: "40+ Hours at Partner Facilities", icon: Stethoscope },
-    { label: "Certification", value: "State CNA Exam Preparation", icon: FileCheck },
+    { label: "Program Length", value: "160 Hours | 6-9 Weeks", icon: Clock },
+    { label: "Theory Hours", value: "60 Hours Online", icon: BookOpen },
+    { label: "Clinical Hours", value: "100 Hours In-Person", icon: Stethoscope },
+    { label: "Certification", value: "CDPH Approved", icon: FileCheck },
   ];
 
   const scheduleOptions = [
-    { name: "Day Classes", schedule: "Monday - Thursday", time: "9:00 AM - 2:00 PM", duration: "4 weeks" },
-    { name: "Evening Classes", schedule: "Monday - Wednesday", time: "6:00 PM - 9:00 PM", duration: "8 weeks" },
-    { name: "Weekend Classes", schedule: "Saturday - Sunday", time: "8:00 AM - 5:00 PM", duration: "6 weeks" },
+    { name: "Daytime Program", schedule: "Monday - Friday", time: "6:00 AM - 3:00 PM", duration: "~6 weeks (23 days)" },
+    { name: "Weekend Program", schedule: "Saturday - Sunday", time: "7:00 AM - 6:00 PM", duration: "~9 weeks (18 days)" },
   ];
 
   const upcomingDates = [
-    { date: "January 8, 2024", type: "Day" },
-    { date: "January 15, 2024", type: "Evening" },
-    { date: "February 3, 2024", type: "Weekend" },
+    { date: "May 19, 2025", endDate: "June 30, 2025" },
+    { date: "July 7, 2025", endDate: "August 18, 2025" },
+    { date: "August 25, 2025", endDate: "October 6, 2025" },
+    { date: "October 13, 2025", endDate: "November 25, 2025" },
   ];
 
   const curriculum = [
-    {
-      module: "Module 1",
-      title: "Foundations of Care",
-      topics: ["Role of the CNA", "Ethics & Professionalism", "Communication Skills", "Patient Rights"],
-    },
-    {
-      module: "Module 2",
-      title: "Safety & Infection Control",
-      topics: ["Standard Precautions", "Emergency Procedures", "Fire Safety", "Ergonomics & Body Mechanics"],
-    },
-    {
-      module: "Module 3",
-      title: "Patient Care Skills",
-      topics: ["Vital Signs Measurement", "Mobility Assistance", "Personal Hygiene", "Nutrition & Feeding"],
-    },
-    {
-      module: "Module 4",
-      title: "Clinical Rotations",
-      topics: ["Supervised Patient Care", "Real Healthcare Settings", "Team Collaboration", "Documentation"],
-    },
-    {
-      module: "Module 5",
-      title: "Exam Prep & Career Readiness",
-      topics: ["State Exam Review", "Skills Competency", "Resume Building", "Interview Preparation"],
-    },
+    { module: "Module 1-3", title: "Introductions, Patients' Rights & Interpersonal Skills" },
+    { module: "Module 4-6", title: "Catastrophe Prevention, Body Mechanics & Asepsis" },
+    { module: "Module 7-9", title: "Weights/Measures, Patient Care Skills & Procedures" },
+    { module: "Module 10-12", title: "Vital Signs, Nutrition & Emergency Procedures" },
+    { module: "Module 13-17", title: "Long-Term Care, Rehab Nursing, Charting, Death/Dying & Abuse" },
   ];
 
-  const tuitionIncludes = [
-    "Comprehensive Textbook & Study Materials",
-    "Complete Skills Kit (Blood Pressure Cuff, Stethoscope, etc.)",
-    "Professional Scrub Uniform",
-    "State Exam Application Fee",
-    "CPR/BLS Certification",
-    "Background Check Processing",
+  const tuitionBreakdown = [
+    { item: "Tuition", cost: "$2,184" },
+    { item: "Uniform", cost: "$35" },
+    { item: "Textbook", cost: "$45" },
+    { item: "Workbook", cost: "$30" },
+    { item: "BP Cuff/Stethoscope", cost: "$25" },
+    { item: "Lab Supplies", cost: "$100" },
+    { item: "LiveScan", cost: "$80" },
   ];
 
   return (
@@ -77,11 +57,10 @@ const ProgramsPage = () => {
         <div className="container-custom text-center">
           <h1 className="font-heading text-4xl md:text-5xl font-bold text-primary-foreground mb-6 animate-fade-in-up">
             Comprehensive CNA Training<br />
-            <span className="text-coral">Designed for Your Success</span>
+            <span className="text-cyan">Designed for Your Success</span>
           </h1>
           <p className="text-primary-foreground/90 text-lg max-w-2xl mx-auto animate-fade-in-up animation-delay-100">
-            Our state-approved program combines classroom instruction, hands-on skills training, 
-            and real-world clinical experience to prepare you for a rewarding healthcare career.
+            Our CDPH-approved hybrid program combines flexible online theory with hands-on clinical experience at approved healthcare facilities.
           </p>
         </div>
       </section>
@@ -95,10 +74,7 @@ const ProgramsPage = () => {
                 Program Overview
               </h2>
               <p className="text-gray-dark mb-6 leading-relaxed">
-                Our Certified Nursing Assistant (CNA) program is designed to provide you with 
-                the knowledge, skills, and confidence you need to excel in the healthcare field. 
-                Upon completion, you'll be prepared to take the state certification exam and 
-                begin your career immediately.
+                Health Star Academy's CDPH-approved Online CNA Program offers the perfect blend of flexibility and hands-on training. Complete online coursework at your own pace while gaining real-world experience at our clinical training sites in Stockton and Lodi.
               </p>
               <div className="grid grid-cols-2 gap-4">
                 {programDetails.map((detail, index) => (
@@ -107,7 +83,7 @@ const ProgramsPage = () => {
                     className="bg-neutral-light rounded-lg p-4 animate-fade-in-up"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <detail.icon className="h-6 w-6 text-teal mb-2" />
+                    <detail.icon className="h-6 w-6 text-purple mb-2" />
                     <p className="text-sm text-gray-dark">{detail.label}</p>
                     <p className="font-semibold text-charcoal">{detail.value}</p>
                   </div>
@@ -117,7 +93,7 @@ const ProgramsPage = () => {
             <div>
               <img
                 src={trainingLab}
-                alt="CNA students practicing in training lab"
+                alt="CNA students practicing clinical skills"
                 className="rounded-xl shadow-medium w-full"
               />
             </div>
@@ -133,22 +109,22 @@ const ProgramsPage = () => {
               Flexible Schedule Options
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
-              We offer multiple schedule options to fit your lifestyle. Choose the one that works best for you.
+              Choose the schedule that fits your lifestyle. Both options include online theory and in-person clinicals.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-3xl mx-auto">
             {scheduleOptions.map((option, index) => (
               <div
                 key={option.name}
                 className="bg-background rounded-xl p-6 shadow-soft hover:shadow-medium transition-shadow text-center animate-fade-in-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <Calendar className="h-10 w-10 text-teal mx-auto mb-4" />
+                <Calendar className="h-10 w-10 text-purple mx-auto mb-4" />
                 <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
                   {option.name}
                 </h3>
-                <p className="text-teal font-medium mb-1">{option.schedule}</p>
+                <p className="text-purple font-medium mb-1">{option.schedule}</p>
                 <p className="text-gray-dark text-sm mb-2">{option.time}</p>
                 <p className="text-charcoal font-semibold">{option.duration}</p>
               </div>
@@ -158,7 +134,7 @@ const ProgramsPage = () => {
           {/* Next Start Dates */}
           <div className="bg-background rounded-xl p-8 shadow-soft max-w-2xl mx-auto">
             <h3 className="font-heading font-semibold text-xl text-charcoal mb-6 text-center">
-              Upcoming Start Dates
+              Upcoming Class Dates
             </h3>
             <div className="space-y-4">
               {upcomingDates.map((item, index) => (
@@ -167,18 +143,18 @@ const ProgramsPage = () => {
                   className="flex items-center justify-between py-3 border-b border-border last:border-0"
                 >
                   <div className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-teal" />
+                    <CheckCircle className="h-5 w-5 text-purple" />
                     <span className="font-medium text-charcoal">{item.date}</span>
                   </div>
-                  <span className="bg-teal/10 text-teal px-3 py-1 rounded-full text-sm font-medium">
-                    {item.type}
+                  <span className="text-gray-dark text-sm">
+                    Ends: {item.endDate}
                   </span>
                 </div>
               ))}
             </div>
             <div className="text-center mt-6">
               <Button variant="default" asChild>
-                <Link to="/contact">Request More Dates</Link>
+                <Link to="/contact">Enroll for Next Class</Link>
               </Button>
             </div>
           </div>
@@ -193,7 +169,7 @@ const ProgramsPage = () => {
               What You'll Learn
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
-              Our comprehensive curriculum covers everything you need to become a skilled, confident CNA.
+              17 comprehensive modules covering everything you need to become a skilled, confident CNA.
             </p>
           </div>
 
@@ -205,26 +181,12 @@ const ProgramsPage = () => {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
-                  <div className="flex-shrink-0">
-                    <span className="bg-teal text-primary-foreground px-4 py-2 rounded-lg font-semibold text-sm">
-                      {item.module}
-                    </span>
-                  </div>
-                  <div className="flex-grow">
-                    <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
-                      {item.title}
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {item.topics.map((topic) => (
-                        <span
-                          key={topic}
-                          className="bg-background text-gray-dark px-3 py-1 rounded-full text-sm"
-                        >
-                          {topic}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                  <span className="bg-purple text-primary-foreground px-4 py-2 rounded-lg font-semibold text-sm flex-shrink-0">
+                    {item.module}
+                  </span>
+                  <h3 className="font-heading font-semibold text-lg text-charcoal">
+                    {item.title}
+                  </h3>
                 </div>
               </div>
             ))}
@@ -239,8 +201,8 @@ const ProgramsPage = () => {
             {/* Tuition Card */}
             <div className="bg-background rounded-xl p-8 shadow-soft">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 bg-coral/10 rounded-xl flex items-center justify-center">
-                  <DollarSign className="h-7 w-7 text-coral" />
+                <div className="w-14 h-14 bg-cyan/10 rounded-xl flex items-center justify-center">
+                  <DollarSign className="h-7 w-7 text-cyan" />
                 </div>
                 <div>
                   <h3 className="font-heading font-semibold text-2xl text-charcoal">
@@ -250,17 +212,17 @@ const ProgramsPage = () => {
                 </div>
               </div>
               
-              <div className="bg-teal/5 rounded-lg p-6 mb-6">
-                <p className="text-4xl font-bold text-teal mb-2">$1,495</p>
+              <div className="bg-purple/5 rounded-lg p-6 mb-6">
+                <p className="text-4xl font-bold text-purple mb-2">$2,499</p>
                 <p className="text-gray-dark text-sm">Total Program Cost (Everything Included)</p>
               </div>
 
               <h4 className="font-semibold text-charcoal mb-4">What's Included:</h4>
               <ul className="space-y-3">
-                {tuitionIncludes.map((item) => (
-                  <li key={item} className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-teal flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-dark text-sm">{item}</span>
+                {tuitionBreakdown.map((item) => (
+                  <li key={item.item} className="flex items-center justify-between">
+                    <span className="text-gray-dark text-sm">{item.item}</span>
+                    <span className="font-medium text-charcoal">{item.cost}</span>
                   </li>
                 ))}
               </ul>
@@ -269,33 +231,25 @@ const ProgramsPage = () => {
             {/* Payment Options */}
             <div className="bg-background rounded-xl p-8 shadow-soft">
               <h3 className="font-heading font-semibold text-2xl text-charcoal mb-6">
-                Flexible Payment Options
+                Financial Assistance & Payment Options
               </h3>
               <p className="text-gray-dark mb-6 leading-relaxed">
-                We believe cost shouldn't be a barrier to your healthcare career. That's why we offer 
-                flexible payment plans to make your education affordable.
+                We believe financial barriers should never hold you back. We've partnered with trusted organizations to provide affordable payment solutions.
               </p>
 
               <div className="space-y-4 mb-8">
                 <div className="bg-neutral-light rounded-lg p-4">
-                  <h4 className="font-semibold text-charcoal mb-1">Pay in Full</h4>
-                  <p className="text-sm text-gray-dark">Save $100 with upfront payment</p>
-                  <p className="text-teal font-bold mt-2">$1,395</p>
+                  <h4 className="font-semibold text-charcoal mb-1">Self-Help Federal Credit Union</h4>
+                  <p className="text-sm text-gray-dark">Payment plans, loans, and financing support available</p>
                 </div>
                 <div className="bg-neutral-light rounded-lg p-4">
-                  <h4 className="font-semibold text-charcoal mb-1">2-Payment Plan</h4>
-                  <p className="text-sm text-gray-dark">Split into 2 easy payments</p>
-                  <p className="text-charcoal font-bold mt-2">$747.50 x 2</p>
-                </div>
-                <div className="bg-neutral-light rounded-lg p-4">
-                  <h4 className="font-semibold text-charcoal mb-1">4-Payment Plan</h4>
-                  <p className="text-sm text-gray-dark">Monthly payments available</p>
-                  <p className="text-charcoal font-bold mt-2">$373.75 x 4</p>
+                  <h4 className="font-semibold text-charcoal mb-1">Denefits - No Credit Check Financing</h4>
+                  <p className="text-sm text-gray-dark">Guaranteed approvals, instant pre-approval, flexible monthly payments</p>
                 </div>
               </div>
 
-              <p className="text-sm text-gray-dark italic">
-                "We work with you to make it affordable. Don't let finances hold you back from your dream career."
+              <p className="text-sm text-gray-dark italic mb-4">
+                Have questions? Call our Admissions Team at (209) 323-4169 for personalized guidance.
               </p>
             </div>
           </div>
@@ -321,7 +275,7 @@ const ProgramsPage = () => {
                 </Link>
               </Button>
               <Button 
-                variant="teal-outline" 
+                variant="purple-outline" 
                 size="lg" 
                 className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-charcoal" 
                 asChild
