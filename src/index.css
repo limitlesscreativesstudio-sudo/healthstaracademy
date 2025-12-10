@@ -6,58 +6,60 @@
 
 @layer base {
   :root {
-    /* HealthStar Academy Design System */
+    /* HealthStar Academy Design System - Purple/Cyan Theme */
     
-    /* Primary Colors */
-    --charcoal: 220 26% 24%;
-    --teal: 181 51% 39%;
-    --teal-dark: 181 48% 32%;
-    --coral: 28 83% 57%;
-    --coral-dark: 28 83% 47%;
+    /* Primary Colors - Based on Logo */
+    --charcoal: 240 20% 20%;
+    --purple: 270 60% 55%;
+    --purple-dark: 270 55% 45%;
+    --cyan: 195 85% 55%;
+    --cyan-dark: 195 80% 45%;
+    --magenta: 290 60% 55%;
+    --magenta-dark: 290 55% 45%;
     
     /* Neutrals */
-    --neutral-light: 210 36% 98%;
+    --neutral-light: 240 20% 98%;
     --white: 0 0% 100%;
-    --gray-medium: 214 15% 69%;
-    --gray-dark: 220 13% 46%;
+    --gray-medium: 240 10% 65%;
+    --gray-dark: 240 10% 40%;
     
     /* Semantic Colors */
     --background: 0 0% 100%;
-    --foreground: 220 26% 24%;
+    --foreground: 240 20% 20%;
     
     --card: 0 0% 100%;
-    --card-foreground: 220 26% 24%;
+    --card-foreground: 240 20% 20%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 220 26% 24%;
+    --popover-foreground: 240 20% 20%;
     
-    --primary: 181 51% 39%;
+    --primary: 270 60% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 181 48% 32%;
+    --primary-hover: 270 55% 45%;
     
-    --secondary: 28 83% 57%;
+    --secondary: 195 85% 55%;
     --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 28 83% 47%;
+    --secondary-hover: 195 80% 45%;
     
-    --muted: 210 36% 98%;
-    --muted-foreground: 214 15% 69%;
+    --muted: 240 20% 98%;
+    --muted-foreground: 240 10% 65%;
     
-    --accent: 210 36% 98%;
-    --accent-foreground: 220 26% 24%;
+    --accent: 290 60% 55%;
+    --accent-foreground: 0 0% 100%;
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 181 51% 39%;
+    --border: 240 10% 90%;
+    --input: 240 10% 90%;
+    --ring: 270 60% 55%;
     
     --radius: 0.5rem;
     
     /* Custom shadows */
-    --shadow-soft: 0 4px 20px -2px rgba(45, 55, 72, 0.08);
-    --shadow-medium: 0 8px 30px -4px rgba(45, 55, 72, 0.12);
-    --shadow-strong: 0 12px 40px -6px rgba(45, 55, 72, 0.16);
+    --shadow-soft: 0 4px 20px -2px rgba(100, 80, 150, 0.1);
+    --shadow-medium: 0 8px 30px -4px rgba(100, 80, 150, 0.15);
+    --shadow-strong: 0 12px 40px -6px rgba(100, 80, 150, 0.2);
     
     /* Sidebar */
     --sidebar-background: 0 0% 98%;
@@ -66,35 +68,35 @@
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 181 51% 39%;
+    --sidebar-border: 240 10% 90%;
+    --sidebar-ring: 270 60% 55%;
   }
 
   .dark {
-    --background: 220 26% 12%;
-    --foreground: 210 36% 98%;
+    --background: 240 20% 10%;
+    --foreground: 240 20% 98%;
     
-    --card: 220 26% 16%;
-    --card-foreground: 210 36% 98%;
+    --card: 240 20% 14%;
+    --card-foreground: 240 20% 98%;
     
-    --popover: 220 26% 16%;
-    --popover-foreground: 210 36% 98%;
+    --popover: 240 20% 14%;
+    --popover-foreground: 240 20% 98%;
     
-    --primary: 181 51% 45%;
+    --primary: 270 65% 60%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 28 83% 60%;
+    --secondary: 195 85% 60%;
     --secondary-foreground: 0 0% 100%;
     
-    --muted: 220 26% 20%;
-    --muted-foreground: 214 15% 69%;
+    --muted: 240 20% 18%;
+    --muted-foreground: 240 10% 65%;
     
-    --accent: 220 26% 20%;
-    --accent-foreground: 210 36% 98%;
+    --accent: 290 60% 60%;
+    --accent-foreground: 0 0% 100%;
     
-    --border: 220 26% 24%;
-    --input: 220 26% 24%;
-    --ring: 181 51% 45%;
+    --border: 240 20% 22%;
+    --input: 240 20% 22%;
+    --ring: 270 65% 60%;
   }
 }
 
@@ -122,11 +124,15 @@
   }
   
   .gradient-hero {
-    background: linear-gradient(135deg, hsl(var(--teal)) 0%, hsl(var(--teal-dark)) 100%);
+    background: linear-gradient(135deg, hsl(var(--purple)) 0%, hsl(var(--cyan)) 100%);
   }
   
-  .gradient-coral {
-    background: linear-gradient(135deg, hsl(var(--coral)) 0%, hsl(var(--coral-dark)) 100%);
+  .gradient-accent {
+    background: linear-gradient(135deg, hsl(var(--magenta)) 0%, hsl(var(--purple)) 100%);
+  }
+  
+  .gradient-cyan {
+    background: linear-gradient(135deg, hsl(var(--cyan)) 0%, hsl(var(--cyan-dark)) 100%);
   }
   
   .section-padding {

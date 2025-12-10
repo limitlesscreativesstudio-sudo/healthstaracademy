@@ -10,6 +10,7 @@ import {
   Linkedin,
   ArrowRight,
 } from "lucide-react";
+import logo from "@/assets/healthstar-logo.png";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -39,34 +40,36 @@ const Footer = () => {
           {/* Logo & Tagline */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-teal rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-xl">H</span>
-              </div>
+              <img 
+                src={logo} 
+                alt="HealthStar Academy Logo" 
+                className="w-12 h-12 object-contain"
+              />
               <span className="font-heading font-bold text-xl text-primary-foreground">
                 HealthStar Academy
               </span>
             </Link>
             <p className="text-gray-medium text-sm leading-relaxed mb-6">
-              Empowering the next generation of compassionate healthcare professionals through expert training and dedicated support.
+              Empowering the next generation of compassionate healthcare professionals through quality, affordable CNA training.
             </p>
             <div className="flex gap-4">
               <a
                 href="#"
-                className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-teal transition-colors"
+                className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-purple transition-colors"
                 aria-label="Facebook"
               >
                 <Facebook className="h-5 w-5" />
               </a>
               <a
                 href="#"
-                className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-teal transition-colors"
+                className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-purple transition-colors"
                 aria-label="Instagram"
               >
                 <Instagram className="h-5 w-5" />
               </a>
               <a
                 href="#"
-                className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-teal transition-colors"
+                className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-purple transition-colors"
                 aria-label="LinkedIn"
               >
                 <Linkedin className="h-5 w-5" />
@@ -107,32 +110,32 @@ const Footer = () => {
             </h3>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-teal flex-shrink-0 mt-0.5" />
+                <MapPin className="h-5 w-5 text-cyan flex-shrink-0 mt-0.5" />
                 <span className="text-gray-medium text-sm">
-                  1234 Healthcare Blvd, Suite 100<br />
-                  City, State 12345
+                  5250 Claremont Avenue, Suite 127<br />
+                  Stockton, CA 95207
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-teal flex-shrink-0" />
+                <Phone className="h-5 w-5 text-cyan flex-shrink-0" />
                 <a
-                  href="tel:5551234325"
+                  href="tel:2093234169"
                   className="text-gray-medium hover:text-primary-foreground transition-colors text-sm"
                 >
-                  (555) 123-HEAL
+                  (209) 323-4169
                 </a>
               </li>
               <li className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-teal flex-shrink-0" />
+                <Mail className="h-5 w-5 text-cyan flex-shrink-0" />
                 <a
-                  href="mailto:info@healthstaracademy.com"
+                  href="mailto:healthstaracademy@gmail.com"
                   className="text-gray-medium hover:text-primary-foreground transition-colors text-sm"
                 >
-                  info@healthstaracademy.com
+                  healthstaracademy@gmail.com
                 </a>
               </li>
               <li className="flex items-start gap-3">
-                <Clock className="h-5 w-5 text-teal flex-shrink-0 mt-0.5" />
+                <Clock className="h-5 w-5 text-cyan flex-shrink-0 mt-0.5" />
                 <span className="text-gray-medium text-sm">
                   Mon-Fri: 9am-6pm<br />
                   Sat: 10am-2pm
@@ -147,14 +150,14 @@ const Footer = () => {
               Accreditation
             </h3>
             <p className="text-gray-medium text-sm mb-4">
-              HealthStar Academy is a state-approved nursing assistant training program.
+              HealthStar Academy is 100% California Department of Public Health (CDPH) approved.
             </p>
             <div className="bg-primary-foreground/10 rounded-lg p-4">
               <p className="text-xs text-gray-medium">
-                Licensed by the State Board of Health Education
+                State-Approved Hybrid CNA Training Program
               </p>
               <p className="text-xs text-gray-medium mt-2">
-                Approved for clinical training partnerships
+                Clinical Training at Approved Healthcare Facilities
               </p>
             </div>
           </div>

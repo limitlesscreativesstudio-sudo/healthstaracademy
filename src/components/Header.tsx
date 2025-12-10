@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/healthstar-logo.png";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -44,9 +45,11 @@ const Header = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-teal rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xl">H</span>
-            </div>
+            <img 
+              src={logo} 
+              alt="HealthStar Academy Logo" 
+              className="w-14 h-14 object-contain"
+            />
             <span className="font-heading font-bold text-xl text-charcoal hidden sm:block">
               HealthStar Academy
             </span>
@@ -61,13 +64,13 @@ const Header = () => {
                 className={cn(
                   "font-body text-sm font-medium transition-colors relative",
                   location.pathname === link.path
-                    ? "text-teal"
-                    : "text-charcoal hover:text-teal"
+                    ? "text-purple"
+                    : "text-charcoal hover:text-purple"
                 )}
               >
                 {link.name}
                 {location.pathname === link.path && (
-                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-teal rounded-full" />
+                  <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-purple rounded-full" />
                 )}
               </Link>
             ))}
@@ -79,7 +82,7 @@ const Header = () => {
               <Link to="/admissions">Enroll Now</Link>
             </Button>
             <Button variant="gray-outline" asChild>
-              <a href="#" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.healthstaracademy.org" target="_blank" rel="noopener noreferrer">
                 Student Login
               </a>
             </Button>
@@ -107,8 +110,8 @@ const Header = () => {
                     className={cn(
                       "font-body text-base font-medium py-2 transition-colors",
                       location.pathname === link.path
-                        ? "text-teal"
-                        : "text-charcoal hover:text-teal"
+                        ? "text-purple"
+                        : "text-charcoal hover:text-purple"
                     )}
                   >
                     {link.name}
@@ -119,7 +122,7 @@ const Header = () => {
                     <Link to="/admissions">Enroll Now</Link>
                   </Button>
                   <Button variant="gray-outline" asChild className="w-full">
-                    <a href="#" target="_blank" rel="noopener noreferrer">
+                    <a href="https://www.healthstaracademy.org" target="_blank" rel="noopener noreferrer">
                       Student Login
                     </a>
                   </Button>

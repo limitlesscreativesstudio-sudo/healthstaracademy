@@ -9,17 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Primary Teal Button
-        default: "bg-teal text-primary-foreground hover:bg-teal-dark shadow-soft hover:shadow-medium",
+        // Primary Purple Button
+        default: "bg-purple text-primary-foreground hover:bg-purple-dark shadow-soft hover:shadow-medium",
         
-        // Secondary Coral Button (filled)
-        secondary: "bg-coral text-secondary-foreground hover:bg-coral-dark shadow-soft hover:shadow-medium",
+        // Secondary Cyan Button (filled)
+        secondary: "bg-cyan text-secondary-foreground hover:bg-cyan-dark shadow-soft hover:shadow-medium",
         
-        // Coral Outline Button
-        "coral-outline": "border-2 border-coral text-coral bg-transparent hover:bg-coral hover:text-secondary-foreground",
+        // Purple Outline Button
+        "purple-outline": "border-2 border-purple text-purple bg-transparent hover:bg-purple hover:text-primary-foreground",
         
-        // Teal Outline Button
-        "teal-outline": "border-2 border-teal text-teal bg-transparent hover:bg-teal hover:text-primary-foreground",
+        // Cyan Outline Button
+        "cyan-outline": "border-2 border-cyan text-cyan bg-transparent hover:bg-cyan hover:text-secondary-foreground",
         
         // Gray Outline (Tertiary/Login)
         "gray-outline": "border-2 border-charcoal text-charcoal bg-transparent hover:bg-charcoal hover:text-primary-foreground",
@@ -28,7 +28,7 @@ const buttonVariants = cva(
         ghost: "text-charcoal hover:bg-neutral-light hover:text-charcoal",
         
         // Link variant
-        link: "text-teal underline-offset-4 hover:underline",
+        link: "text-purple underline-offset-4 hover:underline",
         
         // Destructive
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
