@@ -9,6 +9,7 @@ import {
   Quote,
 } from "lucide-react";
 import heroImage from "@/assets/hero-home.jpg";
+import heroPrograms from "@/assets/hero-programs.jpg";
 import graduateMaria from "@/assets/graduate-maria.jpg";
 import studentDavid from "@/assets/student-david.jpg";
 import trainingLab from "@/assets/training-lab.jpg";
@@ -73,32 +74,40 @@ const HomePage = () => {
   return (
     <main>
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroImage})` }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-charcoal/90 via-charcoal/70 to-charcoal/40" />
-        </div>
-        
-        <div className="container-custom relative z-10 pt-20">
-          <div className="max-w-2xl">
-            <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-6 animate-fade-in-up">
-              Start Your CNA{" "}
-              <span className="text-cyan">Journey Today!</span>
-            </h1>
-            <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 animate-fade-in-up animation-delay-100">
-              Enroll in our state-certified hybrid CNA training program and begin your path to a rewarding healthcare career. Complete in just 6 weeks!
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up animation-delay-200">
-              <Button variant="secondary" size="lg" asChild>
-                <Link to="/admissions">
-                  Start Your Application <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button variant="purple-outline" size="lg" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-charcoal" asChild>
-                <Link to="/programs">View Our Program</Link>
-              </Button>
+      <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-purple via-purple/90 to-cyan/80">
+        <div className="container-custom relative z-10 py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-6 animate-fade-in-up">
+                Start Your CNA{" "}
+                <span className="text-cyan">Journey Today!</span>
+              </h1>
+              <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 animate-fade-in-up animation-delay-100">
+                Enroll in our state-certified hybrid CNA training program and begin your path to a rewarding healthcare career. Complete in just 6 weeks!
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up animation-delay-200">
+                <Button variant="secondary" size="lg" asChild>
+                  <Link to="/admissions">
+                    Start Your Application <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button variant="purple-outline" size="lg" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-charcoal" asChild>
+                  <Link to="/programs">View Our Program</Link>
+                </Button>
+              </div>
+            </div>
+            <div className="relative animate-fade-in-up animation-delay-300">
+              <div className="relative rounded-2xl overflow-hidden shadow-strong">
+                <img
+                  src={heroPrograms}
+                  alt="Health Star Academy CNA students in training"
+                  className="w-full h-auto object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-purple/20 to-transparent" />
+              </div>
+              <div className="absolute -bottom-4 -left-4 bg-cyan text-charcoal px-6 py-3 rounded-xl shadow-medium font-heading font-semibold">
+                CDPH Approved
+              </div>
             </div>
           </div>
         </div>
