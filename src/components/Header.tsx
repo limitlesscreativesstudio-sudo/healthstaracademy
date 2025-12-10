@@ -47,11 +47,11 @@ const Header = () => {
           <Link to="/" className="flex items-center gap-3">
             <img 
               src={logo} 
-              alt="HealthStar Academy Logo" 
+              alt="Health Star Academy Logo" 
               className="w-14 h-14 object-contain"
             />
             <span className="font-heading font-bold text-xl text-charcoal hidden sm:block">
-              HealthStar Academy
+              Health Star Academy
             </span>
           </Link>
 

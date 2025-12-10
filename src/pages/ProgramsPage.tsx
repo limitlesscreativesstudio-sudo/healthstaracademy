@@ -11,6 +11,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import trainingLab from "@/assets/training-lab.jpg";
+import heroPrograms from "@/assets/hero-programs.jpg";
 
 const ProgramsPage = () => {
   const programDetails = [
@@ -53,15 +54,26 @@ const ProgramsPage = () => {
   return (
     <main className="pt-20">
       {/* Hero Section */}
-      <section className="gradient-hero py-20">
-        <div className="container-custom text-center">
-          <h1 className="font-heading text-4xl md:text-5xl font-bold text-primary-foreground mb-6 animate-fade-in-up">
-            Comprehensive CNA Training<br />
-            <span className="text-cyan">Designed for Your Success</span>
-          </h1>
-          <p className="text-primary-foreground/90 text-lg max-w-2xl mx-auto animate-fade-in-up animation-delay-100">
-            Our CDPH-approved hybrid program combines flexible online theory with hands-on clinical experience at approved healthcare facilities.
-          </p>
+      <section className="gradient-hero py-16 md:py-20">
+        <div className="container-custom">
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+            <div className="flex-1 text-center lg:text-left">
+              <h1 className="font-heading text-4xl md:text-5xl font-bold text-primary-foreground mb-6 animate-fade-in-up">
+                Comprehensive CNA Training<br />
+                <span className="text-cyan">Designed for Your Success</span>
+              </h1>
+              <p className="text-primary-foreground/90 text-lg max-w-2xl animate-fade-in-up animation-delay-100">
+                Our CDPH-approved hybrid program combines flexible online theory with hands-on clinical experience at approved healthcare facilities.
+              </p>
+            </div>
+            <div className="flex-1 max-w-md lg:max-w-lg animate-fade-in-up animation-delay-200">
+              <img
+                src={heroPrograms}
+                alt="Health Star Academy CNA students in scrubs ready for their healthcare career"
+                className="rounded-xl shadow-medium w-full"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

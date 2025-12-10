@@ -62,7 +62,7 @@ const AboutPage = () => {
               </p>
             </div>
             <div className="animate-slide-in-right">
-              <img src={trainingLab} alt="HealthStar Academy clinical training" className="rounded-xl shadow-medium w-full" />
+              <img src={trainingLab} alt="Health Star Academy clinical training" className="rounded-xl shadow-medium w-full" />
             </div>
           </div>
         </div>

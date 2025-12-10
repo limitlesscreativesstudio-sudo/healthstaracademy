@@ -42,11 +42,11 @@ const Footer = () => {
             <Link to="/" className="flex items-center gap-3 mb-4">
               <img 
                 src={logo} 
-                alt="HealthStar Academy Logo" 
+                alt="Health Star Academy Logo" 
                 className="w-12 h-12 object-contain"
               />
               <span className="font-heading font-bold text-xl text-primary-foreground">
-                HealthStar Academy
+                Health Star Academy
               </span>
             </Link>
             <p className="text-gray-medium text-sm leading-relaxed mb-6">
@@ -150,7 +150,7 @@ const Footer = () => {
               Accreditation
             </h3>
             <p className="text-gray-medium text-sm mb-4">
-              HealthStar Academy is 100% California Department of Public Health (CDPH) approved.
+              Health Star Academy is 100% California Department of Public Health (CDPH) approved.
             </p>
             <div className="bg-primary-foreground/10 rounded-lg p-4">
               <p className="text-xs text-gray-medium">
@@ -168,7 +168,7 @@ const Footer = () => {
       <div className="border-t border-primary-foreground/10">
         <div className="container-custom py-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-medium text-sm">
-            © {currentYear} HealthStar Academy. All rights reserved.
+            © {currentYear} Health Star Academy. All rights reserved.
           </p>
           <div className="flex gap-6">
             <Link

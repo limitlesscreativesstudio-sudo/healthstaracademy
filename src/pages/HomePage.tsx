@@ -109,7 +109,7 @@ const HomePage = () => {
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
-              Why HealthStar Academy is Your Smartest First Step
+              Why Health Star Academy is Your Smartest First Step
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
               State-approved hybrid CNA training – Start in just a few weeks with flexible online classes and in-person clinicals.
@@ -187,7 +187,7 @@ const HomePage = () => {
       <section className="relative h-96 overflow-hidden">
         <img
           src={trainingLab}
-          alt="HealthStar Academy clinical training at approved healthcare facilities"
+          alt="Health Star Academy clinical training at approved healthcare facilities"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 to-transparent flex items-end">
@@ -210,7 +210,7 @@ const HomePage = () => {
               What Others Say About Us
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
-              Real stories from real students who transformed their lives through HealthStar Academy.
+              Real stories from real students who transformed their lives through Health Star Academy.
             </p>
           </div>
 

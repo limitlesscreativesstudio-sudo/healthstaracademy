@@ -16,12 +16,12 @@ const SuccessStoriesPage = () => {
       currentRole: "CNA at Valley General Hospital",
       story: `After eight years in retail, Maria knew she wanted more from her career. "I was tired of feeling like I wasn't making a real difference," she recalls. "I've always been a caregiver at heart—taking care of my grandmother when I was younger showed me that."
 
-Maria enrolled at HealthStar Academy while still working part-time at her retail job. "The evening classes fit perfectly with my schedule. The instructors understood that we had lives outside of school."
+Maria enrolled at Health Star Academy while still working part-time at her retail job. "The evening classes fit perfectly with my schedule. The instructors understood that we had lives outside of school."
 
 The hands-on training was transformative. "When I first practiced taking vital signs, I was so nervous. But by the end, it felt natural. The clinical rotations really prepared me for the real world."
 
 Today, Maria works in the cardiac unit at Valley General Hospital. "Every day I come home knowing I helped someone. That's worth more than any paycheck. Though the paycheck is better too!" she laughs.`,
-      quote: "HealthStar didn't just teach me to be a CNA—they taught me to believe in myself.",
+      quote: "Health Star didn't just teach me to be a CNA—they taught me to believe in myself.",
     },
     {
       name: "David Thompson",
@@ -33,9 +33,9 @@ Today, Maria works in the cardiac unit at Valley General Hospital. "Every day I 
 
 "She told me about how much she loved helping people, and about the job security. In the warehouse, I was always worried about layoffs. Healthcare doesn't have that problem."
 
-The biggest challenge? "Honestly, it was believing I could do it. I hadn't been in school for years. But the small class sizes at HealthStar made all the difference. The instructors gave me one-on-one attention when I needed it."
+The biggest challenge? "Honestly, it was believing I could do it. I hadn't been in school for years. But the small class sizes at Health Star made all the difference. The instructors gave me one-on-one attention when I needed it."
 
-The payment plan was essential for David. "I couldn't afford to pay upfront, and HealthStar worked with me. They wanted me to succeed."
+The payment plan was essential for David. "I couldn't afford to pay upfront, and Health Star worked with me. They wanted me to succeed."
 
 Now David works at a senior living facility, where he's become a resident favorite. "The families thank me, the residents smile when I walk in—that never gets old. This is what I was meant to do."`,
       quote: "The payment plan made it possible. The small class size made it personal. This program changed my life.",
@@ -73,7 +73,7 @@ Now David works at a senior living facility, where he's become a resident favori
       image: instructorJane,
     },
     {
-      quote: "I was scared to go back to school at 45. HealthStar made me feel like I belonged.",
+      quote: "I was scared to go back to school at 45. Health Star made me feel like I belonged.",
       name: "Robert M.",
       role: "Graduate 2023",
       image: instructorJohn,
@@ -90,7 +90,7 @@ Now David works at a senior living facility, where he's become a resident favori
             <span className="text-coral">Your Career</span>
           </h1>
           <p className="text-primary-foreground/90 text-lg max-w-2xl mx-auto animate-fade-in-up animation-delay-100">
-            Real stories from real students who transformed their lives through HealthStar Academy. 
+            Real stories from real students who transformed their lives through Health Star Academy. 
             Your success story could be next.
           </p>
         </div>
@@ -230,7 +230,7 @@ Now David works at a senior living facility, where he's become a resident favori
             Be Our Next Success Story
           </h2>
           <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-8 text-lg">
-            Join the hundreds of HealthStar graduates who have launched meaningful healthcare careers. 
+            Join the hundreds of Health Star graduates who have launched meaningful healthcare careers. 
             Your transformation starts with a single step.
           </p>
           <Button variant="secondary" size="xl" asChild>

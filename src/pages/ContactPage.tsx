@@ -122,7 +122,7 @@ const ContactPage = () => {
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="HealthStar Academy Location - Stockton, CA"
+                  title="Health Star Academy Location - Stockton, CA"
                 />
               </div>
             </div>
@@ -180,7 +180,7 @@ const ContactPage = () => {
                     <Button type="submit" variant="default" size="lg" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? "Sending..." : (<>Send My Inquiry <Send className="ml-2 h-5 w-5" /></>)}
                     </Button>
-                    <p className="text-xs text-gray-medium text-center">By submitting, you agree to be contacted by HealthStar Academy regarding your inquiry.</p>
+                    <p className="text-xs text-gray-medium text-center">By submitting, you agree to be contacted by Health Star Academy regarding your inquiry.</p>
                   </form>
                 )}
               </div>
