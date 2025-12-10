@@ -32,17 +32,32 @@ const AboutPage = () => {
 
   return (
     <main className="pt-20">
-      {/* Hero Section */}
-      <section className="gradient-hero py-20">
-        <div className="container-custom text-center">
-          <h1 className="font-heading text-4xl md:text-5xl font-bold text-primary-foreground mb-6 animate-fade-in-up">
-            Our Mission: Quality, Affordable<br />
-            <span className="text-cyan">CNA Training for Everyone</span>
-          </h1>
-          <p className="text-primary-foreground/90 text-lg max-w-2xl mx-auto animate-fade-in-up animation-delay-100">
-            At Health Star Academy, we empower students with the knowledge, skills, and confidence to build a stable career in healthcare and make a lasting impact in their communities.
-          </p>
+      {/* Hero Section - Marketing Style */}
+      <section className="relative min-h-[50vh] flex items-center overflow-hidden">
+        <div className="absolute inset-0 flex flex-col lg:flex-row">
+          {/* Image Side */}
+          <div className="w-full lg:w-1/2 h-64 lg:h-full relative">
+            <img
+              src={trainingLab}
+              alt="Health Star Academy clinical training"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          {/* Gradient Side */}
+          <div className="w-full lg:w-1/2 h-full bg-gradient-to-br from-purple via-purple/90 to-magenta flex items-center justify-center py-12 lg:py-0">
+            <div className="text-center px-8 lg:px-12">
+              <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4 animate-fade-in-up uppercase tracking-wide">
+                Our Mission:<br />
+                Quality, Affordable<br />
+                <span className="text-cyan">CNA Training</span>
+              </h1>
+              <p className="text-primary-foreground/90 text-lg animate-fade-in-up animation-delay-100">
+                Empowering Future Healthcare Professionals
+              </p>
+            </div>
+          </div>
         </div>
+        <div className="relative z-10 container-custom py-32 lg:py-40" />
       </section>
 
       {/* Our Story Section */}

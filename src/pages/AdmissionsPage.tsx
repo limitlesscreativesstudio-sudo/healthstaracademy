@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FileText, Users, ClipboardCheck, CreditCard, GraduationCap, ArrowRight, ChevronDown, ChevronUp, HelpCircle, Download } from "lucide-react";
+import heroPrograms from "@/assets/hero-programs.jpg";
 import { useState } from "react";
 
 const AdmissionsPage = () => {
@@ -20,7 +21,7 @@ const AdmissionsPage = () => {
     "Social Security Card",
     "Must Pass Criminal Background Check (LiveScan)",
     "Proof of good health (physical exam, PPD TB Test or Chest X-ray)",
-    "GED/High School Diploma preferred (or pass entrance exam with 70%)",
+    "GED/High School Diploma preferred (or pass entrance exam with 75% or above)",
     "$175 non-refundable application fee",
   ];
 
@@ -28,24 +29,39 @@ const AdmissionsPage = () => {
     { question: "Do you offer payment plans?", answer: "Yes! We've partnered with Self-Help Federal Credit Union and Denefits for flexible payment options. Denefits offers no credit check financing with guaranteed approvals and instant pre-approval decisions." },
     { question: "What if I have a criminal record?", answer: "Certain offenses may prevent state CNA certification. Contact us to discuss your situation confidentially. We'll help you understand your options." },
     { question: "Can I work while attending?", answer: "Absolutely! Our hybrid format with flexible online theory and scheduled clinicals is designed for working adults." },
-    { question: "Do I need a high school diploma?", answer: "A GED/High School Diploma is preferred but not required. If you don't have one, you can pass our entrance exam with 70% to qualify." },
+    { question: "Do I need a high school diploma?", answer: "A GED/High School Diploma is preferred but not required. If you don't have one, you can pass our entrance exam with 75% or above to qualify." },
     { question: "How long is the program?", answer: "The program is 160 total hours: 60 hours online theory + 100 hours clinical. Daytime program takes ~6 weeks, weekend program takes ~9 weeks." },
     { question: "Where are the clinical sites?", answer: "Clinical training is held at Meadowood Health and Rehabilitation Center (Stockton) and Lodi Creek Post-Acute (Lodi). Bay Area locations coming soon!" },
   ];
 
   return (
     <main className="pt-20">
-      {/* Hero Section */}
-      <section className="gradient-hero py-20">
-        <div className="container-custom text-center">
-          <h1 className="font-heading text-4xl md:text-5xl font-bold text-primary-foreground mb-6 animate-fade-in-up">
-            Your Application Checklist:<br />
-            <span className="text-cyan">Simple, Clear, and Supported</span>
-          </h1>
-          <p className="text-primary-foreground/90 text-lg max-w-2xl mx-auto animate-fade-in-up animation-delay-100">
-            Application deadlines are 7 days prior to the first day of class. New classes start monthly!
-          </p>
+      {/* Hero Section - Marketing Style */}
+      <section className="relative min-h-[50vh] flex items-center overflow-hidden">
+        <div className="absolute inset-0 flex flex-col lg:flex-row">
+          {/* Image Side */}
+          <div className="w-full lg:w-1/2 h-64 lg:h-full relative">
+            <img
+              src={heroPrograms}
+              alt="Health Star Academy students ready to enroll"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          {/* Gradient Side */}
+          <div className="w-full lg:w-1/2 h-full bg-gradient-to-br from-purple via-purple/90 to-magenta flex items-center justify-center py-12 lg:py-0">
+            <div className="text-center px-8 lg:px-12">
+              <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4 animate-fade-in-up uppercase tracking-wide">
+                Your Application<br />
+                Checklist:<br />
+                <span className="text-cyan">Simple & Clear</span>
+              </h1>
+              <p className="text-primary-foreground/90 text-lg animate-fade-in-up animation-delay-100">
+                New Classes Start Monthly!
+              </p>
+            </div>
+          </div>
         </div>
+        <div className="relative z-10 container-custom py-32 lg:py-40" />
       </section>
 
       {/* 5-Step Enrollment Process */}
