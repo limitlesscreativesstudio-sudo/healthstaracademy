@@ -66,7 +66,7 @@ const ContactPage = () => {
   ];
 
   return (
-    <main className="pt-20">
+    <main className="pt-30">
       {/* Hero Section - Marketing Style */}
       <section className="relative min-h-[50vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 flex flex-col lg:flex-row">
