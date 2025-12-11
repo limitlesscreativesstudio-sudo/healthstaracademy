@@ -27,9 +27,9 @@ const Footer = () => {
             Take the first step toward a meaningful career in healthcare. We're here to guide you every step of the way.
           </p>
           <Button variant="secondary" size="lg" asChild>
-            <Link to="/admissions">
+            <a href="https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true" target="_blank" rel="noopener noreferrer">
               Enroll Now <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
+            </a>
           </Button>
         </div>
       </div>
@@ -87,8 +87,8 @@ const Footer = () => {
                 { name: "Home", path: "/" },
                 { name: "About Us", path: "/about" },
                 { name: "CNA Program", path: "/programs" },
-                { name: "Admissions", path: "/admissions" },
-                { name: "Success Stories", path: "/success-stories" },
+                { name: "Admissions", path: "/programs/admissions" },
+                { name: "Gallery", path: "/gallery" },
                 { name: "Contact", path: "/contact" },
               ].map((link) => (
                 <li key={link.path}>

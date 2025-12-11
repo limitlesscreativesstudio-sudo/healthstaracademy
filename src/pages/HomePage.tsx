@@ -14,17 +14,19 @@ import graduateMaria from "@/assets/graduate-maria.jpg";
 import studentDavid from "@/assets/student-david.jpg";
 import trainingLab from "@/assets/training-lab.jpg";
 
+const ENROLLMENT_LINK = "https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true";
+
 const HomePage = () => {
   const advantages = [
     {
       icon: Clock,
       title: "Fast & Flexible",
-      description: "Daytime and weekend classes available. Complete in just 6-9 weeks with our hybrid format.",
+      description: "Daytime classes available. Complete in just 6 weeks with our hybrid format.",
     },
     {
       icon: HandHeart,
       title: "Hands-On Training",
-      description: "100 hours of clinical training at approved facilities in Stockton and Lodi.",
+      description: "100 hours of clinical training at approved facilities in Stockton, Lodi, and Hayward.",
     },
     {
       icon: GraduationCap,
@@ -72,7 +74,7 @@ const HomePage = () => {
   ];
 
   return (
-    <main>
+    <main className="pt-10">
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-purple via-purple/90 to-cyan/80">
         <div className="container-custom relative z-10 py-20">
@@ -87,9 +89,9 @@ const HomePage = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up animation-delay-200">
                 <Button variant="secondary" size="lg" asChild>
-                  <Link to="/admissions">
+                  <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">
                     Start Your Application <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
+                  </a>
                 </Button>
                 <Button variant="purple-outline" size="lg" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-charcoal" asChild>
                   <Link to="/programs">View Our Program</Link>
@@ -205,7 +207,7 @@ const HomePage = () => {
               Clinical Training at Approved Facilities
             </h3>
             <p className="text-primary-foreground/80 max-w-xl">
-              Hands-on experience at Meadowood Health and Rehabilitation Center (Stockton) and Lodi Creek Post-Acute (Lodi).
+              Hands-on experience at approved healthcare facilities in Stockton, Lodi, and Hayward.
             </p>
           </div>
         </div>
@@ -253,8 +255,8 @@ const HomePage = () => {
 
           <div className="text-center mt-12">
             <Button variant="cyan-outline" size="lg" asChild>
-              <Link to="/success-stories">
-                Read More Success Stories <ArrowRight className="ml-2 h-5 w-5" />
+              <Link to="/gallery">
+                View Our Gallery <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
           </div>
@@ -271,9 +273,9 @@ const HomePage = () => {
             No prerequisites required. Payment plans available. New classes start monthly.
           </p>
           <Button variant="secondary" size="xl" asChild>
-            <Link to="/admissions">
+            <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">
               Secure Your Spot in the Next Class <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
+            </a>
           </Button>
         </div>
       </section>

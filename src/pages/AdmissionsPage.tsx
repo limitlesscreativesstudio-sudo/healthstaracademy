@@ -4,6 +4,8 @@ import { FileText, Users, ClipboardCheck, CreditCard, GraduationCap, ArrowRight,
 import heroPrograms from "@/assets/hero-programs.jpg";
 import { useState } from "react";
 
+const ENROLLMENT_LINK = "https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true";
+
 const AdmissionsPage = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -30,12 +32,12 @@ const AdmissionsPage = () => {
     { question: "What if I have a criminal record?", answer: "Certain offenses may prevent state CNA certification. Contact us to discuss your situation confidentially. We'll help you understand your options." },
     { question: "Can I work while attending?", answer: "Absolutely! Our hybrid format with flexible online theory and scheduled clinicals is designed for working adults." },
     { question: "Do I need a high school diploma?", answer: "A GED/High School Diploma is preferred but not required. If you don't have one, you can pass our entrance exam with 75% or above to qualify." },
-    { question: "How long is the program?", answer: "The program is 160 total hours: 60 hours online theory + 100 hours clinical. Daytime program takes ~6 weeks, weekend program takes ~9 weeks." },
-    { question: "Where are the clinical sites?", answer: "Clinical training is held at Meadowood Health and Rehabilitation Center (Stockton) and Lodi Creek Post-Acute (Lodi). Bay Area locations coming soon!" },
+    { question: "How long is the program?", answer: "The program is 160 total hours: 60 hours online theory + 100 hours clinical. Our daytime program takes approximately 6 weeks." },
+    { question: "Where are the clinical sites?", answer: "Clinical training is held at approved healthcare facilities in Stockton, Lodi, and Hayward—with plans to expand throughout California." },
   ];
 
   return (
-    <main className="pt-20">
+    <main className="pt-30">
       {/* Hero Section - Marketing Style */}
       <section className="relative min-h-[50vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 flex flex-col lg:flex-row">
@@ -166,7 +168,7 @@ const AdmissionsPage = () => {
           <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-8 text-lg">Start your journey today. New classes start monthly - limited seats available!</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button variant="secondary" size="lg" asChild>
-              <Link to="/contact">Start Your Application <ArrowRight className="ml-2 h-5 w-5" /></Link>
+              <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">Start Your Application <ArrowRight className="ml-2 h-5 w-5" /></a>
             </Button>
             <Button variant="purple-outline" size="lg" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-magenta" asChild>
               <a href="tel:2093234169">Call (209) 323-4169</a>

@@ -20,7 +20,7 @@ const GalleryPage = () => {
   ];
 
   return (
-    <main className="pt-20">
+    <main className="pt-30">
       {/* Hero Section - Marketing Style */}
       <section className="relative min-h-[50vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 flex flex-col lg:flex-row">
@@ -115,7 +115,7 @@ const GalleryPage = () => {
             Join the Health Star Academy community and start your journey to a rewarding healthcare career.
           </p>
           <Button variant="secondary" size="xl" asChild>
-            <Link to="/admissions">
+            <Link to="/programs/admissions">
               Start Your Application <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>

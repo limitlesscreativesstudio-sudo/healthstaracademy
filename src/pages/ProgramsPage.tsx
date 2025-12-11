@@ -14,23 +14,20 @@ import trainingLab from "@/assets/training-lab.jpg";
 import heroPrograms from "@/assets/hero-programs.jpg";
 
 const ProgramsPage = () => {
+  const ENROLLMENT_LINK = "https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true";
+
   const programDetails = [
-    { label: "Program Length", value: "160 Hours | 6-9 Weeks", icon: Clock },
+    { label: "Program Length", value: "160 Hours | ~6 Weeks", icon: Clock },
     { label: "Theory Hours", value: "60 Hours Online", icon: BookOpen },
     { label: "Clinical Hours", value: "100 Hours In-Person", icon: Stethoscope },
     { label: "Certification", value: "CDPH Approved", icon: FileCheck },
   ];
 
-  const scheduleOptions = [
-    { name: "Daytime Program", schedule: "Monday - Friday", time: "6:00 AM - 3:00 PM", duration: "~6 weeks (23 days)" },
-    { name: "Weekend Program", schedule: "Saturday - Sunday", time: "7:00 AM - 6:00 PM", duration: "~9 weeks (18 days)" },
-  ];
-
   const upcomingDates = [
-    { date: "May 19, 2025", endDate: "June 30, 2025" },
-    { date: "July 7, 2025", endDate: "August 18, 2025" },
-    { date: "August 25, 2025", endDate: "October 6, 2025" },
-    { date: "October 13, 2025", endDate: "November 25, 2025" },
+    { date: "January 26, 2025", endDate: "March 7, 2025" },
+    { date: "March 17, 2025", endDate: "April 28, 2025" },
+    { date: "May 5, 2025", endDate: "June 16, 2025" },
+    { date: "June 23, 2025", endDate: "August 4, 2025" },
   ];
 
   const curriculum = [
@@ -52,7 +49,7 @@ const ProgramsPage = () => {
   ];
 
   return (
-    <main className="pt-20">
+    <main className="pt-30">
       {/* Hero Section */}
       <section className="gradient-hero py-16 md:py-20">
         <div className="container-custom">
@@ -86,7 +83,7 @@ const ProgramsPage = () => {
                 Program Overview
               </h2>
               <p className="text-gray-dark mb-6 leading-relaxed">
-                Health Star Academy's CDPH-approved Online CNA Program offers the perfect blend of flexibility and hands-on training. Complete online coursework at your own pace while gaining real-world experience at our clinical training sites in Stockton and Lodi.
+                Health Star Academy's CDPH-approved Online CNA Program offers the perfect blend of flexibility and hands-on training. Complete online coursework at your own pace while gaining real-world experience at our clinical training sites in Stockton, Lodi, and Hayward—with plans to expand throughout California.
               </p>
               <div className="grid grid-cols-2 gap-4">
                 {programDetails.map((detail, index) => (
@@ -113,34 +110,26 @@ const ProgramsPage = () => {
         </div>
       </section>
 
-      {/* Schedule Options */}
+      {/* Schedule & Start Dates */}
       <section className="section-padding bg-neutral-light">
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
-              Flexible Schedule Options
+              Daytime Program Schedule
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
-              Choose the schedule that fits your lifestyle. Both options include online theory and in-person clinicals.
+              Our daytime program runs Monday through Friday, allowing you to complete your training in approximately 6 weeks.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-3xl mx-auto">
-            {scheduleOptions.map((option, index) => (
-              <div
-                key={option.name}
-                className="bg-background rounded-xl p-6 shadow-soft hover:shadow-medium transition-shadow text-center animate-fade-in-up"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <Calendar className="h-10 w-10 text-purple mx-auto mb-4" />
-                <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
-                  {option.name}
-                </h3>
-                <p className="text-purple font-medium mb-1">{option.schedule}</p>
-                <p className="text-gray-dark text-sm mb-2">{option.time}</p>
-                <p className="text-charcoal font-semibold">{option.duration}</p>
-              </div>
-            ))}
+          <div className="bg-background rounded-xl p-6 shadow-soft max-w-md mx-auto mb-12 text-center">
+            <Calendar className="h-10 w-10 text-purple mx-auto mb-4" />
+            <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
+              Daytime Program
+            </h3>
+            <p className="text-purple font-medium mb-1">Monday - Friday</p>
+            <p className="text-gray-dark text-sm mb-2">6:00 AM - 3:00 PM</p>
+            <p className="text-charcoal font-semibold">~6 weeks (23 days)</p>
           </div>
 
           {/* Next Start Dates */}
@@ -166,7 +155,7 @@ const ProgramsPage = () => {
             </div>
             <div className="text-center mt-6">
               <Button variant="default" asChild>
-                <Link to="/contact">Enroll for Next Class</Link>
+                <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">Enroll for Next Class</a>
               </Button>
             </div>
           </div>
@@ -292,7 +281,7 @@ const ProgramsPage = () => {
                 className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-charcoal" 
                 asChild
               >
-                <Link to="/admissions">Enroll Now</Link>
+                <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">Enroll Now</a>
               </Button>
             </div>
           </div>
