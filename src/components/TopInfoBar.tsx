@@ -1,4 +1,4 @@
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin, Clock } from "lucide-react";
 
 const TopInfoBar = () => {
   return (
@@ -14,16 +14,20 @@ const TopInfoBar = () => {
               <span>(209) 323-4169</span>
             </a>
             <a 
-              href="mailto:healthstaracademy@gmail.com" 
+              href="mailto:healthstaracademy01@gmail.com" 
               className="flex items-center gap-2 hover:text-cyan transition-colors"
             >
               <Mail className="h-4 w-4" />
-              <span className="hidden md:inline">healthstaracademy@gmail.com</span>
+              <span className="hidden md:inline">healthstaracademy01@gmail.com</span>
               <span className="md:hidden">Email Us</span>
             </a>
             <div className="hidden lg:flex items-center gap-2">
               <MapPin className="h-4 w-4" />
               <span>5250 Claremont Ave, Suite 127, Stockton, CA</span>
+            </div>
+            <div className="hidden xl:flex items-center gap-2 text-primary-foreground/80">
+              <Clock className="h-4 w-4" />
+              <span>Mon-Thu: 9am-5pm | Fri: 9am-1pm</span>
             </div>
           </div>
           <div className="hidden sm:block text-primary-foreground/80">

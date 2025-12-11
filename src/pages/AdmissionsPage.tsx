@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, Users, ClipboardCheck, CreditCard, GraduationCap, ArrowRight, ChevronDown, ChevronUp, HelpCircle, Download } from "lucide-react";
+import { FileText, Users, ClipboardCheck, CreditCard, GraduationCap, ArrowRight, ChevronDown, ChevronUp, HelpCircle, Download, Laptop, CheckCircle, BookOpen, CalendarCheck, UserCheck } from "lucide-react";
 import heroPrograms from "@/assets/hero-programs.jpg";
 import { useState } from "react";
 
@@ -10,11 +10,12 @@ const AdmissionsPage = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const enrollmentSteps = [
-    { step: 1, icon: FileText, title: "Submit Application", description: "Complete our online application with $175 non-refundable fee. An admissions advisor will contact you within one business hour." },
-    { step: 2, icon: Users, title: "Gather Documents", description: "Provide: Government ID, Social Security Card, and pass LiveScan background check." },
-    { step: 3, icon: ClipboardCheck, title: "Health Clearance", description: "Submit proof of good health: physical examination, PPD TB Test or Chest X-ray clearance." },
-    { step: 4, icon: CreditCard, title: "Complete Enrollment", description: "Finalize payment arrangements. Payment plans available through Self-Help Credit Union or Denefits financing." },
-    { step: 5, icon: GraduationCap, title: "Start Class!", description: "Attend your first online theory session and begin your journey to becoming a CNA!" },
+    { step: 1, icon: ClipboardCheck, title: "Pre-Qualification Questionnaire", description: "Complete our pre-qualification questionnaire to ensure you have everything needed to start the program. If anything is missing, you'll need to obtain it and resubmit before moving to the next step." },
+    { step: 2, icon: BookOpen, title: "Student Handbook Review", description: "Once qualified, you'll receive the student handbook to review and sign. Return the signed handbook to the admissions team to proceed." },
+    { step: 3, icon: FileText, title: "Enrollment Application & Fee", description: "Complete and sign the enrollment application, submit necessary documents, and pay the $175 enrollment fee to secure your spot." },
+    { step: 4, icon: UserCheck, title: "LiveScan Background Check", description: "You'll receive an email with instructions to complete your LiveScan background check at an approved location." },
+    { step: 5, icon: CalendarCheck, title: "Select Cohort & Pay Tuition", description: "Choose your preferred cohort start date and complete tuition payment using available payment options including Stripe, Klarna, Afterpay, Zip, or Apple Pay." },
+    { step: 6, icon: GraduationCap, title: "Enrollment & Orientation", description: "Once payment is complete, you're enrolled in Canvas LMS to access your course. You'll receive your orientation date where you'll get all tools needed—including your Chromebook ($499 value)—to access course materials." },
   ];
 
   const requirements = [
@@ -28,12 +29,16 @@ const AdmissionsPage = () => {
   ];
 
   const faqs = [
-    { question: "Do you offer payment plans?", answer: "Yes! We've partnered with Self-Help Federal Credit Union and Denefits for flexible payment options. Denefits offers no credit check financing with guaranteed approvals and instant pre-approval decisions." },
+    { question: "Do you offer payment plans?", answer: "Yes! We accept payments through Stripe, which offers flexible options including Klarna, Afterpay, Zip, and Apple Pay for full tuition payment or payment plans. We've also partnered with Self-Help Federal Credit Union and Denefits for additional financing. Denefits offers no credit check financing with guaranteed approvals and instant pre-approval decisions." },
+    { question: "What is the refund policy?", answer: "Students are entitled to a refund up to 5 days after the program start date, minus a $495 administrative fee. After 5 days from the program start date, no refund is available." },
+    { question: "Is there a separate, non-refundable application or registration fee?", answer: "Yes, there is a $175 non-refundable application fee that must be paid when submitting your enrollment application." },
+    { question: "What is the attendance policy, and what are the procedures for making up missed classes or clinical hours?", answer: "Students may miss no more than 2 days throughout the program. Any missed days must be made up to complete the program requirements." },
     { question: "What if I have a criminal record?", answer: "Certain offenses may prevent state CNA certification. Contact us to discuss your situation confidentially. We'll help you understand your options." },
     { question: "Can I work while attending?", answer: "Absolutely! Our hybrid format with flexible online theory and scheduled clinicals is designed for working adults." },
     { question: "Do I need a high school diploma?", answer: "A GED/High School Diploma is preferred but not required. If you don't have one, you can pass our entrance exam with 75% or above to qualify." },
-    { question: "How long is the program?", answer: "The program is 160 total hours: 60 hours online theory + 100 hours clinical. Our daytime program takes approximately 6 weeks." },
+    { question: "How long is the program?", answer: "The program is 160 total hours: 60 hours online theory + 100 hours clinical. Our daytime program takes 6 weeks." },
     { question: "Where are the clinical sites?", answer: "Clinical training is held at approved healthcare facilities in Stockton, Lodi, and Hayward—with plans to expand throughout California." },
+    { question: "Do I get any equipment or materials?", answer: "Yes! All students receive a Chromebook valued at $499 during orientation to access course materials. Your tuition also includes textbooks, workbook, uniform, BP cuff/stethoscope, and lab supplies." },
   ];
 
   return (
@@ -66,12 +71,12 @@ const AdmissionsPage = () => {
         <div className="relative z-10 container-custom py-32 lg:py-40" />
       </section>
 
-      {/* 5-Step Enrollment Process */}
+      {/* 6-Step Enrollment Process */}
       <section className="section-padding bg-background">
         <div className="container-custom">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">5-Step Enrollment Process</h2>
-            <p className="text-gray-dark max-w-2xl mx-auto">From inquiry to your first day of class, we guide you through every step.</p>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">6-Step Enrollment Process</h2>
+            <p className="text-gray-dark max-w-2xl mx-auto">From pre-qualification to your first day of class, we guide you through every step.</p>
           </div>
 
           <div className="max-w-4xl mx-auto">
@@ -92,6 +97,21 @@ const AdmissionsPage = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Chromebook Highlight */}
+      <section className="bg-cyan/10 py-12">
+        <div className="container-custom">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-center md:text-left">
+            <div className="w-20 h-20 bg-cyan rounded-full flex items-center justify-center flex-shrink-0">
+              <Laptop className="h-10 w-10 text-charcoal" />
+            </div>
+            <div>
+              <h3 className="font-heading font-bold text-2xl text-charcoal mb-2">Chromebook Included — $499 Value!</h3>
+              <p className="text-gray-dark max-w-xl">Every student receives a Chromebook during orientation to access course materials. It's part of our commitment to removing barriers and setting you up for success.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -121,19 +141,49 @@ const AdmissionsPage = () => {
                   <Download className="h-10 w-10 text-cyan" />
                 </div>
                 <h3 className="font-heading font-semibold text-2xl text-charcoal mb-4">Ready to Enroll?</h3>
-                <p className="text-gray-dark mb-6">Contact us today to start your application and secure your spot in the next class.</p>
+                <p className="text-gray-dark mb-6">Start your application today and secure your spot in the next class.</p>
                 <Button variant="secondary" size="lg" asChild>
-                  <Link to="/contact">Contact Admissions <ArrowRight className="ml-2 h-5 w-5" /></Link>
+                  <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">Enroll Now <ArrowRight className="ml-2 h-5 w-5" /></a>
                 </Button>
-                <p className="text-sm text-gray-medium mt-4">Call: (209) 323-4169</p>
+                <p className="text-sm text-gray-medium mt-4">
+                  Call: <a href="tel:2093234169" className="text-purple hover:underline">(209) 323-4169</a>
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
+      {/* Payment Options */}
       <section className="section-padding bg-background">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Flexible Payment Options</h2>
+            <p className="text-gray-dark max-w-2xl mx-auto">We've partnered with trusted payment providers to make your education accessible.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="bg-neutral-light rounded-xl p-6 text-center">
+              <CreditCard className="h-10 w-10 text-purple mx-auto mb-4" />
+              <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Stripe Payments</h3>
+              <p className="text-gray-dark text-sm">Full tuition or payment plans via Klarna, Afterpay, Zip, Apple Pay & more</p>
+            </div>
+            <div className="bg-neutral-light rounded-xl p-6 text-center">
+              <CheckCircle className="h-10 w-10 text-purple mx-auto mb-4" />
+              <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Self-Help Credit Union</h3>
+              <p className="text-gray-dark text-sm">Payment plans, loans, and financing support available</p>
+            </div>
+            <div className="bg-neutral-light rounded-xl p-6 text-center">
+              <Users className="h-10 w-10 text-purple mx-auto mb-4" />
+              <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Denefits Financing</h3>
+              <p className="text-gray-dark text-sm">No credit check, guaranteed approvals, instant pre-approval</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="section-padding bg-neutral-light">
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Frequently Asked Questions</h2>
