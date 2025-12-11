@@ -7,6 +7,7 @@ import {
   Briefcase,
   ArrowRight,
   Quote,
+  Laptop,
 } from "lucide-react";
 import heroImage from "@/assets/hero-home.jpg";
 import heroPrograms from "@/assets/hero-programs.jpg";
@@ -35,8 +36,13 @@ const HomePage = () => {
     },
     {
       icon: Briefcase,
-      title: "Career Support",
-      description: "Job placement assistance. Many graduates secure positions before completing the program.",
+      title: "Job Placement Support",
+      description: "Job placement support. Many graduates secure positions before completing the program.",
+    },
+    {
+      icon: Laptop,
+      title: "Chromebook Included",
+      description: "Every student receives a Chromebook ($499 value) during orientation to access course materials.",
     },
   ];
 
@@ -120,14 +126,14 @@ const HomePage = () => {
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
-              Why Health Star Academy is Your Smartest First Step
+              Why Choose Health Star Academy?
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
               State-approved hybrid CNA training – Start in just a few weeks with flexible online classes and in-person clinicals.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {advantages.map((advantage, index) => (
               <div
                 key={advantage.title}
@@ -186,7 +192,7 @@ const HomePage = () => {
 
           <div className="text-center mt-12">
             <Button variant="default" size="lg" asChild>
-              <Link to="/admissions">
+              <Link to="/programs/admissions">
                 See Full Enrollment Process <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>

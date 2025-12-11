@@ -9,6 +9,7 @@ import {
   Instagram,
   Linkedin,
   ArrowRight,
+  Shield,
 } from "lucide-react";
 import logo from "@/assets/healthstar-logo.png";
 
@@ -88,6 +89,7 @@ const Footer = () => {
                 { name: "About Us", path: "/about" },
                 { name: "CNA Program", path: "/programs" },
                 { name: "Admissions", path: "/programs/admissions" },
+                { name: "Blog", path: "/blog" },
                 { name: "Gallery", path: "/gallery" },
                 { name: "Contact", path: "/contact" },
               ].map((link) => (
@@ -128,17 +130,17 @@ const Footer = () => {
               <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-cyan flex-shrink-0" />
                 <a
-                  href="mailto:healthstaracademy@gmail.com"
+                  href="mailto:healthstaracademy01@gmail.com"
                   className="text-gray-medium hover:text-primary-foreground transition-colors text-sm"
                 >
-                  healthstaracademy@gmail.com
+                  healthstaracademy01@gmail.com
                 </a>
               </li>
               <li className="flex items-start gap-3">
                 <Clock className="h-5 w-5 text-cyan flex-shrink-0 mt-0.5" />
                 <span className="text-gray-medium text-sm">
-                  Mon-Fri: 9am-6pm<br />
-                  Sat: 10am-2pm
+                  Mon-Thu: 9am-5pm<br />
+                  Fri: 9am-1pm
                 </span>
               </li>
             </ul>
@@ -152,13 +154,17 @@ const Footer = () => {
             <p className="text-gray-medium text-sm mb-4">
               Health Star Academy is 100% California Department of Public Health (CDPH) approved.
             </p>
-            <div className="bg-primary-foreground/10 rounded-lg p-4">
+            <div className="bg-primary-foreground/10 rounded-lg p-4 mb-4">
               <p className="text-xs text-gray-medium">
                 State-Approved Hybrid CNA Training Program
               </p>
               <p className="text-xs text-gray-medium mt-2">
                 Clinical Training at Approved Healthcare Facilities
               </p>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-medium">
+              <Shield className="h-5 w-5 text-cyan" />
+              <span>BBB Accredited Business</span>
             </div>
           </div>
         </div>

@@ -9,6 +9,7 @@ import {
   ArrowRight,
   CheckCircle,
   DollarSign,
+  Laptop,
 } from "lucide-react";
 import trainingLab from "@/assets/training-lab.jpg";
 import heroPrograms from "@/assets/hero-programs.jpg";
@@ -17,7 +18,7 @@ const ProgramsPage = () => {
   const ENROLLMENT_LINK = "https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true";
 
   const programDetails = [
-    { label: "Program Length", value: "160 Hours | ~6 Weeks", icon: Clock },
+    { label: "Program Length", value: "160 Hours | 6 Weeks", icon: Clock },
     { label: "Theory Hours", value: "60 Hours Online", icon: BookOpen },
     { label: "Clinical Hours", value: "100 Hours In-Person", icon: Stethoscope },
     { label: "Certification", value: "CDPH Approved", icon: FileCheck },
@@ -40,6 +41,7 @@ const ProgramsPage = () => {
 
   const tuitionBreakdown = [
     { item: "Tuition", cost: "$2,184" },
+    { item: "Chromebook", cost: "$499" },
     { item: "Uniform", cost: "$35" },
     { item: "Textbook", cost: "$45" },
     { item: "Workbook", cost: "$30" },
@@ -110,6 +112,21 @@ const ProgramsPage = () => {
         </div>
       </section>
 
+      {/* Chromebook Highlight */}
+      <section className="bg-cyan/10 py-12">
+        <div className="container-custom">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-center md:text-left">
+            <div className="w-20 h-20 bg-cyan rounded-full flex items-center justify-center flex-shrink-0">
+              <Laptop className="h-10 w-10 text-charcoal" />
+            </div>
+            <div>
+              <h3 className="font-heading font-bold text-2xl text-charcoal mb-2">Chromebook Included — $499 Value!</h3>
+              <p className="text-gray-dark max-w-xl">Every student receives a Chromebook during orientation to access course materials. It's part of our commitment to removing barriers and setting you up for success.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Schedule & Start Dates */}
       <section className="section-padding bg-neutral-light">
         <div className="container-custom">
@@ -118,7 +135,7 @@ const ProgramsPage = () => {
               Daytime Program Schedule
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
-              Our daytime program runs Monday through Friday, allowing you to complete your training in approximately 6 weeks.
+              Our daytime program runs Monday through Friday, allowing you to complete your training in 6 weeks.
             </p>
           </div>
 
@@ -129,7 +146,7 @@ const ProgramsPage = () => {
             </h3>
             <p className="text-purple font-medium mb-1">Monday - Friday</p>
             <p className="text-gray-dark text-sm mb-2">6:00 AM - 3:00 PM</p>
-            <p className="text-charcoal font-semibold">~6 weeks (23 days)</p>
+            <p className="text-charcoal font-semibold">6 weeks (23 days)</p>
           </div>
 
           {/* Next Start Dates */}
@@ -235,10 +252,14 @@ const ProgramsPage = () => {
                 Financial Assistance & Payment Options
               </h3>
               <p className="text-gray-dark mb-6 leading-relaxed">
-                We believe financial barriers should never hold you back. We've partnered with trusted organizations to provide affordable payment solutions.
+                We believe financial barriers should never hold you back. We accept payments through Stripe with flexible options and have partnered with trusted organizations to provide affordable payment solutions.
               </p>
 
               <div className="space-y-4 mb-8">
+                <div className="bg-neutral-light rounded-lg p-4">
+                  <h4 className="font-semibold text-charcoal mb-1">Stripe Payment Processing</h4>
+                  <p className="text-sm text-gray-dark">Full tuition or payment plans via Klarna, Afterpay, Zip, Apple Pay & more</p>
+                </div>
                 <div className="bg-neutral-light rounded-lg p-4">
                   <h4 className="font-semibold text-charcoal mb-1">Self-Help Federal Credit Union</h4>
                   <p className="text-sm text-gray-dark">Payment plans, loans, and financing support available</p>
@@ -271,8 +292,8 @@ const ProgramsPage = () => {
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button variant="secondary" size="lg" asChild>
-                <Link to="/contact">
-                  Contact an Advisor <ArrowRight className="ml-2 h-5 w-5" />
+                <Link to="/programs/admissions">
+                  See Full Enrollment Process <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button 
