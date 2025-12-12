@@ -40,9 +40,9 @@ const GalleryPage = () => {
       />
 
       {/* Gallery Intro */}
-      <section className="py-12 bg-background">
+      <section className="py-8 bg-background">
         <div className="container-custom text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="flex items-center justify-center gap-3 mb-3">
             <Camera className="h-8 w-8 text-purple" />
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal">
               Our Gallery
@@ -83,8 +83,8 @@ const GalleryPage = () => {
           </div>
 
           {/* Coming Soon Message */}
-          <div className="mt-12 text-center bg-background rounded-xl p-8 shadow-soft">
-            <ImageIcon className="h-12 w-12 text-purple/30 mx-auto mb-4" />
+          <div className="mt-8 text-center bg-background rounded-xl p-6 shadow-soft">
+            <ImageIcon className="h-10 w-10 text-purple/30 mx-auto mb-3" />
             <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
               More Photos Coming Soon!
             </h3>
@@ -98,10 +98,10 @@ const GalleryPage = () => {
       {/* CTA Section */}
       <section className="gradient-hero section-padding">
         <div className="container-custom text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-3">
             Be Part of Our Story
           </h2>
-          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-8 text-lg">
+          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-6 text-lg">
             Join the Health Star Academy community and start your journey to a rewarding healthcare career.
           </p>
           <Button variant="secondary" size="xl" asChild>

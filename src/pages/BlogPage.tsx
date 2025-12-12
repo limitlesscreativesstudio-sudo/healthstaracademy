@@ -60,8 +60,8 @@ const BlogPage = () => {
       {/* Articles Grid */}
       <section className="section-padding bg-background">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
               Latest Articles
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
@@ -69,7 +69,7 @@ const BlogPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles.map((article, index) => (
               <article
                 key={article.slug}
@@ -121,8 +121,8 @@ const BlogPage = () => {
       {/* Social Media Section */}
       <section className="section-padding bg-neutral-light">
         <div className="container-custom">
-          <div className="text-center mb-10">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
               Follow Us on Social Media
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
@@ -130,7 +130,7 @@ const BlogPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {/* Instagram Card */}
             <a 
               href="https://www.instagram.com/healthstaracademy/" 
@@ -185,10 +185,10 @@ const BlogPage = () => {
       {/* CTA Section */}
       <section className="gradient-accent section-padding">
         <div className="container-custom text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-3">
             Ready to Start Your Healthcare Career?
           </h2>
-          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-8 text-lg">
+          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-6 text-lg">
             Turn your interest into action. Enroll in our CDPH-approved CNA program today!
           </p>
           <Button variant="secondary" size="lg" asChild>

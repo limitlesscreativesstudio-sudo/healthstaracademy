@@ -63,9 +63,9 @@ const AboutPage = () => {
       />
 
       {/* Mission Statement */}
-      <section className="bg-gradient-to-r from-purple via-magenta to-cyan py-12">
+      <section className="bg-gradient-to-r from-purple via-magenta to-cyan py-8">
         <div className="container-custom text-center">
-          <h2 className="font-heading text-2xl md:text-3xl font-bold text-primary-foreground mb-4">Our Mission</h2>
+          <h2 className="font-heading text-2xl md:text-3xl font-bold text-primary-foreground mb-3">Our Mission</h2>
           <p className="text-primary-foreground/95 text-lg md:text-xl max-w-4xl mx-auto leading-relaxed">
             At Health Star Academy, our mission is to be a leading provider of online CNA education by equipping students with the knowledge, skills, and confidence needed to begin a successful career in healthcare. We are committed to delivering high-quality, flexible training that prepares future Certified Nursing Assistants to excel in patient care and make a lasting impact in their communities.
           </p>
@@ -75,9 +75,9 @@ const AboutPage = () => {
       {/* Our Story Section */}
       <section className="section-padding bg-background">
         <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div className="animate-slide-in-left">
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-6">Our Story</h2>
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Our Story</h2>
               <p className="text-gray-dark mb-4 leading-relaxed">
                 Health Star Academy was founded to be a leading provider of online CNA education, equipping students with the knowledge, skills, and confidence needed to begin a successful career in healthcare.
               </p>
@@ -98,14 +98,14 @@ const AboutPage = () => {
       {/* Leadership Team */}
       <section className="section-padding bg-neutral-light">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Our Leadership</h2>
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">Our Leadership</h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
               Health Star Academy was founded by two experienced healthcare professionals with a combined 60+ years in the field.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-10">
             {leadership.map((leader, index) => (
               <div key={leader.name} className="bg-background rounded-xl overflow-hidden shadow-soft hover:shadow-medium transition-shadow animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
                 <img src={leader.image} alt={leader.name} className="w-full h-64 object-cover object-top" />
@@ -118,14 +118,14 @@ const AboutPage = () => {
             ))}
           </div>
 
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Our Instructors</h2>
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">Our Instructors</h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
               Our team is made up of experienced clinical professionals who bring real-world expertise and a passion for teaching.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {instructors.map((instructor, index) => (
               <div key={instructor.name} className="bg-background rounded-xl overflow-hidden shadow-soft hover:shadow-medium transition-shadow animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
                 <img src={instructor.image} alt={instructor.name} className="w-full h-64 object-cover object-top" />
@@ -143,10 +143,10 @@ const AboutPage = () => {
       {/* Why Choose Us */}
       <section className="section-padding bg-background">
         <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div>
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-6">Why Choose Health Star Academy?</h2>
-              <p className="text-gray-dark mb-8">We provide a supportive learning environment that prepares future healthcare professionals to thrive.</p>
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Why Choose Health Star Academy?</h2>
+              <p className="text-gray-dark mb-6">We provide a supportive learning environment that prepares future healthcare professionals to thrive.</p>
               <div className="grid grid-cols-1 gap-4">
                 {whyChooseUs.map((item, index) => (
                   <div key={item.text} className="flex items-center gap-3 animate-fade-in-up" style={{ animationDelay: `${index * 50}ms` }}>
@@ -183,8 +183,8 @@ const AboutPage = () => {
       {/* CTA Section */}
       <section className="gradient-accent section-padding">
         <div className="container-custom text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-4">Ready to Learn from the Best?</h2>
-          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-8 text-lg">Discover our comprehensive CNA program and see how we can help you achieve your healthcare career goals.</p>
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-3">Ready to Learn from the Best?</h2>
+          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-6 text-lg">Discover our comprehensive CNA program and see how we can help you achieve your healthcare career goals.</p>
           <Button variant="secondary" size="lg" asChild>
             <Link to="/programs">Explore Our Program <ArrowRight className="ml-2 h-5 w-5" /></Link>
           </Button>
