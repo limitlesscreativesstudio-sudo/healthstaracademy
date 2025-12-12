@@ -67,7 +67,7 @@ const AboutPage = () => {
         <div className="container-custom text-center">
           <h2 className="font-heading text-2xl md:text-3xl font-bold text-primary-foreground mb-4">Our Mission</h2>
           <p className="text-primary-foreground/95 text-lg md:text-xl max-w-4xl mx-auto leading-relaxed">
-            To empower individuals from all backgrounds with accessible, high-quality CNA training that opens doors to meaningful healthcare careers. We are committed to fostering compassionate, skilled caregivers who make a positive impact in their communities.
+            At Health Star Academy, our mission is to be a leading provider of online CNA education by equipping students with the knowledge, skills, and confidence needed to begin a successful career in healthcare. We are committed to delivering high-quality, flexible training that prepares future Certified Nursing Assistants to excel in patient care and make a lasting impact in their communities.
           </p>
         </div>
       </section>
