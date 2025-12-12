@@ -22,11 +22,11 @@ const TopInfoBar = () => {
               <span className="hidden sm:inline">(916) 208-8097</span>
             </a>
             <a 
-              href="mailto:healthstaracademy01@gmail.com" 
+              href="mailto:info@healthstaracademy.org" 
               className="flex items-center gap-2 hover:text-cyan transition-colors"
             >
               <Mail className="h-4 w-4" />
-              <span className="hidden md:inline">healthstaracademy01@gmail.com</span>
+              <span className="hidden md:inline">info@healthstaracademy.org</span>
               <span className="md:hidden">Email Us</span>
             </a>
             <div className="hidden lg:flex items-center gap-2">
