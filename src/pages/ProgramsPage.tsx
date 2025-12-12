@@ -41,14 +41,13 @@ const ProgramsPage = () => {
   ];
 
   const tuitionBreakdown = [
-    { item: "Instruction & Materials", cost: "$1,586" },
-    { item: "Chromebook (provided to use while in program)", cost: "$249" },
-    { item: "Textbooks & Study Guides", cost: "Included" },
-    { item: "Skills Practice Kit", cost: "Included" },
-    { item: "Scrubs (1 set)", cost: "Included" },
-    { item: "Blood Pressure Cuff & Stethoscope", cost: "Included" },
-    { item: "State Certification Exam Prep", cost: "Included" },
-    { item: "CPR/BLS Certification", cost: "Included" },
+    { item: "Tuition", cost: "$2,184" },
+    { item: "Lab Supplies", cost: "$100" },
+    { item: "LiveScan Background Check", cost: "$80" },
+    { item: "Textbook", cost: "$45" },
+    { item: "Uniform (Scrubs)", cost: "$35" },
+    { item: "Workbook", cost: "$30" },
+    { item: "Blood Pressure Cuff & Stethoscope", cost: "$25" },
   ];
 
   return (
@@ -221,7 +220,7 @@ const ProgramsPage = () => {
               </div>
               
               <div className="bg-purple/5 rounded-lg p-6 mb-6">
-                <p className="text-4xl font-bold text-purple mb-2">$1,835</p>
+                <p className="text-4xl font-bold text-purple mb-2">$2,499</p>
                 <p className="text-gray-dark text-sm">Total Program Cost (Everything Included)</p>
               </div>
 

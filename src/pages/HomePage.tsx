@@ -75,23 +75,23 @@ const HomePage = () => {
 
   const testimonials = [
     {
+      quote: "Highly qualified instructors, extremely knowledgeable.",
+      name: "Sheila L.",
+      role: "Google Review ★★★★★",
+    },
+    {
+      quote: "It's been an experience I'll remember for the rest of my life.",
+      name: "Chiara N.",
+      role: "Google Review ★★★★★",
+    },
+    {
+      quote: "Healthcare delivery thrives with thoroughly trained CNAs!",
+      name: "Sheremoya RN",
+      role: "Google Review ★★★★★",
+    },
+    {
       quote: "Amazing program! The instructors are up to date with knowledge, teach well, and are generous with their ideas!",
       name: "Trevor H.",
-      role: "CNA Graduate",
-    },
-    {
-      quote: "Excellent learning tool, concise and clear videos, explained well. Highly recommend this program to anyone looking to start their healthcare career.",
-      name: "Jenna K.",
-      role: "CNA Graduate",
-    },
-    {
-      quote: "Best CNA program in the area! The staff genuinely cares about your success. I passed my state exam on the first try!",
-      name: "Maria L.",
-      role: "CNA Graduate",
-    },
-    {
-      quote: "Health Star Academy gave me the confidence I needed to start my healthcare career. The hands-on training was exceptional!",
-      name: "David M.",
       role: "CNA Graduate",
     },
   ];
@@ -244,6 +244,11 @@ const HomePage = () => {
       <section className="section-padding bg-neutral-light">
         <div className="container-custom">
           <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="text-2xl font-bold text-charcoal">5.0</span>
+              <span className="text-yellow-500 text-xl">★★★★★</span>
+              <span className="text-gray-dark text-sm">(10 Google Reviews)</span>
+            </div>
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
               What Others Say About Us
             </h2>
