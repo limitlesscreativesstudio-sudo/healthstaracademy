@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft, Calendar, User, Clock } from "lucide-react";
+import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
+import studentsTrainingGroup from "@/assets/students-training-group.png";
+import instructorStethoscopeTraining from "@/assets/instructor-stethoscope-training.jpg";
 
 const CNATrainingExcellence = () => {
   return (
@@ -41,6 +44,14 @@ const CNATrainingExcellence = () => {
       <article className="section-padding bg-background">
         <div className="container-custom">
           <div className="max-w-3xl mx-auto prose prose-lg">
+            {/* Featured Image */}
+            <div className="mb-10 rounded-xl overflow-hidden shadow-soft">
+              <img 
+                src={instructorTeachingMannequin} 
+                alt="CNA instructor teaching student with clinical mannequin" 
+                className="w-full h-64 md:h-80 object-cover"
+              />
+            </div>
             <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">Introduction: The Importance of Quality CNA Training</h2>
             <p className="text-gray-dark mb-6 leading-relaxed">
               Choosing a Certified Nursing Assistant training program is one of the most important decisions you'll make in your healthcare career. The quality of your training directly impacts your competence, confidence, and success in the field. Not all CNA programs are created equal, and understanding what distinguishes excellent programs from mediocre ones can save you time, money, and frustration while setting you up for long-term career success.
@@ -74,6 +85,16 @@ const CNATrainingExcellence = () => {
               At Health Star Academy, our hybrid program includes 60 hours of online theory and 100 hours of clinical training. This structure provides the flexibility of online learning while ensuring graduates have extensive hands-on experience. Students receive a Chromebook valued at $499 to access course materials, eliminating technology barriers that might otherwise impede learning.
             </p>
 
+            {/* Inline Image */}
+            <div className="my-10 rounded-xl overflow-hidden shadow-soft">
+              <img 
+                src={studentsTrainingGroup} 
+                alt="Diverse CNA students practicing clinical skills together" 
+                className="w-full h-64 md:h-72 object-cover"
+              />
+              <p className="text-center text-sm text-gray-dark bg-neutral-light py-3 italic">Students learn hands-on clinical skills under expert supervision</p>
+            </div>
+
             <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">The Critical Role of Clinical Training</h2>
             <p className="text-gray-dark mb-6 leading-relaxed">
               Clinical training is where CNA education truly comes to life. During clinical hours, students transition from learning about patient care to actually providing it. This supervised practice is essential for developing the confidence and competence employers expect from new CNAs.
@@ -87,6 +108,16 @@ const CNATrainingExcellence = () => {
             <p className="text-gray-dark mb-6 leading-relaxed">
               The student-to-instructor ratio during clinicals significantly impacts learning quality. Small groups allow instructors to provide individualized attention, observe each student's technique, and offer targeted feedback. Programs with overcrowded clinical sessions often leave students feeling overlooked and underprepared.
             </p>
+
+            {/* Inline Image */}
+            <div className="my-10 rounded-xl overflow-hidden shadow-soft">
+              <img 
+                src={instructorStethoscopeTraining} 
+                alt="Experienced instructor guiding student with stethoscope technique" 
+                className="w-full h-64 md:h-72 object-cover"
+              />
+              <p className="text-center text-sm text-gray-dark bg-neutral-light py-3 italic">Our RN instructors bring real-world experience to every lesson</p>
+            </div>
 
             <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Instructor Qualifications Matter</h2>
             <p className="text-gray-dark mb-6 leading-relaxed">

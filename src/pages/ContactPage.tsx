@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import HeroBanner from "@/components/HeroBanner";
-import heroPrograms from "@/assets/hero-programs.jpg";
+import studentSmilingStethoscope from "@/assets/student-smiling-stethoscope.jpg";
 
 const ContactPage = () => {
   const { toast } = useToast();
@@ -70,8 +70,8 @@ const ContactPage = () => {
     <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
-        imageSrc={heroPrograms}
-        imageAlt="Health Star Academy team ready to help"
+        imageSrc={studentSmilingStethoscope}
+        imageAlt="Health Star Academy student ready to help patients"
         title={
           <>
             We're Here to<br />

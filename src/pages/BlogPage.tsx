@@ -2,7 +2,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, User, Clock } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
-import heroPrograms from "@/assets/hero-programs.jpg";
+import studentSmilingStethoscope from "@/assets/student-smiling-stethoscope.jpg";
+import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
+import cnaStudentsGroup from "@/assets/cna-students-group.png";
+import diverseStudentsTraining from "@/assets/diverse-students-training.jpg";
 
 const BlogPage = () => {
   const articles = [
@@ -14,6 +17,7 @@ const BlogPage = () => {
       date: "December 10, 2024",
       readTime: "12 min read",
       category: "Career Guide",
+      image: studentSmilingStethoscope,
     },
     {
       slug: "cna-training-excellence",
@@ -23,6 +27,7 @@ const BlogPage = () => {
       date: "December 8, 2024",
       readTime: "10 min read",
       category: "Training",
+      image: instructorTeachingMannequin,
     },
     {
       slug: "nursing-career-foundations",
@@ -32,6 +37,7 @@ const BlogPage = () => {
       date: "December 5, 2024",
       readTime: "11 min read",
       category: "Career Advancement",
+      image: cnaStudentsGroup,
     },
   ];
 
@@ -39,7 +45,7 @@ const BlogPage = () => {
     <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
-        imageSrc={heroPrograms}
+        imageSrc={diverseStudentsTraining}
         imageAlt="Health Star Academy blog and resources"
         title={
           <>
@@ -70,6 +76,14 @@ const BlogPage = () => {
                 className="bg-neutral-light rounded-xl overflow-hidden shadow-soft hover:shadow-medium transition-shadow animate-fade-in-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
+                {/* Article Thumbnail */}
+                <div className="h-48 overflow-hidden">
+                  <img 
+                    src={article.image} 
+                    alt={article.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
                 <div className="p-6">
                   <div className="flex items-center gap-4 mb-4">
                     <span className="bg-purple/10 text-purple px-3 py-1 rounded-full text-xs font-semibold">

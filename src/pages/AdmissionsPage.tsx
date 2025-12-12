@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FileText, Users, ClipboardCheck, CreditCard, GraduationCap, ArrowRight, ChevronDown, ChevronUp, HelpCircle, Download, Laptop, CheckCircle, BookOpen, CalendarCheck, UserCheck } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
-import heroPrograms from "@/assets/hero-programs.jpg";
+import studentBloodPressure from "@/assets/student-blood-pressure.jpg";
 import { useState } from "react";
 
 const ENROLLMENT_LINK = "https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true";
@@ -46,8 +46,8 @@ const AdmissionsPage = () => {
     <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
-        imageSrc={heroPrograms}
-        imageAlt="Health Star Academy students ready to enroll"
+        imageSrc={studentBloodPressure}
+        imageAlt="Health Star Academy student practicing vital signs"
         title={
           <>
             Your Application<br />

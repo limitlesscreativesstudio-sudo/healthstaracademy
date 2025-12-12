@@ -2,9 +2,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Award, Users, Stethoscope, HeartHandshake, ArrowRight, CheckCircle } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
-import instructorJane from "@/assets/instructor-jane.jpg";
-import instructorJohn from "@/assets/instructor-john.jpg";
-import trainingLab from "@/assets/training-lab.jpg";
+import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
+import instructorStethoscopeTraining from "@/assets/instructor-stethoscope-training.jpg";
+import diverseStudentsTraining from "@/assets/diverse-students-training.jpg";
+import cnaPatientCare from "@/assets/cna-patient-care.png";
 
 const AboutPage = () => {
   const whyChooseUs = [
@@ -20,13 +21,13 @@ const AboutPage = () => {
     {
       name: "Agnes Adebe, LPN",
       role: "Co-Owner & Program Director",
-      image: instructorJane,
+      image: instructorTeachingMannequin,
       bio: "With over 30 years of experience in healthcare, Agnes brings a wealth of clinical knowledge and a passion for mentoring the next generation of CNAs.",
     },
     {
       name: "Kimberly Nelson, RN",
       role: "Co-Owner & Program Administrator",
-      image: instructorJohn,
+      image: instructorStethoscopeTraining,
       bio: "With over 30 years of nursing experience, Kimberly ensures our program delivers excellence in both education and student support.",
     },
   ];
@@ -35,13 +36,13 @@ const AboutPage = () => {
     {
       name: "RN Instructor",
       role: "Lead Instructor",
-      image: instructorJane,
+      image: instructorTeachingMannequin,
       bio: "Our lead instructors bring years of bedside nursing experience and a passion for training the next generation of CNAs with real-world, hands-on skills.",
     },
     {
       name: "Clinical Instructor",
       role: "Clinical Training",
-      image: instructorJohn,
+      image: instructorStethoscopeTraining,
       bio: "Our clinical instructors provide supportive, personalized guidance at approved healthcare facilities to build your confidence for your first CNA position.",
     },
   ];
@@ -50,8 +51,8 @@ const AboutPage = () => {
     <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
-        imageSrc={trainingLab}
-        imageAlt="Health Star Academy clinical training"
+        imageSrc={cnaPatientCare}
+        imageAlt="Health Star Academy CNA providing compassionate patient care"
         title={
           <>
             Quality, Affordable<br />
@@ -78,7 +79,7 @@ const AboutPage = () => {
               </p>
             </div>
             <div className="animate-slide-in-right">
-              <img src={trainingLab} alt="Health Star Academy clinical training" className="rounded-xl shadow-medium w-full" />
+              <img src={diverseStudentsTraining} alt="Health Star Academy diverse students in clinical training" className="rounded-xl shadow-medium w-full" />
             </div>
           </div>
         </div>
