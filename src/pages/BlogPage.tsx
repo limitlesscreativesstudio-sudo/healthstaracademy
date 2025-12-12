@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, Clock, Instagram, Facebook } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
+import SEO from "@/components/SEO";
 import studentsVitalsPractice from "@/assets/students-vitals-practice.jpg";
 import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
 import cnaStudentsConfident from "@/assets/cna-students-confident.jpg";
@@ -42,7 +43,14 @@ const BlogPage = () => {
   ];
 
   return (
-    <main className="pt-28 md:pt-32">
+    <>
+      <SEO
+        title="Blog | CNA Career Tips & Healthcare Insights | Health Star Academy"
+        description="Read expert articles on CNA careers, healthcare training tips, and nursing assistant certification guidance from Health Star Academy. Start your healthcare journey with valuable insights."
+        canonical="/blog"
+        keywords="CNA blog, nursing assistant career tips, healthcare career advice, CNA training articles, certified nursing assistant guide, healthcare education blog"
+      />
+      <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
         imageSrc={studentCareTraining}
@@ -199,6 +207,7 @@ const BlogPage = () => {
         </div>
       </section>
     </main>
+    </>
   );
 };
 

@@ -1,13 +1,24 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft, Calendar, User, Clock } from "lucide-react";
+import SEO from "@/components/SEO";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 import studentBloodPressure from "@/assets/student-blood-pressure.jpg";
 import cnaPatientCare from "@/assets/cna-patient-care.png";
 
 const NursingCareerFoundations = () => {
   return (
-    <main className="pt-30">
+    <>
+      <SEO
+        title="Nursing Career Foundations: From CNA to Advanced Nursing Roles"
+        description="Explore how starting as a CNA opens doors to LVN, RN, and advanced nursing positions. Learn about career advancement, salary growth, and education pathways in nursing."
+        canonical="/blog/nursing-career-foundations"
+        keywords="CNA to RN career path, nursing career advancement, LVN training, RN salary California, nursing career ladder, healthcare career progression"
+        type="article"
+        author="Health Star Academy"
+        publishedTime="2024-12-05"
+      />
+      <main className="pt-30">
       {/* Article Header */}
       <section className="gradient-hero py-16 md:py-20">
         <div className="container-custom">
@@ -225,6 +236,7 @@ const NursingCareerFoundations = () => {
         </div>
       </article>
     </main>
+    </>
   );
 };
 

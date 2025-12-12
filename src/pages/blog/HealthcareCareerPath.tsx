@@ -1,13 +1,24 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft, Calendar, User, Clock } from "lucide-react";
+import SEO from "@/components/SEO";
 import studentSmilingStethoscope from "@/assets/student-smiling-stethoscope.jpg";
 import cnaPatientCare from "@/assets/cna-patient-care.png";
 import diverseStudentsTraining from "@/assets/diverse-students-training.jpg";
 
 const HealthcareCareerPath = () => {
   return (
-    <main className="pt-30">
+    <>
+      <SEO
+        title="The Healthcare Career Path: Complete Guide to Starting a Healthcare Career"
+        description="Discover opportunities in healthcare and learn why becoming a Certified Nursing Assistant (CNA) is the perfect first step. Explore career paths, salary expectations, and training options in California."
+        canonical="/blog/healthcare-career-path"
+        keywords="healthcare career path, CNA career guide, nursing assistant jobs, healthcare career opportunities, how to become a CNA, healthcare industry growth"
+        type="article"
+        author="Health Star Academy"
+        publishedTime="2024-12-10"
+      />
+      <main className="pt-30">
       {/* Article Header */}
       <section className="gradient-hero py-16 md:py-20">
         <div className="container-custom">
@@ -182,6 +193,7 @@ const HealthcareCareerPath = () => {
         </div>
       </article>
     </main>
+    </>
   );
 };
 

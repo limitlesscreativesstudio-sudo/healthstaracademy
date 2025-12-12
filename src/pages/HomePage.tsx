@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
+import SEO from "@/components/SEO";
 import cnaStudentsConfident from "@/assets/cna-students-confident.jpg";
 import studentCareTraining from "@/assets/student-care-training.jpg";
 
@@ -117,7 +118,14 @@ const HomePage = () => {
   };
 
   return (
-    <main className="pt-28 md:pt-32">
+    <>
+      <SEO
+        title="Health Star Academy | CNA Training in Stockton, CA | CDPH Approved"
+        description="Health Star Academy offers CDPH-approved hybrid CNA training in Stockton, Lodi & Hayward, CA. Complete your certification in just 6 weeks with online theory and hands-on clinical training. Enroll today!"
+        canonical="/"
+        keywords="CNA training Stockton, CNA classes California, certified nursing assistant training, CDPH approved CNA program, hybrid CNA course, CNA certification Stockton CA, nursing assistant school, Lodi CNA training, Hayward CNA classes"
+      />
+      <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
         imageSrc={cnaStudentsConfident}
@@ -346,6 +354,7 @@ const HomePage = () => {
         </div>
       </section>
     </main>
+    </>
   );
 };
 
