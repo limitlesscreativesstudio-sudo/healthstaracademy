@@ -158,7 +158,7 @@ const AdmissionsPage = () => {
       <section className="section-padding bg-background">
         <div className="container-custom">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Flexible Payment Options</h2>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Payment Options</h2>
             <p className="text-gray-dark max-w-2xl mx-auto">We've partnered with trusted payment providers to make your education accessible.</p>
           </div>
           
@@ -173,11 +173,16 @@ const AdmissionsPage = () => {
               <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Self-Help Credit Union</h3>
               <p className="text-gray-dark text-sm">Payment plans, loans, and financing support available</p>
             </div>
-            <div className="bg-neutral-light rounded-xl p-6 text-center">
+            <a 
+              href="https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-neutral-light rounded-xl p-6 text-center hover:bg-cyan/10 transition-colors border-2 border-transparent hover:border-cyan"
+            >
               <Users className="h-10 w-10 text-purple mx-auto mb-4" />
               <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Denefits Financing</h3>
-              <p className="text-gray-dark text-sm">No credit check, guaranteed approvals, instant pre-approval</p>
-            </div>
+              <p className="text-gray-dark text-sm">No credit check, guaranteed approvals. Click to apply!</p>
+            </a>
           </div>
         </div>
       </section>

@@ -40,14 +40,8 @@ const ProgramsPage = () => {
   ];
 
   const tuitionBreakdown = [
-    { item: "Tuition", cost: "$2,184" },
+    { item: "Tuition", cost: "$1,186" },
     { item: "Chromebook", cost: "$499" },
-    { item: "Uniform", cost: "$35" },
-    { item: "Textbook", cost: "$45" },
-    { item: "Workbook", cost: "$30" },
-    { item: "BP Cuff/Stethoscope", cost: "$25" },
-    { item: "Lab Supplies", cost: "$100" },
-    { item: "LiveScan", cost: "$80" },
   ];
 
   return (
@@ -135,7 +129,7 @@ const ProgramsPage = () => {
               Daytime Program Schedule
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
-              Our daytime program runs Monday through Friday, allowing you to complete your training in 6 weeks.
+              Our daytime program runs Monday through Thursday, allowing you to complete your training in 6 weeks.
             </p>
           </div>
 
@@ -144,9 +138,9 @@ const ProgramsPage = () => {
             <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
               Daytime Program
             </h3>
-            <p className="text-purple font-medium mb-1">Monday - Friday</p>
-            <p className="text-gray-dark text-sm mb-2">6:00 AM - 3:00 PM</p>
-            <p className="text-charcoal font-semibold">6 weeks (23 days)</p>
+            <p className="text-purple font-medium mb-1">Monday - Thursday</p>
+            <p className="text-gray-dark text-sm mb-2">6:00 AM - 2:30 PM</p>
+            <p className="text-charcoal font-semibold">6 Weeks</p>
           </div>
 
           {/* Next Start Dates */}
@@ -231,7 +225,7 @@ const ProgramsPage = () => {
               </div>
               
               <div className="bg-purple/5 rounded-lg p-6 mb-6">
-                <p className="text-4xl font-bold text-purple mb-2">$2,499</p>
+                <p className="text-4xl font-bold text-purple mb-2">$1,685</p>
                 <p className="text-gray-dark text-sm">Total Program Cost (Everything Included)</p>
               </div>
 
@@ -252,7 +246,7 @@ const ProgramsPage = () => {
                 Financial Assistance & Payment Options
               </h3>
               <p className="text-gray-dark mb-6 leading-relaxed">
-                We believe financial barriers should never hold you back. We accept payments through Stripe with flexible options and have partnered with trusted organizations to provide affordable payment solutions.
+                We believe financial barriers should never hold you back. We accept payments through Stripe and have partnered with trusted organizations to provide affordable payment solutions.
               </p>
 
               <div className="space-y-4 mb-8">
@@ -264,10 +258,15 @@ const ProgramsPage = () => {
                   <h4 className="font-semibold text-charcoal mb-1">Self-Help Federal Credit Union</h4>
                   <p className="text-sm text-gray-dark">Payment plans, loans, and financing support available</p>
                 </div>
-                <div className="bg-neutral-light rounded-lg p-4">
+                <a 
+                  href="https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block bg-neutral-light rounded-lg p-4 hover:bg-cyan/10 transition-colors border-2 border-transparent hover:border-cyan"
+                >
                   <h4 className="font-semibold text-charcoal mb-1">Denefits - No Credit Check Financing</h4>
-                  <p className="text-sm text-gray-dark">Guaranteed approvals, instant pre-approval, flexible monthly payments</p>
-                </div>
+                  <p className="text-sm text-gray-dark">Guaranteed approvals, instant pre-approval, monthly payments. Click to apply!</p>
+                </a>
               </div>
 
               <p className="text-sm text-gray-dark italic mb-4">
