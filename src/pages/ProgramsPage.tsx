@@ -64,12 +64,22 @@ const ProgramsPage = () => {
     { course: "Abuse", hours: "2" },
   ];
 
+  const gradingScale = [
+    { numerical: "100-90", letter: "A", points: "4.0" },
+    { numerical: "89-80", letter: "B", points: "3.0" },
+    { numerical: "79-70", letter: "C", points: "2.0" },
+    { numerical: "69-60", letter: "D", points: "1.0" },
+    { numerical: "Below 60", letter: "F", points: "0.0" },
+    { numerical: "Incomplete", letter: "I", points: "0.0" },
+    { numerical: "Withdraw", letter: "W", points: "0.0" },
+  ];
+
   const graduationRequirements = [
     { requirement: "Attendance", description: "Minimum 90% attendance for all theory and clinical sessions" },
     { requirement: "Theory Completion", description: "Complete all 60 hours of online theory coursework with passing scores" },
     { requirement: "Clinical Hours", description: "Complete all 100 hours of supervised clinical training" },
     { requirement: "Skills Competency", description: "Demonstrate proficiency in all 22 required CNA skills" },
-    { requirement: "Final Exam", description: "Pass the final written examination with a score of 75% or higher" },
+    { requirement: "Final Exam", description: "Pass the final written examination with a score of 70% or higher" },
     { requirement: "Clinical Evaluation", description: "Receive satisfactory evaluation from clinical instructor" },
   ];
 
@@ -414,6 +424,37 @@ const ProgramsPage = () => {
                   <span className="text-gray-dark w-2/3">{item.description}</span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Grading Scale */}
+          <div className="mt-12">
+            <h3 className="font-heading text-2xl font-bold text-charcoal mb-6 text-center">
+              Grading Scale
+            </h3>
+            <p className="text-gray-dark text-center max-w-2xl mx-auto mb-8">
+              Grades are evaluated separately for classroom, lab, and clinicals. Students must receive an overall course grade of 70% or higher to pass and receive a certificate of completion.
+            </p>
+            <div className="bg-background rounded-xl overflow-hidden shadow-soft max-w-xl mx-auto">
+              <div className="bg-purple text-primary-foreground px-6 py-3">
+                <div className="grid grid-cols-3 text-center">
+                  <span className="font-semibold">Numerical Grade</span>
+                  <span className="font-semibold">Letter Grade</span>
+                  <span className="font-semibold">Grade Point</span>
+                </div>
+              </div>
+              <div className="divide-y divide-border">
+                {gradingScale.map((grade, index) => (
+                  <div
+                    key={grade.numerical}
+                    className="grid grid-cols-3 text-center px-6 py-3 hover:bg-neutral-light transition-colors"
+                  >
+                    <span className="text-charcoal">{grade.numerical}</span>
+                    <span className="font-bold text-purple">{grade.letter}</span>
+                    <span className="text-gray-dark">{grade.points}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
