@@ -39,26 +39,38 @@ const ProgramsPage = () => {
   ];
 
   const upcomingDates = [
-    { date: "January 6, 2026", endDate: "February 17, 2026" },
-    { date: "February 23, 2026", endDate: "April 6, 2026" },
-    { date: "April 13, 2026", endDate: "May 25, 2026" },
-    { date: "June 1, 2026", endDate: "July 13, 2026" },
-    { date: "July 20, 2026", endDate: "August 31, 2026" },
-    { date: "September 8, 2026", endDate: "October 19, 2026" },
-    { date: "October 26, 2026", endDate: "December 7, 2026" },
-    { date: "December 14, 2026", endDate: "January 25, 2027" },
-    { date: "February 1, 2027", endDate: "March 15, 2027" },
-    { date: "March 22, 2027", endDate: "May 3, 2027" },
-    { date: "May 10, 2027", endDate: "June 21, 2027" },
-    { date: "June 28, 2027", endDate: "August 9, 2027" },
+    { date: "May 19, 2025", endDate: "June 30, 2025" },
+    { date: "July 7, 2025", endDate: "August 18, 2025" },
+    { date: "August 25, 2025", endDate: "October 6, 2025" },
+    { date: "October 13, 2025", endDate: "November 25, 2025" },
+    { date: "December 1, 2025", endDate: "January 19, 2026" },
+    { date: "January 26, 2026", endDate: "March 9, 2026" },
+    { date: "March 16, 2026", endDate: "April 27, 2026" },
+    { date: "May 4, 2026", endDate: "June 15, 2026" },
+    { date: "July 6, 2026", endDate: "August 17, 2026" },
+    { date: "August 24, 2026", endDate: "October 5, 2026" },
+    { date: "October 12, 2026", endDate: "November 23, 2026" },
+    { date: "December 7, 2026", endDate: "January 18, 2027" },
   ];
 
   const curriculum = [
-    { module: "Module 1-3", title: "Introductions, Patients' Rights & Interpersonal Skills" },
-    { module: "Module 4-6", title: "Catastrophe Prevention, Body Mechanics & Asepsis" },
-    { module: "Module 7-9", title: "Weights/Measures, Patient Care Skills & Procedures" },
-    { module: "Module 10-12", title: "Vital Signs, Nutrition & Emergency Procedures" },
-    { module: "Module 13-17", title: "Long-Term Care, Rehab Nursing, Charting, Death/Dying & Abuse" },
+    { module: "Module 1", title: "Introductions" },
+    { module: "Module 2", title: "Patients' Rights" },
+    { module: "Module 3", title: "Interpersonal Skills" },
+    { module: "Module 4", title: "Prevention and Management of Catastrophe and Unusual Occurrences" },
+    { module: "Module 5", title: "Body Mechanics" },
+    { module: "Module 6", title: "Medical and Surgical Asepsis" },
+    { module: "Module 7", title: "Weights and Measures" },
+    { module: "Module 8", title: "Patient Care Skills" },
+    { module: "Module 9", title: "Patient Care Procedures" },
+    { module: "Module 10", title: "Vital Signs" },
+    { module: "Module 11", title: "Nutrition" },
+    { module: "Module 12", title: "Emergency Procedures" },
+    { module: "Module 13", title: "Long-Term Care Patient" },
+    { module: "Module 14", title: "Rehabilitative Nursing" },
+    { module: "Module 15", title: "Observation and Charting" },
+    { module: "Module 16", title: "Death and Dying" },
+    { module: "Module 17", title: "Abuse" },
   ];
 
   const requiredCoursework = [
@@ -106,6 +118,7 @@ const ProgramsPage = () => {
   ];
 
   const [isCourseworkOpen, setIsCourseworkOpen] = useState(false);
+  const [isModulesOpen, setIsModulesOpen] = useState(false);
 
   const tuitionBreakdown = [
     { item: "Tuition", cost: "$2,184" },
@@ -498,33 +511,41 @@ const ProgramsPage = () => {
           </Collapsible>
 
           {/* What You'll Learn - Modules */}
-          <div className="text-center mb-6">
-            <h3 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-3">
-              Curriculum Modules
-            </h3>
-            <p className="text-gray-dark max-w-2xl mx-auto">
-              17 comprehensive modules covering everything you need to become a skilled, confident CNA.
-            </p>
-          </div>
-
-          <div className="space-y-3 max-w-4xl mx-auto">
-            {curriculum.map((item, index) => (
-              <div
-                key={item.module}
-                className="bg-neutral-light rounded-xl p-5 animate-fade-in-up"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="flex flex-col md:flex-row md:items-center gap-3">
-                  <span className="bg-purple text-primary-foreground px-4 py-2 rounded-lg font-semibold text-sm flex-shrink-0">
-                    {item.module}
-                  </span>
-                  <h3 className="font-heading font-semibold text-lg text-charcoal">
-                    {item.title}
-                  </h3>
+          <Collapsible open={isModulesOpen} onOpenChange={setIsModulesOpen} className="max-w-4xl mx-auto">
+            <div className="text-center mb-4">
+              <h3 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-2">
+                Curriculum Modules
+              </h3>
+              <p className="text-gray-dark max-w-2xl mx-auto">
+                17 comprehensive modules covering everything you need to become a skilled, confident CNA.
+              </p>
+            </div>
+            <CollapsibleTrigger className="w-full">
+              <div className="bg-cyan text-charcoal px-6 py-4 rounded-t-xl flex justify-between items-center cursor-pointer hover:bg-cyan/90 transition-colors">
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold">View All 17 Modules</span>
+                </div>
+                <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${isModulesOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="bg-neutral-light rounded-b-xl overflow-hidden shadow-soft">
+                <div className="divide-y divide-border">
+                  {curriculum.map((item, index) => (
+                    <div
+                      key={item.module}
+                      className="flex items-center gap-4 px-6 py-3 hover:bg-background transition-colors"
+                    >
+                      <span className="bg-purple text-primary-foreground px-3 py-1 rounded-lg font-semibold text-sm flex-shrink-0 min-w-[90px] text-center">
+                        {item.module}
+                      </span>
+                      <span className="text-charcoal">{item.title}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </section>
 
