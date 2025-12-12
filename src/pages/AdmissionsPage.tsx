@@ -164,11 +164,15 @@ const AdmissionsPage = () => {
               href="https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-neutral-light rounded-xl p-6 text-center hover:bg-cyan/10 transition-colors border-2 border-transparent hover:border-cyan"
+              className="bg-gradient-to-r from-cyan/20 to-magenta/20 rounded-xl p-6 text-center hover:from-cyan/30 hover:to-magenta/30 transition-all border-2 border-cyan shadow-md hover:shadow-lg"
             >
+              <div className="mb-2">
+                <span className="bg-cyan text-charcoal text-xs font-bold px-2 py-1 rounded">RECOMMENDED</span>
+              </div>
               <Users className="h-10 w-10 text-purple mx-auto mb-4" />
-              <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Denefits Financing</h3>
-              <p className="text-gray-dark text-sm">No credit check, guaranteed approvals. Click to apply!</p>
+              <h3 className="font-heading font-bold text-lg text-charcoal mb-2">Denefits Financing</h3>
+              <p className="text-gray-dark text-sm mb-2">No credit check, guaranteed approvals</p>
+              <span className="text-purple font-semibold text-sm">Click to apply now →</span>
             </a>
           </div>
         </div>

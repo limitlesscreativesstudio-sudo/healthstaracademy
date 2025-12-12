@@ -9,12 +9,12 @@ import cnaPatientCare from "@/assets/cna-patient-care.png";
 
 const AboutPage = () => {
   const whyChooseUs = [
-    "100% CDPH Approved Curriculum",
-    "Experienced RN & LPN Instructors",
-    "Hybrid Format - Online + In-Person",
-    "Clinical Training at Approved Facilities",
-    "Chromebook Included ($249 Value)",
-    "No Prerequisites Required",
+    { text: "100% CDPH Approved Curriculum", link: "https://www.cdph.ca.gov/Programs/CHCQ/LCP/Pages/Certified-Nurse-Assistant-Training-Programs.aspx" },
+    { text: "Experienced RN & LPN Instructors", link: null },
+    { text: "Hybrid Format - Online + In-Person", link: null },
+    { text: "Clinical Training at Approved Facilities", link: null },
+    { text: "Chromebook Included ($249 Value)", link: null },
+    { text: "No Prerequisites Required", link: null },
   ];
 
   const leadership = [
@@ -139,9 +139,15 @@ const AboutPage = () => {
               <p className="text-gray-dark mb-8">We provide a supportive learning environment that prepares future healthcare professionals to thrive.</p>
               <div className="grid grid-cols-1 gap-4">
                 {whyChooseUs.map((item, index) => (
-                  <div key={item} className="flex items-center gap-3 animate-fade-in-up" style={{ animationDelay: `${index * 50}ms` }}>
+                  <div key={item.text} className="flex items-center gap-3 animate-fade-in-up" style={{ animationDelay: `${index * 50}ms` }}>
                     <CheckCircle className="h-5 w-5 text-purple flex-shrink-0" />
-                    <span className="text-charcoal font-medium">{item}</span>
+                    {item.link ? (
+                      <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-charcoal font-medium hover:text-purple underline">
+                        {item.text}
+                      </a>
+                    ) : (
+                      <span className="text-charcoal font-medium">{item.text}</span>
+                    )}
                   </div>
                 ))}
               </div>

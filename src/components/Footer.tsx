@@ -36,51 +36,51 @@ const Footer = () => {
       </div>
 
       {/* Main Footer */}
-      <div className="container-custom py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+      <div className="container-custom py-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo & Tagline */}
           <div className="lg:col-span-1">
-            <Link to="/" className="flex items-center gap-3 mb-4">
+            <Link to="/" className="flex items-center gap-3 mb-3">
               <img 
                 src={logo} 
                 alt="Health Star Academy Logo" 
-                className="w-12 h-12 object-contain"
+                className="w-10 h-10 object-contain"
               />
-              <span className="font-heading font-bold text-xl text-primary-foreground">
+              <span className="font-heading font-bold text-lg text-primary-foreground">
                 Health Star Academy
               </span>
             </Link>
-            <p className="text-gray-medium text-sm leading-relaxed mb-6">
-              Empowering the next generation of compassionate healthcare professionals through quality, affordable CNA training.
+            <p className="text-gray-medium text-sm leading-relaxed mb-4">
+              Empowering the next generation of compassionate healthcare professionals through quality CNA training.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <a
                 href="https://www.facebook.com/healthstaracademy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-purple transition-colors"
+                className="w-9 h-9 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-purple transition-colors"
                 aria-label="Facebook"
               >
-                <Facebook className="h-5 w-5" />
+                <Facebook className="h-4 w-4" />
               </a>
               <a
                 href="https://www.instagram.com/healthstaracademy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-purple transition-colors"
+                className="w-9 h-9 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-purple transition-colors"
                 aria-label="Instagram"
               >
-                <Instagram className="h-5 w-5" />
+                <Instagram className="h-4 w-4" />
               </a>
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-heading font-semibold text-lg mb-6 text-primary-foreground">
+            <h3 className="font-heading font-semibold text-lg mb-4 text-primary-foreground">
               Quick Links
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2">
               {[
                 { name: "Home", path: "/" },
                 { name: "About Us", path: "/about" },
@@ -104,10 +104,10 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div>
-            <h3 className="font-heading font-semibold text-lg mb-6 text-primary-foreground">
+            <h3 className="font-heading font-semibold text-lg mb-4 text-primary-foreground">
               Contact Info
             </h3>
-            <ul className="space-y-4">
+            <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-cyan flex-shrink-0 mt-0.5" />
                 <span className="text-gray-medium text-sm">
@@ -145,22 +145,27 @@ const Footer = () => {
 
           {/* Accreditation */}
           <div>
-            <h3 className="font-heading font-semibold text-lg mb-6 text-primary-foreground">
+            <h3 className="font-heading font-semibold text-lg mb-4 text-primary-foreground">
               Accreditation
             </h3>
-            <p className="text-gray-medium text-sm mb-4">
-              Health Star Academy is 100% California Department of Public Health (CDPH) approved.
+            <p className="text-gray-medium text-sm mb-3">
+              Health Star Academy is 100%{" "}
+              <a 
+                href="https://www.cdph.ca.gov/Programs/CHCQ/LCP/Pages/Certified-Nurse-Assistant-Training-Programs.aspx" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-cyan hover:underline font-medium"
+              >
+                California Department of Public Health (CDPH)
+              </a>{" "}
+              approved.
             </p>
-            <div className="bg-primary-foreground/10 rounded-lg p-4 mb-4">
-              <p className="text-xs text-gray-medium">
-                State-Approved Hybrid CNA Training Program
-              </p>
-              <p className="text-xs text-gray-medium mt-2">
-                Clinical Training at Approved Healthcare Facilities
-              </p>
+            <div className="bg-primary-foreground/10 rounded-lg p-3 mb-3">
+              <p className="text-xs text-gray-medium">State-Approved Hybrid CNA Training</p>
+              <p className="text-xs text-gray-medium mt-1">Clinical Training at Approved Facilities</p>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-medium">
-              <Shield className="h-5 w-5 text-cyan" />
+              <Shield className="h-4 w-4 text-cyan" />
               <span>BBB Accredited Business</span>
             </div>
           </div>
