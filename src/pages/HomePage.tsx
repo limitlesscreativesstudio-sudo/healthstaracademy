@@ -90,9 +90,19 @@ const HomePage = () => {
       role: "Google Review ★★★★★",
     },
     {
-      quote: "Amazing program! The instructors are up to date with knowledge, teach well, and are generous with their ideas!",
-      name: "Trevor H.",
-      role: "CNA Graduate",
+      quote: "The best CNA training program in the area! The instructors truly care about your success and prepare you well for the state exam.",
+      name: "Marcus J.",
+      role: "Google Review ★★★★★",
+    },
+    {
+      quote: "I was nervous about starting a new career, but Health Star Academy made the process smooth and supportive. Passed my exam on the first try!",
+      name: "Angela R.",
+      role: "Google Review ★★★★★",
+    },
+    {
+      quote: "Excellent hands-on training at the clinical sites. The small class sizes meant I got personalized attention when I needed it.",
+      name: "David P.",
+      role: "Google Review ★★★★★",
     },
   ];
 
