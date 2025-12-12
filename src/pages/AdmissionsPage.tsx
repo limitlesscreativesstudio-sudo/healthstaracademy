@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FileText, Users, ClipboardCheck, CreditCard, GraduationCap, ArrowRight, ChevronDown, ChevronUp, HelpCircle, Download, Laptop, CheckCircle, BookOpen, CalendarCheck, UserCheck } from "lucide-react";
+import HeroBanner from "@/components/HeroBanner";
 import heroPrograms from "@/assets/hero-programs.jpg";
 import { useState } from "react";
 
@@ -15,7 +16,7 @@ const AdmissionsPage = () => {
     { step: 3, icon: FileText, title: "Enrollment Application & Fee", description: "Complete and sign the enrollment application, submit necessary documents, and pay the $175 enrollment fee to secure your spot." },
     { step: 4, icon: UserCheck, title: "LiveScan Background Check", description: "You'll receive an email with instructions to complete your LiveScan background check at an approved location." },
     { step: 5, icon: CalendarCheck, title: "Select Cohort & Pay Tuition", description: "Choose your preferred cohort start date and complete tuition payment using available payment options including Stripe, Klarna, Afterpay, Zip, or Apple Pay." },
-    { step: 6, icon: GraduationCap, title: "Enrollment & Orientation", description: "Once payment is complete, you're enrolled in Canvas LMS to access your course. You'll receive your orientation date where you'll get all tools needed—including your Chromebook ($499 value)—to access course materials." },
+    { step: 6, icon: GraduationCap, title: "Enrollment & Orientation", description: "Once payment is complete, you're enrolled in Canvas LMS to access your course. You'll receive your orientation date where you'll get all tools needed—including your Chromebook ($249 value)—to access course materials." },
   ];
 
   const requirements = [
@@ -38,38 +39,24 @@ const AdmissionsPage = () => {
     { question: "Do I need a high school diploma?", answer: "A GED/High School Diploma is preferred but not required. If you don't have one, you can pass our entrance exam with 75% or above to qualify." },
     { question: "How long is the program?", answer: "The program is 160 total hours: 60 hours online theory + 100 hours clinical. Our daytime program takes 6 weeks." },
     { question: "Where are the clinical sites?", answer: "Clinical training is held at approved healthcare facilities in Stockton, Lodi, and Hayward—with plans to expand throughout California." },
-    { question: "Do I get any equipment or materials?", answer: "Yes! All students receive a Chromebook valued at $499 during orientation to access course materials. Your tuition also includes textbooks, workbook, uniform, BP cuff/stethoscope, and lab supplies." },
+    { question: "Do I get any equipment or materials?", answer: "Yes! All students receive a Chromebook valued at $249 during orientation to access course materials. Your tuition also includes textbooks, workbook, uniform, BP cuff/stethoscope, and lab supplies." },
   ];
 
   return (
-    <main className="pt-30">
-      {/* Hero Section - Marketing Style */}
-      <section className="relative min-h-[50vh] flex items-center overflow-hidden">
-        <div className="absolute inset-0 flex flex-col lg:flex-row">
-          {/* Image Side */}
-          <div className="w-full lg:w-1/2 h-64 lg:h-full relative">
-            <img
-              src={heroPrograms}
-              alt="Health Star Academy students ready to enroll"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          {/* Gradient Side */}
-          <div className="w-full lg:w-1/2 h-full bg-gradient-to-br from-purple via-purple/90 to-magenta flex items-center justify-center py-12 lg:py-0">
-            <div className="text-center px-8 lg:px-12">
-              <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4 animate-fade-in-up uppercase tracking-wide">
-                Your Application<br />
-                Checklist:<br />
-                <span className="text-cyan">Simple & Clear</span>
-              </h1>
-              <p className="text-primary-foreground/90 text-lg animate-fade-in-up animation-delay-100">
-                New Classes Start Monthly!
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="relative z-10 container-custom py-32 lg:py-40" />
-      </section>
+    <main className="pt-28 md:pt-32">
+      {/* Hero Section - 16:9 */}
+      <HeroBanner
+        imageSrc={heroPrograms}
+        imageAlt="Health Star Academy students ready to enroll"
+        title={
+          <>
+            Your Application<br />
+            Checklist:<br />
+            <span className="text-cyan">Simple & Clear</span>
+          </>
+        }
+        subtitle="New Classes Start Monthly!"
+      />
 
       {/* 6-Step Enrollment Process */}
       <section className="section-padding bg-background">
@@ -109,7 +96,7 @@ const AdmissionsPage = () => {
               <Laptop className="h-10 w-10 text-charcoal" />
             </div>
             <div>
-              <h3 className="font-heading font-bold text-2xl text-charcoal mb-2">Chromebook Included — $499 Value!</h3>
+              <h3 className="font-heading font-bold text-2xl text-charcoal mb-2">Chromebook Included — $249 Value!</h3>
               <p className="text-gray-dark max-w-xl">Every student receives a Chromebook during orientation to access course materials. It's part of our commitment to removing barriers and setting you up for success.</p>
             </div>
           </div>

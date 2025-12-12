@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import HeroBanner from "@/components/HeroBanner";
 import heroPrograms from "@/assets/hero-programs.jpg";
 import trainingLab from "@/assets/training-lab.jpg";
 
@@ -39,7 +40,7 @@ const HomePage = () => {
     {
       icon: Laptop,
       title: "Chromebook Included",
-      description: "Every student receives a Chromebook ($499 value) during orientation to access course materials.",
+      description: "Every student receives a Chromebook ($249 value) during orientation to access course materials.",
     },
     {
       icon: Briefcase,
@@ -100,42 +101,36 @@ const HomePage = () => {
   };
 
   return (
-    <main className="pt-10">
-      {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-purple via-purple/90 to-cyan/80">
-        <div className="container-custom relative z-10 py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-6 animate-fade-in-up">
-                Start Your CNA{" "}
-                <span className="text-cyan">Journey Today!</span>
-              </h1>
-              <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 animate-fade-in-up animation-delay-100">
-                Enroll in our state-certified hybrid CNA training program and begin your path to a rewarding healthcare career. Complete in just 6 weeks!
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up animation-delay-200">
-                <Button variant="secondary" size="lg" asChild>
-                  <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">
-                    Start Your Application <ArrowRight className="ml-2 h-5 w-5" />
-                  </a>
-                </Button>
-                <Button variant="purple-outline" size="lg" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-charcoal" asChild>
-                  <Link to="/programs">View Our Program</Link>
-                </Button>
-              </div>
-            </div>
-            <div className="relative animate-fade-in-up animation-delay-300">
-              <div className="relative rounded-2xl overflow-hidden shadow-strong">
-                <img
-                  src={heroPrograms}
-                  alt="Health Star Academy CNA students in training"
-                  className="w-full h-auto object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-purple/20 to-transparent" />
-              </div>
-              <div className="absolute -bottom-4 -left-4 bg-cyan text-charcoal px-6 py-3 rounded-xl shadow-medium font-heading font-semibold">
-                CDPH Approved
-              </div>
+    <main className="pt-28 md:pt-32">
+      {/* Hero Section - 16:9 */}
+      <HeroBanner
+        imageSrc={heroPrograms}
+        imageAlt="Health Star Academy CNA students in training"
+        title={
+          <>
+            Start Your CNA<br />
+            <span className="text-cyan">Journey Today!</span>
+          </>
+        }
+        subtitle="Enroll in our state-certified hybrid CNA training program"
+      />
+
+      {/* Quick CTA below hero */}
+      <section className="py-8 bg-purple">
+        <div className="container-custom">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+            <p className="text-primary-foreground font-medium text-center">
+              Complete in just 6 weeks! CDPH Approved Program.
+            </p>
+            <div className="flex gap-3">
+              <Button variant="secondary" size="sm" asChild>
+                <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">
+                  Start Your Application <ArrowRight className="ml-2 h-4 w-4" />
+                </a>
+              </Button>
+              <Button variant="purple-outline" size="sm" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-charcoal" asChild>
+                <Link to="/programs">View Program</Link>
+              </Button>
             </div>
           </div>
         </div>

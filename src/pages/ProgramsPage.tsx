@@ -11,6 +11,7 @@ import {
   DollarSign,
   Laptop,
 } from "lucide-react";
+import HeroBanner from "@/components/HeroBanner";
 import trainingLab from "@/assets/training-lab.jpg";
 import heroPrograms from "@/assets/hero-programs.jpg";
 
@@ -40,35 +41,24 @@ const ProgramsPage = () => {
   ];
 
   const tuitionBreakdown = [
-    { item: "Tuition", cost: "$1,186" },
-    { item: "Chromebook", cost: "$499" },
+    { item: "Instruction & Materials", cost: "$1,586" },
+    { item: "Chromebook", cost: "$249" },
   ];
 
   return (
-    <main className="pt-30">
-      {/* Hero Section */}
-      <section className="gradient-hero py-16 md:py-20">
-        <div className="container-custom">
-          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-            <div className="flex-1 text-center lg:text-left">
-              <h1 className="font-heading text-4xl md:text-5xl font-bold text-primary-foreground mb-6 animate-fade-in-up">
-                Comprehensive CNA Training<br />
-                <span className="text-cyan">Designed for Your Success</span>
-              </h1>
-              <p className="text-primary-foreground/90 text-lg max-w-2xl animate-fade-in-up animation-delay-100">
-                Our CDPH-approved hybrid program combines flexible online theory with hands-on clinical experience at approved healthcare facilities.
-              </p>
-            </div>
-            <div className="flex-1 max-w-md lg:max-w-lg animate-fade-in-up animation-delay-200">
-              <img
-                src={heroPrograms}
-                alt="Health Star Academy CNA students in scrubs ready for their healthcare career"
-                className="rounded-xl shadow-medium w-full"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+    <main className="pt-28 md:pt-32">
+      {/* Hero Section - 16:9 */}
+      <HeroBanner
+        imageSrc={heroPrograms}
+        imageAlt="Health Star Academy CNA students in scrubs ready for their healthcare career"
+        title={
+          <>
+            Comprehensive CNA Training<br />
+            <span className="text-cyan">Designed for Your Success</span>
+          </>
+        }
+        subtitle="CDPH-approved hybrid program with hands-on clinical experience"
+      />
 
       {/* Program Overview */}
       <section className="section-padding bg-background">
@@ -114,7 +104,7 @@ const ProgramsPage = () => {
               <Laptop className="h-10 w-10 text-charcoal" />
             </div>
             <div>
-              <h3 className="font-heading font-bold text-2xl text-charcoal mb-2">Chromebook Included — $499 Value!</h3>
+              <h3 className="font-heading font-bold text-2xl text-charcoal mb-2">Chromebook Included — $249 Value!</h3>
               <p className="text-gray-dark max-w-xl">Every student receives a Chromebook during orientation to access course materials. It's part of our commitment to removing barriers and setting you up for success.</p>
             </div>
           </div>
@@ -225,7 +215,7 @@ const ProgramsPage = () => {
               </div>
               
               <div className="bg-purple/5 rounded-lg p-6 mb-6">
-                <p className="text-4xl font-bold text-purple mb-2">$1,685</p>
+                <p className="text-4xl font-bold text-purple mb-2">$1,835</p>
                 <p className="text-gray-dark text-sm">Total Program Cost (Everything Included)</p>
               </div>
 
