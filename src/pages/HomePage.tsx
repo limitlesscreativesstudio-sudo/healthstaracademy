@@ -155,8 +155,8 @@ const HomePage = () => {
       {/* Advantages Section */}
       <section className="section-padding bg-neutral-light">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
               Why Choose Health Star Academy?
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
@@ -164,7 +164,7 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {advantages.map((advantage, index) => (
               <div
                 key={advantage.title}
@@ -187,8 +187,8 @@ const HomePage = () => {
       {/* How It Works Section */}
       <section className="section-padding bg-background">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
               Your Path from Curiosity to Certified
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
@@ -196,7 +196,7 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
             {/* Connector Line */}
             <div className="hidden md:block absolute top-16 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-purple via-cyan to-purple" />
             
@@ -221,7 +221,7 @@ const HomePage = () => {
             ))}
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-8">
             <Button variant="default" size="lg" asChild>
               <Link to="/programs/admissions">
                 See Full Enrollment Process <ArrowRight className="ml-2 h-5 w-5" />
@@ -253,13 +253,13 @@ const HomePage = () => {
       {/* Testimonials Section - Carousel */}
       <section className="section-padding bg-neutral-light">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-2 mb-3">
               <span className="text-2xl font-bold text-charcoal">5.0</span>
               <span className="text-yellow-500 text-xl">★★★★★</span>
               <span className="text-gray-dark text-sm">(10 Google Reviews)</span>
             </div>
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
               What Others Say About Us
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
@@ -319,7 +319,7 @@ const HomePage = () => {
             </div>
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-8">
             <Button variant="cyan-outline" size="lg" asChild>
               <Link to="/gallery">
                 View Our Gallery <ArrowRight className="ml-2 h-5 w-5" />
@@ -332,10 +332,10 @@ const HomePage = () => {
       {/* Final CTA Section */}
       <section className="gradient-hero section-padding">
         <div className="container-custom text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-3">
             Your New Career in Healthcare Starts with a Single Decision
           </h2>
-          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-8 text-lg">
+          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-6 text-lg">
             No prerequisites required. Payment plans available. New classes start monthly.
           </p>
           <Button variant="secondary" size="xl" asChild>

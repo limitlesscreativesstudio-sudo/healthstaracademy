@@ -61,14 +61,14 @@ const AdmissionsPage = () => {
       {/* 6-Step Enrollment Process */}
       <section className="section-padding bg-background">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">6-Step Enrollment Process</h2>
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">6-Step Enrollment Process</h2>
             <p className="text-gray-dark max-w-2xl mx-auto">From pre-qualification to your first day of class, we guide you through every step.</p>
           </div>
 
           <div className="max-w-4xl mx-auto">
             {enrollmentSteps.map((item, index) => (
-              <div key={item.step} className="flex gap-6 mb-8 last:mb-0 animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
+              <div key={item.step} className="flex gap-6 mb-6 last:mb-0 animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
                 <div className="flex flex-col items-center">
                   <div className="w-16 h-16 bg-purple rounded-full flex items-center justify-center shadow-medium flex-shrink-0">
                     <item.icon className="h-7 w-7 text-primary-foreground" />
@@ -89,7 +89,7 @@ const AdmissionsPage = () => {
       </section>
 
       {/* Chromebook Highlight */}
-      <section className="bg-cyan/10 py-12">
+      <section className="bg-cyan/10 py-8">
         <div className="container-custom">
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-center md:text-left">
             <div className="w-20 h-20 bg-cyan rounded-full flex items-center justify-center flex-shrink-0">
@@ -106,10 +106,10 @@ const AdmissionsPage = () => {
       {/* Prerequisites & Requirements */}
       <section className="section-padding bg-neutral-light">
         <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-6">Enrollment Requirements</h2>
-              <p className="text-gray-dark mb-8 leading-relaxed">To enroll in our CNA program, you'll need to meet these requirements. Our admissions team will help you gather everything.</p>
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Enrollment Requirements</h2>
+              <p className="text-gray-dark mb-6 leading-relaxed">To enroll in our CNA program, you'll need to meet these requirements. Our admissions team will help you gather everything.</p>
               <ul className="space-y-4">
                 {requirements.map((req, index) => (
                   <li key={index} className="flex items-start gap-3 animate-fade-in-up" style={{ animationDelay: `${index * 50}ms` }}>
@@ -123,11 +123,11 @@ const AdmissionsPage = () => {
             </div>
 
             <div className="flex flex-col justify-center">
-              <div className="bg-background rounded-xl p-8 shadow-soft text-center">
-                <div className="w-20 h-20 bg-cyan/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Download className="h-10 w-10 text-cyan" />
+              <div className="bg-background rounded-xl p-6 shadow-soft text-center">
+                <div className="w-16 h-16 bg-cyan/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Download className="h-8 w-8 text-cyan" />
                 </div>
-                <h3 className="font-heading font-semibold text-2xl text-charcoal mb-4">Ready to Enroll?</h3>
+                <h3 className="font-heading font-semibold text-2xl text-charcoal mb-3">Ready to Enroll?</h3>
                 <p className="text-gray-dark mb-6">Start your application today and secure your spot in the next class.</p>
                 <Button variant="secondary" size="lg" asChild>
                   <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">Enroll Now <ArrowRight className="ml-2 h-5 w-5" /></a>
@@ -144,8 +144,8 @@ const AdmissionsPage = () => {
       {/* Payment Options */}
       <section className="section-padding bg-background">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Payment Options</h2>
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">Payment Options</h2>
             <p className="text-gray-dark max-w-2xl mx-auto">We've partnered with trusted payment providers to make your education accessible.</p>
           </div>
           
@@ -181,8 +181,8 @@ const AdmissionsPage = () => {
       {/* FAQ Section */}
       <section className="section-padding bg-neutral-light">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Frequently Asked Questions</h2>
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">Frequently Asked Questions</h2>
             <p className="text-gray-dark max-w-2xl mx-auto">We understand you have questions. Here are answers to the most common ones.</p>
           </div>
 
@@ -210,8 +210,8 @@ const AdmissionsPage = () => {
       {/* CTA Section */}
       <section className="gradient-accent section-padding">
         <div className="container-custom text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-4">Ready to Take the First Step?</h2>
-          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-8 text-lg">Start your journey today. New classes start monthly - limited seats available!</p>
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-3">Ready to Take the First Step?</h2>
+          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-6 text-lg">Start your journey today. New classes start monthly - limited seats available!</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button variant="secondary" size="lg" asChild>
               <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">Start Your Application <ArrowRight className="ml-2 h-5 w-5" /></a>

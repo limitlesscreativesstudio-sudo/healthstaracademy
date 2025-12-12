@@ -85,13 +85,13 @@ const ContactPage = () => {
       {/* Contact Content */}
       <section className="section-padding bg-background">
         <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Contact Information */}
             <div className="animate-slide-in-left">
-              <h2 className="font-heading text-3xl font-bold text-charcoal mb-6">
+              <h2 className="font-heading text-3xl font-bold text-charcoal mb-4">
                 Contact Information
               </h2>
-              <p className="text-gray-dark mb-8 leading-relaxed">
+              <p className="text-gray-dark mb-6 leading-relaxed">
                 Reach out to us through any of the channels below. We respond to all inquiries within one business hour during office hours.
               </p>
 
@@ -116,7 +116,7 @@ const ContactPage = () => {
               </div>
 
               {/* Map Embed */}
-              <div className="mt-8 rounded-xl overflow-hidden shadow-soft h-64">
+              <div className="mt-6 rounded-xl overflow-hidden shadow-soft h-56">
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3145.8!2d-121.3!3d37.96!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzfCsDU3JzM2LjAiTiAxMjHCsDE4JzAwLjAiVw!5e0!3m2!1sen!2sus!4v1635959481234"
                   width="100%"
@@ -132,11 +132,11 @@ const ContactPage = () => {
 
             {/* Contact Form */}
             <div className="animate-slide-in-right">
-              <div className="bg-neutral-light rounded-xl p-8 shadow-soft">
+              <div className="bg-neutral-light rounded-xl p-6 shadow-soft">
                 <h2 className="font-heading text-2xl font-bold text-charcoal mb-2">
                   Send Your Inquiry
                 </h2>
-                <p className="text-gray-dark mb-6">
+                <p className="text-gray-dark mb-4">
                   Fill out the form below and an admissions advisor will contact you within one business hour.
                 </p>
 
