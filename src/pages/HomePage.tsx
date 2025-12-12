@@ -14,8 +14,8 @@ import {
   Users,
 } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
-import heroPrograms from "@/assets/hero-programs.jpg";
-import trainingLab from "@/assets/training-lab.jpg";
+import studentsTrainingGroup from "@/assets/students-training-group.png";
+import cnaStudentsGroup from "@/assets/cna-students-group.png";
 
 const ENROLLMENT_LINK = "https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true";
 
@@ -110,8 +110,8 @@ const HomePage = () => {
     <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
-        imageSrc={heroPrograms}
-        imageAlt="Health Star Academy CNA students in training"
+        imageSrc={studentsTrainingGroup}
+        imageAlt="Health Star Academy CNA students in clinical training"
         title={
           <>
             Start Your CNA<br />
@@ -224,8 +224,8 @@ const HomePage = () => {
       {/* Training Lab Image Section */}
       <section className="relative h-96 overflow-hidden">
         <img
-          src={trainingLab}
-          alt="Health Star Academy clinical training at approved healthcare facilities"
+          src={cnaStudentsGroup}
+          alt="Health Star Academy diverse CNA students ready for their healthcare careers"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 to-transparent flex items-end">

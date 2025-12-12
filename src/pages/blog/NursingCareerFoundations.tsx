@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft, Calendar, User, Clock } from "lucide-react";
+import cnaStudentsGroup from "@/assets/cna-students-group.png";
+import studentBloodPressure from "@/assets/student-blood-pressure.jpg";
+import cnaPatientCare from "@/assets/cna-patient-care.png";
 
 const NursingCareerFoundations = () => {
   return (
@@ -41,6 +44,14 @@ const NursingCareerFoundations = () => {
       <article className="section-padding bg-background">
         <div className="container-custom">
           <div className="max-w-3xl mx-auto prose prose-lg">
+            {/* Featured Image */}
+            <div className="mb-10 rounded-xl overflow-hidden shadow-soft">
+              <img 
+                src={cnaStudentsGroup} 
+                alt="Diverse group of CNA students ready for their nursing careers" 
+                className="w-full h-64 md:h-80 object-cover"
+              />
+            </div>
             <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">Introduction: CNA as the Gateway to Nursing Excellence</h2>
             <p className="text-gray-dark mb-6 leading-relaxed">
               For many aspiring nurses, the journey to a rewarding career in nursing begins with a single, strategic decision: becoming a Certified Nursing Assistant. While some may view CNA certification as merely an entry-level credential, experienced healthcare professionals recognize it as an invaluable foundation for advanced nursing roles. The skills, experience, and patient care perspective gained as a CNA create advantages that benefit nurses throughout their careers.
@@ -65,6 +76,16 @@ const NursingCareerFoundations = () => {
             <p className="text-gray-dark mb-6 leading-relaxed">
               <strong>Realistic Career Expectations:</strong> Perhaps most importantly, CNA experience provides realistic understanding of healthcare work. Students who complete CNA training before pursuing advanced nursing education enter those programs with clear expectations about the physical demands, emotional challenges, and profound rewards of nursing practice.
             </p>
+
+            {/* Inline Image */}
+            <div className="my-10 rounded-xl overflow-hidden shadow-soft">
+              <img 
+                src={studentBloodPressure} 
+                alt="CNA student practicing vital signs measurement" 
+                className="w-full h-64 md:h-72 object-cover"
+              />
+              <p className="text-center text-sm text-gray-dark bg-neutral-light py-3 italic">Hands-on training builds confidence for advanced nursing roles</p>
+            </div>
 
             <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Understanding the Nursing Career Ladder</h2>
             <p className="text-gray-dark mb-6 leading-relaxed">
@@ -110,6 +131,16 @@ const NursingCareerFoundations = () => {
             <p className="text-gray-dark mb-6 leading-relaxed">
               Many hospitals and health systems now prefer or require BSN credentials for RN positions, particularly in acute care settings. This preference makes LVN-to-BSN programs particularly attractive for career-focused nurses planning long-term advancement.
             </p>
+
+            {/* Inline Image */}
+            <div className="my-10 rounded-xl overflow-hidden shadow-soft">
+              <img 
+                src={cnaPatientCare} 
+                alt="CNA providing compassionate care to elderly patient" 
+                className="w-full h-64 md:h-72 object-cover"
+              />
+              <p className="text-center text-sm text-gray-dark bg-neutral-light py-3 italic">CNA experience builds the foundation for a rewarding nursing career</p>
+            </div>
 
             <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Specialized Nursing Careers</h2>
             <p className="text-gray-dark mb-6 leading-relaxed">
