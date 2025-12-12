@@ -42,6 +42,7 @@ const ProgramsPage = () => {
 
   const tuitionBreakdown = [
     { item: "Tuition", cost: "$2,184" },
+    { item: "Chromebook", cost: "$249" },
     { item: "Lab Supplies", cost: "$100" },
     { item: "LiveScan Background Check", cost: "$80" },
     { item: "Textbook", cost: "$45" },

@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Calendar, User, Clock } from "lucide-react";
+import { ArrowRight, Calendar, Clock, Instagram, Facebook } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
-import studentSmilingStethoscope from "@/assets/student-smiling-stethoscope.jpg";
+import studentsVitalsPractice from "@/assets/students-vitals-practice.jpg";
 import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
-import cnaStudentsGroup from "@/assets/cna-students-group.png";
-import diverseStudentsTraining from "@/assets/diverse-students-training.jpg";
+import cnaStudentsConfident from "@/assets/cna-students-confident.jpg";
+import studentCareTraining from "@/assets/student-care-training.jpg";
 
 const BlogPage = () => {
   const articles = [
@@ -17,7 +17,7 @@ const BlogPage = () => {
       date: "December 10, 2024",
       readTime: "12 min read",
       category: "Career Guide",
-      image: studentSmilingStethoscope,
+      image: studentsVitalsPractice,
     },
     {
       slug: "cna-training-excellence",
@@ -37,7 +37,7 @@ const BlogPage = () => {
       date: "December 5, 2024",
       readTime: "11 min read",
       category: "Career Advancement",
-      image: cnaStudentsGroup,
+      image: cnaStudentsConfident,
     },
   ];
 
@@ -45,7 +45,7 @@ const BlogPage = () => {
     <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
-        imageSrc={diverseStudentsTraining}
+        imageSrc={studentCareTraining}
         imageAlt="Health Star Academy blog and resources"
         title={
           <>
@@ -114,6 +114,70 @@ const BlogPage = () => {
                 </div>
               </article>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Social Media Section */}
+      <section className="section-padding bg-neutral-light">
+        <div className="container-custom">
+          <div className="text-center mb-10">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+              Follow Us on Social Media
+            </h2>
+            <p className="text-gray-dark max-w-2xl mx-auto">
+              Stay connected! Follow Health Star Academy for the latest updates, student highlights, and healthcare tips.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {/* Instagram Card */}
+            <a 
+              href="https://www.instagram.com/healthstaracademy/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-background rounded-xl p-6 shadow-soft hover:shadow-medium transition-all group"
+            >
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-purple via-magenta to-cyan rounded-xl flex items-center justify-center">
+                  <Instagram className="h-7 w-7 text-primary-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-heading font-semibold text-lg text-charcoal">@healthstaracademy</h3>
+                  <p className="text-sm text-gray-dark">Follow on Instagram</p>
+                </div>
+              </div>
+              <p className="text-gray-dark text-sm mb-4">
+                Become a Certified Nursing Assistant (CNA)! Online classes with in-person clinicals in Lodi & Stockton, CA!
+              </p>
+              <span className="text-purple font-semibold text-sm group-hover:underline">
+                View Profile →
+              </span>
+            </a>
+
+            {/* Facebook Card */}
+            <a 
+              href="https://www.facebook.com/healthstaracademy" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-background rounded-xl p-6 shadow-soft hover:shadow-medium transition-all group"
+            >
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 bg-[#1877F2] rounded-xl flex items-center justify-center">
+                  <Facebook className="h-7 w-7 text-primary-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-heading font-semibold text-lg text-charcoal">Health Star Academy LLC</h3>
+                  <p className="text-sm text-gray-dark">Follow on Facebook</p>
+                </div>
+              </div>
+              <p className="text-gray-dark text-sm mb-4">
+                Stockton's newest Certified Nursing Assistant (CNA) training school, dedicated to preparing the next generation of healthcare heroes.
+              </p>
+              <span className="text-purple font-semibold text-sm group-hover:underline">
+                View Page →
+              </span>
+            </a>
           </div>
         </div>
       </section>

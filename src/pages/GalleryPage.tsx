@@ -7,20 +7,20 @@ import cnaStudentsGroup from "@/assets/cna-students-group.png";
 import cnaPatientCare from "@/assets/cna-patient-care.png";
 import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
 import instructorStethoscopeTraining from "@/assets/instructor-stethoscope-training.jpg";
-import diverseStudentsTraining from "@/assets/diverse-students-training.jpg";
-import studentBloodPressure from "@/assets/student-blood-pressure.jpg";
-import studentSmilingStethoscope from "@/assets/student-smiling-stethoscope.jpg";
+import cnaStudentsConfident from "@/assets/cna-students-confident.jpg";
+import studentCareTraining from "@/assets/student-care-training.jpg";
+import studentsVitalsPractice from "@/assets/students-vitals-practice.jpg";
 
 const GalleryPage = () => {
   const galleryImages = [
+    { src: cnaStudentsConfident, alt: "Health Star Academy diverse CNA students smiling confidently", category: "Students" },
+    { src: studentCareTraining, alt: "CNA student providing compassionate care to patient", category: "Patient Care" },
+    { src: studentsVitalsPractice, alt: "CNA students practicing vital signs together", category: "Training" },
     { src: studentsTrainingGroup, alt: "Health Star Academy diverse CNA students in clinical training", category: "Students" },
     { src: cnaStudentsGroup, alt: "Diverse group of CNA students with stethoscopes", category: "Students" },
     { src: cnaPatientCare, alt: "CNA providing compassionate care to elderly patient", category: "Patient Care" },
     { src: instructorTeachingMannequin, alt: "Instructor teaching student with mannequin", category: "Training" },
     { src: instructorStethoscopeTraining, alt: "Instructor guiding student with stethoscope technique", category: "Training" },
-    { src: diverseStudentsTraining, alt: "Diverse students practicing clinical skills", category: "Training" },
-    { src: studentBloodPressure, alt: "Student practicing blood pressure measurement", category: "Skills" },
-    { src: studentSmilingStethoscope, alt: "Confident CNA student with stethoscope", category: "Students" },
   ];
 
   return (
