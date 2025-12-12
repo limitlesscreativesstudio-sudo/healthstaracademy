@@ -15,7 +15,15 @@ import {
   Wifi,
   GraduationCap,
   ClipboardCheck,
+  ChevronDown,
+  ExternalLink,
 } from "lucide-react";
+import { useState } from "react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import HeroBanner from "@/components/HeroBanner";
 import diverseStudentsTraining from "@/assets/diverse-students-training.jpg";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
@@ -31,11 +39,18 @@ const ProgramsPage = () => {
   ];
 
   const upcomingDates = [
-    { date: "May 19, 2025", endDate: "June 30, 2025" },
-    { date: "July 7, 2025", endDate: "August 18, 2025" },
-    { date: "August 25, 2025", endDate: "October 6, 2025" },
-    { date: "October 13, 2025", endDate: "November 25, 2025" },
-    { date: "December 1, 2025", endDate: "January 19, 2026" },
+    { date: "January 6, 2026", endDate: "February 17, 2026" },
+    { date: "February 23, 2026", endDate: "April 6, 2026" },
+    { date: "April 13, 2026", endDate: "May 25, 2026" },
+    { date: "June 1, 2026", endDate: "July 13, 2026" },
+    { date: "July 20, 2026", endDate: "August 31, 2026" },
+    { date: "September 8, 2026", endDate: "October 19, 2026" },
+    { date: "October 26, 2026", endDate: "December 7, 2026" },
+    { date: "December 14, 2026", endDate: "January 25, 2027" },
+    { date: "February 1, 2027", endDate: "March 15, 2027" },
+    { date: "March 22, 2027", endDate: "May 3, 2027" },
+    { date: "May 10, 2027", endDate: "June 21, 2027" },
+    { date: "June 28, 2027", endDate: "August 9, 2027" },
   ];
 
   const curriculum = [
@@ -80,15 +95,17 @@ const ProgramsPage = () => {
     { requirement: "Theory Completion", description: "Complete all 60 hours of online theory coursework with passing scores" },
     { requirement: "Clinical Hours", description: "Complete all 100 hours of supervised clinical training" },
     { requirement: "Skills Competency", description: "Demonstrate proficiency in all 22 required CNA skills" },
-    { requirement: "Final Exam", description: "Pass the final written examination with a score of 70% or higher" },
+    { requirement: "Final Exam", description: "Pass the final written examination with a score of 75% or higher" },
     { requirement: "Clinical Evaluation", description: "Receive satisfactory evaluation from clinical instructor" },
   ];
 
   const clinicalLocations = [
-    { city: "Stockton", facility: "Meadowood Health and Rehabilitation Center" },
-    { city: "Lodi", facility: "Lodi Creek Post-Acute" },
-    { city: "Hayward", facility: "Approved Skilled Nursing Facility" },
+    { city: "Stockton", facility: "Meadowood Health and Rehabilitation Center", url: "https://maps.google.com/?q=Meadowood+Health+and+Rehabilitation+Center+Stockton+CA" },
+    { city: "Lodi", facility: "Lodi Creek Post-Acute", url: "https://maps.google.com/?q=Lodi+Creek+Post-Acute+Lodi+CA" },
+    { city: "Hayward", facility: "Approved Skilled Nursing Facility", url: "https://maps.google.com/?q=Hayward+CA" },
   ];
+
+  const [isCourseworkOpen, setIsCourseworkOpen] = useState(false);
 
   const tuitionBreakdown = [
     { item: "Tuition", cost: "$2,184" },
@@ -117,26 +134,26 @@ const ProgramsPage = () => {
       />
 
       {/* Program Overview */}
-      <section className="section-padding bg-background">
+      <section className="py-12 bg-background">
         <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
             <div>
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-6">
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
                 Program Overview
               </h2>
-              <p className="text-gray-dark mb-6 leading-relaxed">
+              <p className="text-gray-dark mb-5 leading-relaxed">
                 Health Star Academy's CDPH-approved Online CNA Program offers the perfect blend of flexibility and hands-on training. Complete online coursework at your own pace while gaining real-world experience at our clinical training sites in Stockton, Lodi, and Hayward—with plans to expand throughout California.
               </p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 {programDetails.map((detail, index) => (
                   <div
                     key={detail.label}
-                    className="bg-neutral-light rounded-lg p-4 animate-fade-in-up"
+                    className="bg-neutral-light rounded-lg p-3 animate-fade-in-up"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <detail.icon className="h-6 w-6 text-purple mb-2" />
-                    <p className="text-sm text-gray-dark">{detail.label}</p>
-                    <p className="font-semibold text-charcoal">{detail.value}</p>
+                    <detail.icon className="h-5 w-5 text-purple mb-1" />
+                    <p className="text-xs text-gray-dark">{detail.label}</p>
+                    <p className="font-semibold text-charcoal text-sm">{detail.value}</p>
                   </div>
                 ))}
               </div>
@@ -153,7 +170,7 @@ const ProgramsPage = () => {
       </section>
 
       {/* Chromebook Highlight */}
-      <section className="bg-cyan/10 py-12">
+      <section className="bg-cyan/10 py-10">
         <div className="container-custom">
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-center md:text-left">
             <div className="w-20 h-20 bg-cyan rounded-full flex items-center justify-center flex-shrink-0">
@@ -168,32 +185,32 @@ const ProgramsPage = () => {
       </section>
 
       {/* Hybrid Education Model */}
-      <section className="section-padding bg-neutral-light">
+      <section className="py-12 bg-neutral-light">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
               Hybrid Education Model
             </h2>
-            <p className="text-gray-dark max-w-3xl mx-auto text-lg">
+            <p className="text-gray-dark max-w-3xl mx-auto">
               Our program combines the convenience of <strong>online theory coursework</strong> with hands-on <strong>clinical training at approved local nursing facilities</strong>. This hybrid approach gives you the flexibility to learn at your own pace while gaining real-world experience.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
-            <div className="bg-background rounded-xl p-6 shadow-soft text-center">
-              <div className="w-16 h-16 bg-purple/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Monitor className="h-8 w-8 text-purple" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            <div className="bg-background rounded-xl p-5 shadow-soft text-center">
+              <div className="w-14 h-14 bg-purple/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Monitor className="h-7 w-7 text-purple" />
               </div>
-              <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">Online Theory</h3>
-              <p className="text-3xl font-bold text-purple mb-2">60 Hours</p>
+              <h3 className="font-heading font-semibold text-lg text-charcoal mb-1">Online Theory</h3>
+              <p className="text-2xl font-bold text-purple mb-1">60 Hours</p>
               <p className="text-gray-dark text-sm">Complete coursework online at your own pace via Canvas LMS</p>
             </div>
-            <div className="bg-background rounded-xl p-6 shadow-soft text-center">
-              <div className="w-16 h-16 bg-cyan/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Stethoscope className="h-8 w-8 text-cyan" />
+            <div className="bg-background rounded-xl p-5 shadow-soft text-center">
+              <div className="w-14 h-14 bg-cyan/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Stethoscope className="h-7 w-7 text-cyan" />
               </div>
-              <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">Clinical Training</h3>
-              <p className="text-3xl font-bold text-cyan mb-2">100 Hours</p>
+              <h3 className="font-heading font-semibold text-lg text-charcoal mb-1">Clinical Training</h3>
+              <p className="text-2xl font-bold text-cyan mb-1">100 Hours</p>
               <p className="text-gray-dark text-sm">Hands-on training at approved skilled nursing facilities</p>
             </div>
           </div>
@@ -201,10 +218,10 @@ const ProgramsPage = () => {
       </section>
 
       {/* Clinical Training Locations */}
-      <section className="section-padding bg-background">
+      <section className="py-12 bg-background">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
               Clinical Training Locations
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
@@ -212,17 +229,23 @@ const ProgramsPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-6">
             {clinicalLocations.map((location, index) => (
-              <div
+              <a
                 key={location.city}
-                className="bg-neutral-light rounded-xl p-6 text-center animate-fade-in-up"
+                href={location.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-neutral-light rounded-xl p-5 text-center animate-fade-in-up hover:bg-purple/5 hover:shadow-md transition-all group cursor-pointer"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <MapPin className="h-8 w-8 text-purple mx-auto mb-3" />
-                <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">{location.city}, CA</h3>
-                <p className="text-gray-dark text-sm">{location.facility}</p>
-              </div>
+                <MapPin className="h-7 w-7 text-purple mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                <h3 className="font-heading font-semibold text-lg text-charcoal mb-1">{location.city}, CA</h3>
+                <p className="text-gray-dark text-sm mb-2">{location.facility}</p>
+                <span className="inline-flex items-center gap-1 text-purple text-xs font-medium">
+                  <ExternalLink className="h-3 w-3" /> View on Map
+                </span>
+              </a>
             ))}
           </div>
           <p className="text-center text-gray-dark text-sm italic">
@@ -232,18 +255,18 @@ const ProgramsPage = () => {
       </section>
 
       {/* Schedule & Start Dates */}
-      <section className="section-padding bg-neutral-light">
+      <section className="py-12 bg-neutral-light">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
-              Class Schedule Options
+          <div className="text-center mb-8">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
+              Class Schedule
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
-              We offer scheduling options to meet your needs. Choose the program that works best for you.
+              Our daytime program is designed for your success.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-12">
+          <div className="max-w-md mx-auto mb-10">
             <div className="bg-background rounded-xl p-6 shadow-soft text-center">
               <Calendar className="h-10 w-10 text-purple mx-auto mb-4" />
               <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
@@ -252,45 +275,35 @@ const ProgramsPage = () => {
               <p className="text-purple font-medium mb-1">Monday - Friday</p>
               <p className="text-gray-dark text-sm mb-1">Classroom: 6:00 AM – 3:00 PM</p>
               <p className="text-gray-dark text-sm mb-2">Clinical: Mon-Thu, 6:00 AM – 3:00 PM</p>
-              <p className="text-charcoal font-semibold">~6 Weeks (23 days)</p>
-            </div>
-            <div className="bg-background rounded-xl p-6 shadow-soft text-center">
-              <Calendar className="h-10 w-10 text-cyan mx-auto mb-4" />
-              <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
-                Weekend Program
-              </h3>
-              <p className="text-cyan font-medium mb-1">Saturdays & Sundays</p>
-              <p className="text-gray-dark text-sm mb-1">Theory & Clinical:</p>
-              <p className="text-gray-dark text-sm mb-2">7:00 AM – 6:00 PM</p>
-              <p className="text-charcoal font-semibold">~9 Weeks (18 days)</p>
+              <p className="text-charcoal font-semibold">6 Weeks (23 days)</p>
             </div>
           </div>
 
           {/* Next Start Dates */}
-          <div className="bg-background rounded-xl p-8 shadow-soft max-w-2xl mx-auto">
+          <div className="bg-background rounded-xl p-6 shadow-soft max-w-3xl mx-auto">
             <h3 className="font-heading font-semibold text-xl text-charcoal mb-2 text-center">
-              Upcoming Class Dates
+              Upcoming Class Dates — Starting January 2026
             </h3>
-            <p className="text-gray-dark text-sm text-center mb-6">
+            <p className="text-gray-dark text-sm text-center mb-4">
               Application deadline: 7 days prior to start date
             </p>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
               {upcomingDates.map((item, index) => (
                 <div
                   key={item.date}
-                  className="flex items-center justify-between py-3 border-b border-border last:border-0"
+                  className="flex items-center justify-between py-2 border-b border-border last:border-0"
                 >
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className="h-5 w-5 text-purple" />
-                    <span className="font-medium text-charcoal">{item.date}</span>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-purple" />
+                    <span className="font-medium text-charcoal text-sm">{item.date}</span>
                   </div>
-                  <span className="text-gray-dark text-sm">
+                  <span className="text-gray-dark text-xs">
                     Ends: {item.endDate}
                   </span>
                 </div>
               ))}
             </div>
-            <div className="text-center mt-6">
+            <div className="text-center mt-5">
               <Button variant="default" asChild>
                 <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">Enroll for Next Class</a>
               </Button>
@@ -300,7 +313,7 @@ const ProgramsPage = () => {
       </section>
 
       {/* Technical Requirements */}
-      <section className="section-padding bg-gradient-to-br from-purple via-magenta to-cyan relative overflow-hidden">
+      <section className="py-12 bg-gradient-to-br from-purple via-magenta to-cyan relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-3xl animate-pulse" />
@@ -438,14 +451,14 @@ const ProgramsPage = () => {
       </section>
 
       {/* Required Coursework */}
-      <section className="section-padding bg-background">
+      <section className="py-12 bg-background">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-purple/10 text-purple px-4 py-2 rounded-full font-semibold text-sm mb-4">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-purple/10 text-purple px-4 py-2 rounded-full font-semibold text-sm mb-3">
               <ClipboardCheck className="h-4 w-4" />
               CDPH REQUIRED COURSEWORK
             </div>
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
               Required Course Content
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
@@ -453,33 +466,40 @@ const ProgramsPage = () => {
             </p>
           </div>
 
-          <div className="bg-neutral-light rounded-xl overflow-hidden shadow-soft max-w-3xl mx-auto mb-12">
-            <div className="bg-purple text-primary-foreground px-6 py-4">
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Course Content</span>
-                <span className="font-semibold">Theory Hours</span>
-              </div>
-            </div>
-            <div className="divide-y divide-border">
-              {requiredCoursework.map((item, index) => (
-                <div
-                  key={item.course}
-                  className="flex justify-between items-center px-6 py-3 hover:bg-background transition-colors"
-                >
-                  <span className="text-charcoal">{item.course}</span>
-                  <span className="font-medium text-purple">{item.hours}</span>
+          <Collapsible open={isCourseworkOpen} onOpenChange={setIsCourseworkOpen} className="max-w-3xl mx-auto mb-10">
+            <CollapsibleTrigger className="w-full">
+              <div className="bg-purple text-primary-foreground px-6 py-4 rounded-t-xl flex justify-between items-center cursor-pointer hover:bg-purple/90 transition-colors">
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold">View All Course Requirements</span>
+                  <span className="bg-primary-foreground/20 px-2 py-0.5 rounded text-xs">16 courses • 60 hours</span>
                 </div>
-              ))}
-              <div className="flex justify-between items-center px-6 py-4 bg-purple/5 font-semibold">
-                <span className="text-charcoal">Total Theory Hours</span>
-                <span className="text-purple">60</span>
+                <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${isCourseworkOpen ? 'rotate-180' : ''}`} />
               </div>
-            </div>
-          </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="bg-neutral-light rounded-b-xl overflow-hidden shadow-soft">
+                <div className="divide-y divide-border">
+                  {requiredCoursework.map((item, index) => (
+                    <div
+                      key={item.course}
+                      className="flex justify-between items-center px-6 py-3 hover:bg-background transition-colors"
+                    >
+                      <span className="text-charcoal">{item.course}</span>
+                      <span className="font-medium text-purple">{item.hours}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between items-center px-6 py-4 bg-purple/5 font-semibold">
+                    <span className="text-charcoal">Total Theory Hours</span>
+                    <span className="text-purple">60</span>
+                  </div>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* What You'll Learn - Modules */}
-          <div className="text-center mb-8">
-            <h3 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-4">
+          <div className="text-center mb-6">
+            <h3 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-3">
               Curriculum Modules
             </h3>
             <p className="text-gray-dark max-w-2xl mx-auto">
@@ -487,14 +507,14 @@ const ProgramsPage = () => {
             </p>
           </div>
 
-          <div className="space-y-4 max-w-4xl mx-auto">
+          <div className="space-y-3 max-w-4xl mx-auto">
             {curriculum.map((item, index) => (
               <div
                 key={item.module}
-                className="bg-neutral-light rounded-xl p-6 animate-fade-in-up"
+                className="bg-neutral-light rounded-xl p-5 animate-fade-in-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                <div className="flex flex-col md:flex-row md:items-center gap-3">
                   <span className="bg-purple text-primary-foreground px-4 py-2 rounded-lg font-semibold text-sm flex-shrink-0">
                     {item.module}
                   </span>
@@ -509,14 +529,14 @@ const ProgramsPage = () => {
       </section>
 
       {/* Graduation Requirements */}
-      <section className="section-padding bg-neutral-light">
+      <section className="py-12 bg-neutral-light">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-cyan/10 text-cyan px-4 py-2 rounded-full font-semibold text-sm mb-4">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-cyan/10 text-cyan px-4 py-2 rounded-full font-semibold text-sm mb-3">
               <GraduationCap className="h-4 w-4" />
               GRADUATION REQUIREMENTS
             </div>
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
               Requirements to Graduate
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
@@ -525,7 +545,7 @@ const ProgramsPage = () => {
           </div>
 
           <div className="bg-background rounded-xl overflow-hidden shadow-soft max-w-3xl mx-auto">
-            <div className="bg-cyan text-charcoal px-6 py-4">
+            <div className="bg-cyan text-charcoal px-6 py-3">
               <div className="flex gap-4">
                 <span className="font-semibold w-1/3">Requirement</span>
                 <span className="font-semibold w-2/3">Description</span>
@@ -535,7 +555,7 @@ const ProgramsPage = () => {
               {graduationRequirements.map((item, index) => (
                 <div
                   key={item.requirement}
-                  className="flex gap-4 px-6 py-4 hover:bg-neutral-light transition-colors"
+                  className="flex gap-4 px-6 py-3 hover:bg-neutral-light transition-colors"
                 >
                   <span className="font-medium text-purple w-1/3">{item.requirement}</span>
                   <span className="text-gray-dark w-2/3">{item.description}</span>
@@ -545,12 +565,12 @@ const ProgramsPage = () => {
           </div>
 
           {/* Grading Scale */}
-          <div className="mt-12">
-            <h3 className="font-heading text-2xl font-bold text-charcoal mb-6 text-center">
+          <div className="mt-10">
+            <h3 className="font-heading text-2xl font-bold text-charcoal mb-4 text-center">
               Grading Scale
             </h3>
-            <p className="text-gray-dark text-center max-w-2xl mx-auto mb-8">
-              Grades are evaluated separately for classroom, lab, and clinicals. Students must receive an overall course grade of 70% or higher to pass and receive a certificate of completion.
+            <p className="text-gray-dark text-center max-w-2xl mx-auto mb-6">
+              Grades are evaluated separately for classroom, lab, and clinicals. Students must receive an overall course grade of 75% or higher to pass and receive a certificate of completion.
             </p>
             <div className="bg-background rounded-xl overflow-hidden shadow-soft max-w-xl mx-auto">
               <div className="bg-purple text-primary-foreground px-6 py-3">
@@ -564,7 +584,7 @@ const ProgramsPage = () => {
                 {gradingScale.map((grade, index) => (
                   <div
                     key={grade.numerical}
-                    className="grid grid-cols-3 text-center px-6 py-3 hover:bg-neutral-light transition-colors"
+                    className="grid grid-cols-3 text-center px-6 py-2 hover:bg-neutral-light transition-colors"
                   >
                     <span className="text-charcoal">{grade.numerical}</span>
                     <span className="font-bold text-purple">{grade.letter}</span>
@@ -578,7 +598,7 @@ const ProgramsPage = () => {
       </section>
 
       {/* Tuition & Financial Info */}
-      <section className="section-padding bg-neutral-light">
+      <section className="py-12 bg-neutral-light">
         <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Tuition Card */}
