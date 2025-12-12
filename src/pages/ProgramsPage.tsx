@@ -10,6 +10,11 @@ import {
   CheckCircle,
   DollarSign,
   Laptop,
+  MapPin,
+  Monitor,
+  Wifi,
+  GraduationCap,
+  ClipboardCheck,
 } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import diverseStudentsTraining from "@/assets/diverse-students-training.jpg";
@@ -38,6 +43,40 @@ const ProgramsPage = () => {
     { module: "Module 7-9", title: "Weights/Measures, Patient Care Skills & Procedures" },
     { module: "Module 10-12", title: "Vital Signs, Nutrition & Emergency Procedures" },
     { module: "Module 13-17", title: "Long-Term Care, Rehab Nursing, Charting, Death/Dying & Abuse" },
+  ];
+
+  const requiredCoursework = [
+    { course: "Patient Rights & Independence", hours: "4" },
+    { course: "Interpersonal Skills", hours: "4" },
+    { course: "Prevention & Management of Catastrophe & Unusual Occurrences", hours: "2" },
+    { course: "Body Mechanics", hours: "2" },
+    { course: "Medical & Surgical Asepsis", hours: "2" },
+    { course: "Weights & Measures", hours: "2" },
+    { course: "Patient Care Skills", hours: "14" },
+    { course: "Patient Care Procedures", hours: "7" },
+    { course: "Vital Signs", hours: "4" },
+    { course: "Nutrition", hours: "4" },
+    { course: "Emergency Procedures", hours: "2" },
+    { course: "Long-Term Care Patient", hours: "3" },
+    { course: "Rehabilitative Nursing", hours: "3" },
+    { course: "Observation & Charting", hours: "3" },
+    { course: "Death & Dying", hours: "2" },
+    { course: "Abuse", hours: "2" },
+  ];
+
+  const graduationRequirements = [
+    { requirement: "Attendance", description: "Minimum 90% attendance for all theory and clinical sessions" },
+    { requirement: "Theory Completion", description: "Complete all 60 hours of online theory coursework with passing scores" },
+    { requirement: "Clinical Hours", description: "Complete all 100 hours of supervised clinical training" },
+    { requirement: "Skills Competency", description: "Demonstrate proficiency in all 22 required CNA skills" },
+    { requirement: "Final Exam", description: "Pass the final written examination with a score of 75% or higher" },
+    { requirement: "Clinical Evaluation", description: "Receive satisfactory evaluation from clinical instructor" },
+  ];
+
+  const clinicalLocations = [
+    { city: "Stockton", facility: "Approved Skilled Nursing Facility" },
+    { city: "Lodi", facility: "Approved Skilled Nursing Facility" },
+    { city: "Hayward", facility: "Approved Skilled Nursing Facility" },
   ];
 
   const tuitionBreakdown = [
@@ -117,6 +156,70 @@ const ProgramsPage = () => {
         </div>
       </section>
 
+      {/* Hybrid Education Model */}
+      <section className="section-padding bg-neutral-light">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+              Hybrid Education Model
+            </h2>
+            <p className="text-gray-dark max-w-3xl mx-auto text-lg">
+              Our program combines the convenience of <strong>online theory coursework</strong> with hands-on <strong>clinical training at approved local nursing facilities</strong>. This hybrid approach gives you the flexibility to learn at your own pace while gaining real-world experience.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
+            <div className="bg-background rounded-xl p-6 shadow-soft text-center">
+              <div className="w-16 h-16 bg-purple/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Monitor className="h-8 w-8 text-purple" />
+              </div>
+              <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">Online Theory</h3>
+              <p className="text-3xl font-bold text-purple mb-2">60 Hours</p>
+              <p className="text-gray-dark text-sm">Complete coursework online at your own pace via Canvas LMS</p>
+            </div>
+            <div className="bg-background rounded-xl p-6 shadow-soft text-center">
+              <div className="w-16 h-16 bg-cyan/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Stethoscope className="h-8 w-8 text-cyan" />
+              </div>
+              <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">Clinical Training</h3>
+              <p className="text-3xl font-bold text-cyan mb-2">100 Hours</p>
+              <p className="text-gray-dark text-sm">Hands-on training at approved skilled nursing facilities</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Clinical Training Locations */}
+      <section className="section-padding bg-background">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+              Clinical Training Locations
+            </h2>
+            <p className="text-gray-dark max-w-2xl mx-auto">
+              Complete your 100 hours of clinical training at one of our approved partner facilities.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-8">
+            {clinicalLocations.map((location, index) => (
+              <div
+                key={location.city}
+                className="bg-neutral-light rounded-xl p-6 text-center animate-fade-in-up"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <MapPin className="h-8 w-8 text-purple mx-auto mb-3" />
+                <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">{location.city}, CA</h3>
+                <p className="text-gray-dark text-sm">{location.facility}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-gray-dark text-sm italic">
+            Additional locations coming soon throughout California
+          </p>
+        </div>
+      </section>
+
       {/* Schedule & Start Dates */}
       <section className="section-padding bg-neutral-light">
         <div className="container-custom">
@@ -135,7 +238,7 @@ const ProgramsPage = () => {
               Daytime Program
             </h3>
             <p className="text-purple font-medium mb-1">Monday - Thursday</p>
-            <p className="text-gray-dark text-sm mb-2">6:00 AM - 2:30 PM</p>
+            <p className="text-gray-dark text-sm mb-2">8:00 AM - 4:30 PM</p>
             <p className="text-charcoal font-semibold">6 Weeks</p>
           </div>
 
@@ -169,13 +272,89 @@ const ProgramsPage = () => {
         </div>
       </section>
 
-      {/* Curriculum */}
+      {/* Technical Requirements */}
+      <section className="section-padding bg-gradient-to-br from-purple via-magenta to-cyan">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
+              Technical Requirements
+            </h2>
+            <p className="text-primary-foreground/90 max-w-2xl mx-auto">
+              Ensure you have the following to successfully complete your online coursework
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="bg-background/95 backdrop-blur rounded-xl p-6 text-center shadow-lg transform hover:scale-105 transition-transform">
+              <div className="w-16 h-16 bg-purple/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Laptop className="h-8 w-8 text-purple" />
+              </div>
+              <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Computer or Tablet</h3>
+              <p className="text-gray-dark text-sm">Chromebook provided or use your own device with Chrome browser</p>
+            </div>
+            <div className="bg-background/95 backdrop-blur rounded-xl p-6 text-center shadow-lg transform hover:scale-105 transition-transform">
+              <div className="w-16 h-16 bg-cyan/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Wifi className="h-8 w-8 text-cyan" />
+              </div>
+              <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Internet Connection</h3>
+              <p className="text-gray-dark text-sm">Reliable high-speed internet for streaming video lectures</p>
+            </div>
+            <div className="bg-background/95 backdrop-blur rounded-xl p-6 text-center shadow-lg transform hover:scale-105 transition-transform">
+              <div className="w-16 h-16 bg-magenta/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Monitor className="h-8 w-8 text-magenta" />
+              </div>
+              <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Canvas LMS Access</h3>
+              <p className="text-gray-dark text-sm">Login credentials provided after enrollment for all coursework</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Required Coursework */}
       <section className="section-padding bg-background">
         <div className="container-custom">
           <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-purple/10 text-purple px-4 py-2 rounded-full font-semibold text-sm mb-4">
+              <ClipboardCheck className="h-4 w-4" />
+              CDPH REQUIRED COURSEWORK
+            </div>
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
-              What You'll Learn
+              Required Course Content
             </h2>
+            <p className="text-gray-dark max-w-2xl mx-auto">
+              All students must complete the following state-mandated coursework as required by the California Department of Public Health.
+            </p>
+          </div>
+
+          <div className="bg-neutral-light rounded-xl overflow-hidden shadow-soft max-w-3xl mx-auto mb-12">
+            <div className="bg-purple text-primary-foreground px-6 py-4">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold">Course Content</span>
+                <span className="font-semibold">Theory Hours</span>
+              </div>
+            </div>
+            <div className="divide-y divide-border">
+              {requiredCoursework.map((item, index) => (
+                <div
+                  key={item.course}
+                  className="flex justify-between items-center px-6 py-3 hover:bg-background transition-colors"
+                >
+                  <span className="text-charcoal">{item.course}</span>
+                  <span className="font-medium text-purple">{item.hours}</span>
+                </div>
+              ))}
+              <div className="flex justify-between items-center px-6 py-4 bg-purple/5 font-semibold">
+                <span className="text-charcoal">Total Theory Hours</span>
+                <span className="text-purple">60</span>
+              </div>
+            </div>
+          </div>
+
+          {/* What You'll Learn - Modules */}
+          <div className="text-center mb-8">
+            <h3 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-4">
+              Curriculum Modules
+            </h3>
             <p className="text-gray-dark max-w-2xl mx-auto">
               17 comprehensive modules covering everything you need to become a skilled, confident CNA.
             </p>
@@ -198,6 +377,44 @@ const ProgramsPage = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Graduation Requirements */}
+      <section className="section-padding bg-neutral-light">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-cyan/10 text-cyan px-4 py-2 rounded-full font-semibold text-sm mb-4">
+              <GraduationCap className="h-4 w-4" />
+              GRADUATION REQUIREMENTS
+            </div>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+              Requirements to Graduate
+            </h2>
+            <p className="text-gray-dark max-w-2xl mx-auto">
+              Students must meet all of the following requirements to successfully complete the CNA program and be eligible for state certification.
+            </p>
+          </div>
+
+          <div className="bg-background rounded-xl overflow-hidden shadow-soft max-w-3xl mx-auto">
+            <div className="bg-cyan text-charcoal px-6 py-4">
+              <div className="flex gap-4">
+                <span className="font-semibold w-1/3">Requirement</span>
+                <span className="font-semibold w-2/3">Description</span>
+              </div>
+            </div>
+            <div className="divide-y divide-border">
+              {graduationRequirements.map((item, index) => (
+                <div
+                  key={item.requirement}
+                  className="flex gap-4 px-6 py-4 hover:bg-neutral-light transition-colors"
+                >
+                  <span className="font-medium text-purple w-1/3">{item.requirement}</span>
+                  <span className="text-gray-dark w-2/3">{item.description}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
