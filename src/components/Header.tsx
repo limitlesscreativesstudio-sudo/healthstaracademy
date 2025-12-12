@@ -10,7 +10,7 @@ const STUDENT_LOGIN_LINK = "https://b2b0c970-8c97-44e8-bc56-a029b47c90c1.iad.log
 
 const navLinks = [
   { name: "Home", path: "/" },
-  { name: "About", path: "/about" },
+  { name: "About Us", path: "/about" },
   { 
     name: "CNA Program", 
     path: "/programs",

@@ -11,6 +11,7 @@ import {
   Laptop,
   ChevronLeft,
   ChevronRight,
+  Users,
 } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import heroPrograms from "@/assets/hero-programs.jpg";
@@ -39,13 +40,18 @@ const HomePage = () => {
     },
     {
       icon: Laptop,
-      title: "Chromebook Included",
-      description: "Every student receives a Chromebook ($249 value) during orientation to access course materials.",
+      title: "Chromebook Provided",
+      description: "Every student receives a Chromebook ($249 value) to use while in the program.",
     },
     {
       icon: Briefcase,
       title: "Career Resources",
       description: "Resume support and career guidance. Many graduates secure positions before completing the program.",
+    },
+    {
+      icon: Users,
+      title: "Small Class Sizes",
+      description: "Personalized attention with small class sizes ensures you get the support you need to succeed.",
     },
   ];
 

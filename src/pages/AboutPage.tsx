@@ -54,7 +54,6 @@ const AboutPage = () => {
         imageAlt="Health Star Academy clinical training"
         title={
           <>
-            About Us:<br />
             Quality, Affordable<br />
             <span className="text-cyan">CNA Training</span>
           </>
