@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Award, Users, Stethoscope, HeartHandshake, ArrowRight, CheckCircle } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
+import SEO from "@/components/SEO";
 import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
 import instructorStethoscopeTraining from "@/assets/instructor-stethoscope-training.jpg";
 import diverseStudentsTraining from "@/assets/diverse-students-training.jpg";
@@ -48,7 +49,14 @@ const AboutPage = () => {
   ];
 
   return (
-    <main className="pt-28 md:pt-32">
+    <>
+      <SEO
+        title="About Us | Health Star Academy | CNA School in Stockton, CA"
+        description="Learn about Health Star Academy's mission to train exceptional CNAs. Founded by experienced healthcare professionals with 60+ years combined experience. CDPH-approved program in Stockton, CA."
+        canonical="/about"
+        keywords="about Health Star Academy, CNA school Stockton, nursing assistant training California, healthcare education, CNA instructors, nursing school mission"
+      />
+      <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
         imageSrc={cnaPatientCare}
@@ -191,6 +199,7 @@ const AboutPage = () => {
         </div>
       </section>
     </main>
+    </>
   );
 };
 

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import HeroBanner from "@/components/HeroBanner";
+import SEO from "@/components/SEO";
 import studentSmilingStethoscope from "@/assets/student-smiling-stethoscope.jpg";
 
 const ContactPage = () => {
@@ -67,7 +68,14 @@ const ContactPage = () => {
   ];
 
   return (
-    <main className="pt-28 md:pt-32">
+    <>
+      <SEO
+        title="Contact Us | Health Star Academy | CNA Training Stockton CA"
+        description="Contact Health Star Academy for CNA training inquiries. Call (209) 323-4169 or visit us at 5250 Claremont Avenue, Suite 127, Stockton, CA 95207. Get answers within 1 business hour!"
+        canonical="/contact"
+        keywords="contact Health Star Academy, CNA school phone number, nursing assistant training Stockton address, CNA program inquiries, healthcare school contact"
+      />
+      <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
         imageSrc={studentSmilingStethoscope}
@@ -201,6 +209,7 @@ const ContactPage = () => {
         </div>
       </section>
     </main>
+    </>
   );
 };
 

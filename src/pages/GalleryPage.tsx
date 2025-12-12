@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Camera, Image as ImageIcon } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
+import SEO from "@/components/SEO";
 import studentsTrainingGroup from "@/assets/students-training-group.png";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 import cnaPatientCare from "@/assets/cna-patient-care.png";
@@ -24,7 +25,14 @@ const GalleryPage = () => {
   ];
 
   return (
-    <main className="pt-28 md:pt-32">
+    <>
+      <SEO
+        title="Photo Gallery | CNA Students & Training | Health Star Academy"
+        description="View photos of Health Star Academy CNA students, clinical training, and patient care practice. See our diverse student community and hands-on learning environment in Stockton, CA."
+        canonical="/gallery"
+        keywords="CNA student photos, nursing assistant training pictures, Health Star Academy gallery, clinical training images, CNA school Stockton photos"
+      />
+      <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
         imageSrc={cnaStudentsGroup}
@@ -112,6 +120,7 @@ const GalleryPage = () => {
         </div>
       </section>
     </main>
+    </>
   );
 };
 

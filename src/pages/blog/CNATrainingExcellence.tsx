@@ -1,13 +1,24 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft, Calendar, User, Clock } from "lucide-react";
+import SEO from "@/components/SEO";
 import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
 import studentsTrainingGroup from "@/assets/students-training-group.png";
 import instructorStethoscopeTraining from "@/assets/instructor-stethoscope-training.jpg";
 
 const CNATrainingExcellence = () => {
   return (
-    <main className="pt-30">
+    <>
+      <SEO
+        title="CNA Training Excellence: What Makes a Quality Nursing Assistant Program"
+        description="Learn what to look for in a CNA training program. Discover California requirements, curriculum essentials, clinical training importance, and how Health Star Academy prepares you for success."
+        canonical="/blog/cna-training-excellence"
+        keywords="quality CNA training, nursing assistant program California, CDPH approved CNA course, CNA curriculum, clinical training requirements, CNA exam preparation"
+        type="article"
+        author="Health Star Academy"
+        publishedTime="2024-12-08"
+      />
+      <main className="pt-30">
       {/* Article Header */}
       <section className="gradient-hero py-16 md:py-20">
         <div className="container-custom">
@@ -212,6 +223,7 @@ const CNATrainingExcellence = () => {
         </div>
       </article>
     </main>
+    </>
   );
 };
 

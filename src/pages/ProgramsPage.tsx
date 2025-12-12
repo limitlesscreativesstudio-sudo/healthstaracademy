@@ -25,6 +25,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import HeroBanner from "@/components/HeroBanner";
+import SEO from "@/components/SEO";
 import diverseStudentsTraining from "@/assets/diverse-students-training.jpg";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 
@@ -132,7 +133,14 @@ const ProgramsPage = () => {
   ];
 
   return (
-    <main className="pt-28 md:pt-32">
+    <>
+      <SEO
+        title="CNA Program | 160-Hour CDPH Approved Training | Health Star Academy"
+        description="Enroll in Health Star Academy's 160-hour CDPH-approved CNA program. 60 hours online theory + 100 hours clinical training in Stockton, Lodi & Hayward. Complete in 6 weeks. Start your healthcare career today!"
+        canonical="/programs"
+        keywords="CNA program Stockton, CDPH approved CNA training, 160 hour CNA course, hybrid CNA program California, certified nursing assistant curriculum, CNA clinical training, nursing assistant certification"
+      />
+      <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
         imageSrc={cnaStudentsGroup}
@@ -725,6 +733,7 @@ const ProgramsPage = () => {
         </div>
       </section>
     </main>
+    </>
   );
 };
 
