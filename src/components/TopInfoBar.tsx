@@ -15,6 +15,13 @@ const TopInfoBar = () => {
               <span>(209) 323-4169</span>
             </a>
             <a 
+              href="tel:9162088097" 
+              className="flex items-center gap-2 hover:text-cyan transition-colors"
+            >
+              <Phone className="h-4 w-4" />
+              <span className="hidden sm:inline">(916) 208-8097</span>
+            </a>
+            <a 
               href="mailto:healthstaracademy01@gmail.com" 
               className="flex items-center gap-2 hover:text-cyan transition-colors"
             >

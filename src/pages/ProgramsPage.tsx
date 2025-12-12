@@ -31,10 +31,11 @@ const ProgramsPage = () => {
   ];
 
   const upcomingDates = [
-    { date: "January 26, 2025", endDate: "March 7, 2025" },
-    { date: "March 17, 2025", endDate: "April 28, 2025" },
-    { date: "May 5, 2025", endDate: "June 16, 2025" },
-    { date: "June 23, 2025", endDate: "August 4, 2025" },
+    { date: "May 19, 2025", endDate: "June 30, 2025" },
+    { date: "July 7, 2025", endDate: "August 18, 2025" },
+    { date: "August 25, 2025", endDate: "October 6, 2025" },
+    { date: "October 13, 2025", endDate: "November 25, 2025" },
+    { date: "December 1, 2025", endDate: "January 19, 2026" },
   ];
 
   const curriculum = [
@@ -84,8 +85,8 @@ const ProgramsPage = () => {
   ];
 
   const clinicalLocations = [
-    { city: "Stockton", facility: "Approved Skilled Nursing Facility" },
-    { city: "Lodi", facility: "Approved Skilled Nursing Facility" },
+    { city: "Stockton", facility: "Meadowood Health and Rehabilitation Center" },
+    { city: "Lodi", facility: "Lodi Creek Post-Acute" },
     { city: "Hayward", facility: "Approved Skilled Nursing Facility" },
   ];
 
@@ -235,28 +236,44 @@ const ProgramsPage = () => {
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
-              Daytime Program Schedule
+              Class Schedule Options
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
-              Our daytime program runs Monday through Thursday, allowing you to complete your training in 6 weeks.
+              We offer scheduling options to meet your needs. Choose the program that works best for you.
             </p>
           </div>
 
-          <div className="bg-background rounded-xl p-6 shadow-soft max-w-md mx-auto mb-12 text-center">
-            <Calendar className="h-10 w-10 text-purple mx-auto mb-4" />
-            <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
-              Daytime Program
-            </h3>
-            <p className="text-purple font-medium mb-1">Monday - Thursday</p>
-            <p className="text-gray-dark text-sm mb-2">8:00 AM - 4:30 PM</p>
-            <p className="text-charcoal font-semibold">6 Weeks</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-12">
+            <div className="bg-background rounded-xl p-6 shadow-soft text-center">
+              <Calendar className="h-10 w-10 text-purple mx-auto mb-4" />
+              <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
+                Daytime Program
+              </h3>
+              <p className="text-purple font-medium mb-1">Monday - Friday</p>
+              <p className="text-gray-dark text-sm mb-1">Classroom: 6:00 AM – 3:00 PM</p>
+              <p className="text-gray-dark text-sm mb-2">Clinical: Mon-Thu, 6:00 AM – 3:00 PM</p>
+              <p className="text-charcoal font-semibold">~6 Weeks (23 days)</p>
+            </div>
+            <div className="bg-background rounded-xl p-6 shadow-soft text-center">
+              <Calendar className="h-10 w-10 text-cyan mx-auto mb-4" />
+              <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
+                Weekend Program
+              </h3>
+              <p className="text-cyan font-medium mb-1">Saturdays & Sundays</p>
+              <p className="text-gray-dark text-sm mb-1">Theory & Clinical:</p>
+              <p className="text-gray-dark text-sm mb-2">7:00 AM – 6:00 PM</p>
+              <p className="text-charcoal font-semibold">~9 Weeks (18 days)</p>
+            </div>
           </div>
 
           {/* Next Start Dates */}
           <div className="bg-background rounded-xl p-8 shadow-soft max-w-2xl mx-auto">
-            <h3 className="font-heading font-semibold text-xl text-charcoal mb-6 text-center">
+            <h3 className="font-heading font-semibold text-xl text-charcoal mb-2 text-center">
               Upcoming Class Dates
             </h3>
+            <p className="text-gray-dark text-sm text-center mb-6">
+              Application deadline: 7 days prior to start date
+            </p>
             <div className="space-y-4">
               {upcomingDates.map((item, index) => (
                 <div
@@ -283,38 +300,138 @@ const ProgramsPage = () => {
       </section>
 
       {/* Technical Requirements */}
-      <section className="section-padding bg-gradient-to-br from-purple via-magenta to-cyan">
-        <div className="container-custom">
+      <section className="section-padding bg-gradient-to-br from-purple via-magenta to-cyan relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-10 right-10 w-40 h-40 bg-cyan rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        </div>
+        
+        <div className="container-custom relative z-10">
           <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur text-primary-foreground px-4 py-2 rounded-full font-semibold text-sm mb-4 animate-bounce">
+              <Monitor className="h-4 w-4" />
+              IMPORTANT - READ BEFORE ENROLLING
+            </div>
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
               Technical Requirements
             </h2>
             <p className="text-primary-foreground/90 max-w-2xl mx-auto">
-              Ensure you have the following to successfully complete your online coursework
+              To access our online learning systems, students must meet the following requirements
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="bg-background/95 backdrop-blur rounded-xl p-6 text-center shadow-lg transform hover:scale-105 transition-transform">
-              <div className="w-16 h-16 bg-purple/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Laptop className="h-8 w-8 text-purple" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Hardware Requirements */}
+            <div className="bg-background/95 backdrop-blur rounded-xl p-6 shadow-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-purple/10 rounded-full flex items-center justify-center">
+                  <Laptop className="h-6 w-6 text-purple" />
+                </div>
+                <h3 className="font-heading font-semibold text-xl text-charcoal">Hardware Requirements</h3>
               </div>
-              <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Computer or Tablet</h3>
-              <p className="text-gray-dark text-sm">Chromebook provided or use your own device with Chrome browser</p>
+              <ul className="space-y-3 text-gray-dark text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-purple mt-0.5 flex-shrink-0" />
+                  <span>2 GHz processor or faster</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-purple mt-0.5 flex-shrink-0" />
+                  <span>High-speed internet (minimum 3 Mbps upload/download)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-purple mt-0.5 flex-shrink-0" />
+                  <span>2 GB RAM or greater</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-purple mt-0.5 flex-shrink-0" />
+                  <span>32 GB system storage or larger</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-purple mt-0.5 flex-shrink-0" />
+                  <span>Built-in or external speakers (wired or Bluetooth)</span>
+                </li>
+              </ul>
             </div>
-            <div className="bg-background/95 backdrop-blur rounded-xl p-6 text-center shadow-lg transform hover:scale-105 transition-transform">
-              <div className="w-16 h-16 bg-cyan/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Wifi className="h-8 w-8 text-cyan" />
+
+            {/* Software & Browser */}
+            <div className="bg-background/95 backdrop-blur rounded-xl p-6 shadow-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-cyan/10 rounded-full flex items-center justify-center">
+                  <Monitor className="h-6 w-6 text-cyan" />
+                </div>
+                <h3 className="font-heading font-semibold text-xl text-charcoal">Software & Browser</h3>
               </div>
-              <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Internet Connection</h3>
-              <p className="text-gray-dark text-sm">Reliable high-speed internet for streaming video lectures</p>
+              <ul className="space-y-3 text-gray-dark text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-cyan mt-0.5 flex-shrink-0" />
+                  <span>Any computer manufactured within the last 10 years</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-cyan mt-0.5 flex-shrink-0" />
+                  <span>Latest version of Google Chrome (required)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-cyan mt-0.5 flex-shrink-0" />
+                  <span>Android and iPhone users can access via Canvas mobile app</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-cyan mt-0.5 flex-shrink-0" />
+                  <span>Canvas LMS login credentials provided after enrollment</span>
+                </li>
+              </ul>
             </div>
-            <div className="bg-background/95 backdrop-blur rounded-xl p-6 text-center shadow-lg transform hover:scale-105 transition-transform">
-              <div className="w-16 h-16 bg-magenta/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Monitor className="h-8 w-8 text-magenta" />
+
+            {/* Webcam Requirements */}
+            <div className="bg-background/95 backdrop-blur rounded-xl p-6 shadow-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-magenta/10 rounded-full flex items-center justify-center">
+                  <Wifi className="h-6 w-6 text-magenta" />
+                </div>
+                <h3 className="font-heading font-semibold text-xl text-charcoal">Webcam Requirements</h3>
               </div>
-              <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Canvas LMS Access</h3>
-              <p className="text-gray-dark text-sm">Login credentials provided after enrollment for all coursework</p>
+              <ul className="space-y-3 text-gray-dark text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-magenta mt-0.5 flex-shrink-0" />
+                  <span>Interface: USB 2.0</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-magenta mt-0.5 flex-shrink-0" />
+                  <span>Focus: Automatic or Manual</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-magenta mt-0.5 flex-shrink-0" />
+                  <span>Integrated microphone required</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-magenta mt-0.5 flex-shrink-0" />
+                  <span>Minimum Resolution: HD 720p</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Class Participation */}
+            <div className="bg-background/95 backdrop-blur rounded-xl p-6 shadow-lg border-2 border-cyan">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-cyan/20 rounded-full flex items-center justify-center">
+                  <GraduationCap className="h-6 w-6 text-cyan" />
+                </div>
+                <h3 className="font-heading font-semibold text-xl text-charcoal">Class Participation</h3>
+              </div>
+              <ul className="space-y-3 text-gray-dark text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-cyan mt-0.5 flex-shrink-0" />
+                  <span><strong>Video must be ON</strong> throughout class time</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-cyan mt-0.5 flex-shrink-0" />
+                  <span>Students must mute and turn off camera during scheduled breaks only</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-cyan mt-0.5 flex-shrink-0" />
+                  <span>Chromebook provided ($249 value) or use your own device</span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
