@@ -8,11 +8,26 @@ import trainingLab from "@/assets/training-lab.jpg";
 const AboutPage = () => {
   const whyChooseUs = [
     "100% CDPH Approved Curriculum",
-    "Experienced RN Instructors",
-    "Flexible Hybrid Format - Online + In-Person",
+    "Experienced RN & LPN Instructors",
+    "Hybrid Format - Online + In-Person",
     "Clinical Training at Approved Facilities",
-    "Job Placement Assistance",
+    "Chromebook Included ($499 Value)",
     "No Prerequisites Required",
+  ];
+
+  const leadership = [
+    {
+      name: "Agnes Adebe, LPN",
+      role: "Co-Owner & Program Director",
+      image: instructorJane,
+      bio: "With over 30 years of experience in healthcare, Agnes brings a wealth of clinical knowledge and a passion for mentoring the next generation of CNAs.",
+    },
+    {
+      name: "Kimberly Nelson, RN",
+      role: "Co-Owner & Program Administrator",
+      image: instructorJohn,
+      bio: "With over 30 years of nursing experience, Kimberly ensures our program delivers excellence in both education and student support.",
+    },
   ];
 
   const instructors = [
@@ -47,7 +62,7 @@ const AboutPage = () => {
           <div className="w-full lg:w-1/2 h-full bg-gradient-to-br from-purple via-purple/90 to-magenta flex items-center justify-center py-12 lg:py-0">
             <div className="text-center px-8 lg:px-12">
               <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4 animate-fade-in-up uppercase tracking-wide">
-                Our Mission:<br />
+                About Us:<br />
                 Quality, Affordable<br />
                 <span className="text-cyan">CNA Training</span>
               </h1>
@@ -83,11 +98,31 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Meet Your Instructors */}
+      {/* Leadership Team */}
       <section className="section-padding bg-neutral-light">
         <div className="container-custom">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Our Team</h2>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Our Leadership</h2>
+            <p className="text-gray-dark max-w-2xl mx-auto">
+              Health Star Academy was founded by two experienced healthcare professionals with a combined 60+ years in the field.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-16">
+            {leadership.map((leader, index) => (
+              <div key={leader.name} className="bg-background rounded-xl overflow-hidden shadow-soft hover:shadow-medium transition-shadow animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
+                <img src={leader.image} alt={leader.name} className="w-full h-64 object-cover" />
+                <div className="p-6">
+                  <h3 className="font-heading font-semibold text-xl text-charcoal">{leader.name}</h3>
+                  <p className="text-purple font-medium text-sm mb-4">{leader.role}</p>
+                  <p className="text-gray-dark text-sm leading-relaxed">{leader.bio}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mb-12">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">Our Instructors</h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
               Our team is made up of experienced clinical professionals who bring real-world expertise and a passion for teaching.
             </p>
@@ -129,7 +164,7 @@ const AboutPage = () => {
                 { icon: Award, label: "CDPH Approved", value: "100%" },
                 { icon: Users, label: "Clinical Hours", value: "100" },
                 { icon: Stethoscope, label: "Theory Hours", value: "60" },
-                { icon: HeartHandshake, label: "Job Placement", value: "Yes" },
+                { icon: HeartHandshake, label: "Career Support", value: "Yes" },
               ].map((stat, index) => (
                 <div key={stat.label} className="bg-neutral-light rounded-xl p-6 text-center animate-scale-in" style={{ animationDelay: `${index * 100}ms` }}>
                   <stat.icon className="h-8 w-8 text-purple mx-auto mb-3" />

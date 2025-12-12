@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import {
   Clock,
   HandHeart,
@@ -8,20 +9,21 @@ import {
   ArrowRight,
   Quote,
   Laptop,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import heroImage from "@/assets/hero-home.jpg";
 import heroPrograms from "@/assets/hero-programs.jpg";
-import graduateMaria from "@/assets/graduate-maria.jpg";
-import studentDavid from "@/assets/student-david.jpg";
 import trainingLab from "@/assets/training-lab.jpg";
 
 const ENROLLMENT_LINK = "https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true";
+
+const DENEFITS_LINK = "https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a";
 
 const HomePage = () => {
   const advantages = [
     {
       icon: Clock,
-      title: "Fast & Flexible",
+      title: "Fast-Track Training",
       description: "Daytime classes available. Complete in just 6 weeks with our hybrid format.",
     },
     {
@@ -35,14 +37,14 @@ const HomePage = () => {
       description: "100% California Department of Public Health approved curriculum with experienced RN instructors.",
     },
     {
-      icon: Briefcase,
-      title: "Job Placement Support",
-      description: "Job placement support. Many graduates secure positions before completing the program.",
-    },
-    {
       icon: Laptop,
       title: "Chromebook Included",
       description: "Every student receives a Chromebook ($499 value) during orientation to access course materials.",
+    },
+    {
+      icon: Briefcase,
+      title: "Career Resources",
+      description: "Resume support and career guidance. Many graduates secure positions before completing the program.",
     },
   ];
 
@@ -69,15 +71,33 @@ const HomePage = () => {
       quote: "Amazing program! The instructors are up to date with knowledge, teach well, and are generous with their ideas!",
       name: "Trevor H.",
       role: "CNA Graduate",
-      image: graduateMaria,
     },
     {
       quote: "Excellent learning tool, concise and clear videos, explained well. Highly recommend this program to anyone looking to start their healthcare career.",
       name: "Jenna K.",
       role: "CNA Graduate",
-      image: studentDavid,
+    },
+    {
+      quote: "Best CNA program in the area! The staff genuinely cares about your success. I passed my state exam on the first try!",
+      name: "Maria L.",
+      role: "CNA Graduate",
+    },
+    {
+      quote: "Health Star Academy gave me the confidence I needed to start my healthcare career. The hands-on training was exceptional!",
+      name: "David M.",
+      role: "CNA Graduate",
     },
   ];
+
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+
+  const nextTestimonial = () => {
+    setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+  };
+
+  const prevTestimonial = () => {
+    setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  };
 
   return (
     <main className="pt-10">
@@ -219,7 +239,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
+      {/* Testimonials Section - Carousel */}
       <section className="section-padding bg-neutral-light">
         <div className="container-custom">
           <div className="text-center mb-12">
@@ -231,32 +251,56 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div
-                key={testimonial.name}
-                className="bg-background rounded-xl p-8 shadow-soft hover:shadow-medium transition-shadow animate-fade-in-up"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <Quote className="h-10 w-10 text-purple/30 mb-4" />
-                <p className="text-charcoal mb-6 leading-relaxed italic">
-                  "{testimonial.quote}"
-                </p>
-                <div className="flex items-center gap-4">
-                  <img
-                    src={testimonial.image}
-                    alt={testimonial.name}
-                    className="w-14 h-14 rounded-full object-cover"
-                  />
-                  <div>
-                    <p className="font-heading font-semibold text-charcoal">
-                      {testimonial.name}
-                    </p>
-                    <p className="text-sm text-gray-dark">{testimonial.role}</p>
-                  </div>
+          <div className="relative max-w-2xl mx-auto">
+            <div className="bg-background rounded-xl p-8 shadow-soft">
+              <Quote className="h-10 w-10 text-purple/30 mb-4" />
+              <p className="text-charcoal mb-6 leading-relaxed italic text-lg">
+                "{testimonials[currentTestimonial].quote}"
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-purple/10 flex items-center justify-center">
+                  <span className="text-purple font-bold text-xl">
+                    {testimonials[currentTestimonial].name.charAt(0)}
+                  </span>
+                </div>
+                <div>
+                  <p className="font-heading font-semibold text-charcoal">
+                    {testimonials[currentTestimonial].name}
+                  </p>
+                  <p className="text-sm text-gray-dark">{testimonials[currentTestimonial].role}</p>
                 </div>
               </div>
-            ))}
+            </div>
+            
+            {/* Carousel Controls */}
+            <div className="flex items-center justify-center gap-4 mt-6">
+              <button
+                onClick={prevTestimonial}
+                className="w-10 h-10 rounded-full bg-purple/10 flex items-center justify-center hover:bg-purple hover:text-primary-foreground transition-colors"
+                aria-label="Previous testimonial"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <div className="flex gap-2">
+                {testimonials.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentTestimonial(index)}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === currentTestimonial ? "bg-purple" : "bg-purple/30"
+                    }`}
+                    aria-label={`Go to testimonial ${index + 1}`}
+                  />
+                ))}
+              </div>
+              <button
+                onClick={nextTestimonial}
+                className="w-10 h-10 rounded-full bg-purple/10 flex items-center justify-center hover:bg-purple hover:text-primary-foreground transition-colors"
+                aria-label="Next testimonial"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           <div className="text-center mt-12">
