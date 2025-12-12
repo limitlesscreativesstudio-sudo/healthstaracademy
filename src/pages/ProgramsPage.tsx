@@ -42,7 +42,13 @@ const ProgramsPage = () => {
 
   const tuitionBreakdown = [
     { item: "Instruction & Materials", cost: "$1,586" },
-    { item: "Chromebook", cost: "$249" },
+    { item: "Chromebook (provided to use while in program)", cost: "$249" },
+    { item: "Textbooks & Study Guides", cost: "Included" },
+    { item: "Skills Practice Kit", cost: "Included" },
+    { item: "Scrubs (1 set)", cost: "Included" },
+    { item: "Blood Pressure Cuff & Stethoscope", cost: "Included" },
+    { item: "State Certification Exam Prep", cost: "Included" },
+    { item: "CPR/BLS Certification", cost: "Included" },
   ];
 
   return (
@@ -252,10 +258,15 @@ const ProgramsPage = () => {
                   href="https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="block bg-neutral-light rounded-lg p-4 hover:bg-cyan/10 transition-colors border-2 border-transparent hover:border-cyan"
+                  className="block bg-gradient-to-r from-cyan/20 to-magenta/20 rounded-lg p-5 hover:from-cyan/30 hover:to-magenta/30 transition-all border-2 border-cyan shadow-md hover:shadow-lg"
                 >
-                  <h4 className="font-semibold text-charcoal mb-1">Denefits - No Credit Check Financing</h4>
-                  <p className="text-sm text-gray-dark">Guaranteed approvals, instant pre-approval, monthly payments. Click to apply!</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="bg-cyan text-charcoal text-xs font-bold px-2 py-1 rounded">RECOMMENDED</span>
+                    <span className="text-xs text-gray-dark">No Credit Check Required</span>
+                  </div>
+                  <h4 className="font-bold text-charcoal text-lg mb-1">Denefits Financing</h4>
+                  <p className="text-sm text-gray-dark mb-2">Guaranteed approvals • Instant pre-approval • Affordable monthly payments</p>
+                  <span className="text-purple font-semibold text-sm">Click here to apply now →</span>
                 </a>
               </div>
 

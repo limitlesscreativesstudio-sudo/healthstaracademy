@@ -19,7 +19,7 @@ const AboutPage = () => {
 
   const leadership = [
     {
-      name: "Agnes Adebe, LPN",
+      name: "Agnes Adebe, MSN",
       role: "Co-Owner & Program Director",
       image: instructorTeachingMannequin,
       bio: "With over 30 years of experience in healthcare, Agnes brings a wealth of clinical knowledge and a passion for mentoring the next generation of CNAs.",
@@ -98,7 +98,7 @@ const AboutPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-16">
             {leadership.map((leader, index) => (
               <div key={leader.name} className="bg-background rounded-xl overflow-hidden shadow-soft hover:shadow-medium transition-shadow animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
-                <img src={leader.image} alt={leader.name} className="w-full h-64 object-cover" />
+                <img src={leader.image} alt={leader.name} className="w-full h-64 object-cover object-top" />
                 <div className="p-6">
                   <h3 className="font-heading font-semibold text-xl text-charcoal">{leader.name}</h3>
                   <p className="text-purple font-medium text-sm mb-4">{leader.role}</p>
@@ -118,7 +118,7 @@ const AboutPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {instructors.map((instructor, index) => (
               <div key={instructor.name} className="bg-background rounded-xl overflow-hidden shadow-soft hover:shadow-medium transition-shadow animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
-                <img src={instructor.image} alt={instructor.name} className="w-full h-64 object-cover" />
+                <img src={instructor.image} alt={instructor.name} className="w-full h-64 object-cover object-top" />
                 <div className="p-6">
                   <h3 className="font-heading font-semibold text-xl text-charcoal">{instructor.name}</h3>
                   <p className="text-purple font-medium text-sm mb-4">{instructor.role}</p>

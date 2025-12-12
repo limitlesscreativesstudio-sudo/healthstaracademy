@@ -1,4 +1,5 @@
-import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import { Phone, Mail, MapPin } from "lucide-react";
+import { Facebook, Instagram } from "lucide-react";
 
 const TopInfoBar = () => {
   return (
@@ -25,13 +26,26 @@ const TopInfoBar = () => {
               <MapPin className="h-4 w-4" />
               <span>5250 Claremont Ave, Suite 127, Stockton, CA</span>
             </div>
-            <div className="hidden xl:flex items-center gap-2 text-primary-foreground/80">
-              <Clock className="h-4 w-4" />
-              <span>Mon-Thu: 9am-5pm | Fri: 9am-1pm</span>
-            </div>
           </div>
-          <div className="hidden sm:block text-primary-foreground/80">
-            Training Sites: Stockton | Lodi | Hayward
+          <div className="flex items-center gap-4">
+            <a 
+              href="https://www.facebook.com/healthstaracademy" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-cyan transition-colors"
+              aria-label="Facebook"
+            >
+              <Facebook className="h-4 w-4" />
+            </a>
+            <a 
+              href="https://www.instagram.com/healthstaracademy" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-cyan transition-colors"
+              aria-label="Instagram"
+            >
+              <Instagram className="h-4 w-4" />
+            </a>
           </div>
         </div>
       </div>
