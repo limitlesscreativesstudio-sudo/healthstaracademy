@@ -140,7 +140,7 @@ const Header = () => {
             </Button>
             <Button variant="gray-outline" asChild>
               <a href={STUDENT_LOGIN_LINK} target="_blank" rel="noopener noreferrer">
-                Student Login
+                Student Portal
               </a>
             </Button>
           </div>
@@ -216,7 +216,7 @@ const Header = () => {
                   </Button>
                   <Button variant="gray-outline" asChild className="w-full">
                     <a href={STUDENT_LOGIN_LINK} target="_blank" rel="noopener noreferrer">
-                      Student Login
+                      Student Portal
                     </a>
                   </Button>
                 </div>
