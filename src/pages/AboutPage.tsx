@@ -5,7 +5,8 @@ import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
 import instructorStethoscopeTraining from "@/assets/instructor-stethoscope-training.jpg";
-import diverseStudentsTraining from "@/assets/diverse-students-training.jpg";
+import instructorsHealthcare from "@/assets/instructors-healthcare.jpg";
+import studentsBpTraining from "@/assets/students-bp-training.jpg";
 import cnaPatientCare from "@/assets/cna-patient-care.png";
 
 const AboutPage = () => {
@@ -18,15 +19,15 @@ const AboutPage = () => {
     { text: "No Prerequisites Required", link: null },
   ];
 
-  const leadership = [
+const leadership = [
     {
-      name: "Agnes Adebe, MSN",
+      name: "Agnes A., MSN",
       role: "Co-Owner & Program Director",
       image: instructorTeachingMannequin,
       bio: "With over 30 years of experience in healthcare, Agnes brings a wealth of clinical knowledge and a passion for mentoring the next generation of CNAs.",
     },
     {
-      name: "Kimberly Nelson, RN",
+      name: "Kimberly N., RN",
       role: "Co-Owner & Program Administrator",
       image: instructorStethoscopeTraining,
       bio: "With over 30 years of nursing experience, Kimberly ensures our program delivers excellence in both education and student support.",
@@ -37,13 +38,13 @@ const AboutPage = () => {
     {
       name: "RN Instructor",
       role: "Lead Instructor",
-      image: instructorTeachingMannequin,
+      image: instructorsHealthcare,
       bio: "Our lead instructors bring years of bedside nursing experience and a passion for training the next generation of CNAs with real-world, hands-on skills.",
     },
     {
       name: "Clinical Instructor",
       role: "Clinical Training",
-      image: instructorStethoscopeTraining,
+      image: studentsBpTraining,
       bio: "Our clinical instructors provide supportive, personalized guidance at approved healthcare facilities to build your confidence for your first CNA position.",
     },
   ];
@@ -97,7 +98,7 @@ const AboutPage = () => {
               </p>
             </div>
             <div className="animate-slide-in-right">
-              <img src={diverseStudentsTraining} alt="Health Star Academy diverse students in clinical training" className="rounded-xl shadow-medium w-full" />
+              <img src={studentsBpTraining} alt="Health Star Academy diverse students in clinical training" className="rounded-xl shadow-medium w-full" />
             </div>
           </div>
         </div>
