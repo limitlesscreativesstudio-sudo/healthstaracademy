@@ -238,6 +238,30 @@ const ProgramsPage = () => {
         </div>
       </section>
 
+      {/* State Exam Prep CTA */}
+      <section className="py-12 bg-gradient-to-r from-purple/10 to-cyan/10">
+        <div className="container-custom">
+          <div className="bg-background rounded-xl p-8 shadow-soft flex flex-col md:flex-row items-center gap-6">
+            <div className="w-20 h-20 bg-purple rounded-full flex items-center justify-center flex-shrink-0">
+              <ClipboardCheck className="h-10 w-10 text-white" />
+            </div>
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="font-heading font-bold text-2xl text-charcoal mb-2">
+                California State Exam Prep Tool
+              </h3>
+              <p className="text-gray-dark mb-4">
+                Practice with 175+ CDPH-aligned questions. Choose from Study Mode, Timed Exam simulations, or Category Drills to master every topic before your certification exam.
+              </p>
+              <Button asChild>
+                <Link to="/programs/exam-prep">
+                  Start Practicing Now <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Clinical Training Locations */}
       <section className="py-12 bg-background">
         <div className="container-custom">

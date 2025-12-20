@@ -17,6 +17,7 @@ const navLinks = [
     submenu: [
       { name: "Program Overview", path: "/programs" },
       { name: "Admissions", path: "/programs/admissions" },
+      { name: "State Exam Prep", path: "/programs/exam-prep" },
     ]
   },
   { name: "Blog", path: "/blog" },
