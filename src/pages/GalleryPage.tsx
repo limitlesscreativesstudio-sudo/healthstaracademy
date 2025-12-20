@@ -4,24 +4,15 @@ import { ArrowRight, Camera, Image as ImageIcon } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import studentsTrainingGroup from "@/assets/students-training-group.png";
-import cnaStudentsGroup from "@/assets/cna-students-group.png";
-import cnaPatientCare from "@/assets/cna-patient-care.png";
-import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
-import instructorStethoscopeTraining from "@/assets/instructor-stethoscope-training.jpg";
-import cnaStudentsConfident from "@/assets/cna-students-confident.jpg";
-import studentCareTraining from "@/assets/student-care-training.jpg";
 import studentsVitalsPractice from "@/assets/students-vitals-practice.jpg";
+import heroDiverseStudents from "@/assets/hero-diverse-students.jpg";
 
 const GalleryPage = () => {
+  // Gallery images - excluding images used as hero banners on other pages
   const galleryImages = [
-    { src: cnaStudentsConfident, alt: "Health Star Academy diverse CNA students smiling confidently", category: "Students" },
-    { src: studentCareTraining, alt: "CNA student providing compassionate care to patient", category: "Patient Care" },
+    { src: heroDiverseStudents, alt: "Diverse group of Health Star Academy CNA students in clinical lab", category: "Students" },
     { src: studentsVitalsPractice, alt: "CNA students practicing vital signs together", category: "Training" },
     { src: studentsTrainingGroup, alt: "Health Star Academy diverse CNA students in clinical training", category: "Students" },
-    { src: cnaStudentsGroup, alt: "Diverse group of CNA students with stethoscopes", category: "Students" },
-    { src: cnaPatientCare, alt: "CNA providing compassionate care to elderly patient", category: "Patient Care" },
-    { src: instructorTeachingMannequin, alt: "Instructor teaching student with mannequin", category: "Training" },
-    { src: instructorStethoscopeTraining, alt: "Instructor guiding student with stethoscope technique", category: "Training" },
   ];
 
   return (
@@ -35,7 +26,7 @@ const GalleryPage = () => {
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
-        imageSrc={cnaStudentsGroup}
+        imageSrc={studentsTrainingGroup}
         imageAlt="Health Star Academy diverse students and graduates"
         title={
           <>
