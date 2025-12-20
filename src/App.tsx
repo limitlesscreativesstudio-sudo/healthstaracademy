@@ -17,6 +17,7 @@ import BlogPage from "./pages/BlogPage";
 import HealthcareCareerPath from "./pages/blog/HealthcareCareerPath";
 import CNATrainingExcellence from "./pages/blog/CNATrainingExcellence";
 import NursingCareerFoundations from "./pages/blog/NursingCareerFoundations";
+import ExamPrepPage from "./pages/ExamPrepPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/about" element={<AboutPage />} />
               <Route path="/programs" element={<ProgramsPage />} />
               <Route path="/programs/admissions" element={<AdmissionsPage />} />
+              <Route path="/programs/exam-prep" element={<ExamPrepPage />} />
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/blog" element={<BlogPage />} />
