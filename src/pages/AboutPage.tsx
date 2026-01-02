@@ -21,13 +21,13 @@ const AboutPage = () => {
 
 const leadership = [
     {
-      name: "Agnes A., MSN",
+      name: "Agnes E., MSN",
       role: "Co-Owner & Program Director",
       image: instructorTeachingMannequin,
       bio: "With over 30 years of experience in healthcare, Agnes brings a wealth of clinical knowledge and a passion for mentoring the next generation of CNAs.",
     },
     {
-      name: "Kimberly N., RN",
+      name: "Kimberly N., BSN",
       role: "Co-Owner & Program Administrator",
       image: instructorStethoscopeTraining,
       bio: "With over 30 years of nursing experience, Kimberly ensures our program delivers excellence in both education and student support.",
@@ -37,9 +37,9 @@ const leadership = [
   const instructors = [
     {
       name: "RN Instructor",
-      role: "Lead Instructor",
+      role: "Classroom Instructor",
       image: instructorsHealthcare,
-      bio: "Our lead instructors bring years of bedside nursing experience and a passion for training the next generation of CNAs with real-world, hands-on skills.",
+      bio: "Our instructors bring years of bedside nursing experience and a passion for training the next generation of CNAs with real-world, hands-on skills.",
     },
     {
       name: "Clinical Instructor",
