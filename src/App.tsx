@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import AnnouncementBar from "./components/AnnouncementBar";
 import TopInfoBar from "./components/TopInfoBar";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -30,6 +31,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <div className="min-h-screen flex flex-col">
+          <AnnouncementBar />
           <TopInfoBar />
           <Header />
           <div className="flex-grow">
