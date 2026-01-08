@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Clock, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 import scholarshipBanner from '@/assets/scholarship-banner.png';
+
+const DEADLINE_DATE = new Date('2026-01-12T23:59:59');
 
 const announcements = [
   {
@@ -11,6 +13,7 @@ const announcements = [
     subtitle: 'Application deadline: January 12, 2026',
     ctaText: 'Enroll Now',
     ctaLink: '/programs/admissions',
+    hasCountdown: true,
   },
   {
     id: 'scholarship',
@@ -29,6 +32,32 @@ const AnnouncementBar = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const calculateCountdown = () => {
+      const now = new Date();
+      const diff = DEADLINE_DATE.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      return { days, hours, minutes, seconds };
+    };
+
+    setCountdown(calculateCountdown());
+    const interval = setInterval(() => {
+      setCountdown(calculateCountdown());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   if (!isVisible) return null;
 
@@ -45,7 +74,7 @@ const AnnouncementBar = () => {
   };
 
   return (
-    <div className="relative bg-gradient-to-r from-purple to-magenta text-white overflow-hidden">
+    <div className="sticky top-[120px] z-40 bg-gradient-to-r from-purple to-magenta text-white overflow-hidden shadow-lg">
       {/* Animated background effect */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.3),transparent_50%)]" />
@@ -68,18 +97,43 @@ const AnnouncementBar = () => {
 
           {/* Announcement content */}
           <div 
-            className="flex-1 flex items-center justify-center gap-3 cursor-pointer"
+            className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 cursor-pointer"
             onClick={() => currentAnnouncement.image && setIsExpanded(!isExpanded)}
           >
-            <currentAnnouncement.icon className="w-5 h-5 flex-shrink-0 animate-pulse" />
-            <div className="text-center">
+            <div className="flex items-center gap-2">
+              <currentAnnouncement.icon className="w-5 h-5 flex-shrink-0 animate-pulse" />
               <span className="font-bold text-sm md:text-base">
                 {currentAnnouncement.title}
               </span>
-              <span className="hidden sm:inline text-white/90 text-sm ml-2">
-                — {currentAnnouncement.subtitle}
-              </span>
             </div>
+            
+            {/* Countdown Timer */}
+            {currentAnnouncement.hasCountdown && (
+              <div className="flex items-center gap-1 bg-white/20 rounded-lg px-3 py-1">
+                <div className="flex items-center gap-1 text-xs sm:text-sm font-mono">
+                  <div className="flex flex-col items-center">
+                    <span className="font-bold text-base sm:text-lg">{countdown.days}</span>
+                    <span className="text-[10px] uppercase">Days</span>
+                  </div>
+                  <span className="text-lg font-bold">:</span>
+                  <div className="flex flex-col items-center">
+                    <span className="font-bold text-base sm:text-lg">{String(countdown.hours).padStart(2, '0')}</span>
+                    <span className="text-[10px] uppercase">Hrs</span>
+                  </div>
+                  <span className="text-lg font-bold">:</span>
+                  <div className="flex flex-col items-center">
+                    <span className="font-bold text-base sm:text-lg">{String(countdown.minutes).padStart(2, '0')}</span>
+                    <span className="text-[10px] uppercase">Min</span>
+                  </div>
+                  <span className="text-lg font-bold">:</span>
+                  <div className="flex flex-col items-center">
+                    <span className="font-bold text-base sm:text-lg">{String(countdown.seconds).padStart(2, '0')}</span>
+                    <span className="text-[10px] uppercase">Sec</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <a
               href={currentAnnouncement.ctaLink}
               target={currentAnnouncement.external ? '_blank' : undefined}
