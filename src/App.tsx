@@ -31,9 +31,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <div className="min-h-screen flex flex-col">
-          <AnnouncementBar />
           <TopInfoBar />
           <Header />
+          <AnnouncementBar />
           <div className="flex-grow">
             <Routes>
               <Route path="/" element={<HomePage />} />
