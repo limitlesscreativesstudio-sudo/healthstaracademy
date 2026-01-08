@@ -33,8 +33,8 @@ const App = () => (
         <div className="min-h-screen flex flex-col">
           <TopInfoBar />
           <Header />
-          <AnnouncementBar />
           <div className="flex-grow">
+            <AnnouncementBar />
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />

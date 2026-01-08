@@ -5,7 +5,7 @@ const TopInfoBar = () => {
   return (
     <div className="bg-charcoal text-primary-foreground py-2 text-sm">
       <div className="container-custom">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6">
           <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
             <a 
               href="tel:2093234169" 
