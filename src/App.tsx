@@ -13,6 +13,7 @@ import AboutPage from "./pages/AboutPage";
 import ProgramsPage from "./pages/ProgramsPage";
 import LocationsPage from "./pages/LocationsPage";
 import AdmissionsPage from "./pages/AdmissionsPage";
+import CohortsPage from "./pages/CohortsPage";
 import GalleryPage from "./pages/GalleryPage";
 import ContactPage from "./pages/ContactPage";
 import BlogPage from "./pages/BlogPage";
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/programs" element={<ProgramsPage />} />
+              <Route path="/programs/cohorts" element={<CohortsPage />} />
               <Route path="/programs/admissions" element={<AdmissionsPage />} />
               <Route path="/programs/exam-prep" element={<ExamPrepPage />} />
               <Route path="/locations" element={<LocationsPage />} />

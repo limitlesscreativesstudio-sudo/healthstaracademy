@@ -12,11 +12,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
+  Award,
 } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import heroDiverseStudents from "@/assets/hero-diverse-students.jpg";
 import studentCareTraining from "@/assets/student-care-training.jpg";
+import scholarshipBanner from "@/assets/scholarship-banner.png";
 
 const ENROLLMENT_LINK = "https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true";
 
@@ -337,16 +339,46 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Final CTA Section */}
-      <section className="gradient-hero section-padding">
+      {/* Scholarship Section */}
+      <section className="section-padding bg-background">
+        <div className="container-custom">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Award className="h-8 w-8 text-purple" />
+                <span className="bg-purple/10 text-purple px-3 py-1 rounded-full text-sm font-semibold">Scholarship Opportunity</span>
+              </div>
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+                $1,000 Scholarship Available!
+              </h2>
+              <p className="text-gray-dark mb-4 leading-relaxed">
+                Self-Help Credit Union Community Scholarship Awards 2026 — Apply now for the chance to receive $1,000 towards your CNA tuition!
+              </p>
+              <Button variant="default" size="lg" asChild>
+                <a href="https://www.self-helpfcu.org/scholarship" target="_blank" rel="noopener noreferrer">
+                  Apply for Scholarship <ArrowRight className="ml-2 h-5 w-5" />
+                </a>
+              </Button>
+            </div>
+            <div>
+              <a href="https://www.self-helpfcu.org/scholarship" target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden shadow-medium hover:shadow-strong transition-shadow">
+                <img src={scholarshipBanner} alt="Community Scholarship Awards 2026 - Apply for the chance to receive $1,000 towards your tuition" className="w-full h-auto" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA Section - Simplified */}
+      <section className="py-12 bg-neutral-light">
         <div className="container-custom text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-3">
+          <h2 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-3">
             Your New Career in Healthcare Starts with a Single Decision
           </h2>
-          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-6 text-lg">
+          <p className="text-gray-dark max-w-2xl mx-auto mb-6">
             No prerequisites required. Payment plans available. New classes start monthly.
           </p>
-          <Button variant="secondary" size="xl" asChild>
+          <Button variant="default" size="lg" asChild>
             <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">
               Secure Your Spot in the Next Class <ArrowRight className="ml-2 h-5 w-5" />
             </a>

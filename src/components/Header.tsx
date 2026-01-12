@@ -16,10 +16,12 @@ const navLinks = [
     path: "/programs",
     submenu: [
       { name: "Program Overview", path: "/programs" },
+      { name: "Cohorts & Pricing", path: "/programs/cohorts" },
       { name: "Admissions", path: "/programs/admissions" },
       { name: "State Exam Prep", path: "/programs/exam-prep" },
     ]
   },
+  { name: "Locations", path: "/locations" },
   { name: "Blog", path: "/blog" },
   { name: "Gallery", path: "/gallery" },
   { name: "Contact", path: "/contact" },

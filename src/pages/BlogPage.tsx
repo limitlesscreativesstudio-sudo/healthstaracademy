@@ -190,16 +190,16 @@ const BlogPage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="gradient-accent section-padding">
+      {/* CTA Section - Simplified */}
+      <section className="py-12 bg-background">
         <div className="container-custom text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-3">
+          <h2 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-3">
             Ready to Start Your Healthcare Career?
           </h2>
-          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-6 text-lg">
+          <p className="text-gray-dark max-w-2xl mx-auto mb-6">
             Turn your interest into action. Enroll in our CDPH-approved CNA program today!
           </p>
-          <Button variant="secondary" size="lg" asChild>
+          <Button variant="default" size="lg" asChild>
             <a href="https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true" target="_blank" rel="noopener noreferrer">
               Start Your Application <ArrowRight className="ml-2 h-5 w-5" />
             </a>
