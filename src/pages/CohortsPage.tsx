@@ -6,39 +6,41 @@ import SEO from "@/components/SEO";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 
 const CohortsPage = () => {
+  const denefitsLink = "https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a";
+
   const cohorts = [
     {
       option: 1,
-      startDate: "May 19, 2025",
-      endDate: "June 30, 2025",
+      startDate: "January 26, 2025",
+      endDate: "March 10, 2025",
       paidInFullLink: "https://buy.stripe.com/fZu9AM7Dl845g8T0YP6sw06",
       paymentPlanLink: "https://buy.stripe.com/4gMfZaaPxgABcWHgXN6sw0d",
     },
     {
       option: 2,
-      startDate: "July 7, 2025",
-      endDate: "August 18, 2025",
+      startDate: "March 17, 2025",
+      endDate: "April 28, 2025",
       paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
       paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
     },
     {
       option: 3,
-      startDate: "August 25, 2025",
-      endDate: "October 6, 2025",
+      startDate: "May 5, 2025",
+      endDate: "June 16, 2025",
       paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
       paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
     },
     {
       option: 4,
-      startDate: "October 13, 2025",
-      endDate: "November 25, 2025",
+      startDate: "June 23, 2025",
+      endDate: "August 4, 2025",
       paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
       paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
     },
     {
       option: 5,
-      startDate: "December 1, 2025",
-      endDate: "January 19, 2026",
+      startDate: "August 11, 2025",
+      endDate: "September 22, 2025",
       paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
       paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
     },
@@ -72,8 +74,8 @@ const CohortsPage = () => {
           imageAlt="Health Star Academy CNA students ready for their healthcare career"
           title={
             <>
-              Choose Your<br />
-              <span className="text-cyan">Cohort & Pay</span>
+              Cohorts &<br />
+              <span className="text-cyan">Tuition</span>
             </>
           }
           subtitle="Select your start date and payment option below"
@@ -196,7 +198,7 @@ const CohortsPage = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
                       <Button variant="default" size="lg" asChild>
                         <a href={cohort.paidInFullLink} target="_blank" rel="noopener noreferrer">
                           <DollarSign className="h-4 w-4 mr-1" />
@@ -207,6 +209,12 @@ const CohortsPage = () => {
                         <a href={cohort.paymentPlanLink} target="_blank" rel="noopener noreferrer">
                           <Clock className="h-4 w-4 mr-1" />
                           Payment Plan - $499.80/wk
+                        </a>
+                      </Button>
+                      <Button variant="outline" size="lg" asChild className="border-cyan text-cyan hover:bg-cyan hover:text-charcoal">
+                        <a href={denefitsLink} target="_blank" rel="noopener noreferrer">
+                          <CreditCard className="h-4 w-4 mr-1" />
+                          Denefits Financing
                         </a>
                       </Button>
                     </div>

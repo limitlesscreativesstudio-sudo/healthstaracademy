@@ -1,14 +1,31 @@
-import { MapPin, Phone, Clock, Navigation, Building2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
+import { MapPin, Phone, Clock, Navigation, Building2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import HeroBanner from '@/components/HeroBanner';
 import SEO from '@/components/SEO';
 import heroImage from '@/assets/hero-programs.jpg';
 
-const centralValleyLocations = [
+interface Facility {
+  name: string;
+  address: string;
+  phone: string;
+  hours: string;
+  mapUrl: string;
+  services: string[];
+  isPrimary: boolean;
+}
+
+interface Location {
+  city: string;
+  state: string;
+  facilities: Facility[];
+}
+
+const centralValleyLocations: Location[] = [
   {
     city: "Stockton",
-    region: "Central Valley",
+    state: "CA",
     facilities: [
       {
         name: "Meadowood Health and Rehabilitation Center",
@@ -23,7 +40,7 @@ const centralValleyLocations = [
   },
   {
     city: "Lodi",
-    region: "Central Valley",
+    state: "CA",
     facilities: [
       {
         name: "Lodi Creek Post-Acute",
@@ -38,10 +55,10 @@ const centralValleyLocations = [
   },
 ];
 
-const bayAreaLocations = [
+const bayAreaLocations: Location[] = [
   {
     city: "Hayward",
-    region: "Bay Area",
+    state: "CA",
     facilities: [
       {
         name: "Bay Area Skilled Nursing Facility",
@@ -55,6 +72,74 @@ const bayAreaLocations = [
     ],
   },
 ];
+
+const LocationItem = ({ location }: { location: Location }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="border rounded-lg bg-background overflow-hidden">
+      <CollapsibleTrigger className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
+        <div className="flex items-center gap-3">
+          <MapPin className="w-5 h-5 text-primary" />
+          <span className="text-lg font-semibold text-foreground">
+            {location.city}, {location.state}
+          </span>
+          {location.facilities.some(f => f.isPrimary) && (
+            <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">Main Campus</span>
+          )}
+        </div>
+        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="px-6 pb-6 pt-2 space-y-4">
+          {location.facilities.map((facility) => (
+            <div key={facility.name} className="bg-muted/30 rounded-lg p-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <Building2 className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-foreground">{facility.name}</h4>
+                </div>
+              </div>
+              
+              <div className="grid gap-3 text-sm">
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <span className="text-muted-foreground">{facility.address}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <a href={`tel:${facility.phone}`} className="text-primary hover:underline">{facility.phone}</a>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-muted-foreground">{facility.hours}</span>
+                </div>
+              </div>
+              
+              <div className="pt-2 border-t border-border/50">
+                <p className="text-xs text-muted-foreground mb-2">Services Available:</p>
+                <div className="flex flex-wrap gap-1">
+                  {facility.services.map((service) => (
+                    <span key={service} className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full">
+                      {service}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <Button asChild variant="outline" size="sm">
+                <a href={facility.mapUrl} target="_blank" rel="noopener noreferrer">
+                  <Navigation className="w-4 h-4 mr-2" />
+                  Get Directions
+                </a>
+              </Button>
+            </div>
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
 
 const LocationsPage = () => {
   return (
@@ -85,65 +170,11 @@ const LocationsPage = () => {
             </div>
           </div>
 
-          {centralValleyLocations.map((location) => (
-            <div key={location.city} className="mb-10">
-              <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-primary" />
-                {location.city}, CA
-              </h3>
-              <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
-                {location.facilities.map((facility) => (
-                  <Card key={facility.name} className={`overflow-hidden hover:shadow-lg transition-shadow ${facility.isPrimary ? 'ring-2 ring-primary' : ''}`}>
-                    {facility.isPrimary && (
-                      <div className="bg-primary text-primary-foreground text-center py-1 text-sm font-medium">
-                        Main Campus
-                      </div>
-                    )}
-                    <CardHeader>
-                      <CardTitle className="flex items-start gap-3">
-                        <Building2 className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                        <div>
-                          <span className="block text-lg">{facility.name}</span>
-                        </div>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-start gap-3 text-sm">
-                        <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                        <span className="text-muted-foreground">{facility.address}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <a href={`tel:${facility.phone}`} className="text-primary hover:underline">{facility.phone}</a>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <span className="text-muted-foreground">{facility.hours}</span>
-                      </div>
-                      
-                      <div className="pt-2 border-t">
-                        <p className="text-xs text-muted-foreground mb-2">Services Available:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {facility.services.map((service) => (
-                            <span key={service} className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full">
-                              {service}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <Button asChild variant="outline" className="w-full mt-4">
-                        <a href={facility.mapUrl} target="_blank" rel="noopener noreferrer">
-                          <Navigation className="w-4 h-4 mr-2" />
-                          Get Directions
-                        </a>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          ))}
+          <div className="space-y-4 max-w-3xl">
+            {centralValleyLocations.map((location) => (
+              <LocationItem key={location.city} location={location} />
+            ))}
+          </div>
         </div>
       </section>
 
@@ -160,64 +191,15 @@ const LocationsPage = () => {
             </div>
           </div>
 
-          {bayAreaLocations.map((location) => (
-            <div key={location.city} className="mb-10">
-              <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-primary" />
-                {location.city}, CA
-              </h3>
-              <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-6">
-                {location.facilities.map((facility) => (
-                  <Card key={facility.name} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <CardTitle className="flex items-start gap-3">
-                        <Building2 className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                        <div>
-                          <span className="block text-lg">{facility.name}</span>
-                        </div>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-start gap-3 text-sm">
-                        <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                        <span className="text-muted-foreground">{facility.address}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <a href={`tel:${facility.phone}`} className="text-primary hover:underline">{facility.phone}</a>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <span className="text-muted-foreground">{facility.hours}</span>
-                      </div>
-                      
-                      <div className="pt-2 border-t">
-                        <p className="text-xs text-muted-foreground mb-2">Services Available:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {facility.services.map((service) => (
-                            <span key={service} className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full">
-                              {service}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <Button asChild variant="outline" className="w-full mt-4">
-                        <a href={facility.mapUrl} target="_blank" rel="noopener noreferrer">
-                          <Navigation className="w-4 h-4 mr-2" />
-                          Get Directions
-                        </a>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          ))}
+          <div className="space-y-4 max-w-3xl">
+            {bayAreaLocations.map((location) => (
+              <LocationItem key={location.city} location={location} />
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Contact CTA - Simplified */}
+      {/* Contact CTA */}
       <section className="py-12 bg-background">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl font-bold text-foreground mb-3">Questions About Our Locations?</h2>
