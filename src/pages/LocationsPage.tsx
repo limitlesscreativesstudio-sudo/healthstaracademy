@@ -5,6 +5,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import HeroBanner from '@/components/HeroBanner';
 import SEO from '@/components/SEO';
 import heroImage from '@/assets/hero-programs.jpg';
+import trainingLab from '@/assets/training-lab.jpg';
+import studentCareTraining from '@/assets/student-care-training.jpg';
+import studentsVitalsPractice from '@/assets/students-vitals-practice.jpg';
 
 interface Facility {
   name: string;
@@ -14,6 +17,7 @@ interface Facility {
   mapUrl: string;
   services: string[];
   isPrimary: boolean;
+  image?: string;
 }
 
 interface Location {
@@ -29,12 +33,13 @@ const centralValleyLocations: Location[] = [
     facilities: [
       {
         name: "Meadowood Health and Rehabilitation Center",
-        address: "1850 N California St, Stockton, CA 95204",
-        phone: "(209) 555-0100",
-        hours: "Mon-Fri: 8:00 AM - 5:00 PM",
-        mapUrl: "https://maps.google.com/?q=Meadowood+Health+and+Rehabilitation+Center+Stockton+CA",
+        address: "3110 Wagner Heights Rd, Stockton, CA 95209",
+        phone: "(209) 323-4169",
+        hours: "Mon-Fri: 9:00 AM - 5:00 PM",
+        mapUrl: "https://maps.google.com/?q=3110+Wagner+Heights+Rd+Stockton+CA+95209",
         services: ["Clinical Training", "Skills Lab", "State Exam Testing"],
         isPrimary: true,
+        image: trainingLab,
       },
     ],
   },
@@ -44,12 +49,13 @@ const centralValleyLocations: Location[] = [
     facilities: [
       {
         name: "Lodi Creek Post-Acute",
-        address: "1101 S Fairmont Ave, Lodi, CA 95240",
-        phone: "(209) 555-0200",
-        hours: "Mon-Fri: 8:00 AM - 5:00 PM",
-        mapUrl: "https://maps.google.com/?q=Lodi+Creek+Post-Acute+Lodi+CA",
+        address: "321 West Turner Road, Lodi, CA 95240",
+        phone: "(209) 323-4169",
+        hours: "Mon-Fri: 9:00 AM - 5:00 PM",
+        mapUrl: "https://maps.google.com/?q=321+West+Turner+Road+Lodi+CA+95240",
         services: ["Clinical Training", "Hands-on Practice"],
         isPrimary: false,
+        image: studentCareTraining,
       },
     ],
   },
@@ -63,11 +69,12 @@ const bayAreaLocations: Location[] = [
       {
         name: "Bay Area Skilled Nursing Facility",
         address: "22300 Foothill Blvd, Hayward, CA 94541",
-        phone: "(510) 555-0400",
-        hours: "Mon-Fri: 8:00 AM - 5:00 PM",
-        mapUrl: "https://maps.google.com/?q=Hayward+CA",
+        phone: "(209) 323-4169",
+        hours: "Mon-Fri: 9:00 AM - 5:00 PM",
+        mapUrl: "https://maps.google.com/?q=22300+Foothill+Blvd+Hayward+CA+94541",
         services: ["Clinical Training", "Skills Assessment"],
         isPrimary: false,
+        image: studentsVitalsPractice,
       },
     ],
   },
@@ -93,46 +100,59 @@ const LocationItem = ({ location }: { location: Location }) => {
       <CollapsibleContent>
         <div className="px-6 pb-6 pt-2 space-y-4">
           {location.facilities.map((facility) => (
-            <div key={facility.name} className="bg-muted/30 rounded-lg p-5 space-y-4">
-              <div className="flex items-start gap-3">
-                <Building2 className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="font-semibold text-foreground">{facility.name}</h4>
+            <div key={facility.name} className="bg-muted/30 rounded-lg overflow-hidden">
+              {/* Facility Image */}
+              {facility.image && (
+                <div className="aspect-video overflow-hidden">
+                  <img 
+                    src={facility.image} 
+                    alt={`${facility.name} training facility`}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-              </div>
+              )}
               
-              <div className="grid gap-3 text-sm">
+              <div className="p-5 space-y-4">
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <span className="text-muted-foreground">{facility.address}</span>
+                  <Building2 className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-foreground">{facility.name}</h4>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <a href={`tel:${facility.phone}`} className="text-primary hover:underline">{facility.phone}</a>
+                
+                <div className="grid gap-3 text-sm">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <span className="text-muted-foreground">{facility.address}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <a href={`tel:${facility.phone}`} className="text-primary hover:underline">{facility.phone}</a>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-muted-foreground">{facility.hours}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-muted-foreground">{facility.hours}</span>
+                
+                <div className="pt-2 border-t border-border/50">
+                  <p className="text-xs text-muted-foreground mb-2">Services Available:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {facility.services.map((service) => (
+                      <span key={service} className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full">
+                        {service}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              
-              <div className="pt-2 border-t border-border/50">
-                <p className="text-xs text-muted-foreground mb-2">Services Available:</p>
-                <div className="flex flex-wrap gap-1">
-                  {facility.services.map((service) => (
-                    <span key={service} className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full">
-                      {service}
-                    </span>
-                  ))}
-                </div>
-              </div>
 
-              <Button asChild variant="outline" size="sm">
-                <a href={facility.mapUrl} target="_blank" rel="noopener noreferrer">
-                  <Navigation className="w-4 h-4 mr-2" />
-                  Get Directions
-                </a>
-              </Button>
+                <Button asChild variant="outline" size="sm">
+                  <a href={facility.mapUrl} target="_blank" rel="noopener noreferrer">
+                    <Navigation className="w-4 h-4 mr-2" />
+                    Get Directions
+                  </a>
+                </Button>
+              </div>
             </div>
           ))}
         </div>
