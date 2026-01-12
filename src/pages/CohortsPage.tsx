@@ -4,55 +4,55 @@ import { Calendar, CreditCard, Clock, CheckCircle, ArrowRight, DollarSign } from
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
-import trainingLab from "@/assets/training-lab.jpg";
-import studentCareTraining from "@/assets/student-care-training.jpg";
-import studentsVitalsPractice from "@/assets/students-vitals-practice.jpg";
-import studentsBpTraining from "@/assets/students-bp-training.jpg";
-import cnaPatientCare from "@/assets/cna-patient-care.png";
+import cohortStudentFemale1 from "@/assets/cohort-student-female-1.jpg";
+import cohortStudentMale1 from "@/assets/cohort-student-male-1.jpg";
+import cohortStudentFemale2 from "@/assets/cohort-student-female-2.jpg";
+import cohortStudentMale2 from "@/assets/cohort-student-male-2.jpg";
+import cohortStudentFemale3 from "@/assets/cohort-student-female-3.jpg";
 
 const CohortsPage = () => {
   const denefitsLink = "https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a";
 
   const cohorts = [
     {
-      option: 1,
+      title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "January 26, 2025",
       endDate: "March 10, 2025",
       paidInFullLink: "https://buy.stripe.com/fZu9AM7Dl845g8T0YP6sw06",
       paymentPlanLink: "https://buy.stripe.com/4gMfZaaPxgABcWHgXN6sw0d",
-      image: trainingLab,
+      image: cohortStudentFemale1,
     },
     {
-      option: 2,
+      title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "March 17, 2025",
       endDate: "April 28, 2025",
       paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
       paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
-      image: studentCareTraining,
+      image: cohortStudentMale1,
     },
     {
-      option: 3,
+      title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "May 5, 2025",
       endDate: "June 16, 2025",
       paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
       paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
-      image: studentsVitalsPractice,
+      image: cohortStudentFemale2,
     },
     {
-      option: 4,
+      title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "June 23, 2025",
       endDate: "August 4, 2025",
       paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
       paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
-      image: studentsBpTraining,
+      image: cohortStudentMale2,
     },
     {
-      option: 5,
+      title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "August 11, 2025",
       endDate: "September 22, 2025",
       paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
       paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
-      image: cnaPatientCare,
+      image: cohortStudentFemale3,
     },
   ];
 
@@ -187,16 +187,16 @@ const CohortsPage = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {cohorts.map((cohort) => (
+              {cohorts.map((cohort, index) => (
                 <div
-                  key={cohort.option}
+                  key={index}
                   className="bg-background rounded-xl overflow-hidden shadow-soft hover:shadow-medium transition-shadow flex flex-col"
                 >
                   {/* Cohort Image */}
                   <div className="aspect-[4/3] overflow-hidden">
                     <img 
                       src={cohort.image} 
-                      alt={`CNA Training Cohort ${cohort.option}`}
+                      alt={`CNA Training Student - ${cohort.startDate}`}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -209,7 +209,7 @@ const CohortsPage = () => {
                       </div>
                       <div>
                         <h3 className="font-heading font-bold text-lg text-charcoal">
-                          Cohort {cohort.option}
+                          {cohort.title}
                         </h3>
                       </div>
                     </div>
