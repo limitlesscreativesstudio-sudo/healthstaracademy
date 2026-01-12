@@ -5,7 +5,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import HeroBanner from '@/components/HeroBanner';
 import SEO from '@/components/SEO';
 import heroImage from '@/assets/hero-programs.jpg';
-import trainingLab from '@/assets/training-lab.jpg';
+import stocktonFacility from '@/assets/stockton-facility.jpg';
 import studentCareTraining from '@/assets/student-care-training.jpg';
 import studentsVitalsPractice from '@/assets/students-vitals-practice.jpg';
 
@@ -39,7 +39,7 @@ const centralValleyLocations: Location[] = [
         mapUrl: "https://maps.google.com/?q=3110+Wagner+Heights+Rd+Stockton+CA+95209",
         services: ["Clinical Training", "Skills Lab", "State Exam Testing"],
         isPrimary: true,
-        image: trainingLab,
+        image: stocktonFacility,
       },
     ],
   },
