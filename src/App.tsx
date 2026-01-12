@@ -11,6 +11,7 @@ import Footer from "./components/Footer";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import ProgramsPage from "./pages/ProgramsPage";
+import LocationsPage from "./pages/LocationsPage";
 import AdmissionsPage from "./pages/AdmissionsPage";
 import GalleryPage from "./pages/GalleryPage";
 import ContactPage from "./pages/ContactPage";
@@ -41,6 +42,7 @@ const App = () => (
               <Route path="/programs" element={<ProgramsPage />} />
               <Route path="/programs/admissions" element={<AdmissionsPage />} />
               <Route path="/programs/exam-prep" element={<ExamPrepPage />} />
+              <Route path="/locations" element={<LocationsPage />} />
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/blog" element={<BlogPage />} />
