@@ -13,9 +13,9 @@ const AdmissionsPage = () => {
 
   const enrollmentSteps = [
     { step: 1, icon: ClipboardCheck, title: "Pre-Qualification Questionnaire", description: "Complete our pre-qualification questionnaire to ensure you have everything needed to start the program. If anything is missing, you'll need to obtain it and resubmit before moving to the next step." },
-    { step: 2, icon: FileText, title: "Enrollment Application & Fee", description: "Complete and sign the enrollment application, submit necessary documents, and pay the $175 enrollment fee to secure your spot." },
+    { step: 2, icon: FileText, title: "Enrollment Application & Fee", description: "Complete and sign the enrollment application within 10 business days of your cohort start date, submit necessary documents, and pay the $175 enrollment fee to secure your spot." },
     { step: 3, icon: UserCheck, title: "LiveScan Background Check", description: "You'll receive an email with instructions to complete your LiveScan background check at an approved location." },
-    { step: 4, icon: CalendarCheck, title: "Select Cohort & Pay Tuition", description: "Choose your preferred cohort start date and complete tuition payment using available payment options including Stripe, Klarna, Afterpay, Zip, or Apple Pay." },
+    { step: 4, icon: CalendarCheck, title: "Select Cohort & Pay Tuition", description: "Choose your preferred cohort start date and complete tuition payment using available payment options including Stripe, Klarna, Afterpay, Zip, or Apple Pay. All required documents must be submitted within 10 calendar days of enrollment." },
     { step: 5, icon: GraduationCap, title: "Enrollment, Handbook Review & Orientation", description: "Once payment is complete, you're enrolled in Canvas LMS. You'll receive the student handbook to review and sign, then attend orientation where you'll get all tools needed—including your Chromebook ($249 value)—to access course materials." },
   ];
 
