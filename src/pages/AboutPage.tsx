@@ -189,12 +189,12 @@ const leadership = [
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="gradient-accent section-padding">
+      {/* CTA Section - Simplified */}
+      <section className="py-12 bg-background">
         <div className="container-custom text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-3">Ready to Learn from the Best?</h2>
-          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-6 text-lg">Discover our comprehensive CNA program and see how we can help you achieve your healthcare career goals.</p>
-          <Button variant="secondary" size="lg" asChild>
+          <h2 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-3">Ready to Learn from the Best?</h2>
+          <p className="text-gray-dark max-w-2xl mx-auto mb-6">Discover our comprehensive CNA program and see how we can help you achieve your healthcare career goals.</p>
+          <Button variant="default" size="lg" asChild>
             <Link to="/programs">Explore Our Program <ArrowRight className="ml-2 h-5 w-5" /></Link>
           </Button>
         </div>

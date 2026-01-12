@@ -13,11 +13,10 @@ const AdmissionsPage = () => {
 
   const enrollmentSteps = [
     { step: 1, icon: ClipboardCheck, title: "Pre-Qualification Questionnaire", description: "Complete our pre-qualification questionnaire to ensure you have everything needed to start the program. If anything is missing, you'll need to obtain it and resubmit before moving to the next step." },
-    { step: 2, icon: BookOpen, title: "Student Handbook Review", description: "Once qualified, you'll receive the student handbook to review and sign. Return the signed handbook to the admissions team to proceed." },
-    { step: 3, icon: FileText, title: "Enrollment Application & Fee", description: "Complete and sign the enrollment application, submit necessary documents, and pay the $175 enrollment fee to secure your spot." },
-    { step: 4, icon: UserCheck, title: "LiveScan Background Check", description: "You'll receive an email with instructions to complete your LiveScan background check at an approved location." },
-    { step: 5, icon: CalendarCheck, title: "Select Cohort & Pay Tuition", description: "Choose your preferred cohort start date and complete tuition payment using available payment options including Stripe, Klarna, Afterpay, Zip, or Apple Pay." },
-    { step: 6, icon: GraduationCap, title: "Enrollment & Orientation", description: "Once payment is complete, you're enrolled in Canvas LMS to access your course. You'll receive your orientation date where you'll get all tools needed—including your Chromebook ($249 value)—to access course materials." },
+    { step: 2, icon: FileText, title: "Enrollment Application & Fee", description: "Complete and sign the enrollment application, submit necessary documents, and pay the $175 enrollment fee to secure your spot." },
+    { step: 3, icon: UserCheck, title: "LiveScan Background Check", description: "You'll receive an email with instructions to complete your LiveScan background check at an approved location." },
+    { step: 4, icon: CalendarCheck, title: "Select Cohort & Pay Tuition", description: "Choose your preferred cohort start date and complete tuition payment using available payment options including Stripe, Klarna, Afterpay, Zip, or Apple Pay." },
+    { step: 5, icon: GraduationCap, title: "Enrollment, Handbook Review & Orientation", description: "Once payment is complete, you're enrolled in Canvas LMS. You'll receive the student handbook to review and sign, then attend orientation where you'll get all tools needed—including your Chromebook ($249 value)—to access course materials." },
   ];
 
   const requirements = [
@@ -47,7 +46,7 @@ const AdmissionsPage = () => {
     <>
       <SEO
         title="Admissions & Enrollment | CNA Program Requirements | Health Star Academy"
-        description="Apply to Health Star Academy's CNA program. $2,748 total tuition with payment plans available. Requirements: 18+ years, valid ID, background check. New classes start monthly in Stockton, CA!"
+        description="Apply to Health Star Academy's CNA program. $2,499 total tuition with payment plans available. Requirements: 18+ years, valid ID, background check. New classes start monthly in Stockton, CA!"
         canonical="/programs/admissions"
         keywords="CNA program enrollment, nursing assistant admission requirements, CNA tuition cost, payment plans CNA training, enroll CNA program California, Health Star Academy application"
       />
@@ -66,11 +65,11 @@ const AdmissionsPage = () => {
         subtitle="New Classes Start Monthly!"
       />
 
-      {/* 6-Step Enrollment Process */}
+      {/* 5-Step Enrollment Process */}
       <section className="section-padding bg-background">
         <div className="container-custom">
           <div className="text-center mb-8">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">6-Step Enrollment Process</h2>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">5-Step Enrollment Process</h2>
             <p className="text-gray-dark max-w-2xl mx-auto">From pre-qualification to your first day of class, we guide you through every step.</p>
           </div>
 
@@ -183,6 +182,14 @@ const AdmissionsPage = () => {
               <span className="text-purple font-semibold text-sm">Click to apply now →</span>
             </a>
           </div>
+
+          <div className="text-center mt-8">
+            <Button variant="default" size="lg" asChild>
+              <Link to="/programs/cohorts">
+                View Cohorts & Pricing <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -215,16 +222,16 @@ const AdmissionsPage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="gradient-accent section-padding">
+      {/* CTA Section - Simplified */}
+      <section className="py-12 bg-background">
         <div className="container-custom text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-3">Ready to Take the First Step?</h2>
-          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-6 text-lg">Start your journey today. New classes start monthly - limited seats available!</p>
+          <h2 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-3">Ready to Take the First Step?</h2>
+          <p className="text-gray-dark max-w-2xl mx-auto mb-6">Start your journey today. New classes start monthly - limited seats available!</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="secondary" size="lg" asChild>
+            <Button variant="default" size="lg" asChild>
               <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">Start Your Application <ArrowRight className="ml-2 h-5 w-5" /></a>
             </Button>
-            <Button variant="purple-outline" size="lg" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-magenta" asChild>
+            <Button variant="outline" size="lg" asChild>
               <a href="tel:2093234169">Call (209) 323-4169</a>
             </Button>
           </div>

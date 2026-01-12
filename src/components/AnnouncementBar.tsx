@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Clock, Award, ChevronLeft, ChevronRight } from 'lucide-react';
-import scholarshipBanner from '@/assets/scholarship-banner.png';
+import { X, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const DEADLINE_DATE = new Date('2026-01-12T23:59:59');
 
@@ -15,23 +14,11 @@ const announcements = [
     ctaLink: '/programs/admissions',
     hasCountdown: true,
   },
-  {
-    id: 'scholarship',
-    type: 'scholarship',
-    icon: Award,
-    title: '$1,000 Scholarship Available!',
-    subtitle: 'Self-Help Credit Union Community Scholarship Awards 2026',
-    ctaText: 'Apply Now',
-    ctaLink: 'https://www.self-helpfcu.org/scholarship',
-    external: true,
-    image: scholarshipBanner,
-  },
 ];
 
 const AnnouncementBar = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
@@ -65,12 +52,10 @@ const AnnouncementBar = () => {
 
   const nextAnnouncement = () => {
     setCurrentIndex((prev) => (prev + 1) % announcements.length);
-    setIsExpanded(false);
   };
 
   const prevAnnouncement = () => {
     setCurrentIndex((prev) => (prev - 1 + announcements.length) % announcements.length);
-    setIsExpanded(false);
   };
 
   return (
@@ -96,10 +81,7 @@ const AnnouncementBar = () => {
           )}
 
           {/* Announcement content */}
-          <div 
-            className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 cursor-pointer"
-            onClick={() => currentAnnouncement.image && setIsExpanded(!isExpanded)}
-          >
+          <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2">
               <currentAnnouncement.icon className="w-5 h-5 flex-shrink-0 animate-pulse" />
               <span className="font-bold text-sm md:text-base">
@@ -136,9 +118,6 @@ const AnnouncementBar = () => {
 
             <a
               href={currentAnnouncement.ctaLink}
-              target={currentAnnouncement.external ? '_blank' : undefined}
-              rel={currentAnnouncement.external ? 'noopener noreferrer' : undefined}
-              onClick={(e) => e.stopPropagation()}
               className="flex-shrink-0 bg-white text-purple font-semibold px-4 py-1.5 rounded-full text-sm hover:bg-white/90 transition-colors shadow-lg hover:shadow-xl"
             >
               {currentAnnouncement.ctaText}
@@ -172,34 +151,13 @@ const AnnouncementBar = () => {
             {announcements.map((_, index) => (
               <button
                 key={index}
-                onClick={() => {
-                  setCurrentIndex(index);
-                  setIsExpanded(false);
-                }}
+                onClick={() => setCurrentIndex(index)}
                 className={`w-2 h-2 rounded-full transition-all ${
                   index === currentIndex ? 'bg-white w-4' : 'bg-white/50'
                 }`}
                 aria-label={`Go to announcement ${index + 1}`}
               />
             ))}
-          </div>
-        )}
-
-        {/* Expanded scholarship image */}
-        {isExpanded && currentAnnouncement.image && (
-          <div className="pb-4 animate-fade-in">
-            <a
-              href={currentAnnouncement.ctaLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block max-w-2xl mx-auto rounded-lg overflow-hidden shadow-xl hover:shadow-2xl transition-shadow"
-            >
-              <img
-                src={currentAnnouncement.image}
-                alt="Community Scholarship Awards 2026 - Apply for the chance to receive $1,000 towards your tuition"
-                className="w-full h-auto"
-              />
-            </a>
           </div>
         )}
       </div>
