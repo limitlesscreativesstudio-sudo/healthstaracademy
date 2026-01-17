@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
-import { X, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const DEADLINE_DATE = new Date('2026-01-12T23:59:59');
+const DEADLINE_DATE = new Date('2025-03-07T23:59:59');
 
 const announcements = [
   {
     id: 'cohort',
-    type: 'urgent',
-    icon: Clock,
-    title: 'January 2026 Cohort Enrollment Closing Soon!',
-    subtitle: 'Application deadline: January 12, 2026',
-    ctaText: 'Enroll Now',
-    ctaLink: '/programs/admissions',
+    type: 'info',
+    icon: Calendar,
+    title: 'January Cohort is Now Closed — Next Cohort Starts March 17!',
+    subtitle: 'Apply now for the March 2025 cohort',
+    ctaText: 'View Cohorts',
+    ctaLink: '/programs/cohorts',
     hasCountdown: true,
   },
 ];
