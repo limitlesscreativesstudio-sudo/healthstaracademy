@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Calendar, CreditCard, Clock, CheckCircle, ArrowRight, DollarSign } from "lucide-react";
+import { cn } from "@/lib/utils";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
@@ -18,9 +19,10 @@ const CohortsPage = () => {
       title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "January 26, 2025",
       endDate: "March 10, 2025",
-      paidInFullLink: "https://buy.stripe.com/fZu9AM7Dl845g8T0YP6sw06",
-      paymentPlanLink: "https://buy.stripe.com/4gMfZaaPxgABcWHgXN6sw0d",
+      paidInFullLink: "",
+      paymentPlanLink: "",
       image: cohortStudentFemale1,
+      isClosed: true,
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
@@ -29,6 +31,7 @@ const CohortsPage = () => {
       paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
       paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
       image: cohortStudentMale1,
+      isClosed: false,
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
@@ -37,6 +40,7 @@ const CohortsPage = () => {
       paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
       paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
       image: cohortStudentFemale2,
+      isClosed: false,
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
@@ -45,6 +49,7 @@ const CohortsPage = () => {
       paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
       paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
       image: cohortStudentMale2,
+      isClosed: false,
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
@@ -53,6 +58,7 @@ const CohortsPage = () => {
       paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
       paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
       image: cohortStudentFemale3,
+      isClosed: false,
     },
   ];
 
@@ -190,22 +196,35 @@ const CohortsPage = () => {
               {cohorts.map((cohort, index) => (
                 <div
                   key={index}
-                  className="bg-background rounded-xl overflow-hidden shadow-soft hover:shadow-medium transition-shadow flex flex-col"
+                  className={cn(
+                    "bg-background rounded-xl overflow-hidden shadow-soft transition-shadow flex flex-col",
+                    cohort.isClosed ? "opacity-75" : "hover:shadow-medium"
+                  )}
                 >
                   {/* Cohort Image */}
-                  <div className="aspect-[4/3] overflow-hidden">
+                  <div className="aspect-[4/3] overflow-hidden relative">
                     <img 
                       src={cohort.image} 
                       alt={`CNA Training Student - ${cohort.startDate}`}
-                      className="w-full h-full object-cover"
+                      className={cn("w-full h-full object-cover", cohort.isClosed && "grayscale")}
                     />
+                    {cohort.isClosed && (
+                      <div className="absolute inset-0 bg-charcoal/60 flex items-center justify-center">
+                        <span className="bg-red-600 text-white font-bold text-lg px-6 py-2 rounded-lg transform -rotate-12 shadow-lg">
+                          CLOSED
+                        </span>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Cohort Info */}
                   <div className="p-5 flex flex-col flex-grow">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-purple/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Calendar className="h-5 w-5 text-purple" />
+                      <div className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+                        cohort.isClosed ? "bg-gray-200" : "bg-purple/10"
+                      )}>
+                        <Calendar className={cn("h-5 w-5", cohort.isClosed ? "text-gray-400" : "text-purple")} />
                       </div>
                       <div>
                         <h3 className="font-heading font-bold text-lg text-charcoal">
@@ -221,36 +240,47 @@ const CohortsPage = () => {
                       <p className="text-sm text-gray-medium">6 weeks (23 class days)</p>
                     </div>
 
-                    {/* Payment Buttons - Stacked Vertically */}
-                    <div className="flex flex-col gap-2 mt-auto">
-                      <Button variant="default" size="default" asChild className="w-full">
-                        <a href={cohort.paidInFullLink} target="_blank" rel="noopener noreferrer">
-                          <DollarSign className="h-4 w-4 mr-1" />
-                          Pay in Full - $2,499
-                        </a>
-                      </Button>
-                      <Button variant="secondary" size="default" asChild className="w-full">
-                        <a href={cohort.paymentPlanLink} target="_blank" rel="noopener noreferrer">
-                          <Clock className="h-4 w-4 mr-1" />
-                          Weekly Plan - $499.80/wk
-                        </a>
-                      </Button>
-                    </div>
-                    
-                    {/* Denefits Card - Gradient Style */}
-                    <a
-                      href={denefitsLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 bg-gradient-to-r from-cyan/20 to-magenta/20 rounded-lg p-4 text-center hover:from-cyan/30 hover:to-magenta/30 transition-all border border-cyan/50"
-                    >
-                      <div className="flex items-center justify-center gap-2 mb-1">
-                        <CreditCard className="h-4 w-4 text-purple" />
-                        <span className="font-semibold text-charcoal text-sm">Denefits Financing</span>
+                    {/* Payment Buttons or Closed Notice */}
+                    {cohort.isClosed ? (
+                      <div className="flex flex-col gap-2 mt-auto">
+                        <div className="bg-gray-100 rounded-lg p-4 text-center">
+                          <p className="font-bold text-red-600 mb-1">Registration Closed</p>
+                          <p className="text-sm text-gray-dark">This cohort is no longer accepting applications</p>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-dark">No credit check • Guaranteed approval</p>
-                      <span className="text-purple font-semibold text-xs mt-1 block">Apply Now →</span>
-                    </a>
+                    ) : (
+                      <>
+                        <div className="flex flex-col gap-2 mt-auto">
+                          <Button variant="default" size="default" asChild className="w-full">
+                            <a href={cohort.paidInFullLink} target="_blank" rel="noopener noreferrer">
+                              <DollarSign className="h-4 w-4 mr-1" />
+                              Pay in Full - $2,499
+                            </a>
+                          </Button>
+                          <Button variant="secondary" size="default" asChild className="w-full">
+                            <a href={cohort.paymentPlanLink} target="_blank" rel="noopener noreferrer">
+                              <Clock className="h-4 w-4 mr-1" />
+                              Weekly Plan - $499.80/wk
+                            </a>
+                          </Button>
+                        </div>
+                        
+                        {/* Denefits Card - Gradient Style */}
+                        <a
+                          href={denefitsLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-3 bg-gradient-to-r from-cyan/20 to-magenta/20 rounded-lg p-4 text-center hover:from-cyan/30 hover:to-magenta/30 transition-all border border-cyan/50"
+                        >
+                          <div className="flex items-center justify-center gap-2 mb-1">
+                            <CreditCard className="h-4 w-4 text-purple" />
+                            <span className="font-semibold text-charcoal text-sm">Denefits Financing</span>
+                          </div>
+                          <p className="text-xs text-gray-dark">No credit check • Guaranteed approval</p>
+                          <span className="text-purple font-semibold text-xs mt-1 block">Apply Now →</span>
+                        </a>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}

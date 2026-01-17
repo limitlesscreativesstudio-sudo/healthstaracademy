@@ -10,7 +10,15 @@ const STUDENT_LOGIN_LINK = "https://b2b0c970-8c97-44e8-bc56-a029b47c90c1.iad.log
 
 const navLinks = [
   { name: "Home", path: "/" },
-  { name: "About Us", path: "/about" },
+  { 
+    name: "About Us", 
+    path: "/about",
+    submenu: [
+      { name: "About Health Star Academy", path: "/about" },
+      { name: "Locations", path: "/locations" },
+      { name: "Careers", path: "/careers" },
+    ]
+  },
   { 
     name: "CNA Program", 
     path: "/programs",
@@ -21,7 +29,6 @@ const navLinks = [
       { name: "State Exam Prep", path: "/programs/exam-prep" },
     ]
   },
-  { name: "Locations", path: "/locations" },
   { name: "Blog", path: "/blog" },
   { name: "Gallery", path: "/gallery" },
   { name: "Contact", path: "/contact" },
