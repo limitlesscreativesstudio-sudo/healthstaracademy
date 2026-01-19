@@ -40,11 +40,6 @@ const ProgramsPage = () => {
   ];
 
   const upcomingDates = [
-    { date: "May 19, 2025", endDate: "June 30, 2025" },
-    { date: "July 7, 2025", endDate: "August 18, 2025" },
-    { date: "August 25, 2025", endDate: "October 6, 2025" },
-    { date: "October 13, 2025", endDate: "November 25, 2025" },
-    { date: "December 1, 2025", endDate: "January 19, 2026" },
     { date: "January 26, 2026", endDate: "March 9, 2026" },
     { date: "March 16, 2026", endDate: "April 27, 2026" },
     { date: "May 4, 2026", endDate: "June 15, 2026" },
@@ -327,7 +322,7 @@ const ProgramsPage = () => {
           {/* Next Start Dates */}
           <div className="bg-background rounded-xl p-6 shadow-soft max-w-3xl mx-auto">
             <h3 className="font-heading font-semibold text-xl text-charcoal mb-2 text-center">
-              Upcoming Class Dates — Starting January 2026
+              Upcoming Class Dates — 2026
             </h3>
             <p className="text-gray-dark text-sm text-center mb-4">
               Application deadline: 7 days prior to start date
