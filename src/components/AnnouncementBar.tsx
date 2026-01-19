@@ -8,7 +8,7 @@ const announcements = [
     id: 'cohort',
     type: 'info',
     icon: Calendar,
-    title: 'January Cohort is Now Closed — Next Cohort Starts March 17!',
+    title: 'January Cohort is Now Closed — Next Cohort Starts March 16!',
     subtitle: 'Apply now for the March 2025 cohort',
     ctaText: 'View Cohorts',
     ctaLink: '/programs/cohorts',
