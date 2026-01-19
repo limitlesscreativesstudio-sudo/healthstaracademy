@@ -6,10 +6,12 @@ import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 import cohortStudentFemale1 from "@/assets/cohort-student-female-1.jpg";
-import cohortStudentMale1 from "@/assets/cohort-student-male-1.jpg";
 import cohortStudentFemale2 from "@/assets/cohort-student-female-2.jpg";
-import cohortStudentMale2 from "@/assets/cohort-student-male-2.jpg";
 import cohortStudentFemale3 from "@/assets/cohort-student-female-3.jpg";
+import cohortStudentFemale4 from "@/assets/cohort-student-female-4.jpg";
+import cohortStudentMale1 from "@/assets/cohort-student-male-1.jpg";
+import cohortStudentMale2 from "@/assets/cohort-student-male-2.jpg";
+import cohortStudentMale3 from "@/assets/cohort-student-male-3.jpg";
 
 const CohortsPage = () => {
   const denefitsLink = "https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a";
@@ -22,7 +24,7 @@ const CohortsPage = () => {
       paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
       paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
       image: cohortStudentFemale1,
-      isClosed: false,
+      isClosed: true,
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
@@ -66,7 +68,7 @@ const CohortsPage = () => {
       endDate: "November 23, 2026",
       paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
       paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
-      image: cohortStudentFemale1,
+      image: cohortStudentFemale4,
       isClosed: false,
     },
     {
@@ -75,7 +77,7 @@ const CohortsPage = () => {
       endDate: "January 18, 2027",
       paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
       paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
-      image: cohortStudentMale1,
+      image: cohortStudentMale3,
       isClosed: false,
     },
   ];
