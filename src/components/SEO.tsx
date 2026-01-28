@@ -9,6 +9,8 @@ interface SEOProps {
   image?: string;
   author?: string;
   publishedTime?: string;
+  robots?: string;
+  structuredData?: object;
 }
 
 const SEO = ({
@@ -17,9 +19,11 @@ const SEO = ({
   canonical,
   keywords,
   type = "website",
-  image = "https://lovable.dev/opengraph-image-p98pqg.png",
+  image = "https://healthstar-launchpad.lovable.app/og-image.png",
   author,
   publishedTime,
+  robots,
+  structuredData,
 }: SEOProps) => {
   const baseUrl = "https://www.healthstaracademy.org";
   const fullCanonical = canonical ? `${baseUrl}${canonical}` : baseUrl;
@@ -32,6 +36,9 @@ const SEO = ({
       <meta name="description" content={description} />
       {keywords && <meta name="keywords" content={keywords} />}
       <link rel="canonical" href={fullCanonical} />
+      
+      {/* Robots Meta Tag */}
+      {robots && <meta name="robots" content={robots} />}
 
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />
@@ -60,6 +67,13 @@ const SEO = ({
       {/* Geo Tags */}
       <meta name="geo.region" content="US-CA" />
       <meta name="geo.placename" content="Stockton" />
+
+      {/* Structured Data */}
+      {structuredData && (
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      )}
     </Helmet>
   );
 };

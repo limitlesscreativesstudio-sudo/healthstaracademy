@@ -42,6 +42,19 @@ const AdmissionsPage = () => {
     { question: "Do I get any equipment or materials?", answer: "Yes! All students receive a Chromebook valued at $249 during orientation to access course materials. Your tuition also includes textbooks, workbook, uniform, BP cuff/stethoscope, and lab supplies." },
   ];
 
+  const faqStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  };
+
   return (
     <>
       <SEO
@@ -49,6 +62,7 @@ const AdmissionsPage = () => {
         description="Apply to Health Star Academy's CNA program. $2,499 total tuition with payment plans available. Requirements: 18+ years, valid ID, background check. New classes start monthly in Stockton, CA!"
         canonical="/programs/admissions"
         keywords="CNA program enrollment, nursing assistant admission requirements, CNA tuition cost, payment plans CNA training, enroll CNA program California, Health Star Academy application"
+        structuredData={faqStructuredData}
       />
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
