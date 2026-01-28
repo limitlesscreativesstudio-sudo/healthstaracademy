@@ -267,6 +267,8 @@ const ExamPrepPage = () => {
       <SEO
         title="CNA State Exam Prep | Health Star Academy"
         description="Practice with 175 CDPH-aligned questions for the California CNA certification exam. Study mode, timed exams, and category drills."
+        canonical="/programs/exam-prep"
+        keywords="CNA practice exam, California CNA test prep, nursing assistant certification exam, CDPH CNA questions, CNA study guide, state exam practice, CNA certification test"
       />
       <div className="container-custom section-padding">
         <ExamPrepContent />

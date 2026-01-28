@@ -127,6 +127,31 @@ const ProgramsPage = () => {
     { item: "Blood Pressure Cuff & Stethoscope", cost: "$25" },
   ];
 
+  const courseStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    "name": "Certified Nursing Assistant Training Program",
+    "description": "160-hour CDPH-approved hybrid CNA program with 60 hours online theory and 100 hours clinical training. Complete in 6 weeks.",
+    "provider": {
+      "@type": "Organization",
+      "name": "Health Star Academy",
+      "sameAs": "https://www.healthstaracademy.org"
+    },
+    "hasCourseInstance": {
+      "@type": "CourseInstance",
+      "courseMode": "blended",
+      "duration": "P6W",
+      "courseWorkload": "PT160H"
+    },
+    "occupationalCredentialAwarded": "Certified Nursing Assistant (CNA)",
+    "educationalCredentialAwarded": "CDPH-approved CNA Certificate",
+    "offers": {
+      "@type": "Offer",
+      "price": "2499",
+      "priceCurrency": "USD"
+    }
+  };
+
   return (
     <>
       <SEO
@@ -134,6 +159,7 @@ const ProgramsPage = () => {
         description="Enroll in Health Star Academy's 160-hour CDPH-approved CNA program. 60 hours online theory + 100 hours clinical training in Stockton, Lodi & Hayward. Complete in 6 weeks. Start your healthcare career today!"
         canonical="/programs"
         keywords="CNA program Stockton, CDPH approved CNA training, 160 hour CNA course, hybrid CNA program California, certified nursing assistant curriculum, CNA clinical training, nursing assistant certification"
+        structuredData={courseStructuredData}
       />
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
