@@ -17,7 +17,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-charcoal text-primary-foreground">
+    <footer className="bg-charcoal text-primary-foreground pb-20 lg:pb-0">
       {/* Final CTA Band */}
       <div className="gradient-hero py-12">
         <div className="container-custom text-center">

@@ -24,6 +24,8 @@ const TopInfoBar = () => {
             <a 
               href="mailto:info@healthstaracademy.org" 
               className="flex items-center gap-2 hover:text-cyan transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <Mail className="h-4 w-4" />
               <span className="hidden md:inline">info@healthstaracademy.org</span>

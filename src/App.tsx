@@ -8,6 +8,7 @@ import AnnouncementBar from "./components/AnnouncementBar";
 import TopInfoBar from "./components/TopInfoBar";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import StickyMobileCTA from "./components/StickyMobileCTA";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import ProgramsPage from "./pages/ProgramsPage";
@@ -57,6 +58,7 @@ const App = () => (
             </Routes>
           </div>
           <Footer />
+          <StickyMobileCTA />
         </div>
       </BrowserRouter>
     </TooltipProvider>
