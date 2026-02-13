@@ -71,6 +71,9 @@ const PreQualificationPage = () => {
   const [step, setStep] = useState<FormStep>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<"qualified" | "disqualified" | null>(null);
+  const [needsExam, setNeedsExam] = useState(false);
+  const [needsConsent, setNeedsConsent] = useState(false);
+  const [cohortDateLabel, setCohortDateLabel] = useState("");
 
   const [personal, setPersonal] = useState<PersonalInfo>({
     first_name: "",
@@ -139,6 +142,17 @@ const PreQualificationPage = () => {
 
       if (error) throw error;
 
+      setNeedsExam(data.needs_exam || false);
+      setNeedsConsent(data.needs_consent || false);
+      // Build cohort date label
+      const cohort = cohorts.find(c => c.start_date === selectedCohort);
+      if (cohort) {
+        const startDate = new Date(cohort.start_date + "T00:00:00");
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 42); // 6 weeks
+        const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+        setCohortDateLabel(`${fmt(startDate)} – ${fmt(endDate)}`);
+      }
       setSubmitResult(data.qualification_status === "qualified" ? "qualified" : "disqualified");
     } catch (err) {
       console.error("Submission error:", err);
@@ -174,28 +188,93 @@ const PreQualificationPage = () => {
                 <CheckCircle className="h-10 w-10 text-green-600" />
               </div>
               <h1 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
-                Congratulations, {personal.first_name}! 🎉
+                🎉 Congratulations, {personal.first_name}!
               </h1>
               <p className="text-gray-dark text-lg mb-6 leading-relaxed">
-                You've been <strong>pre-qualified</strong> for Health Star Academy's CNA program! Check your email at <strong>{personal.email}</strong> for next steps, including your enrollment application and document checklist.
+                We are excited to inform you that you have <strong>QUALIFIED</strong> for enrollment in the Health Star Academy Certified Nursing Assistant (CNA) Program!
               </p>
-              <div className="bg-cyan/10 rounded-xl p-6 mb-8 text-left">
-                <h3 className="font-heading font-semibold text-lg text-charcoal mb-3">What happens next:</h3>
-                <ol className="space-y-2 text-gray-dark">
-                  <li className="flex gap-3"><span className="font-bold text-purple">1.</span> Check your email for your welcome packet</li>
-                  <li className="flex gap-3"><span className="font-bold text-purple">2.</span> Complete & sign the enrollment application</li>
-                  <li className="flex gap-3"><span className="font-bold text-purple">3.</span> Submit documents & pay the $175 application fee</li>
-                  <li className="flex gap-3"><span className="font-bold text-purple">4.</span> Complete your LiveScan background check</li>
+
+              {/* Program Details Card */}
+              <div className="bg-cyan/10 rounded-xl p-6 mb-6 text-left">
+                <h3 className="font-heading font-semibold text-lg text-charcoal mb-3">Your Program Details:</h3>
+                <ul className="space-y-2 text-gray-dark">
+                  <li><strong>Student Name:</strong> {personal.first_name} {personal.last_name}</li>
+                  {cohortDateLabel && <li><strong>Cohort Start Date:</strong> {cohortDateLabel}</li>}
+                  <li><strong>Qualification Status:</strong> <span className="text-green-600 font-semibold">QUALIFIED</span></li>
+                </ul>
+              </div>
+
+              {/* Conditional Notices */}
+              {(needsExam || needsConsent) && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-6 text-left">
+                  <h3 className="font-heading font-semibold text-lg text-charcoal mb-3">⚠️ Additional Requirements:</h3>
+                  <ul className="space-y-2 text-gray-dark">
+                    {needsExam && (
+                      <li className="flex gap-2">
+                        <span className="text-amber-600 font-bold">•</span>
+                        <span><strong>Entrance Exam Required:</strong> Since you don't have a GED/High School Diploma, you'll need to pass our entrance exam with 75% or above before starting the program.</span>
+                      </li>
+                    )}
+                    {needsConsent && (
+                      <li className="flex gap-2">
+                        <span className="text-amber-600 font-bold">•</span>
+                        <span><strong>Parent/Guardian Consent Required:</strong> Since you are under 18, a signed parental consent form must be submitted with your enrollment application.</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+
+              {/* Next Steps */}
+              <div className="bg-neutral-light rounded-xl p-6 mb-6 text-left">
+                <h3 className="font-heading font-semibold text-lg text-charcoal mb-4">Next Steps — Enrollment Process:</h3>
+                <ol className="space-y-3 text-gray-dark">
+                  <li className="flex gap-3">
+                    <span className="font-bold text-purple min-w-[24px]">1.</span>
+                    <span><strong>Complete Enrollment Application:</strong> Click the link below to access and submit your enrollment application</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="font-bold text-purple min-w-[24px]">2.</span>
+                    <span><strong>Pay Enrollment Fee:</strong> Submit your $175 non-refundable application fee using the payment link below</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="font-bold text-purple min-w-[24px]">3.</span>
+                    <span><strong>Submit Required Documents:</strong> We will send you detailed instructions for document submission after receiving your application</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="font-bold text-purple min-w-[24px]">4.</span>
+                    <span><strong>Complete LiveScan:</strong> Background check instructions will be provided once documents are received</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="font-bold text-purple min-w-[24px]">5.</span>
+                    <span><strong>Attend Orientation:</strong> Mandatory orientation will be scheduled 10 days before your cohort start date</span>
+                  </li>
                 </ol>
               </div>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button variant="default" size="lg" onClick={() => navigate("/programs/admissions")}>
-                  View Enrollment Steps <ArrowRight className="ml-2 h-5 w-5" />
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+                <Button variant="secondary" size="lg" asChild>
+                  <a href="https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true" target="_blank" rel="noopener noreferrer">
+                    📋 Enrollment Application
+                  </a>
                 </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <a href="tel:2093234169">Call (209) 323-4169</a>
+                <Button variant="default" size="lg" asChild>
+                  <a href="https://buy.stripe.com/3cs8Abg8m9mB17q7st" target="_blank" rel="noopener noreferrer">
+                    💳 Pay Enrollment Fee ($175)
+                  </a>
                 </Button>
               </div>
+
+              <div className="bg-purple/5 border border-purple/20 rounded-xl p-4 mb-6">
+                <p className="text-gray-dark text-sm">
+                  ⏰ <strong>Important Reminder:</strong> Please watch for our next communication with detailed instructions for document submission and further enrollment steps.
+                </p>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Questions? Call <a href="tel:9162088097" className="text-purple hover:underline">(916) 208-8097</a> or email <a href="mailto:info@healthstaracademy.org" className="text-purple hover:underline">info@healthstaracademy.org</a>
+              </p>
             </div>
           </section>
         </main>
