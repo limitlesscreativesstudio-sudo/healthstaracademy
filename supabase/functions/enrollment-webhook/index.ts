@@ -1,5 +1,75 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// Google Sheets helper
+async function appendToGoogleSheet(
+  serviceAccountKey: string,
+  spreadsheetId: string,
+  values: string[][]
+) {
+  const key = JSON.parse(serviceAccountKey);
+
+  // Create JWT for Google API auth
+  const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const now = Math.floor(Date.now() / 1000);
+  const claimSet = btoa(
+    JSON.stringify({
+      iss: key.client_email,
+      scope: "https://www.googleapis.com/auth/spreadsheets",
+      aud: "https://oauth2.googleapis.com/token",
+      exp: now + 3600,
+      iat: now,
+    })
+  );
+
+  // Import the private key and sign the JWT
+  const pemContents = key.private_key
+    .replace(/-----BEGIN PRIVATE KEY-----/, "")
+    .replace(/-----END PRIVATE KEY-----/, "")
+    .replace(/\n/g, "");
+  const binaryKey = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8",
+    binaryKey,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  const signatureInput = new TextEncoder().encode(`${header}.${claimSet}`);
+  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", cryptoKey, signatureInput);
+  const jwt = `${header}.${claimSet}.${btoa(String.fromCharCode(...new Uint8Array(signature)))}`;
+
+  // Exchange JWT for access token
+  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+  });
+  const tokenData = await tokenRes.json();
+  if (!tokenData.access_token) {
+    throw new Error(`Google auth failed: ${JSON.stringify(tokenData)}`);
+  }
+
+  // Append row to Sheet1
+  const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1!A:N:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const appendRes = await fetch(sheetsUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${tokenData.access_token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ values }),
+  });
+
+  if (!appendRes.ok) {
+    const errText = await appendRes.text();
+    throw new Error(`Sheets API error [${appendRes.status}]: ${errText}`);
+  }
+
+  return await appendRes.json();
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -177,6 +247,38 @@ Deno.serve(async (req) => {
           JSON.stringify({ error: "Failed to create student record", details: studentError.message }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+      }
+
+      // Sync to Google Sheet
+      const GOOGLE_SERVICE_ACCOUNT_KEY = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY");
+      const SPREADSHEET_ID = "1E5B5-Zi1q7EEZmuDzE6PCQifrH49EZUdEfwFShhPByA";
+
+      if (GOOGLE_SERVICE_ACCOUNT_KEY) {
+        try {
+          const row = [
+            new Date().toISOString(),
+            payload.first_name,
+            payload.last_name,
+            payload.email,
+            payload.phone || "",
+            payload.date_of_birth || "",
+            payload.is_over_18 ? "Yes" : "No",
+            payload.has_diploma ? "Yes" : "No",
+            payload.has_valid_id ? "Yes" : "No",
+            payload.has_ssn ? "Yes" : "No",
+            payload.can_pass_background ? "Yes" : "No",
+            payload.has_health_proof ? "Yes" : "No",
+            payload.has_transportation ? "Yes" : "No",
+            payload.selected_cohort_date,
+          ];
+          await appendToGoogleSheet(GOOGLE_SERVICE_ACCOUNT_KEY, SPREADSHEET_ID, [row]);
+          console.log("Successfully synced to Google Sheet");
+        } catch (sheetError) {
+          console.error("Google Sheets sync error:", sheetError);
+          // Don't fail the whole request if sheet sync fails
+        }
+      } else {
+        console.warn("GOOGLE_SERVICE_ACCOUNT_KEY not configured, skipping sheet sync");
       }
 
       // Trigger email via send-enrollment-email function
