@@ -30,7 +30,7 @@ import diverseStudentsTraining from "@/assets/diverse-students-training.jpg";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 
 const ProgramsPage = () => {
-  const ENROLLMENT_LINK = "https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true";
+  const ENROLLMENT_LINK = "/pre-qualification";
 
   const programDetails = [
     { label: "Program Length", value: "160 Hours | 6 Weeks", icon: Clock },
@@ -371,7 +371,7 @@ const ProgramsPage = () => {
             </div>
             <div className="text-center mt-5">
               <Button variant="default" asChild>
-                <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">Enroll for Next Class</a>
+                <Link to={ENROLLMENT_LINK}>Enroll for Next Class</Link>
               </Button>
             </div>
           </div>
@@ -771,7 +771,7 @@ const ProgramsPage = () => {
                 className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-charcoal" 
                 asChild
               >
-                <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">Enroll Now</a>
+                <Link to={ENROLLMENT_LINK}>Enroll Now</Link>
               </Button>
             </div>
           </div>

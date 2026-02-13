@@ -6,7 +6,7 @@ import SEO from "@/components/SEO";
 import studentBloodPressure from "@/assets/student-blood-pressure.jpg";
 import { useState } from "react";
 
-const ENROLLMENT_LINK = "https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true";
+const ENROLLMENT_LINK = "/pre-qualification";
 
 const AdmissionsPage = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -160,7 +160,7 @@ const AdmissionsPage = () => {
                 <h3 className="font-heading font-semibold text-2xl text-charcoal mb-3">Ready to Enroll?</h3>
                 <p className="text-gray-dark mb-6">Start your application today and secure your spot in the next class.</p>
                 <Button variant="secondary" size="lg" asChild>
-                  <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">Enroll Now <ArrowRight className="ml-2 h-5 w-5" /></a>
+                  <Link to={ENROLLMENT_LINK}>Enroll Now <ArrowRight className="ml-2 h-5 w-5" /></Link>
                 </Button>
                 <p className="text-sm text-gray-medium mt-4">
                   Call: <a href="tel:2093234169" className="text-purple hover:underline">(209) 323-4169</a>
@@ -252,7 +252,7 @@ const AdmissionsPage = () => {
           <p className="text-gray-dark max-w-2xl mx-auto mb-6">Start your journey today. New classes start monthly - limited seats available!</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button variant="default" size="lg" asChild>
-              <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">Start Your Application <ArrowRight className="ml-2 h-5 w-5" /></a>
+              <Link to={ENROLLMENT_LINK}>Start Your Application <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
               <a href="tel:2093234169">Call (209) 323-4169</a>

@@ -200,9 +200,9 @@ const BlogPage = () => {
             Turn your interest into action. Enroll in our CDPH-approved CNA program today!
           </p>
           <Button variant="default" size="lg" asChild>
-            <a href="https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true" target="_blank" rel="noopener noreferrer">
+            <Link to="/pre-qualification">
               Start Your Application <ArrowRight className="ml-2 h-5 w-5" />
-            </a>
+            </Link>
           </Button>
         </div>
       </section>

@@ -227,9 +227,9 @@ const NursingCareerFoundations = () => {
               <h3 className="font-heading font-bold text-xl text-charcoal mb-4">Build Your Nursing Career Foundation</h3>
               <p className="text-gray-dark mb-6">Start your journey toward advanced nursing roles with CNA certification at Health Star Academy.</p>
               <Button variant="secondary" size="lg" asChild>
-                <a href="https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true" target="_blank" rel="noopener noreferrer">
+                <Link to="/pre-qualification">
                   Start Your Application <ArrowRight className="ml-2 h-5 w-5" />
-                </a>
+                </Link>
               </Button>
             </div>
           </div>
