@@ -97,8 +97,10 @@ Deno.serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET");
 
-    // Verify webhook secret if configured
-    if (WEBHOOK_SECRET) {
+    // Verify webhook secret if configured (skip for website submissions via Supabase SDK)
+    const authHeader = req.headers.get("authorization");
+    const isSupabaseInvoke = authHeader?.startsWith("Bearer ") && !req.headers.get("x-webhook-secret");
+    if (WEBHOOK_SECRET && !isSupabaseInvoke) {
       const incomingSecret = req.headers.get("x-webhook-secret");
       if (incomingSecret !== WEBHOOK_SECRET) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
