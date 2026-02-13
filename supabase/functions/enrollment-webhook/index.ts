@@ -308,6 +308,10 @@ Deno.serve(async (req) => {
           success: true,
           student_id: student.id,
           qualification_status: qualification.status,
+          qualification_notes: qualification.notes,
+          needs_exam: qualification.needsExam,
+          needs_consent: qualification.needsConsent,
+          selected_cohort_date: payload.selected_cohort_date,
           email_sent: emailType,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
