@@ -20,7 +20,7 @@ import heroDiverseStudents from "@/assets/hero-diverse-students.jpg";
 import studentCareTraining from "@/assets/student-care-training.jpg";
 import scholarshipBanner from "@/assets/scholarship-banner.png";
 
-const ENROLLMENT_LINK = "https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true";
+const ENROLLMENT_LINK = "/pre-qualification";
 
 const DENEFITS_LINK = "https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a";
 
@@ -150,9 +150,9 @@ const HomePage = () => {
             </p>
             <div className="flex gap-3">
               <Button variant="secondary" size="sm" asChild>
-                <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">
+                <Link to={ENROLLMENT_LINK}>
                   Start Your Application <ArrowRight className="ml-2 h-4 w-4" />
-                </a>
+                </Link>
               </Button>
               <Button variant="purple-outline" size="sm" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-charcoal" asChild>
                 <Link to="/programs">View Program</Link>
@@ -379,9 +379,9 @@ const HomePage = () => {
             No prerequisites required. Payment plans available. New classes start monthly.
           </p>
           <Button variant="default" size="lg" asChild>
-            <a href={ENROLLMENT_LINK} target="_blank" rel="noopener noreferrer">
+            <Link to={ENROLLMENT_LINK}>
               Secure Your Spot in the Next Class <ArrowRight className="ml-2 h-5 w-5" />
-            </a>
+            </Link>
           </Button>
         </div>
       </section>

@@ -28,9 +28,9 @@ const Footer = () => {
             Take the first step toward a meaningful career in healthcare. We're here to guide you every step of the way.
           </p>
           <Button variant="secondary" size="lg" asChild>
-            <a href="https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true" target="_blank" rel="noopener noreferrer">
+            <Link to="/pre-qualification">
               Enroll Now <ArrowRight className="ml-2 h-5 w-5" />
-            </a>
+            </Link>
           </Button>
         </div>
       </div>
