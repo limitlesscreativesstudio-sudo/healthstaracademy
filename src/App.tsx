@@ -9,6 +9,7 @@ import TopInfoBar from "./components/TopInfoBar";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import StickyMobileCTA from "./components/StickyMobileCTA";
+import ScrollToTop from "./components/ScrollToTop";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import ProgramsPage from "./pages/ProgramsPage";
@@ -36,6 +37,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <div className="min-h-screen flex flex-col">
           <TopInfoBar />
           <Header />
