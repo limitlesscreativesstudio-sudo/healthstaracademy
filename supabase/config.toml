@@ -1,1 +1,7 @@
 project_id = "pguwdjjpeogrxldcrvof"
+
+[functions.enrollment-webhook]
+verify_jwt = false
+
+[functions.send-enrollment-email]
+verify_jwt = false

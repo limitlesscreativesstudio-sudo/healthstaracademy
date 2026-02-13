@@ -1,0 +1,393 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-webhook-secret",
+};
+
+interface PreQualData {
+  timestamp: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  date_of_birth: string;
+  // Columns G-M qualification fields
+  is_over_18: boolean;
+  has_diploma: boolean;
+  has_valid_id: boolean;
+  has_ssn: boolean;
+  can_pass_background: boolean;
+  has_health_proof: boolean;
+  has_transportation: boolean;
+  // Column N
+  selected_cohort_date: string;
+  // Optional: for workflow part triggers
+  event_type?: string;
+  student_id?: string;
+  enrollment_status?: string;
+}
+
+function calculateOrientationDate(cohortStartDate: string): string {
+  const start = new Date(cohortStartDate);
+  // 10 days before cohort start
+  const orientDate = new Date(start);
+  orientDate.setDate(orientDate.getDate() - 10);
+  // Adjust to closest prior Friday (Friday = 5)
+  const day = orientDate.getDay();
+  if (day !== 5) {
+    const daysToSubtract = day >= 5 ? day - 5 : day + 2;
+    orientDate.setDate(orientDate.getDate() - daysToSubtract);
+  }
+  return orientDate.toISOString().split("T")[0];
+}
+
+function qualifyStudent(data: PreQualData): {
+  status: "qualified" | "disqualified";
+  notes: string;
+  needsExam: boolean;
+  needsConsent: boolean;
+} {
+  const {
+    is_over_18,
+    has_diploma,
+    has_valid_id,
+    has_ssn,
+    can_pass_background,
+    has_health_proof,
+    has_transportation,
+  } = data;
+
+  // Any NO in G-M (except age/diploma combo) = disqualified
+  if (!has_valid_id) return { status: "disqualified", notes: "Missing valid government ID", needsExam: false, needsConsent: false };
+  if (!has_ssn) return { status: "disqualified", notes: "Missing Social Security Card", needsExam: false, needsConsent: false };
+  if (!can_pass_background) return { status: "disqualified", notes: "Cannot pass background check", needsExam: false, needsConsent: false };
+  if (!has_health_proof) return { status: "disqualified", notes: "Missing proof of good health", needsExam: false, needsConsent: false };
+  if (!has_transportation) return { status: "disqualified", notes: "No reliable transportation", needsExam: false, needsConsent: false };
+
+  let needsExam = false;
+  let needsConsent = false;
+  const notes: string[] = [];
+
+  if (!has_diploma) {
+    needsExam = true;
+    notes.push("Needs entrance exam (no diploma)");
+  }
+  if (!is_over_18) {
+    needsConsent = true;
+    notes.push("Needs parent consent (under 18)");
+  }
+
+  return {
+    status: "qualified",
+    notes: notes.length > 0 ? notes.join("; ") : "Fully qualified",
+    needsExam,
+    needsConsent,
+  };
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET");
+
+    // Verify webhook secret if configured
+    if (WEBHOOK_SECRET) {
+      const incomingSecret = req.headers.get("x-webhook-secret");
+      if (incomingSecret !== WEBHOOK_SECRET) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const payload: PreQualData = await req.json();
+
+    // Log the webhook
+    await supabase.from("webhook_logs").insert({
+      source: "zapier",
+      event_type: payload.event_type || "pre_qualification",
+      payload: payload as unknown as Record<string, unknown>,
+    });
+
+    const eventType = payload.event_type || "pre_qualification";
+
+    // PART 1: Pre-qualification & initial enrollment
+    if (eventType === "pre_qualification") {
+      // Validate required fields
+      if (!payload.first_name || !payload.last_name || !payload.email || !payload.selected_cohort_date) {
+        // Notify admin of missing data
+        return new Response(
+          JSON.stringify({ error: "Missing required fields (A-N)", missing: true }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const qualification = qualifyStudent(payload);
+      const orientationDate = calculateOrientationDate(payload.selected_cohort_date);
+
+      // Find matching cohort
+      const { data: cohort } = await supabase
+        .from("cohorts")
+        .select("id")
+        .eq("start_date", payload.selected_cohort_date)
+        .single();
+
+      // Insert student
+      const { data: student, error: studentError } = await supabase
+        .from("students")
+        .insert({
+          first_name: payload.first_name,
+          last_name: payload.last_name,
+          email: payload.email,
+          phone: payload.phone,
+          date_of_birth: payload.date_of_birth || null,
+          is_over_18: payload.is_over_18,
+          has_diploma: payload.has_diploma,
+          has_valid_id: payload.has_valid_id,
+          has_ssn: payload.has_ssn,
+          can_pass_background: payload.can_pass_background,
+          has_health_proof: payload.has_health_proof,
+          has_transportation: payload.has_transportation,
+          qualification_status: qualification.status,
+          qualification_notes: qualification.notes,
+          needs_entrance_exam: qualification.needsExam,
+          needs_parent_consent: qualification.needsConsent,
+          enrollment_status: qualification.status === "disqualified" ? "disqualified" : "qualified",
+          selected_cohort_date: payload.selected_cohort_date,
+          orientation_date: orientationDate,
+          cohort_id: cohort?.id || null,
+        })
+        .select()
+        .single();
+
+      if (studentError) {
+        console.error("Error inserting student:", studentError);
+        return new Response(
+          JSON.stringify({ error: "Failed to create student record", details: studentError.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Trigger email via send-enrollment-email function
+      const emailType = qualification.status === "disqualified" ? "disqualified" : "qualified_welcome";
+      
+      await fetch(`${SUPABASE_URL}/functions/v1/send-enrollment-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({
+          student_id: student.id,
+          email_type: emailType,
+          student_email: payload.email,
+          student_name: `${payload.first_name} ${payload.last_name}`,
+          cohort_date: payload.selected_cohort_date,
+          orientation_date: orientationDate,
+          needs_entrance_exam: qualification.needsExam,
+          needs_parent_consent: qualification.needsConsent,
+          qualification_notes: qualification.notes,
+        }),
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          student_id: student.id,
+          qualification_status: qualification.status,
+          email_sent: emailType,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // PART 2: Documents received → LiveScan
+    if (eventType === "documents_received" && payload.student_id) {
+      await supabase
+        .from("students")
+        .update({ enrollment_status: "documents_received" })
+        .eq("id", payload.student_id);
+
+      const { data: student } = await supabase
+        .from("students")
+        .select("*")
+        .eq("id", payload.student_id)
+        .single();
+
+      if (student) {
+        await fetch(`${SUPABASE_URL}/functions/v1/send-enrollment-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({
+            student_id: student.id,
+            email_type: "livescan",
+            student_email: student.email,
+            student_name: `${student.first_name} ${student.last_name}`,
+            cohort_date: student.selected_cohort_date,
+          }),
+        });
+
+        await supabase
+          .from("students")
+          .update({ enrollment_status: "livescan_sent" })
+          .eq("id", payload.student_id);
+      }
+
+      return new Response(JSON.stringify({ success: true, step: "livescan_sent" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // PART 3: Cohort confirmation & tuition
+    if (eventType === "tuition_request" && payload.student_id) {
+      const { data: student } = await supabase
+        .from("students")
+        .select("*")
+        .eq("id", payload.student_id)
+        .single();
+
+      if (student) {
+        await fetch(`${SUPABASE_URL}/functions/v1/send-enrollment-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({
+            student_id: student.id,
+            email_type: "tuition_options",
+            student_email: student.email,
+            student_name: `${student.first_name} ${student.last_name}`,
+            cohort_date: student.selected_cohort_date,
+          }),
+        });
+
+        await supabase
+          .from("students")
+          .update({ enrollment_status: "tuition_sent" })
+          .eq("id", payload.student_id);
+      }
+
+      return new Response(JSON.stringify({ success: true, step: "tuition_sent" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // PART 4: Payment complete → Orientation
+    if (eventType === "payment_complete" && payload.student_id) {
+      const { data: student } = await supabase
+        .from("students")
+        .select("*")
+        .eq("id", payload.student_id)
+        .single();
+
+      if (student) {
+        await supabase
+          .from("students")
+          .update({
+            enrollment_status: "orientation_scheduled",
+            payment_status: "paid",
+          })
+          .eq("id", payload.student_id);
+
+        await fetch(`${SUPABASE_URL}/functions/v1/send-enrollment-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({
+            student_id: student.id,
+            email_type: "orientation",
+            student_email: student.email,
+            student_name: `${student.first_name} ${student.last_name}`,
+            cohort_date: student.selected_cohort_date,
+            orientation_date: student.orientation_date,
+            needs_entrance_exam: student.needs_entrance_exam,
+          }),
+        });
+
+        // Also send scrub request email
+        await fetch(`${SUPABASE_URL}/functions/v1/send-enrollment-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({
+            student_id: student.id,
+            email_type: "scrub_request",
+            student_email: student.email,
+            student_name: `${student.first_name} ${student.last_name}`,
+          }),
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, step: "orientation_scheduled" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // PART 6: Final welcome (Friday before cohort start)
+    if (eventType === "final_welcome" && payload.student_id) {
+      const { data: student } = await supabase
+        .from("students")
+        .select("*")
+        .eq("id", payload.student_id)
+        .single();
+
+      if (student) {
+        await fetch(`${SUPABASE_URL}/functions/v1/send-enrollment-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({
+            student_id: student.id,
+            email_type: "final_welcome",
+            student_email: student.email,
+            student_name: `${student.first_name} ${student.last_name}`,
+            cohort_date: student.selected_cohort_date,
+          }),
+        });
+
+        await supabase
+          .from("students")
+          .update({ enrollment_status: "welcome_sent" })
+          .eq("id", payload.student_id);
+      }
+
+      return new Response(JSON.stringify({ success: true, step: "welcome_sent" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(
+      JSON.stringify({ error: "Unknown event type", event_type: eventType }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (error) {
+    console.error("Webhook error:", error);
+    return new Response(
+      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});

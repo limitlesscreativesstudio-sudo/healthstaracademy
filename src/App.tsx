@@ -23,6 +23,8 @@ import CNATrainingExcellence from "./pages/blog/CNATrainingExcellence";
 import NursingCareerFoundations from "./pages/blog/NursingCareerFoundations";
 import ExamPrepPage from "./pages/ExamPrepPage";
 import CareersPage from "./pages/CareersPage";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +56,8 @@ const App = () => (
               <Route path="/blog/healthcare-career-path" element={<HealthcareCareerPath />} />
               <Route path="/blog/cna-training-excellence" element={<CNATrainingExcellence />} />
               <Route path="/blog/nursing-career-foundations" element={<NursingCareerFoundations />} />
+              <Route path="/admin" element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
