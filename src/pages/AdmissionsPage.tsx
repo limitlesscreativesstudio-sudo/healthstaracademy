@@ -12,7 +12,7 @@ const AdmissionsPage = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const enrollmentSteps = [
-    { step: 1, icon: ClipboardCheck, title: "Pre-Qualification Questionnaire", description: "Complete our pre-qualification questionnaire to ensure you have everything needed to start the program. If anything is missing, you'll need to obtain it and resubmit before moving to the next step." },
+    { step: 1, icon: ClipboardCheck, title: "Pre-Qualification Questionnaire", description: "Complete our pre-qualification questionnaire to ensure you have everything needed to start the program. If anything is missing, you'll need to obtain it and resubmit before moving to the next step.", link: "/pre-qualification" },
     { step: 2, icon: FileText, title: "Enrollment Application & Fee", description: "Complete and sign the enrollment application within 10 business days of your cohort start date, submit necessary documents, and pay the $175 enrollment fee to secure your spot." },
     { step: 3, icon: UserCheck, title: "LiveScan Background Check", description: "You'll receive an email with instructions to complete your LiveScan background check at an approved location." },
     { step: 4, icon: CalendarCheck, title: "Select Cohort & Pay Tuition", description: "Choose your preferred cohort start date and complete tuition payment using available payment options including Stripe, Klarna, Afterpay, Zip, or Apple Pay. All required documents must be submitted within 10 calendar days of enrollment." },
@@ -78,6 +78,15 @@ const AdmissionsPage = () => {
         }
         subtitle="New Classes Start Monthly!"
       />
+
+      {/* Pre-Qualification CTA */}
+      <section className="bg-cyan/10 py-6">
+        <div className="container-custom text-center">
+          <Link to="/pre-qualification">
+            <Button variant="secondary" size="lg">Start Pre-Qualification Questionnaire <ArrowRight className="ml-2 h-5 w-5" /></Button>
+          </Link>
+        </div>
+      </section>
 
       {/* 5-Step Enrollment Process */}
       <section className="section-padding bg-background">

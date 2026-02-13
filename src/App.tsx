@@ -15,6 +15,7 @@ import AboutPage from "./pages/AboutPage";
 import ProgramsPage from "./pages/ProgramsPage";
 import LocationsPage from "./pages/LocationsPage";
 import AdmissionsPage from "./pages/AdmissionsPage";
+import PreQualificationPage from "./pages/PreQualificationPage";
 import CohortsPage from "./pages/CohortsPage";
 import GalleryPage from "./pages/GalleryPage";
 import ContactPage from "./pages/ContactPage";
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="/programs" element={<ProgramsPage />} />
               <Route path="/programs/cohorts" element={<CohortsPage />} />
               <Route path="/programs/admissions" element={<AdmissionsPage />} />
+              <Route path="/pre-qualification" element={<PreQualificationPage />} />
               <Route path="/programs/exam-prep" element={<ExamPrepPage />} />
               <Route path="/locations" element={<LocationsPage />} />
               <Route path="/careers" element={<CareersPage />} />
