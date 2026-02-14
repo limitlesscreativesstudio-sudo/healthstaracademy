@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
-import cohortStudentFemale1 from "@/assets/cohort-student-female-1.jpg";
+
 import cohortStudentFemale2 from "@/assets/cohort-student-female-2.jpg";
 import cohortStudentFemale3 from "@/assets/cohort-student-female-3.jpg";
 import cohortStudentFemale4 from "@/assets/cohort-student-female-4.jpg";
@@ -17,15 +17,6 @@ const CohortsPage = () => {
   const denefitsLink = "https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a";
 
   const cohorts = [
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "January 26, 2026",
-      endDate: "March 9, 2026",
-      paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
-      paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
-      image: cohortStudentFemale1,
-      isClosed: true,
-    },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "March 16, 2026",
