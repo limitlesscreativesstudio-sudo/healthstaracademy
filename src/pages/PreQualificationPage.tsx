@@ -285,12 +285,12 @@ const PreQualificationPage = () => {
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
                 <Button variant="secondary" size="lg" asChild>
-                  <a href="https://docs.google.com/forms/d/1FSLGdKSFD6HWoUUBYxLNLMxYXvoiDz0LVCFbrfX4Gj0/viewform?edit_requested=true" target="_blank" rel="noopener noreferrer">
+                  <a href="https://drive.google.com/file/d/1Y5RPD8ur2DedLR-4C3FYkF7vUdiEEqX7/view?usp=drive_link" target="_blank" rel="noopener noreferrer">
                     📋 Enrollment Application
                   </a>
                 </Button>
                 <Button variant="default" size="lg" asChild>
-                  <a href="https://buy.stripe.com/3cs8Abg8m9mB17q7st" target="_blank" rel="noopener noreferrer">
+                  <a href="https://buy.stripe.com/dRm28k2j1fwx9Kv36X6sw02" target="_blank" rel="noopener noreferrer">
                     💳 Pay Enrollment Fee ($175)
                   </a>
                 </Button>
