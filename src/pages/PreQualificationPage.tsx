@@ -547,7 +547,7 @@ const PreQualificationPage = () => {
                           })()}.</strong>
                         </p>
                         <p>
-                          💳 <strong>Students must select and pay for the program tuition ($2,499)</strong> to secure their seat in this cohort.
+                          💳 <strong>Students must select and pay the program tuition ($2,499) by 03/02/26</strong> to secure their seat in this cohort.
                         </p>
                       </div>
                     </div>
