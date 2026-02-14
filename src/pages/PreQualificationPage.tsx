@@ -418,45 +418,8 @@ const PreQualificationPage = () => {
                     <Input id="phone" type="tel" value={personal.phone} onChange={(e) => updatePersonal("phone", e.target.value)} placeholder="(209) 555-0123" />
                   </div>
                   <div>
-                    <Label>Date of Birth *</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full mt-1 justify-start text-left font-normal",
-                            !personal.date_of_birth && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {personal.date_of_birth
-                            ? format(new Date(personal.date_of_birth + "T00:00:00"), "MM/dd/yyyy")
-                            : "Select your date of birth"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={personal.date_of_birth ? new Date(personal.date_of_birth + "T00:00:00") : undefined}
-                          onSelect={(date) => {
-                            if (date) {
-                              const yyyy = date.getFullYear();
-                              const mm = String(date.getMonth() + 1).padStart(2, "0");
-                              const dd = String(date.getDate()).padStart(2, "0");
-                              updatePersonal("date_of_birth", `${yyyy}-${mm}-${dd}`);
-                            }
-                          }}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
-                          initialFocus
-                          className={cn("p-3 pointer-events-auto")}
-                          captionLayout="dropdown-buttons"
-                          fromYear={1940}
-                          toYear={new Date().getFullYear()}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <Label htmlFor="dob">Date of Birth *</Label>
+                    <Input id="dob" type="date" value={personal.date_of_birth} onChange={(e) => updatePersonal("date_of_birth", e.target.value)} className="mt-1" />
                   </div>
                   <div>
                     <Label htmlFor="address">Street Address</Label>
@@ -533,19 +496,35 @@ const PreQualificationPage = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="cohort" className="mb-2 block">Preferred Cohort Start Date *</Label>
-                  <Select value={selectedCohort} onValueChange={setSelectedCohort}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select a start date..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cohorts.map((c) => (
-                        <SelectItem key={c.id} value={c.start_date}>
-                          {formatShortDate(c.start_date)} — {formatCohortDate(c.start_date)} (Ends {getEndDate(c.start_date)})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label className="mb-3 block">Select Your Preferred Start Date *</Label>
+                  <RadioGroup value={selectedCohort} onValueChange={setSelectedCohort} className="space-y-3">
+                    {cohorts.map((c) => {
+                      const startDate = new Date(c.start_date + "T00:00:00");
+                      const endDate = new Date(startDate);
+                      endDate.setDate(endDate.getDate() + 42);
+                      return (
+                        <label
+                          key={c.id}
+                          htmlFor={`cohort-${c.id}`}
+                          className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                            selectedCohort === c.start_date
+                              ? "border-purple bg-purple/5"
+                              : "border-border bg-background hover:border-purple/40"
+                          }`}
+                        >
+                          <RadioGroupItem value={c.start_date} id={`cohort-${c.id}`} />
+                          <div>
+                            <p className="font-semibold text-charcoal">
+                              {formatShortDate(c.start_date)} — {formatCohortDate(c.start_date)}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Ends {formatShortDate(endDate.getFullYear() + "-" + String(endDate.getMonth() + 1).padStart(2, "0") + "-" + String(endDate.getDate()).padStart(2, "0"))} ({getEndDate(c.start_date)})
+                            </p>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </RadioGroup>
                 </div>
 
                 {/* Selected cohort details */}
