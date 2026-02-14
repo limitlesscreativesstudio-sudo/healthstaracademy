@@ -168,8 +168,8 @@ const PreQualificationPage = () => {
 
   const eligibilityQuestions = [
     { key: "is_over_18" as const, label: "Are you at least 18 years of age?", note: "Parental consent required if younger" },
-    { key: "has_valid_id" as const, label: "Do you have a valid government-issued ID?", note: "Driver's License, CA ID, Passport, or Green Card" },
-    { key: "has_ssn" as const, label: "Do you have a Social Security Card?", note: "" },
+    { key: "has_valid_id" as const, label: "Do you have a valid, physical government-issued ID?", note: "You must bring the original document — Driver's License, CA ID, Passport, or Green Card (no photocopies)" },
+    { key: "has_ssn" as const, label: "Do you have your physical Social Security Card?", note: "You must bring the original card — no photocopies or digital versions accepted" },
     { key: "can_pass_background" as const, label: "Can you pass a criminal background check (LiveScan)?", note: "" },
     { key: "has_health_proof" as const, label: "Can you provide proof of good health?", note: "Physical exam, PPD TB Test, or Chest X-ray" },
     { key: "has_diploma" as const, label: "Do you have a GED or High School Diploma?", note: "If no, you can qualify by passing an entrance exam (75%+)" },
@@ -452,19 +452,37 @@ const PreQualificationPage = () => {
                   <p className="text-gray-dark">Select the cohort you'd like to join. New classes start regularly!</p>
                 </div>
                 <div>
-                  <Label htmlFor="cohort">Preferred Cohort Start Date *</Label>
-                  <Select value={selectedCohort} onValueChange={setSelectedCohort}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Select a start date..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cohorts.map((c) => (
-                        <SelectItem key={c.id} value={c.start_date}>
-                          {formatCohortDate(c.start_date)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label className="mb-3 block">Select Your Preferred Start Date *</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {cohorts.map((c) => {
+                      const startDate = new Date(c.start_date + "T00:00:00");
+                      const endDate = new Date(startDate);
+                      endDate.setDate(endDate.getDate() + 42);
+                      const isSelected = selectedCohort === c.start_date;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setSelectedCohort(c.start_date)}
+                          className={`rounded-xl border-2 p-4 text-left transition-all ${
+                            isSelected
+                              ? "border-purple bg-purple/5 ring-2 ring-purple/20"
+                              : "border-border bg-neutral-light hover:border-purple/40"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <CalendarCheck className={`h-4 w-4 ${isSelected ? "text-purple" : "text-muted-foreground"}`} />
+                            <span className={`font-semibold text-sm ${isSelected ? "text-purple" : "text-charcoal"}`}>
+                              {startDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground ml-6">
+                            Ends {endDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="bg-cyan/10 rounded-xl p-5 mt-6">
