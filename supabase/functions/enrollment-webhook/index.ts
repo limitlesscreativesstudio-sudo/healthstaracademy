@@ -167,17 +167,41 @@ Deno.serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET");
 
-    // Verify webhook secret if configured (skip for website submissions via Supabase SDK)
+    // Authentication: require either a valid JWT (admin) or a valid webhook secret
     const authHeader = req.headers.get("authorization");
-    const isSupabaseInvoke = authHeader?.startsWith("Bearer ") && !req.headers.get("x-webhook-secret");
-    if (WEBHOOK_SECRET && !isSupabaseInvoke) {
-      const incomingSecret = req.headers.get("x-webhook-secret");
-      if (incomingSecret !== WEBHOOK_SECRET) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+    const incomingWebhookSecret = req.headers.get("x-webhook-secret");
+    let authenticated = false;
+
+    // Path 1: Webhook secret for external callers (e.g. Zapier)
+    if (WEBHOOK_SECRET && incomingWebhookSecret === WEBHOOK_SECRET) {
+      authenticated = true;
+    }
+
+    // Path 2: JWT authentication for internal callers (e.g. admin dashboard)
+    if (!authenticated && authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
+      const supabaseAuth = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data, error: authError } = await supabaseAuth.auth.getUser(token);
+      if (!authError && data?.user) {
+        // Verify admin role for sensitive operations
+        const { data: roles } = await supabaseAuth
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .eq("role", "admin");
+        if (roles && roles.length > 0) {
+          authenticated = true;
+        }
       }
+    }
+
+    if (!authenticated) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
