@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,10 +22,13 @@ import {
   User,
   ShieldCheck,
   CalendarCheck,
+  CalendarIcon,
   Loader2,
   AlertTriangle,
   FileText,
 } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import studentBloodPressure from "@/assets/student-blood-pressure.jpg";
@@ -413,8 +418,45 @@ const PreQualificationPage = () => {
                     <Input id="phone" type="tel" value={personal.phone} onChange={(e) => updatePersonal("phone", e.target.value)} placeholder="(209) 555-0123" />
                   </div>
                   <div>
-                    <Label htmlFor="dob">Date of Birth *</Label>
-                    <Input id="dob" type="date" value={personal.date_of_birth} onChange={(e) => updatePersonal("date_of_birth", e.target.value)} />
+                    <Label>Date of Birth *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full mt-1 justify-start text-left font-normal",
+                            !personal.date_of_birth && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {personal.date_of_birth
+                            ? format(new Date(personal.date_of_birth + "T00:00:00"), "MM/dd/yyyy")
+                            : "Select your date of birth"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={personal.date_of_birth ? new Date(personal.date_of_birth + "T00:00:00") : undefined}
+                          onSelect={(date) => {
+                            if (date) {
+                              const yyyy = date.getFullYear();
+                              const mm = String(date.getMonth() + 1).padStart(2, "0");
+                              const dd = String(date.getDate()).padStart(2, "0");
+                              updatePersonal("date_of_birth", `${yyyy}-${mm}-${dd}`);
+                            }
+                          }}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                          captionLayout="dropdown-buttons"
+                          fromYear={1940}
+                          toYear={new Date().getFullYear()}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div>
                     <Label htmlFor="address">Street Address</Label>
