@@ -1,4 +1,35 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://esm.sh/zod@3.23.8";
+
+// Input validation schemas
+const PreQualSchema = z.object({
+  timestamp: z.string().optional(),
+  first_name: z.string().min(1).max(100),
+  last_name: z.string().min(1).max(100),
+  email: z.string().email().max(255),
+  phone: z.string().max(20).optional().default(""),
+  date_of_birth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().default(""),
+  is_over_18: z.boolean(),
+  has_diploma: z.boolean(),
+  has_valid_id: z.boolean(),
+  has_ssn: z.boolean(),
+  can_pass_background: z.boolean(),
+  has_health_proof: z.boolean(),
+  has_transportation: z.boolean(),
+  selected_cohort_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  event_type: z.string().max(50).optional(),
+  student_id: z.string().uuid().optional(),
+  enrollment_status: z.string().max(50).optional(),
+});
+
+// Sanitize text for Google Sheets to prevent formula injection
+function sanitizeForSheets(str: string): string {
+  if (!str) return "";
+  // Strip leading characters that could trigger formulas
+  const cleaned = str.replace(/^[=+\-@\t\r]+/, "");
+  // Remove control characters
+  return cleaned.replace(/[\x00-\x1F\x7F]/g, "");
+}
 
 // Google Sheets helper
 async function appendToGoogleSheet(
@@ -205,7 +236,17 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const payload: PreQualData = await req.json();
+    
+    // Parse and validate input
+    const rawPayload = await req.json();
+    const parseResult = PreQualSchema.safeParse(rawPayload);
+    if (!parseResult.success) {
+      return new Response(
+        JSON.stringify({ error: "Invalid input", details: parseResult.error.issues.map(i => i.message) }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const payload: PreQualData = parseResult.data as PreQualData;
 
     // Log the webhook
     await supabase.from("webhook_logs").insert({
@@ -281,11 +322,11 @@ Deno.serve(async (req) => {
         try {
           const row = [
             new Date().toISOString(),
-            payload.first_name,
-            payload.last_name,
-            payload.email,
-            payload.phone || "",
-            payload.date_of_birth || "",
+            sanitizeForSheets(payload.first_name),
+            sanitizeForSheets(payload.last_name),
+            sanitizeForSheets(payload.email),
+            sanitizeForSheets(payload.phone || ""),
+            sanitizeForSheets(payload.date_of_birth || ""),
             payload.is_over_18 ? "Yes" : "No",
             payload.has_diploma ? "Yes" : "No",
             payload.has_valid_id ? "Yes" : "No",
@@ -293,7 +334,7 @@ Deno.serve(async (req) => {
             payload.can_pass_background ? "Yes" : "No",
             payload.has_health_proof ? "Yes" : "No",
             payload.has_transportation ? "Yes" : "No",
-            payload.selected_cohort_date,
+            sanitizeForSheets(payload.selected_cohort_date),
           ];
           await appendToGoogleSheet(GOOGLE_SERVICE_ACCOUNT_KEY, SPREADSHEET_ID, [row]);
           console.log("Successfully synced to Google Sheet");
@@ -518,7 +559,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("Webhook error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
