@@ -21,6 +21,8 @@ import {
   ShieldCheck,
   CalendarCheck,
   Loader2,
+  AlertTriangle,
+  FileText,
 } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
@@ -63,6 +65,29 @@ interface EligibilityInfo {
 const formatCohortDate = (dateStr: string) => {
   const d = new Date(dateStr + "T00:00:00");
   return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+};
+
+const formatShortDate = (dateStr: string) => {
+  const d = new Date(dateStr + "T00:00:00");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${mm}/${dd}/${yy}`;
+};
+
+const getOrientationDate = (startDateStr: string) => {
+  const d = new Date(startDateStr + "T00:00:00");
+  d.setDate(d.getDate() - 10);
+  return formatShortDate(startDateStr.slice(0, 4) + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"));
+};
+
+const getEndDate = (startDateStr: string) => {
+  const d = new Date(startDateStr + "T00:00:00");
+  d.setDate(d.getDate() + 42);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${mm}/${dd}/${yy}`;
 };
 
 const PreQualificationPage = () => {
@@ -451,44 +476,67 @@ const PreQualificationPage = () => {
                   <h2 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-2">Choose Your Start Date</h2>
                   <p className="text-gray-dark">Select the cohort you'd like to join. New classes start regularly!</p>
                 </div>
-                <div>
-                  <Label className="mb-3 block">Select Your Preferred Start Date *</Label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {cohorts.map((c) => {
-                      const startDate = new Date(c.start_date + "T00:00:00");
-                      const endDate = new Date(startDate);
-                      endDate.setDate(endDate.getDate() + 42);
-                      const isSelected = selectedCohort === c.start_date;
-                      return (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => setSelectedCohort(c.start_date)}
-                          className={`rounded-xl border-2 p-4 text-left transition-all ${
-                            isSelected
-                              ? "border-purple bg-purple/5 ring-2 ring-purple/20"
-                              : "border-border bg-neutral-light hover:border-purple/40"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <CalendarCheck className={`h-4 w-4 ${isSelected ? "text-purple" : "text-muted-foreground"}`} />
-                            <span className={`font-semibold text-sm ${isSelected ? "text-purple" : "text-charcoal"}`}>
-                              {startDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground ml-6">
-                            Ends {endDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                          </p>
-                        </button>
-                      );
-                    })}
+
+                {/* Document Reminder Banner */}
+                <div className="bg-amber-50 border border-amber-300 rounded-xl p-5 mb-6">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-charcoal mb-1">📋 Document Reminder</p>
+                      <p className="text-sm text-charcoal">
+                        You must have your <strong>physical, original government-issued ID</strong> and <strong>physical Social Security Card</strong> ready — no photocopies or digital versions accepted.
+                      </p>
+                    </div>
                   </div>
                 </div>
+
+                <div>
+                  <Label htmlFor="cohort" className="mb-2 block">Preferred Cohort Start Date *</Label>
+                  <Select value={selectedCohort} onValueChange={setSelectedCohort}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select a start date..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cohorts.map((c) => (
+                        <SelectItem key={c.id} value={c.start_date}>
+                          {formatShortDate(c.start_date)} — {formatCohortDate(c.start_date)} (Ends {getEndDate(c.start_date)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Selected cohort details */}
+                {selectedCohort && (
+                  <div className="bg-purple/5 border border-purple/20 rounded-xl p-5 mt-4">
+                    <div className="flex items-start gap-3">
+                      <FileText className="h-5 w-5 text-purple flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-charcoal space-y-2">
+                        <p>
+                          <strong>Cohort Start:</strong> {formatShortDate(selectedCohort)} &nbsp;|&nbsp; <strong>Cohort End:</strong> {getEndDate(selectedCohort)}
+                        </p>
+                        <p>
+                          ⚠️ <strong>All documents must be submitted by cohort orientation on {(() => {
+                            const d = new Date(selectedCohort + "T00:00:00");
+                            d.setDate(d.getDate() - 10);
+                            const mm = String(d.getMonth() + 1).padStart(2, "0");
+                            const dd = String(d.getDate()).padStart(2, "0");
+                            const yy = String(d.getFullYear()).slice(-2);
+                            return `${mm}/${dd}/${yy}`;
+                          })()}.</strong>
+                        </p>
+                        <p>
+                          💳 <strong>Students must select and pay for the program tuition ($2,499)</strong> to secure their seat in this cohort.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="bg-cyan/10 rounded-xl p-5 mt-6">
                   <div className="flex items-start gap-3">
                     <ClipboardCheck className="h-5 w-5 text-cyan flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-gray-dark">
+                    <p className="text-sm text-charcoal">
                       By submitting, you confirm the information above is accurate. A <strong>non-refundable $175 application fee</strong> is required if you meet eligibility and wish to proceed with full enrollment.
                     </p>
                   </div>
