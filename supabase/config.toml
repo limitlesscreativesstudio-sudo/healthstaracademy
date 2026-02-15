@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.send-enrollment-email]
 verify_jwt = false
+
+[functions.student-lookup]
+verify_jwt = false
