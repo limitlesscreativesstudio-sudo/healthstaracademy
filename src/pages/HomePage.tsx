@@ -34,7 +34,7 @@ const HomePage = () => {
     {
       icon: HandHeart,
       title: "Hands-On Training",
-      description: "100 hours of clinical training at approved facilities in Stockton, Lodi, and Hayward.",
+      description: "100 hours of clinical training at approved facilities in Stockton, Lodi, and Hayward — convenient for students from Sacramento, Elk Grove, and the Bay Area.",
     },
     {
       icon: GraduationCap,
@@ -122,10 +122,10 @@ const HomePage = () => {
   return (
     <>
       <SEO
-        title="Health Star Academy | CNA Training in Stockton, CA | CDPH Approved"
-        description="Health Star Academy offers CDPH-approved hybrid CNA training in Stockton, Lodi & Hayward, CA. Complete your certification in just 6 weeks with online theory and hands-on clinical training. Enroll today!"
+        title="Health Star Academy | CNA Training in Stockton, Sacramento & Bay Area | CDPH Approved"
+        description="Health Star Academy offers CDPH-approved hybrid CNA training near Sacramento, Stockton, Lodi & Hayward, CA. Students from Sacramento, Elk Grove, Modesto, and the Bay Area complete certification in just 6 weeks. Enroll today!"
         canonical="/"
-        keywords="CNA training Stockton, CNA classes California, certified nursing assistant training, CDPH approved CNA program, hybrid CNA course, CNA certification Stockton CA, nursing assistant school, Lodi CNA training, Hayward CNA classes"
+        keywords="CNA training Stockton, CNA classes Sacramento, CNA program Bay Area, certified nursing assistant training near Sacramento, CDPH approved CNA program, hybrid CNA course, CNA certification Stockton CA, nursing assistant school Sacramento area, Lodi CNA training, Hayward CNA classes, CNA training near me, CNA school Elk Grove, CNA classes Modesto, Oakland CNA training, San Jose CNA program"
       />
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
@@ -170,7 +170,7 @@ const HomePage = () => {
               Why Choose Health Star Academy?
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
-              State-approved hybrid CNA training – Start in just a few weeks with flexible online classes and in-person clinicals.
+              State-approved hybrid CNA training – Start in just a few weeks with online classes and in-person clinicals. Serving students from Sacramento, Stockton, the Central Valley, and Bay Area.
             </p>
           </div>
 
@@ -255,7 +255,7 @@ const HomePage = () => {
               Clinical Training at Approved Facilities
             </h3>
             <p className="text-primary-foreground/80 max-w-xl">
-              Hands-on experience at approved healthcare facilities in Stockton, Lodi, and Hayward.
+              Hands-on experience at approved healthcare facilities in Stockton, Lodi, and Hayward — easily accessible from Sacramento, Modesto, and the Bay Area.
             </p>
           </div>
         </div>

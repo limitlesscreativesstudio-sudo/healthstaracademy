@@ -189,13 +189,13 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           </p>
           <div className="flex gap-6">
             <Link
-              to="/contact"
+              to="/privacy-policy"
               className="text-gray-medium hover:text-primary-foreground transition-colors text-sm"
             >
               Privacy Policy
             </Link>
             <Link
-              to="/contact"
+              to="/terms-of-service"
               className="text-gray-medium hover:text-primary-foreground transition-colors text-sm"
             >
               Terms of Service
