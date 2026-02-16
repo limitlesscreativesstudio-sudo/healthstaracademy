@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Camera, Image as ImageIcon } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
+import studentsTrainingGroup from "@/assets/students-training-group.png";
 import graduationGroup from "@/assets/graduation-group.jpg";
 import graduationCongratulations from "@/assets/graduation-congratulations.jpg";
 import graduationCelebration from "@/assets/graduation-celebration.jpg";
@@ -31,8 +32,8 @@ const GalleryPage = () => {
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
-        imageSrc={graduationGroup}
-        imageAlt="Health Star Academy CNA graduation ceremony"
+        imageSrc={studentsTrainingGroup}
+        imageAlt="Health Star Academy diverse students and graduates"
         title={
           <>
             Your Future in<br />
