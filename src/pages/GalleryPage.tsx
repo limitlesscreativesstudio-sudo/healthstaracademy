@@ -6,10 +6,14 @@ import SEO from "@/components/SEO";
 import studentsTrainingGroup from "@/assets/students-training-group.png";
 import studentsVitalsPractice from "@/assets/students-vitals-practice.jpg";
 import heroDiverseStudents from "@/assets/hero-diverse-students.jpg";
+import graduationGroup from "@/assets/graduation-group.jpg";
+import graduationCongratulations from "@/assets/graduation-congratulations.jpg";
 
 const GalleryPage = () => {
   // Gallery images - excluding images used as hero banners on other pages
   const galleryImages = [
+    { src: graduationGroup, alt: "Health Star Academy CNA graduation ceremony with graduates in caps and gowns holding flowers", category: "Graduation" },
+    { src: graduationCongratulations, alt: "CNA Class of 2025 graduates celebrating in front of Congratulations banner", category: "Graduation" },
     { src: heroDiverseStudents, alt: "Diverse group of Health Star Academy CNA students in clinical lab", category: "Students" },
     { src: studentsVitalsPractice, alt: "CNA students practicing vital signs together", category: "Training" },
     { src: studentsTrainingGroup, alt: "Health Star Academy diverse CNA students in clinical training", category: "Students" },
