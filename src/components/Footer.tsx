@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,17 +8,16 @@ import {
   Clock,
   Facebook,
   Instagram,
-  Linkedin,
   ArrowRight,
   Shield,
 } from "lucide-react";
 import logo from "@/assets/healthstar-logo.png";
 
-const Footer = () => {
+const Footer = forwardRef<HTMLElement>((_, ref) => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-charcoal text-primary-foreground pb-20 lg:pb-0">
+    <footer ref={ref} className="bg-charcoal text-primary-foreground pb-20 lg:pb-0">
       {/* Final CTA Band */}
       <div className="gradient-hero py-12">
         <div className="container-custom text-center">
@@ -45,6 +45,7 @@ const Footer = () => {
                 src={logo} 
                 alt="Health Star Academy Logo" 
                 className="w-10 h-10 object-contain"
+                loading="lazy"
               />
               <span className="font-heading font-bold text-lg text-primary-foreground">
                 Health Star Academy
@@ -188,13 +189,13 @@ const Footer = () => {
           </p>
           <div className="flex gap-6">
             <Link
-              to="#"
+              to="/contact"
               className="text-gray-medium hover:text-primary-foreground transition-colors text-sm"
             >
               Privacy Policy
             </Link>
             <Link
-              to="#"
+              to="/contact"
               className="text-gray-medium hover:text-primary-foreground transition-colors text-sm"
             >
               Terms of Service
@@ -204,6 +205,8 @@ const Footer = () => {
       </div>
     </footer>
   );
-};
+});
+
+Footer.displayName = "Footer";
 
 export default Footer;
