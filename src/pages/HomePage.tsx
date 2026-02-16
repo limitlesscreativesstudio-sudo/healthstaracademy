@@ -122,10 +122,10 @@ const HomePage = () => {
   return (
     <>
       <SEO
-        title="Health Star Academy | CNA Training in Stockton, Sacramento & Bay Area | CDPH Approved"
-        description="Health Star Academy offers CDPH-approved hybrid CNA training near Sacramento, Stockton, Lodi & Hayward, CA. Students from Sacramento, Elk Grove, Modesto, and the Bay Area complete certification in just 6 weeks. Enroll today!"
+        title="Health Star Academy | CNA Training in Stockton, Hayward, Sacramento & Bay Area | CDPH Approved"
+        description="Health Star Academy offers CDPH-approved hybrid CNA training with clinical sites in Stockton, Hayward & Lodi. Students from Sacramento, Elk Grove, Modesto, and the Bay Area complete certification in just 6 weeks. Enroll today!"
         canonical="/"
-        keywords="CNA training Stockton, CNA classes Sacramento, CNA program Bay Area, certified nursing assistant training near Sacramento, CDPH approved CNA program, hybrid CNA course, CNA certification Stockton CA, nursing assistant school Sacramento area, Lodi CNA training, Hayward CNA classes, CNA training near me, CNA school Elk Grove, CNA classes Modesto, Oakland CNA training, San Jose CNA program"
+        keywords="CNA training Stockton, CNA training Hayward, CNA classes Sacramento, CNA program Bay Area, certified nursing assistant training near Sacramento, CDPH approved CNA program, hybrid CNA course, CNA certification Stockton CA, nursing assistant school Sacramento area, Lodi CNA training, Hayward CNA classes, CNA training near me, CNA school Elk Grove, CNA classes Modesto, Oakland CNA training, San Jose CNA program, Fremont CNA training"
       />
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
