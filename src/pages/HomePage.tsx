@@ -247,6 +247,7 @@ const HomePage = () => {
           src={studentCareTraining}
           alt="Health Star Academy CNA student providing compassionate patient care"
           className="w-full h-full object-cover"
+          loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 to-transparent flex items-end">
           <div className="container-custom pb-12">
