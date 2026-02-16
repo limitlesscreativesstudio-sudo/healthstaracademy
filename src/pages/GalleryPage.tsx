@@ -3,20 +3,21 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Camera, Image as ImageIcon } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
-import studentsTrainingGroup from "@/assets/students-training-group.png";
-import studentsVitalsPractice from "@/assets/students-vitals-practice.jpg";
-import heroDiverseStudents from "@/assets/hero-diverse-students.jpg";
 import graduationGroup from "@/assets/graduation-group.jpg";
 import graduationCongratulations from "@/assets/graduation-congratulations.jpg";
+import graduationCelebration from "@/assets/graduation-celebration.jpg";
+import sherwoodEntrance from "@/assets/sherwood-entrance.jpg";
+import sherwoodSign from "@/assets/sherwood-sign.jpg";
+import sherwoodBuilding from "@/assets/sherwood-building.jpg";
 
 const GalleryPage = () => {
-  // Gallery images - excluding images used as hero banners on other pages
   const galleryImages = [
     { src: graduationGroup, alt: "Health Star Academy CNA graduation ceremony with graduates in caps and gowns holding flowers", category: "Graduation" },
     { src: graduationCongratulations, alt: "CNA Class of 2025 graduates celebrating in front of Congratulations banner", category: "Graduation" },
-    { src: heroDiverseStudents, alt: "Diverse group of Health Star Academy CNA students in clinical lab", category: "Students" },
-    { src: studentsVitalsPractice, alt: "CNA students practicing vital signs together", category: "Training" },
-    { src: studentsTrainingGroup, alt: "Health Star Academy diverse CNA students in clinical training", category: "Students" },
+    { src: graduationCelebration, alt: "Health Star Academy staff celebrating at graduation event with balloon decorations", category: "Graduation" },
+    { src: sherwoodBuilding, alt: "Sherwood Executive Center building exterior, home of Health Star Academy", category: "Campus" },
+    { src: sherwoodSign, alt: "Sherwood Executive Center 5250 street sign at Health Star Academy location", category: "Campus" },
+    { src: sherwoodEntrance, alt: "Sherwood Executive Center entrance at Health Star Academy Stockton campus", category: "Campus" },
   ];
 
   return (
@@ -30,8 +31,8 @@ const GalleryPage = () => {
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
       <HeroBanner
-        imageSrc={studentsTrainingGroup}
-        imageAlt="Health Star Academy diverse students and graduates"
+        imageSrc={graduationGroup}
+        imageAlt="Health Star Academy CNA graduation ceremony"
         title={
           <>
             Your Future in<br />
