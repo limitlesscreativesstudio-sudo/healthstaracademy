@@ -17,6 +17,7 @@ const PreQualSchema = z.object({
   has_health_proof: z.boolean(),
   has_transportation: z.boolean(),
   selected_cohort_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  address: z.string().max(500).optional().default(""),
   referral_source: z.string().max(100).optional().default(""),
   event_type: z.string().max(50).optional(),
   student_id: z.string().uuid().optional(),
@@ -131,6 +132,7 @@ interface PreQualData {
   email: string;
   phone: string;
   date_of_birth: string;
+  address: string;
   // Columns G-M qualification fields
   is_over_18: boolean;
   has_diploma: boolean;
@@ -323,14 +325,14 @@ Deno.serve(async (req) => {
             sanitizeForSheets(payload.email),                                      // C: Email
             sanitizeForSheets(payload.phone || ""),                                // D: Phone
             sanitizeForSheets(payload.date_of_birth || ""),                        // E: DOB
-            payload.is_over_18 ? "Yes" : "No",                                    // F: Over 18
-            payload.has_diploma ? "Yes" : "No",                                   // G: Diploma
-            payload.has_valid_id ? "Yes" : "No",                                  // H: Valid ID
-            payload.has_ssn ? "Yes" : "No",                                       // I: SSN
-            payload.can_pass_background ? "Yes" : "No",                           // J: Background
-            payload.has_health_proof ? "Yes" : "No",                              // K: Health Proof
-            payload.has_transportation ? "Yes" : "No",                            // L: Transportation
-            sanitizeForSheets(payload.selected_cohort_date),                       // M: Cohort Date
+            sanitizeForSheets(payload.address || ""),                              // F: Address
+            payload.is_over_18 ? "Yes" : "No",                                    // G: Over 18
+            payload.has_diploma ? "Yes" : "No",                                   // H: Diploma
+            payload.has_valid_id ? "Yes" : "No",                                  // I: Valid ID
+            payload.has_ssn ? "Yes" : "No",                                       // J: SSN
+            payload.can_pass_background ? "Yes" : "No",                           // K: Background
+            payload.has_health_proof ? "Yes" : "No",                              // L: Health Proof
+            payload.has_transportation ? "Yes" : "No",                            // M: Transportation
             sanitizeForSheets(payload.selected_cohort_date),                       // N: Cohort Selected
             "Yes",                                                                 // O: Understands false info disclaimer
             sanitizeForSheets(payload.referral_source || "Website"),                // P: How Did You Hear

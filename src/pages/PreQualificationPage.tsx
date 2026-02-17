@@ -156,6 +156,7 @@ const PreQualificationPage = () => {
         email: personal.email,
         phone: personal.phone,
         date_of_birth: personal.date_of_birth,
+        address: personal.address,
         is_over_18: eligibility.is_over_18 === "yes",
         has_valid_id: eligibility.has_valid_id === "yes",
         has_ssn: eligibility.has_ssn === "yes",
