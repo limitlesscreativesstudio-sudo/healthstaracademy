@@ -55,6 +55,7 @@ interface PersonalInfo {
   phone: string;
   date_of_birth: string;
   address: string;
+  referral_source: string;
 }
 
 interface EligibilityInfo {
@@ -112,6 +113,7 @@ const PreQualificationPage = () => {
     phone: "",
     date_of_birth: "",
     address: "",
+    referral_source: "",
   });
 
   const [eligibility, setEligibility] = useState<EligibilityInfo>({
@@ -162,6 +164,7 @@ const PreQualificationPage = () => {
         has_diploma: eligibility.has_diploma === "yes",
         has_transportation: eligibility.has_transportation === "yes",
         selected_cohort_date: selectedCohort,
+        referral_source: personal.referral_source,
         event_type: "pre_qualification",
         source: "website",
       };
@@ -424,6 +427,24 @@ const PreQualificationPage = () => {
                   <div>
                     <Label htmlFor="address">Street Address</Label>
                     <Input id="address" value={personal.address} onChange={(e) => updatePersonal("address", e.target.value)} placeholder="123 Main St, Stockton, CA" />
+                  </div>
+                  <div>
+                    <Label htmlFor="referral_source">How Did You Hear About Us?</Label>
+                    <Select value={personal.referral_source} onValueChange={(val) => updatePersonal("referral_source", val)}>
+                      <SelectTrigger id="referral_source" className="bg-background">
+                        <SelectValue placeholder="Select one..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="Google Search">Google Search</SelectItem>
+                        <SelectItem value="Facebook">Facebook</SelectItem>
+                        <SelectItem value="Instagram">Instagram</SelectItem>
+                        <SelectItem value="Friend or Family">Friend or Family</SelectItem>
+                        <SelectItem value="School Counselor">School Counselor</SelectItem>
+                        <SelectItem value="Job Fair">Job Fair</SelectItem>
+                        <SelectItem value="Flyer or Poster">Flyer or Poster</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="flex justify-end mt-8">
