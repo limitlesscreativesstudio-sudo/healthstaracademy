@@ -329,7 +329,7 @@ Deno.serve(async (req) => {
             payload.has_health_proof ? "Yes" : "No",                              // K: Health Proof
             payload.has_transportation ? "Yes" : "No",                            // L: Transportation
             sanitizeForSheets(payload.selected_cohort_date),                       // M: Cohort Date
-            "",                                                                    // N: (reserved)
+            sanitizeForSheets(payload.selected_cohort_date),                       // N: Cohort Selected
             "Yes",                                                                 // O: Understands false info disclaimer
             "Website",                                                             // P: How Did You Hear
             "Yes",                                                                 // Q: Consent
