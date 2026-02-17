@@ -47,10 +47,18 @@ async function appendToGoogleSheet(
     throw e;
   }
 
+  // Base64url encode (JWT requires URL-safe base64 without padding)
+  function base64url(str: string): string {
+    return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function base64urlFromBytes(bytes: Uint8Array): string {
+    return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
   // Create JWT for Google API auth
-  const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const now = Math.floor(Date.now() / 1000);
-  const claimSet = btoa(
+  const claimSet = base64url(
     JSON.stringify({
       iss: key.client_email,
       scope: "https://www.googleapis.com/auth/spreadsheets",
@@ -77,7 +85,7 @@ async function appendToGoogleSheet(
 
   const signatureInput = new TextEncoder().encode(`${header}.${claimSet}`);
   const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", cryptoKey, signatureInput);
-  const jwt = `${header}.${claimSet}.${btoa(String.fromCharCode(...new Uint8Array(signature)))}`;
+  const jwt = `${header}.${claimSet}.${base64urlFromBytes(new Uint8Array(signature))}`;
 
   // Exchange JWT for access token
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
