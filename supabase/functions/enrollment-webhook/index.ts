@@ -198,10 +198,11 @@ Deno.serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET");
 
-    // Authentication: require either a valid JWT (admin) or a valid webhook secret
+    // Authentication: require either a valid JWT, a valid webhook secret, or anon key for public submissions
     const authHeader = req.headers.get("authorization");
     const incomingWebhookSecret = req.headers.get("x-webhook-secret");
     let authenticated = false;
+    let isPublicSubmission = false;
 
     // Path 1: Webhook secret for external callers (e.g. Zapier)
     if (WEBHOOK_SECRET && incomingWebhookSecret === WEBHOOK_SECRET) {
@@ -211,18 +212,30 @@ Deno.serve(async (req) => {
     // Path 2: JWT authentication for internal callers (e.g. admin dashboard)
     if (!authenticated && authHeader?.startsWith("Bearer ")) {
       const token = authHeader.replace("Bearer ", "");
-      const supabaseAuth = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
-        global: { headers: { Authorization: authHeader } },
-      });
-      const { data, error: authError } = await supabaseAuth.auth.getUser(token);
-      if (!authError && data?.user) {
-        // Verify admin role for sensitive operations
-        const { data: roles } = await supabaseAuth
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user.id)
-          .eq("role", "admin");
-        if (roles && roles.length > 0) {
+      
+      // Path 2a: Check if it's the service role key (internal function-to-function calls)
+      if (token === SUPABASE_SERVICE_ROLE_KEY) {
+        authenticated = true;
+      } else {
+        // Path 2b: Check for admin user JWT
+        const supabaseAuth = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+          global: { headers: { Authorization: authHeader } },
+        });
+        const { data, error: authError } = await supabaseAuth.auth.getUser(token);
+        if (!authError && data?.user) {
+          const { data: roles } = await supabaseAuth
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", data.user.id)
+            .eq("role", "admin");
+          if (roles && roles.length > 0) {
+            authenticated = true;
+          }
+        }
+
+        // Path 2c: Allow anon key for public pre-qualification submissions only
+        if (!authenticated) {
+          isPublicSubmission = true;
           authenticated = true;
         }
       }
@@ -256,6 +269,14 @@ Deno.serve(async (req) => {
     });
 
     const eventType = payload.event_type || "pre_qualification";
+
+    // Public submissions (anon key) can only use pre_qualification
+    if (isPublicSubmission && eventType !== "pre_qualification") {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: public access limited to pre_qualification" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // PART 1: Pre-qualification & initial enrollment
     if (eventType === "pre_qualification") {
