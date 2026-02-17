@@ -414,12 +414,12 @@ const PreQualificationPage = () => {
                     <Input id="email" type="email" value={personal.email} onChange={(e) => updatePersonal("email", e.target.value)} placeholder="you@example.com" />
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <Input id="phone" type="tel" value={personal.phone} onChange={(e) => updatePersonal("phone", e.target.value)} placeholder="(209) 555-0123" />
-                  </div>
-                  <div>
                     <Label htmlFor="dob">Date of Birth *</Label>
                     <Input id="dob" type="date" value={personal.date_of_birth} onChange={(e) => updatePersonal("date_of_birth", e.target.value)} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Input id="phone" type="tel" value={personal.phone} onChange={(e) => updatePersonal("phone", e.target.value)} placeholder="(209) 555-0123" />
                   </div>
                   <div>
                     <Label htmlFor="address">Street Address</Label>
