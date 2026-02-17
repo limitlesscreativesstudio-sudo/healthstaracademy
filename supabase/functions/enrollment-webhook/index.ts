@@ -37,7 +37,15 @@ async function appendToGoogleSheet(
   spreadsheetId: string,
   values: string[][]
 ) {
-  const key = JSON.parse(serviceAccountKey);
+  // Try to parse, logging first chars on failure for debugging
+  let key;
+  try {
+    const trimmed = serviceAccountKey.trim();
+    key = JSON.parse(trimmed);
+  } catch (e) {
+    console.error("Failed to parse service account key. First 20 chars:", JSON.stringify(serviceAccountKey.substring(0, 20)));
+    throw e;
+  }
 
   // Create JWT for Google API auth
   const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
