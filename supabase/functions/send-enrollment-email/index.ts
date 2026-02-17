@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  student_id: string;
+  student_id?: string;
   email_type: string;
   student_email: string;
   student_name: string;
@@ -313,17 +313,19 @@ Deno.serve(async (req) => {
       console.log(`[EMAIL LOG] To: ${data.student_email} | Subject: ${email.subject} | Type: ${data.email_type}`);
     }
 
-    // Log email to database
-    await supabase.from("enrollment_emails").insert({
-      student_id: data.student_id,
-      email_type: data.email_type,
-      status: emailStatus,
-      metadata: {
-        subject: email.subject,
-        recipient: data.student_email,
-        student_name: data.student_name,
-      },
-    });
+    // Log email to database (only if student_id is provided)
+    if (data.student_id) {
+      await supabase.from("enrollment_emails").insert({
+        student_id: data.student_id,
+        email_type: data.email_type,
+        status: emailStatus,
+        metadata: {
+          subject: email.subject,
+          recipient: data.student_email,
+          student_name: data.student_name,
+        },
+      });
+    }
 
     return new Response(
       JSON.stringify({ success: true, email_type: data.email_type, status: emailStatus }),

@@ -292,52 +292,10 @@ Deno.serve(async (req) => {
       const qualification = qualifyStudent(payload);
       const orientationDate = calculateOrientationDate(payload.selected_cohort_date);
 
-      // Find matching cohort
-      const { data: cohort } = await supabase
-        .from("cohorts")
-        .select("id")
-        .eq("start_date", payload.selected_cohort_date)
-        .single();
-
-      // Insert student
-      const { data: student, error: studentError } = await supabase
-        .from("students")
-        .insert({
-          first_name: payload.first_name,
-          last_name: payload.last_name,
-          email: payload.email,
-          phone: payload.phone,
-          date_of_birth: payload.date_of_birth || null,
-          is_over_18: payload.is_over_18,
-          has_diploma: payload.has_diploma,
-          has_valid_id: payload.has_valid_id,
-          has_ssn: payload.has_ssn,
-          can_pass_background: payload.can_pass_background,
-          has_health_proof: payload.has_health_proof,
-          has_transportation: payload.has_transportation,
-          qualification_status: qualification.status,
-          qualification_notes: qualification.notes,
-          needs_entrance_exam: qualification.needsExam,
-          needs_parent_consent: qualification.needsConsent,
-          enrollment_status: qualification.status === "disqualified" ? "disqualified" : "qualified",
-          selected_cohort_date: payload.selected_cohort_date,
-          orientation_date: orientationDate,
-          cohort_id: cohort?.id || null,
-        })
-        .select()
-        .single();
-
-      if (studentError) {
-        console.error("Error inserting student:", studentError);
-        return new Response(
-          JSON.stringify({ error: "Failed to create student record", details: studentError.message }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      // Sync to Google Sheet
+      // Sync to Google Sheet (primary data store for pre-qualification)
       const GOOGLE_SERVICE_ACCOUNT_KEY = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY");
       const SPREADSHEET_ID = "1E5B5-Zi1q7EEZmuDzE6PCQifrH49EZUdEfwFShhPByA";
+      let sheetSynced = false;
 
       if (GOOGLE_SERVICE_ACCOUNT_KEY) {
         try {
@@ -356,12 +314,15 @@ Deno.serve(async (req) => {
             payload.has_health_proof ? "Yes" : "No",
             payload.has_transportation ? "Yes" : "No",
             sanitizeForSheets(payload.selected_cohort_date),
+            qualification.status,
+            qualification.notes,
+            orientationDate,
           ];
           await appendToGoogleSheet(GOOGLE_SERVICE_ACCOUNT_KEY, SPREADSHEET_ID, [row]);
+          sheetSynced = true;
           console.log("Successfully synced to Google Sheet");
         } catch (sheetError) {
           console.error("Google Sheets sync error:", sheetError);
-          // Don't fail the whole request if sheet sync fails
         }
       } else {
         console.warn("GOOGLE_SERVICE_ACCOUNT_KEY not configured, skipping sheet sync");
@@ -370,29 +331,32 @@ Deno.serve(async (req) => {
       // Trigger email via send-enrollment-email function
       const emailType = qualification.status === "disqualified" ? "disqualified" : "qualified_welcome";
       
-      await fetch(`${SUPABASE_URL}/functions/v1/send-enrollment-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        },
-        body: JSON.stringify({
-          student_id: student.id,
-          email_type: emailType,
-          student_email: payload.email,
-          student_name: `${payload.first_name} ${payload.last_name}`,
-          cohort_date: payload.selected_cohort_date,
-          orientation_date: orientationDate,
-          needs_entrance_exam: qualification.needsExam,
-          needs_parent_consent: qualification.needsConsent,
-          qualification_notes: qualification.notes,
-        }),
-      });
+      try {
+        await fetch(`${SUPABASE_URL}/functions/v1/send-enrollment-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({
+            email_type: emailType,
+            student_email: payload.email,
+            student_name: `${payload.first_name} ${payload.last_name}`,
+            cohort_date: payload.selected_cohort_date,
+            orientation_date: orientationDate,
+            needs_entrance_exam: qualification.needsExam,
+            needs_parent_consent: qualification.needsConsent,
+            qualification_notes: qualification.notes,
+          }),
+        });
+      } catch (emailError) {
+        console.error("Email send error:", emailError);
+      }
 
       return new Response(
         JSON.stringify({
           success: true,
-          student_id: student.id,
+          sheet_synced: sheetSynced,
           qualification_status: qualification.status,
           qualification_notes: qualification.notes,
           needs_exam: qualification.needsExam,
