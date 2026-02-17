@@ -399,7 +399,7 @@ const PreQualificationPage = () => {
                   <p className="text-gray-dark">Tell us a little about yourself to get started.</p>
                 </div>
                 <div className="space-y-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="first_name">First Name *</Label>
                       <Input id="first_name" value={personal.first_name} onChange={(e) => updatePersonal("first_name", e.target.value)} placeholder="First name" />
