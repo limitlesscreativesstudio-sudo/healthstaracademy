@@ -99,7 +99,7 @@ async function appendToGoogleSheet(
   }
 
   // Append row to Sheet1
-  const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("2025 Responses")}!A:N:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("2025 Responses")}!A:U:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
   const appendRes = await fetch(sheetsUrl, {
     method: "POST",
     headers: {
@@ -316,23 +316,27 @@ Deno.serve(async (req) => {
       if (GOOGLE_SERVICE_ACCOUNT_KEY) {
         try {
           const row = [
-            new Date().toISOString(),
-            sanitizeForSheets(payload.first_name),
-            sanitizeForSheets(payload.last_name),
-            sanitizeForSheets(payload.email),
-            sanitizeForSheets(payload.phone || ""),
-            sanitizeForSheets(payload.date_of_birth || ""),
-            payload.is_over_18 ? "Yes" : "No",
-            payload.has_diploma ? "Yes" : "No",
-            payload.has_valid_id ? "Yes" : "No",
-            payload.has_ssn ? "Yes" : "No",
-            payload.can_pass_background ? "Yes" : "No",
-            payload.has_health_proof ? "Yes" : "No",
-            payload.has_transportation ? "Yes" : "No",
-            sanitizeForSheets(payload.selected_cohort_date),
-            qualification.status,
-            qualification.notes,
-            orientationDate,
+            new Date().toISOString(),                                              // A: Timestamp
+            sanitizeForSheets(`${payload.first_name} ${payload.last_name}`),       // B: First & Last Name
+            sanitizeForSheets(payload.email),                                      // C: Email
+            sanitizeForSheets(payload.phone || ""),                                // D: Phone
+            sanitizeForSheets(payload.date_of_birth || ""),                        // E: DOB
+            payload.is_over_18 ? "Yes" : "No",                                    // F: Over 18
+            payload.has_diploma ? "Yes" : "No",                                   // G: Diploma
+            payload.has_valid_id ? "Yes" : "No",                                  // H: Valid ID
+            payload.has_ssn ? "Yes" : "No",                                       // I: SSN
+            payload.can_pass_background ? "Yes" : "No",                           // J: Background
+            payload.has_health_proof ? "Yes" : "No",                              // K: Health Proof
+            payload.has_transportation ? "Yes" : "No",                            // L: Transportation
+            sanitizeForSheets(payload.selected_cohort_date),                       // M: Cohort Date
+            "",                                                                    // N: (reserved)
+            "Yes",                                                                 // O: Understands false info disclaimer
+            "Website",                                                             // P: How Did You Hear
+            "Yes",                                                                 // Q: Consent
+            qualification.status === "qualified" ? "Qualified" : "Disqualified",   // R: Qualification Category
+            qualification.needsConsent ? "Yes" : "No",                             // S: Parental Consent Needed
+            qualification.needsExam ? "Yes" : "No",                                // T: Entrance Exam Needed
+            qualification.status === "disqualified" ? qualification.notes : "",     // U: Missing Disqualifying Items
           ];
           await appendToGoogleSheet(GOOGLE_SERVICE_ACCOUNT_KEY, SPREADSHEET_ID, [row]);
           sheetSynced = true;
