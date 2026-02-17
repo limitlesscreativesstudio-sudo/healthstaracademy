@@ -17,6 +17,7 @@ const PreQualSchema = z.object({
   has_health_proof: z.boolean(),
   has_transportation: z.boolean(),
   selected_cohort_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  referral_source: z.string().max(100).optional().default(""),
   event_type: z.string().max(50).optional(),
   student_id: z.string().uuid().optional(),
   enrollment_status: z.string().max(50).optional(),
@@ -140,7 +141,8 @@ interface PreQualData {
   has_transportation: boolean;
   // Column N
   selected_cohort_date: string;
-  // Optional: for workflow part triggers
+  // Optional fields
+  referral_source?: string;
   event_type?: string;
   student_id?: string;
   enrollment_status?: string;
@@ -331,7 +333,7 @@ Deno.serve(async (req) => {
             sanitizeForSheets(payload.selected_cohort_date),                       // M: Cohort Date
             sanitizeForSheets(payload.selected_cohort_date),                       // N: Cohort Selected
             "Yes",                                                                 // O: Understands false info disclaimer
-            "Website",                                                             // P: How Did You Hear
+            sanitizeForSheets(payload.referral_source || "Website"),                // P: How Did You Hear
             "Yes",                                                                 // Q: Consent
             qualification.status === "qualified" ? "Qualified" : "Disqualified",   // R: Qualification Category
             qualification.needsConsent ? "Yes" : "No",                             // S: Parental Consent Needed
