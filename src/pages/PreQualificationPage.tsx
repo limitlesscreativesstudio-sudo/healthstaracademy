@@ -27,6 +27,7 @@ import {
   AlertTriangle,
   FileText,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import HeroBanner from "@/components/HeroBanner";
@@ -127,6 +128,8 @@ const PreQualificationPage = () => {
   });
 
   const [selectedCohort, setSelectedCohort] = useState("");
+  const [disclaimerAcknowledged, setDisclaimerAcknowledged] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
 
   const { data: cohorts = [] } = useQuery({
     queryKey: ["open-cohorts"],
@@ -148,7 +151,7 @@ const PreQualificationPage = () => {
 
   const isStep2Valid = Object.values(eligibility).every((v) => v === "yes" || v === "no");
 
-  const isStep3Valid = !!selectedCohort;
+  const isStep3Valid = !!selectedCohort && disclaimerAcknowledged && consentGiven;
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -602,12 +605,33 @@ const PreQualificationPage = () => {
                   </div>
                 )}
 
-                <div className="bg-cyan/10 rounded-xl p-5 mt-6">
+                {/* Disclaimer Acknowledgment (Column O) */}
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mt-6">
                   <div className="flex items-start gap-3">
-                    <ClipboardCheck className="h-5 w-5 text-cyan flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-charcoal">
-                      By submitting, you confirm the information above is accurate. A <strong>non-refundable $175 application fee</strong> is required if you meet eligibility and wish to proceed with full enrollment.
-                    </p>
+                    <Checkbox
+                      id="disclaimer"
+                      checked={disclaimerAcknowledged}
+                      onCheckedChange={(checked) => setDisclaimerAcknowledged(checked === true)}
+                      className="mt-0.5"
+                    />
+                    <Label htmlFor="disclaimer" className="text-sm text-charcoal cursor-pointer leading-relaxed">
+                      I understand that providing false or misleading information on this questionnaire may result in disqualification from the program. All information provided is truthful and accurate to the best of my knowledge. *
+                    </Label>
+                  </div>
+                </div>
+
+                {/* Consent (Column Q) */}
+                <div className="bg-cyan/10 rounded-xl p-5 mt-4">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="consent"
+                      checked={consentGiven}
+                      onCheckedChange={(checked) => setConsentGiven(checked === true)}
+                      className="mt-0.5"
+                    />
+                    <Label htmlFor="consent" className="text-sm text-charcoal cursor-pointer leading-relaxed">
+                      I consent to Health Star Academy collecting and processing my personal information for enrollment purposes in accordance with the <a href="/privacy-policy" target="_blank" className="text-purple hover:underline">Privacy Policy</a>. A <strong>non-refundable $175 application fee</strong> is required if you meet eligibility and wish to proceed with full enrollment. *
+                    </Label>
                   </div>
                 </div>
 
