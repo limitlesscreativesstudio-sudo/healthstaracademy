@@ -29,7 +29,7 @@ const HomePage = () => {
     {
       icon: Clock,
       title: "Fast-Track Training",
-      description: "Daytime classes available. Complete in just 6 weeks with our hybrid format.",
+      description: "Daytime classes available. Complete in just 6.5 weeks with our hybrid format.",
     },
     {
       icon: HandHeart,
@@ -123,7 +123,7 @@ const HomePage = () => {
     <>
       <SEO
         title="Health Star Academy | CNA Training in Stockton, Hayward, Sacramento & Bay Area | CDPH Approved"
-        description="Health Star Academy offers CDPH-approved hybrid CNA training with clinical sites in Stockton, Hayward & Lodi. Students from Sacramento, Elk Grove, Modesto, and the Bay Area complete certification in just 6 weeks. Enroll today!"
+        description="Health Star Academy offers CDPH-approved hybrid CNA training with clinical sites in Stockton, Hayward & Lodi. Students from Sacramento, Elk Grove, Modesto, and the Bay Area complete certification in just 6.5 weeks. Enroll today!"
         canonical="/"
         keywords="CNA training Stockton, CNA training Hayward, CNA classes Sacramento, CNA program Bay Area, certified nursing assistant training near Sacramento, CDPH approved CNA program, hybrid CNA course, CNA certification Stockton CA, nursing assistant school Sacramento area, Lodi CNA training, Hayward CNA classes, CNA training near me, CNA school Elk Grove, CNA classes Modesto, Oakland CNA training, San Jose CNA program, Fremont CNA training"
       />
@@ -146,7 +146,7 @@ const HomePage = () => {
         <div className="container-custom">
           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
             <p className="text-primary-foreground font-medium text-center">
-              Complete in just 6 weeks! CDPH Approved Program.
+              Complete in just 6.5 weeks! CDPH Approved Program.
             </p>
             <div className="flex gap-3">
               <Button variant="secondary" size="sm" asChild>
