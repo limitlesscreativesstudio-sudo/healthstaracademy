@@ -248,7 +248,7 @@ const CohortsPage = () => {
                       <p className="text-gray-dark font-medium">
                         {cohort.startDate} – {cohort.endDate}
                       </p>
-                      <p className="text-sm text-gray-medium">6 weeks (23 class days)</p>
+                      <p className="text-sm text-gray-medium">6.5 weeks (23 class days)</p>
                     </div>
 
                     {/* Payment Buttons or Closed Notice */}

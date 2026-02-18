@@ -37,7 +37,7 @@ const AdmissionsPage = () => {
     { question: "What if I have a criminal record?", answer: "Certain offenses may prevent state CNA certification. Contact us to discuss your situation confidentially. We'll help you understand your options." },
     { question: "Can I work while attending?", answer: "Absolutely! Our hybrid format with flexible online theory and scheduled clinicals is designed for working adults." },
     { question: "Do I need a high school diploma?", answer: "A GED/High School Diploma is preferred but not required. If you don't have one, you can pass our entrance exam with 75% or above to qualify." },
-    { question: "How long is the program?", answer: "The program is 160 total hours: 60 hours online theory + 100 hours clinical. Our daytime program takes 6 weeks." },
+    { question: "How long is the program?", answer: "The program is 160 total hours: 60 hours online theory + 100 hours clinical. Our daytime program takes 6.5 weeks." },
     { question: "Where are the clinical sites?", answer: "Clinical training is held at approved healthcare facilities in Stockton, Lodi, and Hayward—with plans to expand throughout California." },
     { question: "Do I get any equipment or materials?", answer: "Yes! All students receive a Chromebook valued at $249 during orientation to access course materials. Your tuition also includes textbooks, workbook, uniform, BP cuff/stethoscope, and lab supplies." },
   ];

@@ -189,7 +189,7 @@ const PreQualificationPage = () => {
       if (cohort) {
         const startDate = new Date(cohort.start_date + "T00:00:00");
         const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + 42); // 6 weeks
+        endDate.setDate(endDate.getDate() + 46); // 6.5 weeks
         const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
         setCohortDateLabel(`${fmt(startDate)} – ${fmt(endDate)}`);
       }

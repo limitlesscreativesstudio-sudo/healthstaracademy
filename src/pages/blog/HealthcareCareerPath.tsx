@@ -97,7 +97,7 @@ const HealthcareCareerPath = () => {
               For individuals serious about building a healthcare career, becoming a Certified Nursing Assistant represents the ideal entry point. CNA certification offers numerous advantages that make it the preferred starting position for aspiring healthcare professionals.
             </p>
             <p className="text-gray-dark mb-6 leading-relaxed">
-              First, CNA training programs are relatively short and affordable compared to other healthcare certifications. At Health Star Academy, our CDPH-approved program can be completed in as little as 6 weeks, allowing you to enter the workforce quickly while minimizing your upfront investment. This accelerated timeline means you can start earning competitive wages within weeks rather than years.
+              First, CNA training programs are relatively short and affordable compared to other healthcare certifications. At Health Star Academy, our CDPH-approved program can be completed in as little as 6.5 weeks, allowing you to enter the workforce quickly while minimizing your upfront investment. This accelerated timeline means you can start earning competitive wages within weeks rather than years.
             </p>
             <p className="text-gray-dark mb-6 leading-relaxed">
               Second, CNAs gain direct patient care experience that is essential for advanced healthcare roles. Working as a CNA provides hands-on exposure to vital signs monitoring, patient hygiene, mobility assistance, and communication with healthcare teams. This foundational experience is invaluable for anyone planning to pursue LVN or RN certification in the future.
