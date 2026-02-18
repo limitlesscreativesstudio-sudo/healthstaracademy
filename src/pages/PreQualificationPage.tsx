@@ -143,7 +143,8 @@ const PreQualificationPage = () => {
 
   const phoneDigits = personal.phone.replace(/\D/g, "");
   const isPhoneValid = phoneDigits.length === 10;
-  const isStep1Valid = personal.first_name && personal.last_name && personal.email && isPhoneValid && personal.date_of_birth;
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personal.email);
+  const isStep1Valid = personal.first_name && personal.last_name && isEmailValid && isPhoneValid && personal.date_of_birth;
 
   const isStep2Valid = Object.values(eligibility).every((v) => v === "yes" || v === "no");
 
@@ -418,6 +419,9 @@ const PreQualificationPage = () => {
                   <div>
                     <Label htmlFor="email">Email Address *</Label>
                     <Input id="email" type="email" value={personal.email} onChange={(e) => updatePersonal("email", e.target.value)} placeholder="you@example.com" />
+                    {personal.email && !isEmailValid && (
+                      <p className="text-sm text-destructive mt-1">Please enter a valid email address</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="dob">Date of Birth *</Label>
