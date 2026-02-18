@@ -321,11 +321,11 @@ Deno.serve(async (req) => {
         try {
           const row = [
             new Date().toISOString(),                                              // A: Timestamp
-            sanitizeForSheets(`${payload.first_name} ${payload.last_name}`),       // B: First & Last Name
-            sanitizeForSheets(payload.email),                                      // C: Email
-            sanitizeForSheets(payload.phone || ""),                                // D: Phone
-            sanitizeForSheets(payload.date_of_birth || ""),                        // E: DOB
-            sanitizeForSheets(payload.address || ""),                              // F: Address
+            sanitizeForSheets(`${payload.first_name} ${payload.last_name}`),       // B: Name
+            sanitizeForSheets(payload.date_of_birth || ""),                        // C: DOB
+            sanitizeForSheets(payload.email),                                      // D: Email
+            sanitizeForSheets(payload.address || ""),                              // E: Address
+            sanitizeForSheets(payload.phone || ""),                                // F: Phone
             payload.is_over_18 ? "Yes" : "No",                                    // G: Over 18
             payload.has_diploma ? "Yes" : "No",                                   // H: Diploma
             payload.has_valid_id ? "Yes" : "No",                                  // I: Valid ID
