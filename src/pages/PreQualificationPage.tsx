@@ -420,6 +420,10 @@ const PreQualificationPage = () => {
                     </div>
                   </div>
                   <div>
+                    <Label htmlFor="dob">Date of Birth *</Label>
+                    <Input id="dob" type="date" value={personal.date_of_birth} onChange={(e) => updatePersonal("date_of_birth", e.target.value)} className="mt-1" />
+                  </div>
+                  <div>
                     <Label htmlFor="email">Email Address *</Label>
                     <Input id="email" type="email" value={personal.email} onChange={(e) => updatePersonal("email", e.target.value)} placeholder="you@example.com" />
                     {personal.email && !isEmailValid && (
@@ -427,8 +431,8 @@ const PreQualificationPage = () => {
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="dob">Date of Birth *</Label>
-                    <Input id="dob" type="date" value={personal.date_of_birth} onChange={(e) => updatePersonal("date_of_birth", e.target.value)} className="mt-1" />
+                    <Label htmlFor="address">Street Address</Label>
+                    <Input id="address" value={personal.address} onChange={(e) => updatePersonal("address", e.target.value)} placeholder="123 Main St, Stockton, CA" />
                   </div>
                   <div>
                     <Label htmlFor="phone">Phone Number *</Label>
@@ -453,10 +457,6 @@ const PreQualificationPage = () => {
                     {personal.phone && !isPhoneValid && (
                       <p className="text-sm text-destructive mt-1">Please enter a 10-digit phone number</p>
                     )}
-                  </div>
-                  <div>
-                    <Label htmlFor="address">Street Address</Label>
-                    <Input id="address" value={personal.address} onChange={(e) => updatePersonal("address", e.target.value)} placeholder="123 Main St, Stockton, CA" />
                   </div>
                   <div>
                     <Label htmlFor="referral_source">How Did You Hear About Us?</Label>
