@@ -64,26 +64,176 @@ const DENEFITS_LINK = "https://request.denefits.com/finance-panel?product_code=p
 const HANDBOOK_LINK = "https://drive.google.com/file/d/1Ayg61Hbudxsvp1NiWSq7dg7wVtHlxGqI/view";
 const ORIENTATION_PACKAGE_LINK = "https://drive.google.com/file/d/1eBsCJnhbS-47RvQfj3DgLDA5dGn18RbS/view";
 
+function getDisqualificationContent(firstName: string, notes: string): { subject: string; body: string } {
+  const lowerNotes = notes.toLowerCase();
+
+  // Missing valid government ID
+  if (lowerNotes.includes("valid government id") || lowerNotes.includes("valid id")) {
+    return {
+      subject: "Health Star Academy — Important Update About Your Application",
+      body: `
+        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thank you for taking the time to complete the pre-qualification questionnaire for our CNA program. We truly appreciate your interest in pursuing a career in healthcare! 💜</p>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">After reviewing your responses, we noticed that you currently do not have a <strong>valid, physical government-issued ID</strong>, which is a requirement for enrollment.</p>
+        <div style="background:linear-gradient(135deg,rgba(124,58,237,0.05),rgba(6,182,212,0.05));border:2px solid #7c3aed;border-radius:12px;padding:24px;margin:24px 0;">
+          <p style="color:#7c3aed;margin:0 0 12px;font-size:16px;font-weight:700;">✅ How to Resolve This:</p>
+          <ul style="color:#4a4a5a;line-height:2;font-size:15px;margin:0;padding-left:20px;">
+            <li>Obtain one of the following: <strong>California Driver's License, CA State ID, U.S. Passport, or Green Card</strong></li>
+            <li>Visit your local <strong>DMV</strong> to apply for a California ID or Driver's License</li>
+            <li>You must bring the <strong>original physical document</strong> — no photocopies or digital versions are accepted</li>
+          </ul>
+        </div>
+        <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
+          <p style="color:#166534;margin:0;font-size:15px;">🌟 <strong>Good news:</strong> Once you have your valid ID, you can reapply immediately! We'd love to welcome you into our program.</p>
+        </div>
+        ${getButtonHtml("Reapply When Ready", "https://healthstar-launchpad.lovable.app/pre-qualification")}
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you have questions or need assistance, please don't hesitate to call us at <strong>(209) 323-4169</strong> or email <strong>info@healthstaracademy.org</strong>. We're here to help!</p>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We're rooting for you! 💜<br><strong>Health Star Academy Admissions Team</strong></p>
+      `,
+    };
+  }
+
+  // Missing Social Security Card
+  if (lowerNotes.includes("social security")) {
+    return {
+      subject: "Health Star Academy — Important Update About Your Application",
+      body: `
+        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thank you for taking the time to complete the pre-qualification questionnaire for our CNA program. We truly appreciate your interest in pursuing a career in healthcare! 💜</p>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">After reviewing your responses, we noticed that you currently do not have your <strong>physical Social Security Card</strong>, which is required for enrollment and clinical placement.</p>
+        <div style="background:linear-gradient(135deg,rgba(124,58,237,0.05),rgba(6,182,212,0.05));border:2px solid #7c3aed;border-radius:12px;padding:24px;margin:24px 0;">
+          <p style="color:#7c3aed;margin:0 0 12px;font-size:16px;font-weight:700;">✅ How to Resolve This:</p>
+          <ul style="color:#4a4a5a;line-height:2;font-size:15px;margin:0;padding-left:20px;">
+            <li>Request a <strong>replacement Social Security Card</strong> online at <strong>ssa.gov</strong> or visit your local Social Security Administration office</li>
+            <li>Replacement cards are typically <strong>free</strong> and arrive within 10–14 business days</li>
+            <li>You must bring the <strong>original physical card</strong> — no photocopies or digital versions accepted</li>
+          </ul>
+        </div>
+        <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
+          <p style="color:#166534;margin:0;font-size:15px;">🌟 <strong>Good news:</strong> Once you have your replacement card, you can reapply immediately! We'd love to welcome you into our program.</p>
+        </div>
+        ${getButtonHtml("Reapply When Ready", "https://healthstar-launchpad.lovable.app/pre-qualification")}
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you have questions or need assistance, please don't hesitate to call us at <strong>(209) 323-4169</strong> or email <strong>info@healthstaracademy.org</strong>. We're here to help!</p>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We're rooting for you! 💜<br><strong>Health Star Academy Admissions Team</strong></p>
+      `,
+    };
+  }
+
+  // Cannot pass background check
+  if (lowerNotes.includes("background")) {
+    return {
+      subject: "Health Star Academy — Important Update About Your Application",
+      body: `
+        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thank you for taking the time to complete the pre-qualification questionnaire for our CNA program. We truly appreciate your interest in pursuing a career in healthcare! 💜</p>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">After reviewing your responses, we understand that you may have concerns about passing the <strong>LiveScan criminal background check</strong>, which is a state requirement for CNA certification and clinical placement.</p>
+        <div style="background:linear-gradient(135deg,rgba(124,58,237,0.05),rgba(6,182,212,0.05));border:2px solid #7c3aed;border-radius:12px;padding:24px;margin:24px 0;">
+          <p style="color:#7c3aed;margin:0 0 12px;font-size:16px;font-weight:700;">📋 What You Should Know:</p>
+          <ul style="color:#4a4a5a;line-height:2;font-size:15px;margin:0;padding-left:20px;">
+            <li>Not all criminal records automatically disqualify you — the California Department of Public Health (CDPH) reviews each case individually</li>
+            <li>You may be eligible for an <strong>exemption</strong> depending on your circumstances</li>
+            <li>We recommend contacting the <strong>CDPH Aide & Technician Certification Section</strong> at (916) 327-2445 to discuss your eligibility</li>
+            <li>If you receive clearance or an exemption, you are welcome to reapply</li>
+          </ul>
+        </div>
+        <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
+          <p style="color:#166534;margin:0;font-size:15px;">🌟 <strong>Don't give up:</strong> Many people with past records successfully become CNAs. We encourage you to explore your options — we're here to support you every step of the way.</p>
+        </div>
+        ${getButtonHtml("Reapply When Ready", "https://healthstar-launchpad.lovable.app/pre-qualification")}
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you have questions or need guidance, please don't hesitate to call us at <strong>(209) 323-4169</strong> or email <strong>info@healthstaracademy.org</strong>. We're here to help!</p>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We believe in second chances and we believe in you! 💜<br><strong>Health Star Academy Admissions Team</strong></p>
+      `,
+    };
+  }
+
+  // Missing proof of good health
+  if (lowerNotes.includes("health") || lowerNotes.includes("proof of good")) {
+    return {
+      subject: "Health Star Academy — Important Update About Your Application",
+      body: `
+        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thank you for taking the time to complete the pre-qualification questionnaire for our CNA program. We truly appreciate your interest in pursuing a career in healthcare! 💜</p>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">After reviewing your responses, we noticed that you are currently unable to provide <strong>proof of good health</strong>, which is a state requirement for CNA students entering clinical rotations.</p>
+        <div style="background:linear-gradient(135deg,rgba(124,58,237,0.05),rgba(6,182,212,0.05));border:2px solid #7c3aed;border-radius:12px;padding:24px;margin:24px 0;">
+          <p style="color:#7c3aed;margin:0 0 12px;font-size:16px;font-weight:700;">✅ How to Resolve This:</p>
+          <ul style="color:#4a4a5a;line-height:2;font-size:15px;margin:0;padding-left:20px;">
+            <li>Schedule a <strong>physical examination</strong> with your primary care physician or a walk-in clinic</li>
+            <li>Get a <strong>PPD TB skin test</strong> or <strong>Chest X-ray</strong> (required for clinical sites)</li>
+            <li>Many community health centers offer <strong>low-cost or free</strong> physicals and TB testing</li>
+            <li>Your doctor will provide documentation confirming you are in good health to participate in patient care</li>
+          </ul>
+        </div>
+        <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
+          <p style="color:#166534;margin:0;font-size:15px;">🌟 <strong>Good news:</strong> Once you have your health documentation, you can reapply immediately! We'd love to welcome you into our program.</p>
+        </div>
+        ${getButtonHtml("Reapply When Ready", "https://healthstar-launchpad.lovable.app/pre-qualification")}
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you have questions or need help finding affordable health services in your area, please call us at <strong>(209) 323-4169</strong> or email <strong>info@healthstaracademy.org</strong>. We're here to help!</p>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We're rooting for you! 💜<br><strong>Health Star Academy Admissions Team</strong></p>
+      `,
+    };
+  }
+
+  // No reliable transportation
+  if (lowerNotes.includes("transportation")) {
+    return {
+      subject: "Health Star Academy — Important Update About Your Application",
+      body: `
+        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thank you for taking the time to complete the pre-qualification questionnaire for our CNA program. We truly appreciate your interest in pursuing a career in healthcare! 💜</p>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">After reviewing your responses, we understand that you currently do not have <strong>reliable transportation</strong> to our clinical training sites in Stockton, Lodi, or Hayward, which is required for completing the hands-on portion of the program.</p>
+        <div style="background:linear-gradient(135deg,rgba(124,58,237,0.05),rgba(6,182,212,0.05));border:2px solid #7c3aed;border-radius:12px;padding:24px;margin:24px 0;">
+          <p style="color:#7c3aed;margin:0 0 12px;font-size:16px;font-weight:700;">💡 Options to Consider:</p>
+          <ul style="color:#4a4a5a;line-height:2;font-size:15px;margin:0;padding-left:20px;">
+            <li>Arrange a <strong>carpool</strong> with fellow students — we can help connect you with classmates in your area</li>
+            <li>Check <strong>public transit routes</strong> (San Joaquin RTD) for schedules to clinical sites</li>
+            <li>Explore <strong>ride-share services</strong> or community transportation programs</li>
+            <li>Ask family or friends if they can assist with transportation during the 6.5-week program</li>
+          </ul>
+        </div>
+        <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
+          <p style="color:#166534;margin:0;font-size:15px;">🌟 <strong>Good news:</strong> Once you've arranged reliable transportation, you can reapply immediately! We'd love to welcome you into our program.</p>
+        </div>
+        ${getButtonHtml("Reapply When Ready", "https://healthstar-launchpad.lovable.app/pre-qualification")}
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you'd like help exploring transportation options or connecting with other students in your area, please call us at <strong>(209) 323-4169</strong> or email <strong>info@healthstaracademy.org</strong>. We're here to help!</p>
+        <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We're rooting for you! 💜<br><strong>Health Star Academy Admissions Team</strong></p>
+      `,
+    };
+  }
+
+  // Fallback for any other disqualification
+  return {
+    subject: "Health Star Academy — Important Update About Your Application",
+    body: `
+      <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
+      <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thank you for taking the time to complete the pre-qualification questionnaire for our CNA program. We truly appreciate your interest in pursuing a career in healthcare! 💜</p>
+      <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">After reviewing your responses, we are unable to proceed with your enrollment at this time:</p>
+      <div style="background-color:#fffbeb;border-left:4px solid #f59e0b;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
+        <p style="color:#92400e;margin:0;font-size:14px;">${notes || "One or more enrollment requirements were not met."}</p>
+      </div>
+      <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
+        <p style="color:#166534;margin:0;font-size:15px;">🌟 If your circumstances change, we warmly encourage you to reapply! We'd love to welcome you into our program.</p>
+      </div>
+      ${getButtonHtml("Reapply When Ready", "https://healthstar-launchpad.lovable.app/pre-qualification")}
+      <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you have questions, please call us at <strong>(209) 323-4169</strong> or email <strong>info@healthstaracademy.org</strong>. We're here to help!</p>
+      <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We're rooting for you! 💜<br><strong>Health Star Academy Admissions Team</strong></p>
+    `,
+  };
+}
+
 function generateEmail(data: EmailRequest): { subject: string; html: string } {
   const firstName = data.student_name.split(" ")[0];
   const cohortFormatted = data.cohort_date ? formatDate(data.cohort_date) : "";
   const orientationFormatted = data.orientation_date ? formatDate(data.orientation_date) : "";
 
   switch (data.email_type) {
-    case "disqualified":
+    case "disqualified": {
+      const disqualNote = data.qualification_notes || "";
+      const disqualContent = getDisqualificationContent(firstName, disqualNote);
       return {
-        subject: "Health Star Academy — Application Update",
-        html: getEmailWrapper(`
-          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
-          <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thank you for your interest in the CNA program at Health Star Academy.</p>
-          <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">After reviewing your pre-qualification responses, we are unable to proceed with your enrollment at this time. Based on our review:</p>
-          <div style="background-color:#fef2f2;border-left:4px solid #ef4444;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
-            <p style="color:#991b1b;margin:0;font-size:14px;">${data.qualification_notes || "One or more requirements were not met."}</p>
-          </div>
-          <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If your circumstances change, we encourage you to reapply in the future. Please feel free to reach out with any questions.</p>
-          <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Wishing you all the best,<br><strong>Health Star Academy Admissions Team</strong></p>
-        `),
+        subject: disqualContent.subject,
+        html: getEmailWrapper(disqualContent.body),
       };
+    }
 
     case "qualified_welcome":
       return {
