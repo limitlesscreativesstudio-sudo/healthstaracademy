@@ -141,7 +141,9 @@ const PreQualificationPage = () => {
     setEligibility((prev) => ({ ...prev, [field]: value }));
   };
 
-  const isStep1Valid = personal.first_name && personal.last_name && personal.email && personal.phone && personal.date_of_birth;
+  const phoneDigits = personal.phone.replace(/\D/g, "");
+  const isPhoneValid = phoneDigits.length === 10;
+  const isStep1Valid = personal.first_name && personal.last_name && personal.email && isPhoneValid && personal.date_of_birth;
 
   const isStep2Valid = Object.values(eligibility).every((v) => v === "yes" || v === "no");
 
@@ -423,7 +425,27 @@ const PreQualificationPage = () => {
                   </div>
                   <div>
                     <Label htmlFor="phone">Phone Number *</Label>
-                    <Input id="phone" type="tel" value={personal.phone} onChange={(e) => updatePersonal("phone", e.target.value)} placeholder="(209) 555-0123" />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={personal.phone}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        const formatted = raw.length > 6
+                          ? `(${raw.slice(0, 3)}) ${raw.slice(3, 6)}-${raw.slice(6)}`
+                          : raw.length > 3
+                            ? `(${raw.slice(0, 3)}) ${raw.slice(3)}`
+                            : raw.length > 0
+                              ? `(${raw}`
+                              : "";
+                        updatePersonal("phone", formatted);
+                      }}
+                      placeholder="(209) 555-0123"
+                      maxLength={14}
+                    />
+                    {personal.phone && !isPhoneValid && (
+                      <p className="text-sm text-destructive mt-1">Please enter a 10-digit phone number</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="address">Street Address</Label>
