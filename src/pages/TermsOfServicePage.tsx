@@ -59,7 +59,7 @@ const TermsOfServicePage = () => {
                   <li><strong>Enrollment Fee:</strong> $175 non-refundable enrollment fee due with application submission</li>
                   <li><strong>Program Tuition:</strong> $2,499 due at least 14 days prior to the cohort start date</li>
                   <li><strong>Payment Methods:</strong> Full payment via Stripe (credit/debit card, Klarna, Afterpay, digital wallets), 5-week payment plan ($499.80/week via Stripe), or third-party financing through Denefits</li>
-                  <li><strong>Included Materials:</strong> Tuition includes a Chromebook (valued at $249) for use during the program, scrubs, course materials, and access to Canvas LMS</li>
+                  <li><strong>Included Materials:</strong> Tuition includes a Chromebook provided for use during the program (must be returned upon completion), scrubs, course materials, and access to Canvas LMS</li>
                 </ul>
               </section>
 

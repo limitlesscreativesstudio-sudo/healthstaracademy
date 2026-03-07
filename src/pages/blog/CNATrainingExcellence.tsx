@@ -179,7 +179,7 @@ const CNATrainingExcellence = () => {
               Quality programs maintain complete transparency about costs and offer reasonable payment options. Students should know exactly what they're paying for before enrollment, with no hidden fees or surprise expenses.
             </p>
             <p className="text-gray-dark mb-6 leading-relaxed">
-              Health Star Academy's all-inclusive tuition of $2,499 covers everything students need: instruction, textbooks, uniforms, clinical supplies, LiveScan background check, and a Chromebook valued at $499 for accessing course materials. The only additional fee is a $175 non-refundable application fee.
+              Health Star Academy's all-inclusive tuition of $2,499 covers everything students need: instruction, textbooks, uniforms, clinical supplies, LiveScan background check, and a Chromebook provided for use during the program. The only additional fee is a $175 non-refundable application fee.
             </p>
             <p className="text-gray-dark mb-6 leading-relaxed">
               We accept payments through Stripe, offering flexible options including Klarna, Afterpay, Zip, and Apple Pay for full tuition payment or payment plans. Additionally, financing is available through Self-Help Federal Credit Union and Denefits, which offers no credit check financing with guaranteed approvals and instant pre-approval decisions.

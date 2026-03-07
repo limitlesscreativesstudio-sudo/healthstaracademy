@@ -384,7 +384,7 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
             <li>Canvas LMS account is set up</li>
             <li>Student Handbook reviewed and signed</li>
             <li>Scrubs and materials ready</li>
-            <li>Chromebook charged and ready</li>
+            <li>Chromebook charged and ready (remember, it's provided for program use only)</li>
           </ul>
           <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you have any last-minute questions, don't hesitate to call us at <strong>(209) 323-4169</strong>.</p>
           <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">With excitement and support,<br><strong>The Health Star Academy Family 💜</strong></p>
