@@ -58,8 +58,8 @@ const AdmissionsPage = () => {
   return (
     <>
       <SEO
-        title="Admissions & Enrollment | CNA Program Requirements | Health Star Academy"
-        description="Apply to Health Star Academy's CNA program. $2,499 total tuition with payment plans available. Requirements: 18+ years, valid ID, background check. New classes start monthly in Stockton, CA!"
+        title="CNA Admissions & Enrollment | Health Star Academy"
+        description="Apply to our CNA program. $2,499 tuition with payment plans. Requirements: 18+, valid ID, background check. New classes monthly."
         canonical="/programs/admissions"
         keywords="CNA program enrollment, nursing assistant admission requirements, CNA tuition cost, payment plans CNA training, enroll CNA program California, Health Star Academy application"
         structuredData={faqStructuredData}

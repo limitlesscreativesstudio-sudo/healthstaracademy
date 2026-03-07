@@ -66,7 +66,7 @@ const SEO = ({
 
       {/* Geo Tags */}
       <meta name="geo.region" content="US-CA" />
-      <meta name="geo.placename" content="Stockton" />
+      <meta name="geo.placename" content="Stockton, Sacramento, Bay Area" />
 
       {/* Structured Data */}
       {structuredData && (
