@@ -333,7 +333,7 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
             <li>Program expectations and outcomes</li>
             <li>Program structure and schedule</li>
             <li>Policies and procedures</li>
-            <li>Distribution of Chromebook and materials</li>
+            <li>Distribution of Chromebook (provided for program use only) and materials</li>
             <li>Canvas LMS registration and setup</li>
           </ul>
           <h3 style="color:#1e1b2e;margin:24px 0 12px;font-size:18px;">📚 Before Orientation:</h3>
