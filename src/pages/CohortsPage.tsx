@@ -77,7 +77,7 @@ const CohortsPage = () => {
     "160-Hour CDPH Approved Program",
     "60 Hours Online Theory",
     "100 Hours Clinical Training",
-    "Chromebook ($249 Value)",
+    "Chromebook (Program Use Only)",
     "Textbook & Workbook",
     "Uniform (Scrubs)",
     "Blood Pressure Cuff & Stethoscope",

@@ -44,7 +44,7 @@ const HomePage = () => {
     {
       icon: Laptop,
       title: "Chromebook Provided",
-      description: "Every student receives a Chromebook ($249 value) to use while in the program.",
+      description: "Every student is provided a Chromebook to use during the program for accessing course materials.",
     },
     {
       icon: Briefcase,

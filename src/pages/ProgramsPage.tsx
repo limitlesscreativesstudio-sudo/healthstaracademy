@@ -219,8 +219,8 @@ const ProgramsPage = () => {
               <Laptop className="h-10 w-10 text-charcoal" />
             </div>
             <div>
-              <h3 className="font-heading font-bold text-2xl text-charcoal mb-2">Chromebook Included — $249 Value!</h3>
-              <p className="text-gray-dark max-w-xl">Every student receives a Chromebook during orientation to access course materials. It's part of our commitment to removing barriers and setting you up for success.</p>
+              <h3 className="font-heading font-bold text-2xl text-charcoal mb-2">Chromebook Provided During Program</h3>
+              <p className="text-gray-dark max-w-xl">Every student is provided a Chromebook during orientation to access course materials throughout the program. Chromebooks must be returned upon program completion.</p>
             </div>
           </div>
         </div>
@@ -508,7 +508,7 @@ const ProgramsPage = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-cyan mt-0.5 flex-shrink-0" />
-                  <span>Chromebook provided ($249 value) or use your own device</span>
+                  <span>Chromebook provided for use during the program, or use your own device</span>
                 </li>
               </ul>
             </div>
