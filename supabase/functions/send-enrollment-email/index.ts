@@ -414,11 +414,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    const GMAIL_USER = Deno.env.get("GMAIL_USER");
-    const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
-    if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
-      console.warn("Gmail credentials not configured. Logging email instead of sending.");
+    if (!RESEND_API_KEY) {
+      console.warn("RESEND_API_KEY not configured. Logging email instead of sending.");
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -427,36 +426,33 @@ Deno.serve(async (req) => {
 
     let emailStatus = "sent";
 
-    if (GMAIL_USER && GMAIL_APP_PASSWORD) {
-      // Send via Gmail SMTP using fetch to a relay or direct SMTP
-      // Since Deno edge functions can't do raw SMTP, we'll use Gmail API
-      // For now, we log and mark as sent - integrate with Gmail API or SMTP relay
+    if (RESEND_API_KEY) {
       try {
-        // Encode email for Gmail API
-        const rawEmail = [
-          `From: Health Star Academy <${GMAIL_USER}>`,
-          `To: ${data.student_email}`,
-          `Subject: ${email.subject}`,
-          `MIME-Version: 1.0`,
-          `Content-Type: text/html; charset=utf-8`,
-          ``,
-          email.html,
-        ].join("\r\n");
+        const resendResponse = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${RESEND_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "Health Star Academy <noreply@healthstaracademy.org>",
+            to: [data.student_email],
+            subject: email.subject,
+            html: email.html,
+          }),
+        });
 
-        // Base64url encode
-        const encodedEmail = btoa(unescape(encodeURIComponent(rawEmail)))
-          .replace(/\+/g, "-")
-          .replace(/\//g, "_")
-          .replace(/=+$/, "");
-
-        // Try sending via Gmail API (requires OAuth token or App Password via SMTP relay)
-        // For simplicity, log the email content - actual sending requires Gmail API OAuth setup
-        console.log(`Email prepared for: ${data.student_email}`);
-        console.log(`Subject: ${email.subject}`);
-        console.log(`Type: ${data.email_type}`);
-        emailStatus = "sent";
+        if (!resendResponse.ok) {
+          const errorData = await resendResponse.text();
+          console.error(`Resend API error [${resendResponse.status}]: ${errorData}`);
+          emailStatus = "failed";
+        } else {
+          const result = await resendResponse.json();
+          console.log(`Email sent via Resend to ${data.student_email}, id: ${result.id}`);
+          emailStatus = "sent";
+        }
       } catch (sendError) {
-        console.error("Error sending email:", sendError);
+        console.error("Error sending email via Resend:", sendError);
         emailStatus = "failed";
       }
     } else {
