@@ -333,7 +333,7 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
             <li>Program expectations and outcomes</li>
             <li>Program structure and schedule</li>
             <li>Policies and procedures</li>
-            <li>Distribution of Chromebook and materials</li>
+            <li>Distribution of Chromebook (provided for program use only) and materials</li>
             <li>Canvas LMS registration and setup</li>
           </ul>
           <h3 style="color:#1e1b2e;margin:24px 0 12px;font-size:18px;">📚 Before Orientation:</h3>
@@ -384,7 +384,7 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
             <li>Canvas LMS account is set up</li>
             <li>Student Handbook reviewed and signed</li>
             <li>Scrubs and materials ready</li>
-            <li>Chromebook charged and ready</li>
+            <li>Chromebook charged and ready (remember, it's provided for program use only)</li>
           </ul>
           <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you have any last-minute questions, don't hesitate to call us at <strong>(209) 323-4169</strong>.</p>
           <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">With excitement and support,<br><strong>The Health Star Academy Family 💜</strong></p>
