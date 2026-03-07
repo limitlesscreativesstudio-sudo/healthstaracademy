@@ -19,7 +19,7 @@ const SEO = ({
   canonical,
   keywords,
   type = "website",
-  image = "https://healthstar-launchpad.lovable.app/og-image.png",
+  image = "https://www.healthstaracademy.org/og-image.png",
   author,
   publishedTime,
   robots,
