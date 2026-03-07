@@ -93,7 +93,7 @@ const CNATrainingExcellence = () => {
               However, online learning alone is insufficient for CNA preparation. Clinical skills require hands-on practice with real equipment and, eventually, real patients. Excellent programs combine online theory with dedicated clinical hours at approved healthcare facilities where students practice skills under supervision of experienced instructors.
             </p>
             <p className="text-gray-dark mb-6 leading-relaxed">
-              At Health Star Academy, our hybrid program includes 60 hours of online theory and 100 hours of clinical training. This structure provides the flexibility of online learning while ensuring graduates have extensive hands-on experience. Students receive a Chromebook valued at $499 to access course materials, eliminating technology barriers that might otherwise impede learning.
+              At Health Star Academy, our hybrid program includes 60 hours of online theory and 100 hours of clinical training. This structure provides the flexibility of online learning while ensuring graduates have extensive hands-on experience. Students are provided a Chromebook to use during the program for accessing course materials, eliminating technology barriers that might otherwise impede learning.
             </p>
 
             {/* Inline Image */}

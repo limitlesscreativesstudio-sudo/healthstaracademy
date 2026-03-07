@@ -508,7 +508,7 @@ const ProgramsPage = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-cyan mt-0.5 flex-shrink-0" />
-                  <span>Chromebook provided ($249 value) or use your own device</span>
+                  <span>Chromebook provided for use during the program, or use your own device</span>
                 </li>
               </ul>
             </div>

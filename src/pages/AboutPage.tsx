@@ -15,7 +15,7 @@ const AboutPage = () => {
     { text: "Experienced RN & LPN Instructors", link: null },
     { text: "Hybrid Format - Online + In-Person", link: null },
     { text: "Clinical Training at Approved Facilities", link: null },
-    { text: "Chromebook Included ($249 Value)", link: null },
+    { text: "Chromebook Provided During Program", link: null },
     { text: "No Prerequisites Required", link: null },
   ];
 
