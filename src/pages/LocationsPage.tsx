@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import HeroBanner from '@/components/HeroBanner';
 import SEO from '@/components/SEO';
+import { buildBreadcrumbSchema } from '@/lib/breadcrumbs';
 import heroImage from '@/assets/hero-programs.jpg';
 import stocktonFacility from '@/assets/stockton-facility.jpg';
 import studentCareTraining from '@/assets/student-care-training.jpg';
