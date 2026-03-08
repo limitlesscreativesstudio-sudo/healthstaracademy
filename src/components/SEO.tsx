@@ -10,7 +10,7 @@ interface SEOProps {
   author?: string;
   publishedTime?: string;
   robots?: string;
-  structuredData?: object;
+  structuredData?: object | object[];
 }
 
 const SEO = ({
