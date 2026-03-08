@@ -302,7 +302,7 @@ const CohortsPage = () => {
 
             <div className="text-center mt-10">
               <p className="text-charcoal text-lg md:text-xl font-bold mb-4">
-                ⚠️ Application deadlines are 14 days before each cohort start date — see exact dates on each card above
+                ⚠️ Next enrollment application deadline: Monday, April 20, 2026 (14 days before the May 4 start date)
               </p>
               <p className="text-gray-medium text-xs">
                 Have questions? Call <a href="tel:2093234169" className="text-purple hover:underline">(209) 323-4169</a> or email <a href="mailto:info@healthstaracademy.org" className="text-purple hover:underline">info@healthstaracademy.org</a>
