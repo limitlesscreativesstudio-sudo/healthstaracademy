@@ -22,6 +22,7 @@ const CohortsPage = () => {
       title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "May 4, 2026",
       endDate: "June 15, 2026",
+      deadline: "Monday, April 20, 2026",
       paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
       paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
       image: cohortStudentMale2,
@@ -31,6 +32,7 @@ const CohortsPage = () => {
       title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "July 6, 2026",
       endDate: "August 17, 2026",
+      deadline: "Monday, June 22, 2026",
       paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
       paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
       image: cohortStudentFemale3,
@@ -40,6 +42,7 @@ const CohortsPage = () => {
       title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "August 24, 2026",
       endDate: "October 5, 2026",
+      deadline: "Monday, August 10, 2026",
       paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
       paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
       image: cohortStudentFemale4,
@@ -49,6 +52,7 @@ const CohortsPage = () => {
       title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "October 12, 2026",
       endDate: "November 23, 2026",
+      deadline: "Monday, September 28, 2026",
       paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
       paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
       image: cohortStudentMale3,
@@ -58,6 +62,7 @@ const CohortsPage = () => {
       title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "December 7, 2026",
       endDate: "January 18, 2027",
+      deadline: "Monday, November 23, 2026",
       paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
       paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
       image: cohortStudentMale2,
@@ -242,6 +247,11 @@ const CohortsPage = () => {
                         {cohort.startDate} – {cohort.endDate}
                       </p>
                       <p className="text-sm text-gray-medium">6.5 weeks (23 class days)</p>
+                      {!cohort.isClosed && (
+                        <p className="text-sm text-purple font-semibold mt-1">
+                          ⏰ Apply by: {cohort.deadline}
+                        </p>
+                      )}
                     </div>
 
                     {/* Payment Buttons or Closed Notice */}
@@ -292,7 +302,7 @@ const CohortsPage = () => {
 
             <div className="text-center mt-10">
               <p className="text-charcoal text-lg md:text-xl font-bold mb-4">
-                ⚠️ Enrollment application deadline: Monday, April 20, 2026 (14 days before the May 4 start date)
+                ⚠️ Application deadlines are 14 days before each cohort start date — see exact dates on each card above
               </p>
               <p className="text-gray-medium text-xs">
                 Have questions? Call <a href="tel:2093234169" className="text-purple hover:underline">(209) 323-4169</a> or email <a href="mailto:info@healthstaracademy.org" className="text-purple hover:underline">info@healthstaracademy.org</a>
