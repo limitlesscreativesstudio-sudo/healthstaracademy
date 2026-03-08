@@ -51,7 +51,7 @@ const CohortsPage = () => {
       endDate: "November 23, 2026",
       paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
       paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
-      image: cohortStudentFemale4,
+      image: cohortStudentMale3,
       isClosed: false,
     },
     {
