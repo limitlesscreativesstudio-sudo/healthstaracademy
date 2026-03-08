@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Award, Users, Stethoscope, HeartHandshake, ArrowRight, CheckCircle } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
 import instructorStethoscopeTraining from "@/assets/instructor-stethoscope-training.jpg";
 import instructorsHealthcare from "@/assets/instructors-healthcare.jpg";
