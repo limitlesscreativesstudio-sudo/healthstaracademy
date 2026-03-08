@@ -7,7 +7,7 @@ import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 
-import cohortStudentFemale2 from "@/assets/cohort-student-female-2.jpg";
+
 import cohortStudentFemale3 from "@/assets/cohort-student-female-3.jpg";
 import cohortStudentFemale4 from "@/assets/cohort-student-female-4.jpg";
 import cohortStudentMale1 from "@/assets/cohort-student-male-1.jpg";
