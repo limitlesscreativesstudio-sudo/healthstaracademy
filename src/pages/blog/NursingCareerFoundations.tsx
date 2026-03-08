@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft, Calendar, User, Clock } from "lucide-react";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 import studentBloodPressure from "@/assets/student-blood-pressure.jpg";
 import cnaPatientCare from "@/assets/cna-patient-care.png";
