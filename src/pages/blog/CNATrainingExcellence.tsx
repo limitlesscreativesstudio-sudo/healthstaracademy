@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft, Calendar, User, Clock } from "lucide-react";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
 import studentsTrainingGroup from "@/assets/students-training-group.png";
 import instructorStethoscopeTraining from "@/assets/instructor-stethoscope-training.jpg";
