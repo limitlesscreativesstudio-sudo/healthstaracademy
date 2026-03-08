@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { X, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const DEADLINE_DATE = new Date('2026-03-06T23:59:59');
+const DEADLINE_DATE = new Date('2026-04-20T23:59:59');
 
 const announcements = [
   {
     id: 'cohort',
     type: 'info',
     icon: Calendar,
-    title: 'Next Cohort Starts March 16 — Secure Your Spot Today!',
-    subtitle: 'Apply now for the March 2026 cohort',
+    title: 'Next Cohort Starts May 4 — Secure Your Spot by April 20!',
+    subtitle: 'Apply now for the May 2026 cohort',
     ctaText: 'View Cohorts',
     ctaLink: '/programs/cohorts',
     hasCountdown: true,
