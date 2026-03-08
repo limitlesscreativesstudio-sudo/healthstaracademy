@@ -247,6 +247,11 @@ const CohortsPage = () => {
                         {cohort.startDate} – {cohort.endDate}
                       </p>
                       <p className="text-sm text-gray-medium">6.5 weeks (23 class days)</p>
+                      {!cohort.isClosed && (
+                        <p className="text-sm text-purple font-semibold mt-1">
+                          ⏰ Apply by: {cohort.deadline}
+                        </p>
+                      )}
                     </div>
 
                     {/* Payment Buttons or Closed Notice */}
