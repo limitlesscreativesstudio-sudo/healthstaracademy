@@ -4,6 +4,7 @@ import { Calendar, CreditCard, Clock, CheckCircle, ArrowRight, DollarSign } from
 import { cn } from "@/lib/utils";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 
 import cohortStudentFemale2 from "@/assets/cohort-student-female-2.jpg";

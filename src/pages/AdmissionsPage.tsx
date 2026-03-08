@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Users, ClipboardCheck, CreditCard, GraduationCap, ArrowRight, ChevronDown, ChevronUp, HelpCircle, Download, Laptop, CheckCircle, BookOpen, CalendarCheck, UserCheck } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import studentBloodPressure from "@/assets/student-blood-pressure.jpg";
 import { useState } from "react";
 

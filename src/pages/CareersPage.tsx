@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import instructorTeaching from "@/assets/instructor-teaching-mannequin.jpg";
 
 const CareersPage = () => {

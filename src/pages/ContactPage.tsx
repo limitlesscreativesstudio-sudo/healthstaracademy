@@ -21,6 +21,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import studentSmilingStethoscope from "@/assets/student-smiling-stethoscope.jpg";
 
 const ContactPage = () => {
