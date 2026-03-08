@@ -7,10 +7,10 @@ import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 
-import cohortStudentFemale2 from "@/assets/cohort-student-female-2.jpg";
+
 import cohortStudentFemale3 from "@/assets/cohort-student-female-3.jpg";
 import cohortStudentFemale4 from "@/assets/cohort-student-female-4.jpg";
-import cohortStudentMale1 from "@/assets/cohort-student-male-1.jpg";
+
 import cohortStudentMale2 from "@/assets/cohort-student-male-2.jpg";
 import cohortStudentMale3 from "@/assets/cohort-student-male-3.jpg";
 
@@ -20,20 +20,11 @@ const CohortsPage = () => {
   const cohorts = [
     {
       title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "March 16, 2026",
-      endDate: "April 27, 2026",
-      paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
-      paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
-      image: cohortStudentMale1,
-      isClosed: false,
-    },
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "May 4, 2026",
       endDate: "June 15, 2026",
       paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
       paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
-      image: cohortStudentFemale2,
+      image: cohortStudentMale2,
       isClosed: false,
     },
     {
@@ -42,7 +33,7 @@ const CohortsPage = () => {
       endDate: "August 17, 2026",
       paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
       paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
-      image: cohortStudentMale2,
+      image: cohortStudentFemale3,
       isClosed: false,
     },
     {
@@ -51,7 +42,7 @@ const CohortsPage = () => {
       endDate: "October 5, 2026",
       paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
       paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
-      image: cohortStudentFemale3,
+      image: cohortStudentFemale4,
       isClosed: false,
     },
     {
@@ -60,7 +51,7 @@ const CohortsPage = () => {
       endDate: "November 23, 2026",
       paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
       paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
-      image: cohortStudentFemale4,
+      image: cohortStudentMale3,
       isClosed: false,
     },
     {
@@ -69,7 +60,7 @@ const CohortsPage = () => {
       endDate: "January 18, 2027",
       paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
       paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
-      image: cohortStudentMale3,
+      image: cohortStudentMale2,
       isClosed: false,
     },
   ];
@@ -301,7 +292,7 @@ const CohortsPage = () => {
 
             <div className="text-center mt-10">
               <p className="text-charcoal text-lg md:text-xl font-bold mb-4">
-                ⚠️ Enrollment application deadline: 10 business days prior to start date
+                ⚠️ Enrollment application deadline: Monday, April 20, 2026 (14 days before the May 4 start date)
               </p>
               <p className="text-gray-medium text-xs">
                 Have questions? Call <a href="tel:2093234169" className="text-purple hover:underline">(209) 323-4169</a> or email <a href="mailto:info@healthstaracademy.org" className="text-purple hover:underline">info@healthstaracademy.org</a>
