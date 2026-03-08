@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Camera, Image as ImageIcon } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import studentsTrainingGroup from "@/assets/students-training-group.png";
 import graduationGroup from "@/assets/graduation-group.jpg";
 import graduationCongratulations from "@/assets/graduation-congratulations.jpg";
@@ -28,6 +29,7 @@ const GalleryPage = () => {
         description="View photos of Health Star Academy CNA students, clinical training, and patient care practice. See our diverse student community and hands-on learning environment in Stockton, CA."
         canonical="/gallery"
         keywords="CNA student photos, nursing assistant training pictures, Health Star Academy gallery, clinical training images, CNA school Stockton photos"
+        structuredData={buildBreadcrumbSchema([{ name: "Gallery", path: "/gallery" }])}
       />
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}

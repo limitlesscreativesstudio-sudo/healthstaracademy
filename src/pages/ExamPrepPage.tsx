@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORIES, QuestionCategory, getCategoryById } from "@/types/examPrep";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import { BookOpen, Clock, Target, CheckCircle, XCircle, Bookmark, ArrowLeft, ArrowRight, RotateCcw, Trophy, Brain, Timer } from "lucide-react";
 
 const ModeSelection = () => {
@@ -269,6 +270,7 @@ const ExamPrepPage = () => {
         description="Practice with 175 CDPH-aligned questions for the California CNA certification exam. Study mode, timed exams, and category drills."
         canonical="/programs/exam-prep"
         keywords="CNA practice exam, California CNA test prep, nursing assistant certification exam, CDPH CNA questions, CNA study guide, state exam practice, CNA certification test"
+        structuredData={buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }, { name: "Exam Prep", path: "/programs/exam-prep" }])}
       />
       <div className="container-custom section-padding">
         <ExamPrepContent />

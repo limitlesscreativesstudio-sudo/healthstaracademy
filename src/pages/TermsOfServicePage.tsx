@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 
 const TermsOfServicePage = () => {
   return (
@@ -11,6 +12,7 @@ const TermsOfServicePage = () => {
         description="Terms of Service for Health Star Academy's CDPH-approved CNA training program. Enrollment agreements, refund policy, and student responsibilities."
         canonical="/terms-of-service"
         robots="noindex, follow"
+        structuredData={buildBreadcrumbSchema([{ name: "Terms of Service", path: "/terms-of-service" }])}
       />
       <main className="pt-28 md:pt-32">
         <section className="section-padding bg-background">

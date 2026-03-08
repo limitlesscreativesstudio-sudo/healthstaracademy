@@ -4,6 +4,7 @@ import { Calendar, CreditCard, Clock, CheckCircle, ArrowRight, DollarSign } from
 import { cn } from "@/lib/utils";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 
 import cohortStudentFemale2 from "@/assets/cohort-student-female-2.jpg";
@@ -93,6 +94,7 @@ const CohortsPage = () => {
         description="Choose your CNA training cohort and payment option. Total tuition $2,499 - pay in full or use our weekly payment plan. New classes start monthly at Health Star Academy."
         canonical="/programs/cohorts"
         keywords="CNA program cost, CNA tuition payment, nursing assistant training price, CNA class schedule, Health Star Academy enrollment, CNA payment plan"
+        structuredData={buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }, { name: "Cohorts & Pricing", path: "/programs/cohorts" }])}
       />
       <main className="pt-28 md:pt-32">
         {/* Hero Section */}

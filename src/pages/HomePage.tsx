@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import heroDiverseStudents from "@/assets/hero-diverse-students.jpg";
 import studentCareTraining from "@/assets/student-care-training.jpg";
 import scholarshipBanner from "@/assets/scholarship-banner.png";
@@ -126,6 +127,7 @@ const HomePage = () => {
         description="CDPH-approved hybrid CNA training in Stockton, Hayward & Lodi. Complete certification in 6.5 weeks. Enroll today!"
         canonical="/"
         keywords="CNA training Stockton, CNA training Hayward, CNA classes Sacramento, CNA program Bay Area, certified nursing assistant training near Sacramento, CDPH approved CNA program, hybrid CNA course, CNA certification Stockton CA, nursing assistant school Sacramento area, Lodi CNA training, Hayward CNA classes, CNA training near me, CNA school Elk Grove, CNA classes Modesto, Oakland CNA training, San Jose CNA program, Fremont CNA training"
+        structuredData={buildBreadcrumbSchema([])}
       />
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}

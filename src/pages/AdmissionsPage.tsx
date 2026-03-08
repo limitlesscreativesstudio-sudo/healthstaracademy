@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Users, ClipboardCheck, CreditCard, GraduationCap, ArrowRight, ChevronDown, ChevronUp, HelpCircle, Download, Laptop, CheckCircle, BookOpen, CalendarCheck, UserCheck } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import studentBloodPressure from "@/assets/student-blood-pressure.jpg";
 import { useState } from "react";
 
@@ -62,7 +63,7 @@ const AdmissionsPage = () => {
         description="Apply to our CNA program. $2,499 tuition with payment plans. Requirements: 18+, valid ID, background check. New classes monthly."
         canonical="/programs/admissions"
         keywords="CNA program enrollment, nursing assistant admission requirements, CNA tuition cost, payment plans CNA training, enroll CNA program California, Health Star Academy application"
-        structuredData={faqStructuredData}
+        structuredData={[faqStructuredData, buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }, { name: "Admissions", path: "/programs/admissions" }])]}
       />
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
