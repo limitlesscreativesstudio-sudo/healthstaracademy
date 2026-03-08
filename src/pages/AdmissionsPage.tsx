@@ -41,6 +41,7 @@ const AdmissionsPage = () => {
     { question: "How long is the program?", answer: "The program is 160 total hours: 60 hours online theory + 100 hours clinical. Our daytime program takes 6.5 weeks." },
     { question: "Where are the clinical sites?", answer: "Clinical training is held at approved healthcare facilities in Stockton, Lodi, and Hayward—with plans to expand throughout California." },
     { question: "Do I get any equipment or materials?", answer: "Yes! All students are provided a Chromebook to use during the program for accessing course materials (must be returned upon completion). Your tuition also includes textbooks, workbook, uniform, BP cuff/stethoscope, and lab supplies." },
+    { question: "What is the deadline for the May 4, 2026 cohort, and what happens if my documents are submitted late?", answer: "The application deadline for the May 4, 2026 cohort is Monday, April 20, 2026 — exactly 14 days before the start date. All required documents, enrollment application, and tuition payment must be completed by this date. If your documents are submitted after the deadline, your enrollment may be deferred to the next available cohort. We cannot guarantee a spot in your preferred cohort if materials are received late. Contact us at (209) 323-4169 if you need assistance meeting the deadline." },
   ];
 
   const faqStructuredData = {
