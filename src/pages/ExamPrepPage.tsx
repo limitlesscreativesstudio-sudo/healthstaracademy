@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORIES, QuestionCategory, getCategoryById } from "@/types/examPrep";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import { BookOpen, Clock, Target, CheckCircle, XCircle, Bookmark, ArrowLeft, ArrowRight, RotateCcw, Trophy, Brain, Timer } from "lucide-react";
 
 const ModeSelection = () => {
