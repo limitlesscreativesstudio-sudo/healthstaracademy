@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, Clock, Instagram, Facebook } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import studentsVitalsPractice from "@/assets/students-vitals-practice.jpg";
 import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
 import cnaStudentsConfident from "@/assets/cna-students-confident.jpg";
