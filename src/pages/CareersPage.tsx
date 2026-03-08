@@ -63,6 +63,7 @@ const CareersPage = () => {
         description="Join Health Star Academy as a CNA Instructor. We're hiring experienced RNs and LVNs passionate about healthcare education. Competitive pay, flexible hours, and meaningful work."
         canonical="/careers"
         keywords="CNA instructor jobs, nursing instructor California, healthcare educator jobs, RN teaching jobs, LVN instructor positions, Health Star Academy careers"
+        structuredData={buildBreadcrumbSchema([{ name: "Careers", path: "/careers" }])}
       />
       <main className="pt-28 md:pt-32">
         {/* Hero Section */}

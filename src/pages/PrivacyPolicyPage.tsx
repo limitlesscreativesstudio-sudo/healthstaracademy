@@ -12,6 +12,7 @@ const PrivacyPolicyPage = () => {
         description="Health Star Academy's Privacy Policy explains how we collect, use, and protect your personal information when you use our website and CNA training services."
         canonical="/privacy-policy"
         robots="noindex, follow"
+        structuredData={buildBreadcrumbSchema([{ name: "Privacy Policy", path: "/privacy-policy" }])}
       />
       <main className="pt-28 md:pt-32">
         <section className="section-padding bg-background">

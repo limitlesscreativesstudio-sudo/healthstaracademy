@@ -159,7 +159,7 @@ const ProgramsPage = () => {
         description="Enroll in our 160-hour CDPH-approved CNA program. 60 hrs online + 100 hrs clinical in Stockton, Lodi & Hayward. Done in 6.5 weeks."
         canonical="/programs"
         keywords="CNA program Stockton, CDPH approved CNA training, 160 hour CNA course, hybrid CNA program California, certified nursing assistant curriculum, CNA clinical training, nursing assistant certification"
-        structuredData={courseStructuredData}
+        structuredData={[courseStructuredData, buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }])]}
       />
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}

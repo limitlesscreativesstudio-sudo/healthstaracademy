@@ -365,6 +365,7 @@ const PreQualificationPage = () => {
         description="Complete our quick pre-qualification questionnaire to check your eligibility for Health Star Academy's CNA program. Find out in minutes if you're ready to enroll!"
         canonical="/pre-qualification"
         keywords="CNA pre-qualification, nursing assistant eligibility, CNA program requirements, Health Star Academy enrollment"
+        structuredData={buildBreadcrumbSchema([{ name: "Pre-Qualification", path: "/pre-qualification" }])}
       />
       <main className="pt-28 md:pt-32">
         <HeroBanner

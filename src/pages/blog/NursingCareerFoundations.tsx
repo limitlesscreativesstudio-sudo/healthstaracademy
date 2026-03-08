@@ -18,6 +18,7 @@ const NursingCareerFoundations = () => {
         type="article"
         author="Health Star Academy"
         publishedTime="2024-12-05"
+        structuredData={buildBreadcrumbSchema([{ name: "Blog", path: "/blog" }, { name: "Nursing Career Foundations", path: "/blog/nursing-career-foundations" }])}
       />
       <main className="pt-30">
       {/* Article Header */}

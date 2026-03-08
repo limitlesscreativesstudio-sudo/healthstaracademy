@@ -170,71 +170,41 @@ const LocationsPage = () => {
         description="Find Health Star Academy CNA training locations throughout California's Central Valley and Bay Area. Clinical training sites in Stockton, Lodi, and Hayward."
         canonical="/locations"
         keywords="CNA training locations, nursing assistant school California, Stockton CNA, Lodi CNA, Hayward CNA, Central Valley healthcare training"
-        structuredData={{
-          "@context": "https://schema.org",
-          "@type": "EducationalOrganization",
-          "name": "Health Star Academy",
-          "url": "https://www.healthstaracademy.org",
-          "telephone": "(209) 323-4169",
-          "email": "info@healthstaracademy.org",
-          "areaServed": ["Stockton", "Lodi", "Hayward", "Sacramento", "Bay Area", "Central Valley"],
-          "location": [
-            {
-              "@type": "Place",
-              "name": "Meadowood Health and Rehabilitation Center",
-              "description": "Primary clinical training site for Health Star Academy CNA students in Stockton.",
-              "address": {
-                "@type": "PostalAddress",
-                "streetAddress": "3110 Wagner Heights Rd",
-                "addressLocality": "Stockton",
-                "addressRegion": "CA",
-                "postalCode": "95209",
-                "addressCountry": "US"
+        structuredData={[
+          {
+            "@context": "https://schema.org",
+            "@type": "EducationalOrganization",
+            "name": "Health Star Academy",
+            "url": "https://www.healthstaracademy.org",
+            "telephone": "(209) 323-4169",
+            "email": "info@healthstaracademy.org",
+            "areaServed": ["Stockton", "Lodi", "Hayward", "Sacramento", "Bay Area", "Central Valley"],
+            "location": [
+              {
+                "@type": "Place",
+                "name": "Meadowood Health and Rehabilitation Center",
+                "description": "Primary clinical training site for Health Star Academy CNA students in Stockton.",
+                "address": { "@type": "PostalAddress", "streetAddress": "3110 Wagner Heights Rd", "addressLocality": "Stockton", "addressRegion": "CA", "postalCode": "95209", "addressCountry": "US" },
+                "geo": { "@type": "GeoCoordinates", "latitude": 38.0202, "longitude": -121.3236 }
               },
-              "geo": {
-                "@type": "GeoCoordinates",
-                "latitude": 38.0202,
-                "longitude": -121.3236
-              }
-            },
-            {
-              "@type": "Place",
-              "name": "Lodi Creek Post-Acute",
-              "description": "Clinical training site for Health Star Academy CNA students in Lodi.",
-              "address": {
-                "@type": "PostalAddress",
-                "streetAddress": "321 West Turner Road",
-                "addressLocality": "Lodi",
-                "addressRegion": "CA",
-                "postalCode": "95240",
-                "addressCountry": "US"
+              {
+                "@type": "Place",
+                "name": "Lodi Creek Post-Acute",
+                "description": "Clinical training site for Health Star Academy CNA students in Lodi.",
+                "address": { "@type": "PostalAddress", "streetAddress": "321 West Turner Road", "addressLocality": "Lodi", "addressRegion": "CA", "postalCode": "95240", "addressCountry": "US" },
+                "geo": { "@type": "GeoCoordinates", "latitude": 38.1302, "longitude": -121.2777 }
               },
-              "geo": {
-                "@type": "GeoCoordinates",
-                "latitude": 38.1302,
-                "longitude": -121.2777
+              {
+                "@type": "Place",
+                "name": "Bay Area Skilled Nursing Facility",
+                "description": "Clinical training site for Health Star Academy CNA students in Hayward.",
+                "address": { "@type": "PostalAddress", "streetAddress": "22300 Foothill Blvd", "addressLocality": "Hayward", "addressRegion": "CA", "postalCode": "94541", "addressCountry": "US" },
+                "geo": { "@type": "GeoCoordinates", "latitude": 37.6688, "longitude": -122.0872 }
               }
-            },
-            {
-              "@type": "Place",
-              "name": "Bay Area Skilled Nursing Facility",
-              "description": "Clinical training site for Health Star Academy CNA students in Hayward.",
-              "address": {
-                "@type": "PostalAddress",
-                "streetAddress": "22300 Foothill Blvd",
-                "addressLocality": "Hayward",
-                "addressRegion": "CA",
-                "postalCode": "94541",
-                "addressCountry": "US"
-              },
-              "geo": {
-                "@type": "GeoCoordinates",
-                "latitude": 37.6688,
-                "longitude": -122.0872
-              }
-            }
-          ]
-        }}
+            ]
+          },
+          buildBreadcrumbSchema([{ name: "Locations", path: "/locations" }])
+        ]}
       />
 
       <HeroBanner

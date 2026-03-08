@@ -62,7 +62,7 @@ const AdmissionsPage = () => {
         description="Apply to our CNA program. $2,499 tuition with payment plans. Requirements: 18+, valid ID, background check. New classes monthly."
         canonical="/programs/admissions"
         keywords="CNA program enrollment, nursing assistant admission requirements, CNA tuition cost, payment plans CNA training, enroll CNA program California, Health Star Academy application"
-        structuredData={faqStructuredData}
+        structuredData={[faqStructuredData, buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }, { name: "Admissions", path: "/programs/admissions" }])]}
       />
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}

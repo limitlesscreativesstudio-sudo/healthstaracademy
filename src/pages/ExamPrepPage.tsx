@@ -270,6 +270,7 @@ const ExamPrepPage = () => {
         description="Practice with 175 CDPH-aligned questions for the California CNA certification exam. Study mode, timed exams, and category drills."
         canonical="/programs/exam-prep"
         keywords="CNA practice exam, California CNA test prep, nursing assistant certification exam, CDPH CNA questions, CNA study guide, state exam practice, CNA certification test"
+        structuredData={buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }, { name: "Exam Prep", path: "/programs/exam-prep" }])}
       />
       <div className="container-custom section-padding">
         <ExamPrepContent />

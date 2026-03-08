@@ -18,6 +18,7 @@ const CNATrainingExcellence = () => {
         type="article"
         author="Health Star Academy"
         publishedTime="2024-12-08"
+        structuredData={buildBreadcrumbSchema([{ name: "Blog", path: "/blog" }, { name: "CNA Training Excellence", path: "/blog/cna-training-excellence" }])}
       />
       <main className="pt-30">
       {/* Article Header */}

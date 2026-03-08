@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import heroDiverseStudents from "@/assets/hero-diverse-students.jpg";
 import studentCareTraining from "@/assets/student-care-training.jpg";
 import scholarshipBanner from "@/assets/scholarship-banner.png";

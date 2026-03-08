@@ -50,6 +50,7 @@ const BlogPage = () => {
         description="Read expert articles on CNA careers, healthcare training tips, and nursing assistant certification guidance from Health Star Academy. Start your healthcare journey with valuable insights."
         canonical="/blog"
         keywords="CNA blog, nursing assistant career tips, healthcare career advice, CNA training articles, certified nursing assistant guide, healthcare education blog"
+        structuredData={buildBreadcrumbSchema([{ name: "Blog", path: "/blog" }])}
       />
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
