@@ -31,7 +31,7 @@ const CohortsPage = () => {
     {
       title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "July 6, 2026",
-      endDate: "August 21, 2026",
+      endDate: "August 17, 2026",
       deadline: "Monday, June 22, 2026",
       paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
       paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
@@ -41,7 +41,7 @@ const CohortsPage = () => {
     {
       title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "August 24, 2026",
-      endDate: "October 9, 2026",
+      endDate: "October 5, 2026",
       deadline: "Monday, August 10, 2026",
       paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
       paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
@@ -51,7 +51,7 @@ const CohortsPage = () => {
     {
       title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "October 12, 2026",
-      endDate: "November 27, 2026",
+      endDate: "November 23, 2026",
       deadline: "Monday, September 28, 2026",
       paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
       paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
@@ -61,7 +61,7 @@ const CohortsPage = () => {
     {
       title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "December 7, 2026",
-      endDate: "January 22, 2027",
+      endDate: "January 18, 2027",
       deadline: "Monday, November 23, 2026",
       paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
       paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
