@@ -31,7 +31,7 @@ const CohortsPage = () => {
     {
       title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "July 6, 2026",
-      endDate: "August 17, 2026",
+      endDate: "August 21, 2026",
       deadline: "Monday, June 22, 2026",
       paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
       paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
