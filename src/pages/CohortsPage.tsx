@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calendar, CreditCard, Clock, CheckCircle, ArrowRight, DollarSign } from "lucide-react";
+import { Calendar, CreditCard, Clock, CheckCircle, ArrowRight, DollarSign, Users } from "lucide-react";
+import WeekendEnrollmentCounter from "@/components/WeekendEnrollmentCounter";
 import { cn } from "@/lib/utils";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
