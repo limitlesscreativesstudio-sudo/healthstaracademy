@@ -7,6 +7,7 @@ export interface CohortSchedule {
 }
 
 export const cohortSchedule: CohortSchedule[] = [
+  // 2026
   {
     startDate: "May 4, 2026",
     endDate: "June 19, 2026",
@@ -41,6 +42,49 @@ export const cohortSchedule: CohortSchedule[] = [
     deadline: "Monday, November 23, 2026",
     deadlineISO: "2026-11-23",
     startISO: "2026-12-07",
+  },
+  // 2027
+  {
+    startDate: "February 8, 2027",
+    endDate: "March 22, 2027",
+    deadline: "Monday, January 25, 2027",
+    deadlineISO: "2027-01-25",
+    startISO: "2027-02-08",
+  },
+  {
+    startDate: "May 3, 2027",
+    endDate: "June 14, 2027",
+    deadline: "Monday, April 19, 2027",
+    deadlineISO: "2027-04-19",
+    startISO: "2027-05-03",
+  },
+  {
+    startDate: "July 5, 2027",
+    endDate: "August 16, 2027",
+    deadline: "Monday, June 21, 2027",
+    deadlineISO: "2027-06-21",
+    startISO: "2027-07-05",
+  },
+  {
+    startDate: "August 23, 2027",
+    endDate: "October 4, 2027",
+    deadline: "Monday, August 9, 2027",
+    deadlineISO: "2027-08-09",
+    startISO: "2027-08-23",
+  },
+  {
+    startDate: "October 11, 2027",
+    endDate: "November 22, 2027",
+    deadline: "Monday, September 27, 2027",
+    deadlineISO: "2027-09-27",
+    startISO: "2027-10-11",
+  },
+  {
+    startDate: "December 6, 2027",
+    endDate: "January 17, 2028",
+    deadline: "Monday, November 22, 2027",
+    deadlineISO: "2027-11-22",
+    startISO: "2027-12-06",
   },
 ];
 
