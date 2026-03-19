@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
+import { getNextUpcomingCohort } from "@/data/cohortSchedule";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 
 
