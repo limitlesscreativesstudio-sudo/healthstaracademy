@@ -133,6 +133,16 @@ const CohortsPage = () => {
     },
   ];
 
+  // Placeholder enrollment counts — will be replaced by Google Sheet integration
+  const weekendEnrollmentCounts: Record<string, number> = {
+    "July 11, 2026": 0,
+    "October 3, 2026": 0,
+    "January 9, 2027": 0,
+    "April 3, 2027": 0,
+    "July 10, 2027": 0,
+    "October 2, 2027": 0,
+  };
+
   const weekendCohorts = [
     {
       title: "HSA CNA — Weekend Program",
