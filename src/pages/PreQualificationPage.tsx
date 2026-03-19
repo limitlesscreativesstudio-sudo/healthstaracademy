@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { getCohortsByType, type CohortSchedule } from "@/data/cohortSchedule";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -107,6 +108,10 @@ const PreQualificationPage = () => {
   const [needsExam, setNeedsExam] = useState(false);
   const [needsConsent, setNeedsConsent] = useState(false);
   const [cohortDateLabel, setCohortDateLabel] = useState("");
+  const [programTrack, setProgramTrack] = useState<"daytime" | "weekend" | "">("");
+
+  const daytimeCohortDates = useMemo(() => getCohortsByType("daytime"), []);
+  const weekendCohortDates = useMemo(() => getCohortsByType("weekend"), []);
 
   const [personal, setPersonal] = useState<PersonalInfo>({
     first_name: "",
@@ -152,7 +157,7 @@ const PreQualificationPage = () => {
 
   const isStep2Valid = Object.values(eligibility).every((v) => v === "yes" || v === "no");
 
-  const isStep3Valid = !!selectedCohort && disclaimerAcknowledged && consentGiven;
+  const isStep3Valid = !!programTrack && !!selectedCohort && disclaimerAcknowledged && consentGiven;
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -531,8 +536,8 @@ const PreQualificationPage = () => {
             {step === 3 && (
               <div className="animate-fade-in">
                 <div className="text-center mb-8">
-                  <h2 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-2">Choose Your Start Date</h2>
-                  <p className="text-gray-dark">Select the cohort you'd like to join. New classes start regularly!</p>
+                  <h2 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-2">Choose Your Program Track & Start Date</h2>
+                  <p className="text-gray-dark">Select your preferred schedule, then pick a start date.</p>
                 </div>
 
                 {/* Document Reminder Banner */}
@@ -548,37 +553,114 @@ const PreQualificationPage = () => {
                   </div>
                 </div>
 
-                <div>
-                  <Label className="mb-3 block">Select Your Preferred Start Date *</Label>
-                  <RadioGroup value={selectedCohort} onValueChange={setSelectedCohort} className="space-y-3">
-                    {cohorts.map((c) => {
-                      const startDate = new Date(c.start_date + "T00:00:00");
-                      const endDate = new Date(startDate);
-                      endDate.setDate(endDate.getDate() + 42);
-                      return (
-                        <label
-                          key={c.id}
-                          htmlFor={`cohort-${c.id}`}
-                          className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all ${
-                            selectedCohort === c.start_date
-                              ? "border-purple bg-purple/5"
-                              : "border-border bg-background hover:border-purple/40"
-                          }`}
-                        >
-                          <RadioGroupItem value={c.start_date} id={`cohort-${c.id}`} />
-                          <div>
-                            <p className="font-semibold text-charcoal">
-                              {formatShortDate(c.start_date)} — {formatCohortDate(c.start_date)}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Ends {formatShortDate(endDate.getFullYear() + "-" + String(endDate.getMonth() + 1).padStart(2, "0") + "-" + String(endDate.getDate()).padStart(2, "0"))} ({getEndDate(c.start_date)})
-                            </p>
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </RadioGroup>
+                {/* Program Track Selection */}
+                <div className="mb-6">
+                  <Label className="mb-3 block font-semibold">Select Your Program Track *</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => { setProgramTrack("daytime"); setSelectedCohort(""); }}
+                      className={`rounded-xl border-2 p-4 text-left transition-all ${
+                        programTrack === "daytime"
+                          ? "border-purple bg-purple/5"
+                          : "border-border bg-background hover:border-purple/40"
+                      }`}
+                    >
+                      <p className="font-semibold text-charcoal">☀️ Daytime Program</p>
+                      <p className="text-sm text-muted-foreground">Mon–Thu, 6:00 AM – 2:30 PM</p>
+                      <p className="text-xs text-muted-foreground">6.5 weeks (23 class days)</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setProgramTrack("weekend"); setSelectedCohort(""); }}
+                      className={`rounded-xl border-2 p-4 text-left transition-all ${
+                        programTrack === "weekend"
+                          ? "border-cyan bg-cyan/5"
+                          : "border-border bg-background hover:border-cyan/40"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-charcoal">🌙 Weekend Program</p>
+                        <span className="bg-cyan/20 text-cyan text-xs font-bold px-2 py-0.5 rounded">NEW</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Sat & Sun, 6:00 AM – 6:00 PM</p>
+                      <p className="text-xs text-muted-foreground">7 weekends (14 class days)</p>
+                    </button>
+                  </div>
                 </div>
+
+                {/* Weekend minimum notice */}
+                {programTrack === "weekend" && (
+                  <div className="bg-cyan/5 border border-cyan/20 rounded-xl p-4 mb-6">
+                    <p className="text-sm text-charcoal">
+                      ℹ️ <strong>Weekend cohorts require a minimum of 15 enrolled students</strong> to proceed. If the minimum is not met, students will be moved to the next available weekend cohort.
+                    </p>
+                  </div>
+                )}
+
+                {/* Cohort Date Selection */}
+                {programTrack && (
+                  <div>
+                    <Label className="mb-3 block">Select Your Preferred Start Date *</Label>
+                    <RadioGroup value={selectedCohort} onValueChange={setSelectedCohort} className="space-y-3">
+                      {programTrack === "daytime" ? (
+                        cohorts.map((c) => {
+                          const startDate = new Date(c.start_date + "T00:00:00");
+                          const endDate = new Date(startDate);
+                          endDate.setDate(endDate.getDate() + 42);
+                          return (
+                            <label
+                              key={c.id}
+                              htmlFor={`cohort-${c.id}`}
+                              className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                                selectedCohort === c.start_date
+                                  ? "border-purple bg-purple/5"
+                                  : "border-border bg-background hover:border-purple/40"
+                              }`}
+                            >
+                              <RadioGroupItem value={c.start_date} id={`cohort-${c.id}`} />
+                              <div>
+                                <p className="font-semibold text-charcoal">
+                                  {formatShortDate(c.start_date)} — {formatCohortDate(c.start_date)}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  Ends {getEndDate(c.start_date)} · 6.5 weeks
+                                </p>
+                              </div>
+                            </label>
+                          );
+                        })
+                      ) : (
+                        weekendCohortDates
+                          .filter((w) => new Date(w.deadlineISO + "T23:59:59") >= new Date())
+                          .map((w) => (
+                            <label
+                              key={w.startISO}
+                              htmlFor={`cohort-weekend-${w.startISO}`}
+                              className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                                selectedCohort === w.startISO
+                                  ? "border-cyan bg-cyan/5"
+                                  : "border-border bg-background hover:border-cyan/40"
+                              }`}
+                            >
+                              <RadioGroupItem value={w.startISO} id={`cohort-weekend-${w.startISO}`} />
+                              <div>
+                                <p className="font-semibold text-charcoal">
+                                  {w.startDate} — {w.endDate}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  7 weekends · Sat & Sun 6 AM – 6 PM
+                                </p>
+                                <p className="text-xs text-cyan font-medium mt-1">
+                                  ⏰ Apply by: {w.deadline}
+                                </p>
+                              </div>
+                            </label>
+                          ))
+                      )}
+                    </RadioGroup>
+                  </div>
+                )}
 
                 {/* Selected cohort details */}
                 {selectedCohort && (

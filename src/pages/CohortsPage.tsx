@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calendar, CreditCard, Clock, CheckCircle, ArrowRight, DollarSign } from "lucide-react";
+import { Calendar, CreditCard, Clock, CheckCircle, ArrowRight, DollarSign, Users } from "lucide-react";
+import WeekendEnrollmentCounter from "@/components/WeekendEnrollmentCounter";
 import { cn } from "@/lib/utils";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
@@ -131,6 +132,16 @@ const CohortsPage = () => {
       isClosed: false,
     },
   ];
+
+  // Placeholder enrollment counts — will be replaced by Google Sheet integration
+  const weekendEnrollmentCounts: Record<string, number> = {
+    "July 11, 2026": 0,
+    "October 3, 2026": 0,
+    "January 9, 2027": 0,
+    "April 3, 2027": 0,
+    "July 10, 2027": 0,
+    "October 2, 2027": 0,
+  };
 
   const weekendCohorts = [
     {
@@ -481,6 +492,11 @@ const CohortsPage = () => {
                           ⏰ Apply by: {cohort.deadline}
                         </p>
                       )}
+                      <WeekendEnrollmentCounter
+                        enrolled={weekendEnrollmentCounts[cohort.startDate] ?? 0}
+                        minimum={15}
+                        cohortLabel={cohort.startDate}
+                      />
                     </div>
 
                     <div className="flex flex-col gap-2 mt-auto">
