@@ -1,40 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { X, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
-
-const DEADLINE_DATE = new Date('2026-04-20T23:59:59');
-
-const announcements = [
-  {
-    id: 'cohort',
-    type: 'info',
-    icon: Calendar,
-    title: 'Next Cohort Starts May 4 — Secure Your Spot by April 20!',
-    subtitle: 'Apply now for the May 2026 cohort',
-    ctaText: 'View Cohorts',
-    ctaLink: '/programs/cohorts',
-    hasCountdown: true,
-  },
-];
+import { getNextUpcomingCohort } from '@/data/cohortSchedule';
 
 const AnnouncementBar = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
+  const nextCohort = useMemo(() => getNextUpcomingCohort(), []);
+  const deadlineDate = useMemo(() => new Date(nextCohort.deadlineISO + 'T23:59:59'), [nextCohort]);
+
+  const announcements = useMemo(() => [
+    {
+      id: 'cohort',
+      type: 'info',
+      icon: Calendar,
+      title: `Next Cohort Starts ${nextCohort.startDate} — Secure Your Spot by ${nextCohort.deadline.replace(/^Monday, |^Tuesday, |^Wednesday, |^Thursday, |^Friday, |^Saturday, |^Sunday, /, '')}!`,
+      subtitle: `Apply now for the ${nextCohort.startDate} cohort`,
+      ctaText: 'View Cohorts',
+      ctaLink: '/programs/cohorts',
+      hasCountdown: true,
+    },
+  ], [nextCohort]);
+
   useEffect(() => {
     const calculateCountdown = () => {
       const now = new Date();
-      const diff = DEADLINE_DATE.getTime() - now.getTime();
-      
+      const diff = deadlineDate.getTime() - now.getTime();
+
       if (diff <= 0) {
         return { days: 0, hours: 0, minutes: 0, seconds: 0 };
       }
-      
+
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      
+
       return { days, hours, minutes, seconds };
     };
 
@@ -44,7 +46,7 @@ const AnnouncementBar = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [deadlineDate]);
 
   if (!isVisible) return null;
 
@@ -88,7 +90,7 @@ const AnnouncementBar = () => {
                 {currentAnnouncement.title}
               </span>
             </div>
-            
+
             {/* Countdown Timer */}
             {currentAnnouncement.hasCountdown && (
               <div className="flex items-center gap-1 bg-white/20 rounded-lg px-3 py-1">

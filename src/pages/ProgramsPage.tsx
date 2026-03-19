@@ -41,9 +41,7 @@ const ProgramsPage = () => {
   ];
 
   const upcomingDates = [
-    { date: "January 26, 2026", endDate: "March 9, 2026" },
-    { date: "March 16, 2026", endDate: "April 27, 2026" },
-    { date: "May 4, 2026", endDate: "June 15, 2026" },
+    { date: "May 4, 2026", endDate: "June 19, 2026" },
     { date: "July 6, 2026", endDate: "August 17, 2026" },
     { date: "August 24, 2026", endDate: "October 5, 2026" },
     { date: "October 12, 2026", endDate: "November 23, 2026" },
