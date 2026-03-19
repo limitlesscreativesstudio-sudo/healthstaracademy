@@ -323,40 +323,49 @@ const ProgramsPage = () => {
               Class Schedule
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
-              Our daytime program is designed for your success.
+              Choose the schedule that fits your life — daytime or weekend classes.
             </p>
           </div>
 
-          <div className="max-w-md mx-auto mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-10">
             <div className="bg-background rounded-xl p-6 shadow-soft text-center">
               <Calendar className="h-10 w-10 text-purple mx-auto mb-4" />
               <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
                 Daytime Program
               </h3>
-              <p className="text-purple font-medium mb-1">Monday - Friday</p>
-              <p className="text-gray-dark text-sm mb-1">Classroom: 6:00 AM – 3:00 PM</p>
-              <p className="text-gray-dark text-sm mb-2">Clinical: Mon-Thu, 6:00 AM – 3:00 PM</p>
-              <p className="text-charcoal font-semibold">6.5 Weeks (23 days)</p>
+              <p className="text-purple font-medium mb-1">Monday – Thursday</p>
+              <p className="text-gray-dark text-sm mb-1">Classroom & Clinical: 6:00 AM – 2:30 PM</p>
+              <p className="text-charcoal font-semibold">6.5 Weeks (23 class days)</p>
+            </div>
+            <div className="bg-background rounded-xl p-6 shadow-soft text-center border-2 border-cyan">
+              <Calendar className="h-10 w-10 text-cyan mx-auto mb-4" />
+              <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
+                Weekend Program
+              </h3>
+              <span className="inline-block bg-cyan/20 text-cyan text-xs font-bold px-2 py-0.5 rounded mb-2">NEW</span>
+              <p className="text-cyan font-medium mb-1">Saturday & Sunday</p>
+              <p className="text-gray-dark text-sm mb-1">Classroom & Clinical: 6:00 AM – 6:00 PM</p>
+              <p className="text-charcoal font-semibold">7 Weekends (14 class days)</p>
             </div>
           </div>
 
-          {/* Next Start Dates */}
-          <div className="bg-background rounded-xl p-6 shadow-soft max-w-3xl mx-auto">
+          {/* Daytime Start Dates */}
+          <div className="bg-background rounded-xl p-6 shadow-soft max-w-3xl mx-auto mb-6">
             <h3 className="font-heading font-semibold text-xl text-charcoal mb-2 text-center">
-              Upcoming Class Dates — 2026
+              Daytime — Upcoming Class Dates
             </h3>
             <p className="text-gray-dark text-sm text-center mb-4">
-              Application deadline: 7 days prior to start date
+              Application deadline: 14 days prior to start date
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-              {upcomingDates.map((item, index) => (
+              {daytimeDates.map((item) => (
                 <div
-                  key={item.date}
+                  key={item.startISO}
                   className="flex items-center justify-between py-2 border-b border-border last:border-0"
                 >
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-purple" />
-                    <span className="font-medium text-charcoal text-sm">{item.date}</span>
+                    <span className="font-medium text-charcoal text-sm">{item.startDate}</span>
                   </div>
                   <span className="text-gray-dark text-xs">
                     Ends: {item.endDate}
@@ -366,7 +375,38 @@ const ProgramsPage = () => {
             </div>
             <div className="text-center mt-5">
               <Button variant="default" asChild>
-                <Link to={ENROLLMENT_LINK}>Enroll for Next Class</Link>
+                <Link to={ENROLLMENT_LINK}>Enroll for Daytime Class</Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Weekend Start Dates */}
+          <div className="bg-background rounded-xl p-6 shadow-soft max-w-3xl mx-auto border-2 border-cyan/30">
+            <h3 className="font-heading font-semibold text-xl text-charcoal mb-2 text-center">
+              Weekend — Upcoming Class Dates
+            </h3>
+            <p className="text-gray-dark text-sm text-center mb-4">
+              Application deadline: 14 days prior to start date
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+              {weekendDates.map((item) => (
+                <div
+                  key={item.startISO}
+                  className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                >
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-cyan" />
+                    <span className="font-medium text-charcoal text-sm">{item.startDate}</span>
+                  </div>
+                  <span className="text-gray-dark text-xs">
+                    Ends: {item.endDate}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="text-center mt-5">
+              <Button variant="default" className="bg-cyan hover:bg-cyan/90 text-charcoal" asChild>
+                <Link to={ENROLLMENT_LINK}>Enroll for Weekend Class</Link>
               </Button>
             </div>
           </div>
