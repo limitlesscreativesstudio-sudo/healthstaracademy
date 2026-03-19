@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { getCohortsByType } from "@/data/cohortSchedule";
 import {
   Clock,
   Calendar,
