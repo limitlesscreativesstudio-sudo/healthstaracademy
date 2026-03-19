@@ -108,6 +108,10 @@ const PreQualificationPage = () => {
   const [needsExam, setNeedsExam] = useState(false);
   const [needsConsent, setNeedsConsent] = useState(false);
   const [cohortDateLabel, setCohortDateLabel] = useState("");
+  const [programTrack, setProgramTrack] = useState<"daytime" | "weekend" | "">("");
+
+  const daytimeCohortDates = useMemo(() => getCohortsByType("daytime"), []);
+  const weekendCohortDates = useMemo(() => getCohortsByType("weekend"), []);
 
   const [personal, setPersonal] = useState<PersonalInfo>({
     first_name: "",
