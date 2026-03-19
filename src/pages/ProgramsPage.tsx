@@ -41,13 +41,8 @@ const ProgramsPage = () => {
     { label: "Certification", value: "CDPH Approved", icon: FileCheck },
   ];
 
-  const upcomingDates = [
-    { date: "May 4, 2026", endDate: "June 19, 2026" },
-    { date: "July 6, 2026", endDate: "August 17, 2026" },
-    { date: "August 24, 2026", endDate: "October 5, 2026" },
-    { date: "October 12, 2026", endDate: "November 23, 2026" },
-    { date: "December 7, 2026", endDate: "January 18, 2027" },
-  ];
+  const daytimeDates = getCohortsByType("daytime");
+  const weekendDates = getCohortsByType("weekend");
 
   const curriculum = [
     { module: "Module 1", title: "Introductions" },
