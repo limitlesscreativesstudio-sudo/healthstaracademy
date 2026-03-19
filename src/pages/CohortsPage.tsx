@@ -492,6 +492,11 @@ const CohortsPage = () => {
                           ⏰ Apply by: {cohort.deadline}
                         </p>
                       )}
+                      <WeekendEnrollmentCounter
+                        enrolled={weekendEnrollmentCounts[cohort.startDate] ?? 0}
+                        minimum={15}
+                        cohortLabel={cohort.startDate}
+                      />
                     </div>
 
                     <div className="flex flex-col gap-2 mt-auto">

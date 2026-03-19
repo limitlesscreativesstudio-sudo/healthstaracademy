@@ -157,7 +157,7 @@ const PreQualificationPage = () => {
 
   const isStep2Valid = Object.values(eligibility).every((v) => v === "yes" || v === "no");
 
-  const isStep3Valid = !!selectedCohort && disclaimerAcknowledged && consentGiven;
+  const isStep3Valid = !!programTrack && !!selectedCohort && disclaimerAcknowledged && consentGiven;
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
