@@ -319,10 +319,10 @@ const CohortsPage = () => {
           <div className="container-custom">
             <div className="text-center mb-10">
               <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
-                Select Your Cohort
+                Daytime Cohorts
               </h2>
               <p className="text-gray-dark max-w-2xl mx-auto">
-                Choose your preferred start date and click to enroll with your chosen payment option.
+                Monday – Thursday, 6:00 AM – 2:30 PM · 6.5 weeks (23 class days)
               </p>
             </div>
 
@@ -335,7 +335,6 @@ const CohortsPage = () => {
                     cohort.isClosed ? "opacity-75" : "hover:shadow-medium"
                   )}
                 >
-                  {/* Cohort Image */}
                   <div className="aspect-[4/3] overflow-hidden relative">
                     <img 
                       src={cohort.image} 
@@ -351,7 +350,6 @@ const CohortsPage = () => {
                     )}
                   </div>
                   
-                  {/* Cohort Info */}
                   <div className="p-5 flex flex-col flex-grow">
                     <div className="flex items-center gap-3 mb-3">
                       <div className={cn(
@@ -379,7 +377,6 @@ const CohortsPage = () => {
                       )}
                     </div>
 
-                    {/* Payment Buttons or Closed Notice */}
                     {cohort.isClosed ? (
                       <div className="flex flex-col gap-2 mt-auto">
                         <div className="bg-gray-100 rounded-lg p-4 text-center">
@@ -404,7 +401,6 @@ const CohortsPage = () => {
                           </Button>
                         </div>
                         
-                        {/* Denefits Card - Gradient Style */}
                         <a
                           href={denefitsLink}
                           target="_blank"
@@ -424,14 +420,115 @@ const CohortsPage = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Weekend Cohorts */}
+        <section className="py-12 bg-background">
+          <div className="container-custom">
+            <div className="text-center mb-10">
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
+                Weekend Cohorts
+                <span className="ml-3 inline-block bg-cyan/20 text-cyan text-sm font-bold px-3 py-1 rounded-full align-middle">NEW</span>
+              </h2>
+              <p className="text-gray-dark max-w-2xl mx-auto">
+                Saturday & Sunday, 6:00 AM – 6:00 PM · 7 weekends (14 class days)
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {weekendCohorts.map((cohort, index) => (
+                <div
+                  key={index}
+                  className={cn(
+                    "bg-background rounded-xl overflow-hidden shadow-soft transition-shadow flex flex-col border-2 border-cyan/20",
+                    cohort.isClosed ? "opacity-75" : "hover:shadow-medium"
+                  )}
+                >
+                  <div className="aspect-[4/3] overflow-hidden relative">
+                    <img 
+                      src={cohort.image} 
+                      alt={`CNA Weekend Training Student - ${cohort.startDate}`}
+                      className={cn("w-full h-full object-cover", cohort.isClosed && "grayscale")}
+                    />
+                    <div className="absolute top-3 right-3 bg-cyan text-charcoal text-xs font-bold px-2 py-1 rounded">
+                      WEEKEND
+                    </div>
+                  </div>
+                  
+                  <div className="p-5 flex flex-col flex-grow">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+                        cohort.isClosed ? "bg-gray-200" : "bg-cyan/10"
+                      )}>
+                        <Calendar className={cn("h-5 w-5", cohort.isClosed ? "text-gray-400" : "text-cyan")} />
+                      </div>
+                      <div>
+                        <h3 className="font-heading font-bold text-lg text-charcoal">
+                          {cohort.title}
+                        </h3>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <p className="text-gray-dark font-medium">
+                        {cohort.startDate} – {cohort.endDate}
+                      </p>
+                      <p className="text-sm text-gray-medium">7 weekends (14 class days)</p>
+                      {!cohort.isClosed && (
+                        <p className="text-sm text-cyan font-semibold mt-1">
+                          ⏰ Apply by: {cohort.deadline}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-2 mt-auto">
+                      <Button variant="default" size="default" asChild className="w-full">
+                        <a href={cohort.paidInFullLink} target="_blank" rel="noopener noreferrer">
+                          <DollarSign className="h-4 w-4 mr-1" />
+                          Pay in Full - $2,499
+                        </a>
+                      </Button>
+                      <Button variant="secondary" size="default" asChild className="w-full">
+                        <a href={cohort.paymentPlanLink} target="_blank" rel="noopener noreferrer">
+                          <Clock className="h-4 w-4 mr-1" />
+                          Weekly Plan - $499.80/wk
+                        </a>
+                      </Button>
+                    </div>
+                    
+                    <a
+                      href={denefitsLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 bg-gradient-to-r from-cyan/20 to-magenta/20 rounded-lg p-4 text-center hover:from-cyan/30 hover:to-magenta/30 transition-all border border-cyan/50"
+                    >
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <CreditCard className="h-4 w-4 text-purple" />
+                        <span className="font-semibold text-charcoal text-sm">Denefits Financing</span>
+                      </div>
+                      <p className="text-xs text-gray-dark">No credit check • Guaranteed approval</p>
+                      <span className="text-purple font-semibold text-xs mt-1 block">Apply Now →</span>
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
 
             <div className="text-center mt-10">
               {(() => {
-                const next = getNextUpcomingCohort();
+                const next = getNextUpcomingCohort("daytime");
+                const nextWeekend = getNextUpcomingCohort("weekend");
                 return (
-                  <p className="text-charcoal text-lg md:text-xl font-bold mb-4">
-                    ⚠️ Next enrollment application deadline: {next.deadline} (14 days before the {next.startDate} start date)
-                  </p>
+                  <>
+                    <p className="text-charcoal text-lg md:text-xl font-bold mb-2">
+                      ⚠️ Next daytime deadline: {next.deadline} ({next.startDate} start)
+                    </p>
+                    <p className="text-charcoal text-lg md:text-xl font-bold mb-4">
+                      ⚠️ Next weekend deadline: {nextWeekend.deadline} ({nextWeekend.startDate} start)
+                    </p>
+                  </>
                 );
               })()}
               <p className="text-gray-medium text-xs">
