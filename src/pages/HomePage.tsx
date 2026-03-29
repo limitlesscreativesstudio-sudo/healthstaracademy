@@ -12,14 +12,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
-  Award,
 } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import heroDiverseStudents from "@/assets/hero-diverse-students.jpg";
 import studentCareTraining from "@/assets/student-care-training.jpg";
-import scholarshipBanner from "@/assets/scholarship-banner.png";
 
 const ENROLLMENT_LINK = "/pre-qualification";
 
@@ -30,7 +28,7 @@ const HomePage = () => {
     {
       icon: Clock,
       title: "Fast-Track Training",
-      description: "Daytime classes available. Complete in just 6.5 weeks with our hybrid format.",
+      description: "Daytime classes available. Complete in just 6 weeks with our hybrid format.",
     },
     {
       icon: HandHeart,
@@ -124,7 +122,7 @@ const HomePage = () => {
     <>
       <SEO
         title="CNA Training Stockton & Bay Area | Health Star Academy"
-        description="CDPH-approved hybrid CNA training in Stockton, Hayward & Lodi. Complete certification in 6.5 weeks. Enroll today!"
+        description="CDPH-approved hybrid CNA training in Stockton, Hayward & Lodi. Complete certification in 6 weeks. Enroll today!"
         canonical="/"
         keywords="CNA training Stockton, CNA training Hayward, CNA classes Sacramento, CNA program Bay Area, certified nursing assistant training near Sacramento, CDPH approved CNA program, hybrid CNA course, CNA certification Stockton CA, nursing assistant school Sacramento area, Lodi CNA training, Hayward CNA classes, CNA training near me, CNA school Elk Grove, CNA classes Modesto, Oakland CNA training, San Jose CNA program, Fremont CNA training"
         structuredData={buildBreadcrumbSchema([])}
@@ -148,7 +146,7 @@ const HomePage = () => {
         <div className="container-custom">
           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
             <p className="text-primary-foreground font-medium text-center">
-              Complete in just 6.5 weeks! CDPH Approved Program.
+              Complete in just 6 weeks! CDPH Approved Program.
             </p>
             <div className="flex gap-3">
               <Button variant="secondary" size="sm" asChild>
@@ -338,36 +336,6 @@ const HomePage = () => {
                 View Our Gallery <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Scholarship Section */}
-      <section className="section-padding bg-background">
-        <div className="container-custom">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Award className="h-8 w-8 text-purple" />
-                <span className="bg-purple/10 text-purple px-3 py-1 rounded-full text-sm font-semibold">Scholarship Opportunity</span>
-              </div>
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
-                $1,000 Scholarship Available!
-              </h2>
-              <p className="text-gray-dark mb-4 leading-relaxed">
-                Self-Help Credit Union Community Scholarship Awards 2026 — Apply now for the chance to receive $1,000 towards your CNA tuition!
-              </p>
-              <Button variant="default" size="lg" asChild>
-                <a href="https://www.self-helpfcu.org/scholarship" target="_blank" rel="noopener noreferrer">
-                  Apply for Scholarship <ArrowRight className="ml-2 h-5 w-5" />
-                </a>
-              </Button>
-            </div>
-            <div>
-              <a href="https://www.self-helpfcu.org/scholarship" target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden shadow-medium hover:shadow-strong transition-shadow">
-                <img src={scholarshipBanner} alt="Community Scholarship Awards 2026 - Apply for the chance to receive $1,000 towards your tuition" className="w-full h-auto" />
-              </a>
-            </div>
           </div>
         </div>
       </section>
