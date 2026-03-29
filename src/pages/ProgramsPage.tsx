@@ -35,7 +35,7 @@ const ProgramsPage = () => {
   const ENROLLMENT_LINK = "/pre-qualification";
 
   const programDetails = [
-    { label: "Program Length", value: "160 Hours | 6.5 Weeks", icon: Clock },
+    { label: "Program Length", value: "160 Hours | 6 Weeks", icon: Clock },
     { label: "Theory Hours", value: "60 Hours Online", icon: BookOpen },
     { label: "Clinical Hours", value: "100 Hours In-Person", icon: Stethoscope },
     { label: "Certification", value: "CDPH Approved", icon: FileCheck },
@@ -126,7 +126,7 @@ const ProgramsPage = () => {
     "@context": "https://schema.org",
     "@type": "Course",
     "name": "Certified Nursing Assistant Training Program",
-    "description": "160-hour CDPH-approved hybrid CNA program with 60 hours online theory and 100 hours clinical training. Complete in 6.5 weeks.",
+    "description": "160-hour CDPH-approved hybrid CNA program with 60 hours online theory and 100 hours clinical training. Complete in 6 weeks.",
     "provider": {
       "@type": "Organization",
       "name": "Health Star Academy",
@@ -151,7 +151,7 @@ const ProgramsPage = () => {
     <>
       <SEO
         title="160-Hour CDPH Approved CNA Program | Health Star"
-        description="Enroll in our 160-hour CDPH-approved CNA program. 60 hrs online + 100 hrs clinical in Stockton, Lodi & Hayward. Done in 6.5 weeks."
+        description="Enroll in our 160-hour CDPH-approved CNA program. 60 hrs online + 100 hrs clinical in Stockton, Lodi & Hayward. Done in 6 weeks."
         canonical="/programs"
         keywords="CNA program Stockton, CDPH approved CNA training, 160 hour CNA course, hybrid CNA program California, certified nursing assistant curriculum, CNA clinical training, nursing assistant certification"
         structuredData={[courseStructuredData, buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }])]}
@@ -335,7 +335,7 @@ const ProgramsPage = () => {
               </h3>
               <p className="text-purple font-medium mb-1">Monday – Thursday</p>
               <p className="text-gray-dark text-sm mb-1">Classroom & Clinical: 6:00 AM – 2:30 PM</p>
-              <p className="text-charcoal font-semibold">6.5 Weeks (23 class days)</p>
+              <p className="text-charcoal font-semibold">6 Weeks</p>
             </div>
             <div className="bg-background rounded-xl p-6 shadow-soft text-center border-2 border-cyan">
               <Calendar className="h-10 w-10 text-cyan mx-auto mb-4" />
