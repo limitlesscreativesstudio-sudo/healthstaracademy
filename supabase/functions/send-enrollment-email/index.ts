@@ -187,7 +187,7 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
             <li>Arrange a <strong>carpool</strong> with fellow students — we can help connect you with classmates in your area</li>
             <li>Check <strong>public transit routes</strong> (San Joaquin RTD) for schedules to clinical sites</li>
             <li>Explore <strong>ride-share services</strong> or community transportation programs</li>
-            <li>Ask family or friends if they can assist with transportation during the 6.5-week program</li>
+            <li>Ask family or friends if they can assist with transportation during the 6-week program</li>
           </ul>
         </div>
         <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">

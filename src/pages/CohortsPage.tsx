@@ -23,7 +23,7 @@ const CohortsPage = () => {
     {
       title: "HSA Certified Nursing Assistant (CNA)",
       startDate: "May 4, 2026",
-      endDate: "June 19, 2026",
+      endDate: "June 11, 2026",
       deadline: "Monday, April 20, 2026",
       paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
       paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
@@ -32,9 +32,9 @@ const CohortsPage = () => {
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "July 6, 2026",
-      endDate: "August 17, 2026",
-      deadline: "Monday, June 22, 2026",
+      startDate: "June 22, 2026",
+      endDate: "July 30, 2026",
+      deadline: "Monday, June 8, 2026",
       paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
       paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
       image: cohortStudentFemale3,
@@ -42,9 +42,9 @@ const CohortsPage = () => {
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "August 24, 2026",
-      endDate: "October 5, 2026",
-      deadline: "Monday, August 10, 2026",
+      startDate: "August 10, 2026",
+      endDate: "September 17, 2026",
+      deadline: "Monday, July 27, 2026",
       paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
       paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
       image: cohortStudentFemale4,
@@ -52,9 +52,9 @@ const CohortsPage = () => {
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "October 12, 2026",
-      endDate: "November 23, 2026",
-      deadline: "Monday, September 28, 2026",
+      startDate: "September 28, 2026",
+      endDate: "November 5, 2026",
+      deadline: "Monday, September 14, 2026",
       paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
       paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
       image: cohortStudentMale3,
@@ -62,9 +62,9 @@ const CohortsPage = () => {
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "December 7, 2026",
-      endDate: "January 18, 2027",
-      deadline: "Monday, November 23, 2026",
+      startDate: "November 16, 2026",
+      endDate: "December 24, 2026",
+      deadline: "Monday, November 2, 2026",
       paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
       paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
       image: cohortStudentMale2,
@@ -73,9 +73,9 @@ const CohortsPage = () => {
     // 2027
     {
       title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "February 8, 2027",
-      endDate: "March 22, 2027",
-      deadline: "Monday, January 25, 2027",
+      startDate: "January 4, 2027",
+      endDate: "February 11, 2027",
+      deadline: "Monday, December 21, 2026",
       paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
       paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
       image: cohortStudentFemale3,
@@ -83,9 +83,9 @@ const CohortsPage = () => {
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "May 3, 2027",
-      endDate: "June 14, 2027",
-      deadline: "Monday, April 19, 2027",
+      startDate: "February 22, 2027",
+      endDate: "April 1, 2027",
+      deadline: "Monday, February 8, 2027",
       paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
       paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
       image: cohortStudentFemale4,
@@ -93,9 +93,9 @@ const CohortsPage = () => {
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "July 5, 2027",
-      endDate: "August 16, 2027",
-      deadline: "Monday, June 21, 2027",
+      startDate: "April 12, 2027",
+      endDate: "May 20, 2027",
+      deadline: "Monday, March 29, 2027",
       paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
       paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
       image: cohortStudentMale3,
@@ -103,9 +103,9 @@ const CohortsPage = () => {
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "August 23, 2027",
-      endDate: "October 4, 2027",
-      deadline: "Monday, August 9, 2027",
+      startDate: "May 31, 2027",
+      endDate: "July 8, 2027",
+      deadline: "Monday, May 17, 2027",
       paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
       paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
       image: cohortStudentMale2,
@@ -113,9 +113,9 @@ const CohortsPage = () => {
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "October 11, 2027",
-      endDate: "November 22, 2027",
-      deadline: "Monday, September 27, 2027",
+      startDate: "July 19, 2027",
+      endDate: "August 26, 2027",
+      deadline: "Monday, July 5, 2027",
       paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
       paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
       image: cohortStudentFemale3,
@@ -123,9 +123,50 @@ const CohortsPage = () => {
     },
     {
       title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "December 6, 2027",
-      endDate: "January 17, 2028",
-      deadline: "Monday, November 22, 2027",
+      startDate: "September 6, 2027",
+      endDate: "October 14, 2027",
+      deadline: "Monday, August 23, 2027",
+      paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
+      paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
+      image: cohortStudentFemale4,
+      isClosed: false,
+    },
+    {
+      title: "HSA Certified Nursing Assistant (CNA)",
+      startDate: "October 25, 2027",
+      endDate: "December 2, 2027",
+      deadline: "Monday, October 11, 2027",
+      paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
+      paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
+      image: cohortStudentMale3,
+      isClosed: false,
+    },
+    {
+      title: "HSA Certified Nursing Assistant (CNA)",
+      startDate: "December 13, 2027",
+      endDate: "January 20, 2028",
+      deadline: "Monday, November 29, 2027",
+      paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
+      paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
+      image: cohortStudentMale2,
+      isClosed: false,
+    },
+    // 2028
+    {
+      title: "HSA Certified Nursing Assistant (CNA)",
+      startDate: "January 31, 2028",
+      endDate: "March 9, 2028",
+      deadline: "Monday, January 17, 2028",
+      paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
+      paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
+      image: cohortStudentFemale3,
+      isClosed: false,
+    },
+    {
+      title: "HSA Certified Nursing Assistant (CNA)",
+      startDate: "March 20, 2028",
+      endDate: "April 27, 2028",
+      deadline: "Monday, March 6, 2028",
       paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
       paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
       image: cohortStudentFemale4,
@@ -333,7 +374,7 @@ const CohortsPage = () => {
                 Daytime Cohorts
               </h2>
               <p className="text-gray-dark max-w-2xl mx-auto">
-                Monday – Thursday, 6:00 AM – 2:30 PM · 6.5 weeks (23 class days)
+                Monday – Thursday, 6:00 AM – 2:30 PM · 6 weeks
               </p>
             </div>
 
@@ -380,7 +421,7 @@ const CohortsPage = () => {
                       <p className="text-gray-dark font-medium">
                         {cohort.startDate} – {cohort.endDate}
                       </p>
-                      <p className="text-sm text-gray-medium">6.5 weeks (23 class days)</p>
+                      <p className="text-sm text-gray-medium">6 weeks</p>
                       {!cohort.isClosed && (
                         <p className="text-sm text-purple font-semibold mt-1">
                           ⏰ Apply by: {cohort.deadline}
