@@ -1,251 +1,73 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calendar, CreditCard, Clock, CheckCircle, ArrowRight, DollarSign, Users } from "lucide-react";
+import { Calendar, CreditCard, Clock, CheckCircle, ArrowRight, DollarSign, Users, Loader2 } from "lucide-react";
 import WeekendEnrollmentCounter from "@/components/WeekendEnrollmentCounter";
 import { cn } from "@/lib/utils";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
-import { getNextUpcomingCohort } from "@/data/cohortSchedule";
+import { getNextUpcomingCohort, getCohortsByType } from "@/data/cohortSchedule";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
-
-
 import cohortStudentFemale3 from "@/assets/cohort-student-female-3.jpg";
 import cohortStudentFemale4 from "@/assets/cohort-student-female-4.jpg";
-
 import cohortStudentMale2 from "@/assets/cohort-student-male-2.jpg";
 import cohortStudentMale3 from "@/assets/cohort-student-male-3.jpg";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+
+const cohortImages = [cohortStudentMale2, cohortStudentFemale3, cohortStudentFemale4, cohortStudentMale3];
+
+interface CohortRow {
+  id: string;
+  name: string;
+  start_date: string;
+  status: string;
+  capacity: number;
+  program_type: string;
+  paid_in_full_link: string;
+  payment_plan_link: string;
+}
+
+const fetchCohorts = async (): Promise<CohortRow[]> => {
+  const { data, error } = await supabase
+    .from("cohorts")
+    .select("*")
+    .order("start_date", { ascending: true });
+  if (error) throw error;
+  return (data as CohortRow[]) || [];
+};
+
+const formatDate = (dateStr: string) => {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+};
+
+const getEndDate = (startDateStr: string, isWeekend: boolean) => {
+  const d = new Date(startDateStr + "T00:00:00");
+  d.setDate(d.getDate() + (isWeekend ? 43 : 42));
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+};
+
+const getDeadline = (startDateStr: string, isWeekend: boolean) => {
+  const d = new Date(startDateStr + "T00:00:00");
+  d.setDate(d.getDate() - 14);
+  const dayName = d.toLocaleDateString("en-US", { weekday: "long" });
+  return `${dayName}, ${d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
+};
 
 const CohortsPage = () => {
   const denefitsLink = "https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a";
 
-  const cohorts = [
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "May 4, 2026",
-      endDate: "June 11, 2026",
-      deadline: "Monday, April 20, 2026",
-      paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
-      paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
-      image: cohortStudentMale2,
-      isClosed: false,
-    },
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "June 22, 2026",
-      endDate: "July 30, 2026",
-      deadline: "Monday, June 8, 2026",
-      paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
-      paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
-      image: cohortStudentFemale3,
-      isClosed: false,
-    },
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "August 10, 2026",
-      endDate: "September 17, 2026",
-      deadline: "Monday, July 27, 2026",
-      paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
-      paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
-      image: cohortStudentFemale4,
-      isClosed: false,
-    },
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "September 28, 2026",
-      endDate: "November 5, 2026",
-      deadline: "Monday, September 14, 2026",
-      paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
-      paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
-      image: cohortStudentMale3,
-      isClosed: false,
-    },
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "November 16, 2026",
-      endDate: "December 24, 2026",
-      deadline: "Monday, November 2, 2026",
-      paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
-      paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
-      image: cohortStudentMale2,
-      isClosed: false,
-    },
-    // 2027
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "January 4, 2027",
-      endDate: "February 11, 2027",
-      deadline: "Monday, December 21, 2026",
-      paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
-      paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
-      image: cohortStudentFemale3,
-      isClosed: false,
-    },
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "February 22, 2027",
-      endDate: "April 1, 2027",
-      deadline: "Monday, February 8, 2027",
-      paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
-      paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
-      image: cohortStudentFemale4,
-      isClosed: false,
-    },
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "April 12, 2027",
-      endDate: "May 20, 2027",
-      deadline: "Monday, March 29, 2027",
-      paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
-      paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
-      image: cohortStudentMale3,
-      isClosed: false,
-    },
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "May 31, 2027",
-      endDate: "July 8, 2027",
-      deadline: "Monday, May 17, 2027",
-      paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
-      paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
-      image: cohortStudentMale2,
-      isClosed: false,
-    },
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "July 19, 2027",
-      endDate: "August 26, 2027",
-      deadline: "Monday, July 5, 2027",
-      paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
-      paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
-      image: cohortStudentFemale3,
-      isClosed: false,
-    },
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "September 6, 2027",
-      endDate: "October 14, 2027",
-      deadline: "Monday, August 23, 2027",
-      paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
-      paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
-      image: cohortStudentFemale4,
-      isClosed: false,
-    },
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "October 25, 2027",
-      endDate: "December 2, 2027",
-      deadline: "Monday, October 11, 2027",
-      paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
-      paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
-      image: cohortStudentMale3,
-      isClosed: false,
-    },
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "December 13, 2027",
-      endDate: "January 20, 2028",
-      deadline: "Monday, November 29, 2027",
-      paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
-      paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
-      image: cohortStudentMale2,
-      isClosed: false,
-    },
-    // 2028
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "January 31, 2028",
-      endDate: "March 9, 2028",
-      deadline: "Monday, January 17, 2028",
-      paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
-      paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
-      image: cohortStudentFemale3,
-      isClosed: false,
-    },
-    {
-      title: "HSA Certified Nursing Assistant (CNA)",
-      startDate: "March 20, 2028",
-      endDate: "April 27, 2028",
-      deadline: "Monday, March 6, 2028",
-      paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
-      paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
-      image: cohortStudentFemale4,
-      isClosed: false,
-    },
-  ];
+  const { data: allCohorts = [], isLoading } = useQuery({
+    queryKey: ["all-cohorts-public"],
+    queryFn: fetchCohorts,
+  });
+
+  const daytimeCohorts = allCohorts.filter(c => (c.program_type || "daytime") === "daytime");
+  const weekendCohorts = allCohorts.filter(c => c.program_type === "weekend");
 
   // Placeholder enrollment counts — will be replaced by Google Sheet integration
-  const weekendEnrollmentCounts: Record<string, number> = {
-    "July 11, 2026": 0,
-    "October 3, 2026": 0,
-    "January 9, 2027": 0,
-    "April 3, 2027": 0,
-    "July 10, 2027": 0,
-    "October 2, 2027": 0,
-  };
-
-  const weekendCohorts = [
-    {
-      title: "HSA CNA — Weekend Program",
-      startDate: "July 11, 2026",
-      endDate: "August 23, 2026",
-      deadline: "Saturday, June 27, 2026",
-      paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
-      paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
-      image: cohortStudentFemale3,
-      isClosed: false,
-    },
-    {
-      title: "HSA CNA — Weekend Program",
-      startDate: "October 3, 2026",
-      endDate: "November 15, 2026",
-      deadline: "Saturday, September 19, 2026",
-      paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
-      paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
-      image: cohortStudentMale3,
-      isClosed: false,
-    },
-    {
-      title: "HSA CNA — Weekend Program",
-      startDate: "January 9, 2027",
-      endDate: "February 21, 2027",
-      deadline: "Saturday, December 26, 2026",
-      paidInFullLink: "https://buy.stripe.com/6oUdR23n5estf4P7nd6sw05",
-      paymentPlanLink: "https://buy.stripe.com/00w7sEg9R701e0Lazp6sw0c",
-      image: cohortStudentFemale4,
-      isClosed: false,
-    },
-    {
-      title: "HSA CNA — Weekend Program",
-      startDate: "April 3, 2027",
-      endDate: "May 16, 2027",
-      deadline: "Saturday, March 20, 2027",
-      paidInFullLink: "https://buy.stripe.com/eVqaEQ2j1ckl09VbDt6sw04",
-      paymentPlanLink: "https://buy.stripe.com/4gM3co9Lt989e0L36X6sw0b",
-      image: cohortStudentMale2,
-      isClosed: false,
-    },
-    {
-      title: "HSA CNA — Weekend Program",
-      startDate: "July 10, 2027",
-      endDate: "August 22, 2027",
-      deadline: "Saturday, June 26, 2027",
-      paidInFullLink: "https://buy.stripe.com/4gM4gs9Ltckl8Gr22T6sw03",
-      paymentPlanLink: "https://buy.stripe.com/14A6oA9Lt5VX4qb9vl6sw0a",
-      image: cohortStudentFemale3,
-      isClosed: false,
-    },
-    {
-      title: "HSA CNA — Weekend Program",
-      startDate: "October 2, 2027",
-      endDate: "November 14, 2027",
-      deadline: "Saturday, September 18, 2027",
-      paidInFullLink: "https://buy.stripe.com/28E9AM4r9cklg8T9vl6sw01",
-      paymentPlanLink: "https://buy.stripe.com/5kQeV61eX4RTe0L6j96sw09",
-      image: cohortStudentMale3,
-      isClosed: false,
-    },
-  ];
+  const weekendEnrollmentCounts: Record<string, number> = {};
 
   const includedItems = [
     "160-Hour CDPH Approved Program",
@@ -260,6 +82,120 @@ const CohortsPage = () => {
     "State Exam Preparation",
   ];
 
+  const renderCohortCard = (cohort: CohortRow, index: number, isWeekend: boolean) => {
+    const isClosed = cohort.status === "closed";
+    const image = cohortImages[index % cohortImages.length];
+    const startDateFormatted = formatDate(cohort.start_date);
+    const endDateFormatted = getEndDate(cohort.start_date, isWeekend);
+    const deadline = getDeadline(cohort.start_date, isWeekend);
+
+    return (
+      <div
+        key={cohort.id}
+        className={cn(
+          "bg-background rounded-xl overflow-hidden shadow-soft transition-shadow flex flex-col",
+          isWeekend && "border-2 border-cyan/20",
+          isClosed ? "opacity-75" : "hover:shadow-medium"
+        )}
+      >
+        <div className="aspect-[4/3] overflow-hidden relative">
+          <img
+            src={image}
+            alt={`CNA ${isWeekend ? "Weekend " : ""}Training Student - ${startDateFormatted}`}
+            className={cn("w-full h-full object-cover", isClosed && "grayscale")}
+          />
+          {isClosed && (
+            <div className="absolute inset-0 bg-charcoal/60 flex items-center justify-center">
+              <span className="bg-red-600 text-white font-bold text-lg px-6 py-2 rounded-lg transform -rotate-12 shadow-lg">
+                CLOSED
+              </span>
+            </div>
+          )}
+          {isWeekend && (
+            <div className="absolute top-3 right-3 bg-cyan text-charcoal text-xs font-bold px-2 py-1 rounded">
+              WEEKEND
+            </div>
+          )}
+        </div>
+
+        <div className="p-5 flex flex-col flex-grow">
+          <div className="flex items-center gap-3 mb-3">
+            <div className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+              isClosed ? "bg-gray-200" : isWeekend ? "bg-cyan/10" : "bg-purple/10"
+            )}>
+              <Calendar className={cn("h-5 w-5", isClosed ? "text-gray-400" : isWeekend ? "text-cyan" : "text-purple")} />
+            </div>
+            <h3 className="font-heading font-bold text-lg text-charcoal">{cohort.name}</h3>
+          </div>
+
+          <div className="mb-4">
+            <p className="text-gray-dark font-medium">
+              {startDateFormatted} – {endDateFormatted}
+            </p>
+            <p className="text-sm text-gray-medium">{isWeekend ? "7 weekends (14 class days)" : "6 weeks"}</p>
+            {!isClosed && (
+              <p className={cn("text-sm font-semibold mt-1", isWeekend ? "text-cyan" : "text-purple")}>
+                ⏰ Apply by: {deadline}
+              </p>
+            )}
+            {isWeekend && (
+              <WeekendEnrollmentCounter
+                enrolled={weekendEnrollmentCounts[startDateFormatted] ?? 0}
+                minimum={15}
+                cohortLabel={startDateFormatted}
+              />
+            )}
+          </div>
+
+          {isClosed ? (
+            <div className="flex flex-col gap-2 mt-auto">
+              <div className="bg-gray-100 rounded-lg p-4 text-center">
+                <p className="font-bold text-red-600 mb-1">Registration Closed</p>
+                <p className="text-sm text-gray-dark">This cohort is no longer accepting applications</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col gap-2 mt-auto">
+                {cohort.paid_in_full_link && (
+                  <Button variant="default" size="default" asChild className="w-full">
+                    <a href={cohort.paid_in_full_link} target="_blank" rel="noopener noreferrer">
+                      <DollarSign className="h-4 w-4 mr-1" />
+                      Pay in Full - $2,499
+                    </a>
+                  </Button>
+                )}
+                {cohort.payment_plan_link && (
+                  <Button variant="secondary" size="default" asChild className="w-full">
+                    <a href={cohort.payment_plan_link} target="_blank" rel="noopener noreferrer">
+                      <Clock className="h-4 w-4 mr-1" />
+                      Weekly Plan - $499.80/wk
+                    </a>
+                  </Button>
+                )}
+              </div>
+
+              <a
+                href={denefitsLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 bg-gradient-to-r from-cyan/20 to-magenta/20 rounded-lg p-4 text-center hover:from-cyan/30 hover:to-magenta/30 transition-all border border-cyan/50"
+              >
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <CreditCard className="h-4 w-4 text-purple" />
+                  <span className="font-semibold text-charcoal text-sm">Denefits Financing</span>
+                </div>
+                <p className="text-xs text-gray-dark">No credit check • Guaranteed approval</p>
+                <span className="text-purple font-semibold text-xs mt-1 block">Apply Now →</span>
+              </a>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <SEO
@@ -270,16 +206,10 @@ const CohortsPage = () => {
         structuredData={buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }, { name: "Cohorts & Pricing", path: "/programs/cohorts" }])}
       />
       <main className="pt-28 md:pt-32">
-        {/* Hero Section */}
         <HeroBanner
           imageSrc={cnaStudentsGroup}
           imageAlt="Health Star Academy CNA students ready for their healthcare career"
-          title={
-            <>
-              Cohorts &<br />
-              <span className="text-cyan">Tuition</span>
-            </>
-          }
+          title={<>Cohorts &<br /><span className="text-cyan">Tuition</span></>}
           subtitle="Select your start date and payment option below"
         />
 
@@ -287,16 +217,11 @@ const CohortsPage = () => {
         <section className="py-12 bg-background">
           <div className="container-custom">
             <div className="text-center mb-10">
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
-                Program Tuition
-              </h2>
-              <p className="text-gray-dark max-w-2xl mx-auto">
-                Our all-inclusive tuition covers everything you need to become a Certified Nursing Assistant.
-              </p>
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">Program Tuition</h2>
+              <p className="text-gray-dark max-w-2xl mx-auto">Our all-inclusive tuition covers everything you need to become a Certified Nursing Assistant.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
-              {/* Paid in Full Option */}
               <div className="bg-neutral-light rounded-xl p-6 border-2 border-purple shadow-soft">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-purple rounded-full flex items-center justify-center">
@@ -312,18 +237,11 @@ const CohortsPage = () => {
                   <p className="text-sm text-gray-dark">Total Program Cost</p>
                 </div>
                 <ul className="space-y-2 text-sm text-gray-dark">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-purple" />
-                    Best value - save on payment plan fees
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-purple" />
-                    Immediate enrollment confirmation
-                  </li>
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-purple" />Best value - save on payment plan fees</li>
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-purple" />Immediate enrollment confirmation</li>
                 </ul>
               </div>
 
-              {/* Payment Plan Option */}
               <div className="bg-neutral-light rounded-xl p-6 border-2 border-cyan shadow-soft">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 bg-cyan rounded-full flex items-center justify-center">
@@ -339,19 +257,12 @@ const CohortsPage = () => {
                   <p className="text-sm text-gray-dark">Per Week × 5 Payments</p>
                 </div>
                 <ul className="space-y-2 text-sm text-gray-dark">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-cyan" />
-                    First payment initiates enrollment
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-cyan" />
-                    Spread the cost over 5 weeks
-                  </li>
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-cyan" />First payment initiates enrollment</li>
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-cyan" />Spread the cost over 5 weeks</li>
                 </ul>
               </div>
             </div>
 
-            {/* What's Included */}
             <div className="bg-background rounded-xl p-6 shadow-soft max-w-4xl mx-auto">
               <h3 className="font-heading font-bold text-xl text-charcoal mb-4 text-center">What's Included in Your Tuition</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -366,214 +277,53 @@ const CohortsPage = () => {
           </div>
         </section>
 
-        {/* Cohort Selection */}
-        <section className="py-12 bg-neutral-light">
-          <div className="container-custom">
-            <div className="text-center mb-10">
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
-                Daytime Cohorts
-              </h2>
-              <p className="text-gray-dark max-w-2xl mx-auto">
-                Monday – Thursday, 6:00 AM – 2:30 PM · 6 weeks
-              </p>
+        {/* Loading state */}
+        {isLoading && (
+          <section className="py-12 bg-neutral-light">
+            <div className="flex items-center justify-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-purple" />
+              <span className="text-gray-dark">Loading cohorts...</span>
             </div>
+          </section>
+        )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {cohorts.map((cohort, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    "bg-background rounded-xl overflow-hidden shadow-soft transition-shadow flex flex-col",
-                    cohort.isClosed ? "opacity-75" : "hover:shadow-medium"
-                  )}
-                >
-                  <div className="aspect-[4/3] overflow-hidden relative">
-                    <img 
-                      src={cohort.image} 
-                      alt={`CNA Training Student - ${cohort.startDate}`}
-                      className={cn("w-full h-full object-cover", cohort.isClosed && "grayscale")}
-                    />
-                    {cohort.isClosed && (
-                      <div className="absolute inset-0 bg-charcoal/60 flex items-center justify-center">
-                        <span className="bg-red-600 text-white font-bold text-lg px-6 py-2 rounded-lg transform -rotate-12 shadow-lg">
-                          CLOSED
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="p-5 flex flex-col flex-grow">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
-                        cohort.isClosed ? "bg-gray-200" : "bg-purple/10"
-                      )}>
-                        <Calendar className={cn("h-5 w-5", cohort.isClosed ? "text-gray-400" : "text-purple")} />
-                      </div>
-                      <div>
-                        <h3 className="font-heading font-bold text-lg text-charcoal">
-                          {cohort.title}
-                        </h3>
-                      </div>
-                    </div>
-                    
-                    <div className="mb-4">
-                      <p className="text-gray-dark font-medium">
-                        {cohort.startDate} – {cohort.endDate}
-                      </p>
-                      <p className="text-sm text-gray-medium">6 weeks</p>
-                      {!cohort.isClosed && (
-                        <p className="text-sm text-purple font-semibold mt-1">
-                          ⏰ Apply by: {cohort.deadline}
-                        </p>
-                      )}
-                    </div>
-
-                    {cohort.isClosed ? (
-                      <div className="flex flex-col gap-2 mt-auto">
-                        <div className="bg-gray-100 rounded-lg p-4 text-center">
-                          <p className="font-bold text-red-600 mb-1">Registration Closed</p>
-                          <p className="text-sm text-gray-dark">This cohort is no longer accepting applications</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex flex-col gap-2 mt-auto">
-                          <Button variant="default" size="default" asChild className="w-full">
-                            <a href={cohort.paidInFullLink} target="_blank" rel="noopener noreferrer">
-                              <DollarSign className="h-4 w-4 mr-1" />
-                              Pay in Full - $2,499
-                            </a>
-                          </Button>
-                          <Button variant="secondary" size="default" asChild className="w-full">
-                            <a href={cohort.paymentPlanLink} target="_blank" rel="noopener noreferrer">
-                              <Clock className="h-4 w-4 mr-1" />
-                              Weekly Plan - $499.80/wk
-                            </a>
-                          </Button>
-                        </div>
-                        
-                        <a
-                          href={denefitsLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-3 bg-gradient-to-r from-cyan/20 to-magenta/20 rounded-lg p-4 text-center hover:from-cyan/30 hover:to-magenta/30 transition-all border border-cyan/50"
-                        >
-                          <div className="flex items-center justify-center gap-2 mb-1">
-                            <CreditCard className="h-4 w-4 text-purple" />
-                            <span className="font-semibold text-charcoal text-sm">Denefits Financing</span>
-                          </div>
-                          <p className="text-xs text-gray-dark">No credit check • Guaranteed approval</p>
-                          <span className="text-purple font-semibold text-xs mt-1 block">Apply Now →</span>
-                        </a>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
+        {/* Daytime Cohorts */}
+        {!isLoading && daytimeCohorts.length > 0 && (
+          <section className="py-12 bg-neutral-light">
+            <div className="container-custom">
+              <div className="text-center mb-10">
+                <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">Daytime Cohorts</h2>
+                <p className="text-gray-dark max-w-2xl mx-auto">Monday – Thursday, 6:00 AM – 2:30 PM · 6 weeks</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                {daytimeCohorts.map((c, i) => renderCohortCard(c, i, false))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Weekend Cohorts */}
-        <section className="py-12 bg-background">
-          <div className="container-custom">
-            <div className="text-center mb-10">
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
-                Weekend Cohorts
-                <span className="ml-3 inline-block bg-cyan/20 text-cyan text-sm font-bold px-3 py-1 rounded-full align-middle">NEW</span>
-              </h2>
-              <p className="text-gray-dark max-w-2xl mx-auto">
-                Saturday & Sunday, 6:00 AM – 6:00 PM · 7 weekends (14 class days)
-              </p>
+        {!isLoading && weekendCohorts.length > 0 && (
+          <section className="py-12 bg-background">
+            <div className="container-custom">
+              <div className="text-center mb-10">
+                <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
+                  Weekend Cohorts
+                  <span className="ml-3 inline-block bg-cyan/20 text-cyan text-sm font-bold px-3 py-1 rounded-full align-middle">NEW</span>
+                </h2>
+                <p className="text-gray-dark max-w-2xl mx-auto">Saturday & Sunday, 6:00 AM – 6:00 PM · 7 weekends (14 class days)</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                {weekendCohorts.map((c, i) => renderCohortCard(c, i, true))}
+              </div>
             </div>
+          </section>
+        )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {weekendCohorts.map((cohort, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    "bg-background rounded-xl overflow-hidden shadow-soft transition-shadow flex flex-col border-2 border-cyan/20",
-                    cohort.isClosed ? "opacity-75" : "hover:shadow-medium"
-                  )}
-                >
-                  <div className="aspect-[4/3] overflow-hidden relative">
-                    <img 
-                      src={cohort.image} 
-                      alt={`CNA Weekend Training Student - ${cohort.startDate}`}
-                      className={cn("w-full h-full object-cover", cohort.isClosed && "grayscale")}
-                    />
-                    <div className="absolute top-3 right-3 bg-cyan text-charcoal text-xs font-bold px-2 py-1 rounded">
-                      WEEKEND
-                    </div>
-                  </div>
-                  
-                  <div className="p-5 flex flex-col flex-grow">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
-                        cohort.isClosed ? "bg-gray-200" : "bg-cyan/10"
-                      )}>
-                        <Calendar className={cn("h-5 w-5", cohort.isClosed ? "text-gray-400" : "text-cyan")} />
-                      </div>
-                      <div>
-                        <h3 className="font-heading font-bold text-lg text-charcoal">
-                          {cohort.title}
-                        </h3>
-                      </div>
-                    </div>
-                    
-                    <div className="mb-4">
-                      <p className="text-gray-dark font-medium">
-                        {cohort.startDate} – {cohort.endDate}
-                      </p>
-                      <p className="text-sm text-gray-medium">7 weekends (14 class days)</p>
-                      {!cohort.isClosed && (
-                        <p className="text-sm text-cyan font-semibold mt-1">
-                          ⏰ Apply by: {cohort.deadline}
-                        </p>
-                      )}
-                      <WeekendEnrollmentCounter
-                        enrolled={weekendEnrollmentCounts[cohort.startDate] ?? 0}
-                        minimum={15}
-                        cohortLabel={cohort.startDate}
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2 mt-auto">
-                      <Button variant="default" size="default" asChild className="w-full">
-                        <a href={cohort.paidInFullLink} target="_blank" rel="noopener noreferrer">
-                          <DollarSign className="h-4 w-4 mr-1" />
-                          Pay in Full - $2,499
-                        </a>
-                      </Button>
-                      <Button variant="secondary" size="default" asChild className="w-full">
-                        <a href={cohort.paymentPlanLink} target="_blank" rel="noopener noreferrer">
-                          <Clock className="h-4 w-4 mr-1" />
-                          Weekly Plan - $499.80/wk
-                        </a>
-                      </Button>
-                    </div>
-                    
-                    <a
-                      href={denefitsLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 bg-gradient-to-r from-cyan/20 to-magenta/20 rounded-lg p-4 text-center hover:from-cyan/30 hover:to-magenta/30 transition-all border border-cyan/50"
-                    >
-                      <div className="flex items-center justify-center gap-2 mb-1">
-                        <CreditCard className="h-4 w-4 text-purple" />
-                        <span className="font-semibold text-charcoal text-sm">Denefits Financing</span>
-                      </div>
-                      <p className="text-xs text-gray-dark">No credit check • Guaranteed approval</p>
-                      <span className="text-purple font-semibold text-xs mt-1 block">Apply Now →</span>
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="text-center mt-10">
+        {/* Deadline notice */}
+        {!isLoading && (
+          <section className="py-6 bg-neutral-light">
+            <div className="container-custom text-center">
               {(() => {
                 const next = getNextUpcomingCohort("daytime");
                 const nextWeekend = getNextUpcomingCohort("weekend");
@@ -592,21 +342,16 @@ const CohortsPage = () => {
                 Have questions? Call <a href="tel:2093234169" className="text-purple hover:underline">(209) 323-4169</a> or email <a href="mailto:info@healthstaracademy.org" className="text-purple hover:underline">info@healthstaracademy.org</a>
               </p>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Additional Financing */}
         <section className="py-12 bg-background">
           <div className="container-custom">
             <div className="text-center mb-8">
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
-                Need Additional Financing?
-              </h2>
-              <p className="text-gray-dark max-w-2xl mx-auto">
-                We've partnered with trusted organizations to provide additional payment solutions.
-              </p>
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">Need Additional Financing?</h2>
+              <p className="text-gray-dark max-w-2xl mx-auto">We've partnered with trusted organizations to provide additional payment solutions.</p>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
               <div className="bg-neutral-light rounded-xl p-6 text-center">
                 <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Self-Help Credit Union</h3>
@@ -616,7 +361,7 @@ const CohortsPage = () => {
                 </Button>
               </div>
               <a
-                href="https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a"
+                href={denefitsLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-gradient-to-r from-cyan/20 to-magenta/20 rounded-xl p-6 text-center hover:from-cyan/30 hover:to-magenta/30 transition-all border-2 border-cyan shadow-md hover:shadow-lg"
@@ -635,17 +380,11 @@ const CohortsPage = () => {
         {/* CTA */}
         <section className="py-12 bg-neutral-light">
           <div className="container-custom text-center">
-            <h2 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-3">
-              Have Questions About Enrollment?
-            </h2>
-            <p className="text-gray-dark max-w-xl mx-auto mb-6">
-              View our complete enrollment process or contact our admissions team.
-            </p>
+            <h2 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-3">Have Questions About Enrollment?</h2>
+            <p className="text-gray-dark max-w-xl mx-auto mb-6">View our complete enrollment process or contact our admissions team.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button variant="default" size="lg" asChild>
-                <Link to="/programs/admissions">
-                  View Enrollment Process <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
+                <Link to="/programs/admissions">View Enrollment Process <ArrowRight className="ml-2 h-5 w-5" /></Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
                 <a href="tel:2093234169">Call (209) 323-4169</a>
