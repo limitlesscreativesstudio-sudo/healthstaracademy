@@ -507,38 +507,38 @@ const PreQualificationPage = () => {
             {/* Step 1: Personal Info */}
             {step === 1 && (
               <div className="animate-fade-in">
-                <div className="text-center mb-8">
+                <div className="text-center mb-6 md:mb-8">
                   <h2 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-2">Personal Information</h2>
-                  <p className="text-gray-dark">Tell us a little about yourself to get started.</p>
+                  <p className="text-gray-dark text-sm md:text-base">Tell us a little about yourself to get started.</p>
                 </div>
-                <div className="space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4 md:space-y-5">
+                  <div className="grid grid-cols-2 gap-3 md:gap-4">
                     <div>
-                      <Label htmlFor="first_name">First Name *</Label>
-                      <Input id="first_name" value={personal.first_name} onChange={(e) => updatePersonal("first_name", e.target.value)} placeholder="First name" />
+                      <Label htmlFor="first_name" className="text-sm font-semibold">First Name *</Label>
+                      <Input id="first_name" value={personal.first_name} onChange={(e) => updatePersonal("first_name", e.target.value)} placeholder="First name" className="h-12 md:h-10 text-base md:text-sm mt-1" />
                     </div>
                     <div>
-                      <Label htmlFor="last_name">Last Name *</Label>
-                      <Input id="last_name" value={personal.last_name} onChange={(e) => updatePersonal("last_name", e.target.value)} placeholder="Last name" />
+                      <Label htmlFor="last_name" className="text-sm font-semibold">Last Name *</Label>
+                      <Input id="last_name" value={personal.last_name} onChange={(e) => updatePersonal("last_name", e.target.value)} placeholder="Last name" className="h-12 md:h-10 text-base md:text-sm mt-1" />
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="dob">Date of Birth *</Label>
-                    <Input id="dob" type="date" value={personal.date_of_birth} onChange={(e) => updatePersonal("date_of_birth", e.target.value)} className="mt-1" />
+                    <Label htmlFor="dob" className="text-sm font-semibold">Date of Birth *</Label>
+                    <Input id="dob" type="date" value={personal.date_of_birth} onChange={(e) => updatePersonal("date_of_birth", e.target.value)} className="h-12 md:h-10 text-base md:text-sm mt-1" />
                   </div>
                   <div>
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input id="email" type="email" value={personal.email} onChange={(e) => updatePersonal("email", e.target.value)} placeholder="you@example.com" />
+                    <Label htmlFor="email" className="text-sm font-semibold">Email Address *</Label>
+                    <Input id="email" type="email" value={personal.email} onChange={(e) => updatePersonal("email", e.target.value)} placeholder="you@example.com" className="h-12 md:h-10 text-base md:text-sm mt-1" />
                     {personal.email && !isEmailValid && (
                       <p className="text-sm text-destructive mt-1">Please enter a valid email address</p>
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="address">Street Address</Label>
-                    <Input id="address" value={personal.address} onChange={(e) => updatePersonal("address", e.target.value)} placeholder="123 Main St, Stockton, CA" />
+                    <Label htmlFor="address" className="text-sm font-semibold">Street Address</Label>
+                    <Input id="address" value={personal.address} onChange={(e) => updatePersonal("address", e.target.value)} placeholder="123 Main St, Stockton, CA" className="h-12 md:h-10 text-base md:text-sm mt-1" />
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Label htmlFor="phone" className="text-sm font-semibold">Phone Number *</Label>
                     <Input
                       id="phone"
                       type="tel"
@@ -556,15 +556,16 @@ const PreQualificationPage = () => {
                       }}
                       placeholder="(209) 555-0123"
                       maxLength={14}
+                      className="h-12 md:h-10 text-base md:text-sm mt-1"
                     />
                     {personal.phone && !isPhoneValid && (
                       <p className="text-sm text-destructive mt-1">Please enter a 10-digit phone number</p>
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="referral_source">How Did You Hear About Us?</Label>
+                    <Label htmlFor="referral_source" className="text-sm font-semibold">How Did You Hear About Us?</Label>
                     <Select value={personal.referral_source} onValueChange={(val) => updatePersonal("referral_source", val)}>
-                      <SelectTrigger id="referral_source" className="bg-background">
+                      <SelectTrigger id="referral_source" className="bg-background h-12 md:h-10 text-base md:text-sm mt-1">
                         <SelectValue placeholder="Select one..." />
                       </SelectTrigger>
                       <SelectContent className="bg-background z-50">
@@ -580,8 +581,8 @@ const PreQualificationPage = () => {
                     </Select>
                   </div>
                 </div>
-                <div className="flex justify-end mt-8">
-                  <Button variant="default" size="lg" disabled={!isStep1Valid} onClick={() => setStep(2)}>
+                <div className="flex justify-end mt-6 md:mt-8">
+                  <Button variant="default" size="lg" className="h-12 md:h-11 px-6 w-full sm:w-auto" disabled={!isStep1Valid} onClick={() => setStep(2)}>
                     Next: Eligibility <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
