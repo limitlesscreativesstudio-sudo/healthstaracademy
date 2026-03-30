@@ -20,6 +20,9 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          paid_in_full_link: string | null
+          payment_plan_link: string | null
+          program_type: string | null
           start_date: string
           status: string
           updated_at: string
@@ -29,6 +32,9 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          paid_in_full_link?: string | null
+          payment_plan_link?: string | null
+          program_type?: string | null
           start_date: string
           status?: string
           updated_at?: string
@@ -38,6 +44,9 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          paid_in_full_link?: string | null
+          payment_plan_link?: string | null
+          program_type?: string | null
           start_date?: string
           status?: string
           updated_at?: string
