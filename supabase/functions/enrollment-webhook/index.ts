@@ -377,6 +377,29 @@ Deno.serve(async (req) => {
         console.error("Email send error:", emailError);
       }
 
+      // Send admin notification email with the same results
+      try {
+        await fetch(`${SUPABASE_URL}/functions/v1/send-enrollment-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({
+            email_type: "admin_notification",
+            student_email: "healthstaracademy01@gmail.com",
+            student_name: `${payload.first_name} ${payload.last_name}`,
+            cohort_date: payload.selected_cohort_date,
+            orientation_date: orientationDate,
+            needs_entrance_exam: qualification.needsExam,
+            needs_parent_consent: qualification.needsConsent,
+            qualification_notes: qualification.notes,
+          }),
+        });
+      } catch (adminEmailError) {
+        console.error("Admin notification email error:", adminEmailError);
+      }
+
       return new Response(
         JSON.stringify({
           success: true,

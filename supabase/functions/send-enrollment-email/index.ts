@@ -368,6 +368,35 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
         `),
       };
 
+    case "admin_notification": {
+      const isQualified = !data.qualification_notes || data.qualification_notes === "Fully qualified";
+      const statusColor = isQualified ? "#22c55e" : "#f59e0b";
+      const statusLabel = isQualified ? "✅ QUALIFIED" : "⚠️ DISQUALIFIED";
+      const conditionalNotes: string[] = [];
+      if (data.needs_entrance_exam) conditionalNotes.push("Needs entrance exam (no GED/Diploma)");
+      if (data.needs_parent_consent) conditionalNotes.push("Needs parental consent (under 18)");
+
+      return {
+        subject: `[Admin] New Pre-Qualification: ${data.student_name} — ${isQualified ? "Qualified" : "Disqualified"}`,
+        html: getEmailWrapper(`
+          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">New Pre-Qualification Submission</h2>
+          <div style="background-color:${isQualified ? '#f0fdf4' : '#fffbeb'};border-left:4px solid ${statusColor};padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
+            <p style="color:${isQualified ? '#166534' : '#92400e'};margin:0;font-size:18px;font-weight:700;">${statusLabel}</p>
+          </div>
+          <h3 style="color:#1e1b2e;margin:24px 0 12px;font-size:18px;">Student Details:</h3>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;color:#4a4a5a;">
+            <tr><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;width:40%;">Name</td><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${data.student_name}</td></tr>
+            <tr><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">Email</td><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${data.student_email}</td></tr>
+            <tr><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">Cohort Start</td><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${cohortFormatted || "N/A"}</td></tr>
+            <tr><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">Qualification Status</td><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${isQualified ? "Qualified" : "Disqualified"}</td></tr>
+            ${data.qualification_notes && data.qualification_notes !== "Fully qualified" ? `<tr><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">Reason</td><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${data.qualification_notes}</td></tr>` : ""}
+            ${conditionalNotes.length > 0 ? `<tr><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">Additional Notes</td><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${conditionalNotes.join("<br/>")}</td></tr>` : ""}
+          </table>
+          <p style="color:#a0a0b0;margin:24px 0 0;font-size:12px;">This is an automated admin notification from the Health Star Academy enrollment system.</p>
+        `),
+      };
+    }
+
     case "final_welcome":
       return {
         subject: `🎓 See You Soon! Your Cohort Starts ${cohortFormatted}`,
