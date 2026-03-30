@@ -107,6 +107,7 @@ const PreQualificationPage = () => {
   const [submitResult, setSubmitResult] = useState<"qualified" | "disqualified" | null>(null);
   const [needsExam, setNeedsExam] = useState(false);
   const [needsConsent, setNeedsConsent] = useState(false);
+  const [qualificationNotes, setQualificationNotes] = useState("");
   const [cohortDateLabel, setCohortDateLabel] = useState("");
   const [programTrack, setProgramTrack] = useState<"daytime" | "weekend" | "">("");
 
