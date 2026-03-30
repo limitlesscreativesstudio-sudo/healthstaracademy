@@ -595,27 +595,52 @@ const PreQualificationPage = () => {
                   <h2 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-2">Eligibility Checklist</h2>
                   <p className="text-gray-dark">Answer each question honestly — we'll let you know your eligibility instantly.</p>
                 </div>
-                <div className="space-y-6">
-                  {eligibilityQuestions.map((q) => (
-                    <div key={q.key} className="bg-neutral-light rounded-xl p-5">
-                      <p className="font-semibold text-charcoal mb-1">{q.label}</p>
-                      {q.note && <p className="text-sm text-muted-foreground mb-3">{q.note}</p>}
-                      <RadioGroup
-                        value={eligibility[q.key]}
-                        onValueChange={(val) => updateEligibility(q.key, val)}
-                        className="flex gap-6"
-                      >
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value="yes" id={`${q.key}-yes`} />
-                          <Label htmlFor={`${q.key}-yes`} className="cursor-pointer">Yes</Label>
+                <div className="space-y-4">
+                  {eligibilityQuestions.map((q, idx) => {
+                    const isAnswered = eligibility[q.key] !== "";
+                    const isNo = eligibility[q.key] === "no";
+                    return (
+                      <div key={q.key} className={cn(
+                        "rounded-xl p-5 transition-all duration-300 border-2",
+                        isAnswered
+                          ? isNo ? "bg-amber-50 border-amber-200" : "bg-green-50 border-green-200"
+                          : "bg-neutral-light border-transparent"
+                      )}>
+                        <div className="flex items-start gap-3">
+                          <div className={cn(
+                            "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 transition-all duration-300 text-xs font-bold",
+                            isAnswered
+                              ? isNo ? "bg-amber-500 text-white" : "bg-green-500 text-white"
+                              : "bg-muted text-muted-foreground"
+                          )}>
+                            {isAnswered ? (isNo ? "!" : "✓") : idx + 1}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-charcoal mb-1">{q.label}</p>
+                            {q.note && <p className="text-sm text-muted-foreground mb-3">{q.note}</p>}
+                            <RadioGroup
+                              value={eligibility[q.key]}
+                              onValueChange={(val) => updateEligibility(q.key, val)}
+                              className="flex gap-6"
+                            >
+                              <div className="flex items-center gap-2">
+                                <RadioGroupItem value="yes" id={`${q.key}-yes`} />
+                                <Label htmlFor={`${q.key}-yes`} className="cursor-pointer">Yes</Label>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <RadioGroupItem value="no" id={`${q.key}-no`} />
+                                <Label htmlFor={`${q.key}-no`} className="cursor-pointer">No</Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value="no" id={`${q.key}-no`} />
-                          <Label htmlFor={`${q.key}-no`} className="cursor-pointer">No</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
+                  {/* Progress counter */}
+                  <div className="text-center text-sm text-muted-foreground">
+                    {Object.values(eligibility).filter(v => v !== "").length} of {eligibilityQuestions.length} questions answered
+                  </div>
                 </div>
                 <div className="flex justify-between mt-8">
                   <Button variant="outline" size="lg" onClick={() => setStep(1)}>
