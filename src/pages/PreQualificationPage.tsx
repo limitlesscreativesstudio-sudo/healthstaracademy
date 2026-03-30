@@ -107,6 +107,7 @@ const PreQualificationPage = () => {
   const [submitResult, setSubmitResult] = useState<"qualified" | "disqualified" | null>(null);
   const [needsExam, setNeedsExam] = useState(false);
   const [needsConsent, setNeedsConsent] = useState(false);
+  const [qualificationNotes, setQualificationNotes] = useState("");
   const [cohortDateLabel, setCohortDateLabel] = useState("");
   const [programTrack, setProgramTrack] = useState<"daytime" | "weekend" | "">("");
 
@@ -190,14 +191,20 @@ const PreQualificationPage = () => {
 
       setNeedsExam(data.needs_exam || false);
       setNeedsConsent(data.needs_consent || false);
+      setQualificationNotes(data.qualification_notes || "");
       // Build cohort date label
       const cohort = cohorts.find(c => c.start_date === selectedCohort);
       if (cohort) {
         const startDate = new Date(cohort.start_date + "T00:00:00");
         const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + 42); // 6 weeks
+        endDate.setDate(endDate.getDate() + 42);
         const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
         setCohortDateLabel(`${fmt(startDate)} – ${fmt(endDate)}`);
+      } else if (selectedCohort) {
+        // Weekend cohort - build from schedule data
+        const startDate = new Date(selectedCohort + "T00:00:00");
+        const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+        setCohortDateLabel(fmt(startDate));
       }
       setSubmitResult(data.qualification_status === "qualified" ? "qualified" : "disqualified");
     } catch (err) {
@@ -329,34 +336,113 @@ const PreQualificationPage = () => {
   }
 
   if (submitResult === "disqualified") {
+    // Determine specific disqualification details
+    const disqualReasons: { title: string; description: string; resolution: string }[] = [];
+    if (eligibility.has_valid_id === "no") {
+      disqualReasons.push({
+        title: "Valid Government-Issued ID",
+        description: "A physical government-issued ID (Driver's License, CA State ID, U.S. Passport, or Green Card) is required.",
+        resolution: "Visit your local DMV to apply for a California ID or Driver's License. Original documents only — no photocopies.",
+      });
+    }
+    if (eligibility.has_ssn === "no") {
+      disqualReasons.push({
+        title: "Physical Social Security Card",
+        description: "Your original Social Security Card is required for enrollment and clinical placement.",
+        resolution: "Request a free replacement at ssa.gov or visit your local Social Security Administration office. Cards arrive in 10–14 business days.",
+      });
+    }
+    if (eligibility.can_pass_background === "no") {
+      disqualReasons.push({
+        title: "Criminal Background Check (LiveScan)",
+        description: "CNA certification requires passing a LiveScan criminal background check through CDPH.",
+        resolution: "Not all records disqualify you — contact CDPH Aide & Technician Certification at (916) 327-2445 to discuss exemptions and eligibility.",
+      });
+    }
+    if (eligibility.has_health_proof === "no") {
+      disqualReasons.push({
+        title: "Proof of Good Health",
+        description: "A physical exam, PPD TB test, or Chest X-ray is required for clinical rotations.",
+        resolution: "Schedule a physical at your doctor or a walk-in clinic. Many community health centers offer low-cost or free exams.",
+      });
+    }
+    if (eligibility.has_transportation === "no") {
+      disqualReasons.push({
+        title: "Reliable Transportation",
+        description: "Reliable transportation to clinical sites in Stockton, Lodi, or Hayward is required.",
+        resolution: "Consider carpooling with classmates, public transit (San Joaquin RTD), ride-shares, or family/friends during the 6-week program.",
+      });
+    }
+
     return (
       <>
-        <SEO title="Pre-Qualification | Health Star Academy" description="Pre-qualification results for Health Star Academy's CNA program." canonical="/pre-qualification" />
+        <SEO title="Pre-Qualification Results | Health Star Academy" description="Pre-qualification results for Health Star Academy's CNA program." canonical="/pre-qualification" />
         <main className="pt-28 md:pt-32">
           <section className="section-padding bg-background">
-            <div className="container-custom max-w-2xl text-center">
-              <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <XCircle className="h-10 w-10 text-amber-600" />
-              </div>
-              <h1 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
-                Almost There, {personal.first_name}
-              </h1>
-              <p className="text-gray-dark text-lg mb-6 leading-relaxed">
-                Based on your responses, there are a few items you'll need to address before enrolling. Don't worry — our admissions team is here to help! Check your email at <strong>{personal.email}</strong> for details on what's needed.
-              </p>
-              <div className="bg-neutral-light rounded-xl p-6 mb-8">
-                <p className="text-gray-dark">
-                  Have questions or think there's been a mistake? Contact our admissions team — we'll work with you to find a path forward.
+            <div className="container-custom max-w-2xl">
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <AlertTriangle className="h-10 w-10 text-amber-600" />
+                </div>
+                <h1 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+                  Almost There, {personal.first_name}! 💜
+                </h1>
+                <p className="text-gray-dark text-lg leading-relaxed">
+                  Thank you for completing the pre-qualification questionnaire. Based on your responses, there {disqualReasons.length === 1 ? "is 1 item" : `are ${disqualReasons.length} items`} that need to be addressed before you can enroll.
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button variant="default" size="lg" asChild>
-                  <a href="tel:2093234169">Call (209) 323-4169</a>
+
+              {/* Specific disqualification reasons */}
+              <div className="space-y-4 mb-8">
+                {disqualReasons.map((reason, idx) => (
+                  <div key={idx} className="bg-background border-2 border-amber-200 rounded-xl p-5">
+                    <div className="flex items-start gap-3">
+                      <XCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold text-charcoal mb-1">Missing: {reason.title}</h3>
+                        <p className="text-sm text-gray-dark mb-3">{reason.description}</p>
+                        <div className="bg-green-50 border-l-4 border-green-400 rounded-r-lg p-3">
+                          <p className="text-sm text-green-800">
+                            <strong>✅ How to resolve:</strong> {reason.resolution}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Encouragement */}
+              <div className="bg-purple/5 border border-purple/20 rounded-xl p-6 mb-6 text-center">
+                <p className="text-charcoal font-semibold mb-2">🌟 Don't give up!</p>
+                <p className="text-gray-dark text-sm">
+                  Once you've resolved {disqualReasons.length === 1 ? "this item" : "these items"}, you can reapply immediately. We'd love to welcome you into our program!
+                </p>
+              </div>
+
+              {/* Email notice */}
+              <div className="bg-cyan/5 border border-cyan/20 rounded-xl p-4 mb-6 text-center">
+                <p className="text-sm text-charcoal">
+                  📧 We've also sent detailed guidance to <strong>{personal.email}</strong> with step-by-step instructions on how to resolve each item.
+                </p>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+                <Button variant="default" size="lg" onClick={() => {
+                  setSubmitResult(null);
+                  setStep(1);
+                }}>
+                  Reapply When Ready
                 </Button>
-                <Button variant="outline" size="lg" onClick={() => navigate("/contact")}>
-                  Contact Us
+                <Button variant="outline" size="lg" asChild>
+                  <a href="tel:2093234169">📞 Call (209) 323-4169</a>
                 </Button>
               </div>
+
+              <p className="text-sm text-muted-foreground text-center">
+                Questions? Email <a href="mailto:info@healthstaracademy.org" className="text-purple hover:underline">info@healthstaracademy.org</a> — we're here to help!
+              </p>
             </div>
           </section>
         </main>
