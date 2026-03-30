@@ -601,7 +601,7 @@ const PreQualificationPage = () => {
                     const isNo = eligibility[q.key] === "no";
                     const isYes = eligibility[q.key] === "yes";
                     return (
-                      <div key={q.key} className={cn(
+                      <div id={`eligibility-q-${idx}`} key={q.key} className={cn(
                         "rounded-xl p-4 md:p-5 transition-all duration-300 border-2",
                         isAnswered
                           ? isNo ? "bg-amber-50 border-amber-200" : "bg-green-50 border-green-200"
