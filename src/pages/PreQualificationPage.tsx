@@ -591,24 +591,25 @@ const PreQualificationPage = () => {
             {/* Step 2: Eligibility */}
             {step === 2 && (
               <div className="animate-fade-in">
-                <div className="text-center mb-8">
+                <div className="text-center mb-6 md:mb-8">
                   <h2 className="font-heading text-2xl md:text-3xl font-bold text-charcoal mb-2">Eligibility Checklist</h2>
-                  <p className="text-gray-dark">Answer each question honestly — we'll let you know your eligibility instantly.</p>
+                  <p className="text-gray-dark text-sm md:text-base">Tap Yes or No for each question — we'll let you know your eligibility instantly.</p>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                   {eligibilityQuestions.map((q, idx) => {
                     const isAnswered = eligibility[q.key] !== "";
                     const isNo = eligibility[q.key] === "no";
+                    const isYes = eligibility[q.key] === "yes";
                     return (
                       <div key={q.key} className={cn(
-                        "rounded-xl p-5 transition-all duration-300 border-2",
+                        "rounded-xl p-4 md:p-5 transition-all duration-300 border-2",
                         isAnswered
                           ? isNo ? "bg-amber-50 border-amber-200" : "bg-green-50 border-green-200"
                           : "bg-neutral-light border-transparent"
                       )}>
                         <div className="flex items-start gap-3">
                           <div className={cn(
-                            "w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 transition-all duration-300 text-xs font-bold",
+                            "w-7 h-7 md:w-6 md:h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 transition-all duration-300 text-xs font-bold",
                             isAnswered
                               ? isNo ? "bg-amber-500 text-white" : "bg-green-500 text-white"
                               : "bg-muted text-muted-foreground"
@@ -616,38 +617,68 @@ const PreQualificationPage = () => {
                             {isAnswered ? (isNo ? "!" : "✓") : idx + 1}
                           </div>
                           <div className="flex-1">
-                            <p className="font-semibold text-charcoal mb-1">{q.label}</p>
-                            {q.note && <p className="text-sm text-muted-foreground mb-3">{q.note}</p>}
-                            <RadioGroup
-                              value={eligibility[q.key]}
-                              onValueChange={(val) => updateEligibility(q.key, val)}
-                              className="flex gap-6"
-                            >
-                              <div className="flex items-center gap-2">
-                                <RadioGroupItem value="yes" id={`${q.key}-yes`} />
-                                <Label htmlFor={`${q.key}-yes`} className="cursor-pointer">Yes</Label>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <RadioGroupItem value="no" id={`${q.key}-no`} />
-                                <Label htmlFor={`${q.key}-no`} className="cursor-pointer">No</Label>
-                              </div>
-                            </RadioGroup>
+                            <p className="font-semibold text-charcoal mb-1 text-sm md:text-base">{q.label}</p>
+                            {q.note && <p className="text-xs md:text-sm text-muted-foreground mb-3">{q.note}</p>}
+                            {/* Large tappable Yes/No buttons for mobile */}
+                            <div className="flex gap-3">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  updateEligibility(q.key, "yes");
+                                  // Auto-advance: scroll next unanswered question into view
+                                  if (idx < eligibilityQuestions.length - 1) {
+                                    setTimeout(() => {
+                                      const nextEl = document.getElementById(`eligibility-q-${idx + 1}`);
+                                      nextEl?.scrollIntoView({ behavior: "smooth", block: "center" });
+                                    }, 200);
+                                  }
+                                }}
+                                className={cn(
+                                  "flex-1 py-3 md:py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 border-2 active:scale-95",
+                                  isYes
+                                    ? "bg-green-500 text-white border-green-500 shadow-md"
+                                    : "bg-background text-charcoal border-border hover:border-green-400 hover:bg-green-50"
+                                )}
+                              >
+                                ✓ Yes
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  updateEligibility(q.key, "no");
+                                  if (idx < eligibilityQuestions.length - 1) {
+                                    setTimeout(() => {
+                                      const nextEl = document.getElementById(`eligibility-q-${idx + 1}`);
+                                      nextEl?.scrollIntoView({ behavior: "smooth", block: "center" });
+                                    }, 200);
+                                  }
+                                }}
+                                className={cn(
+                                  "flex-1 py-3 md:py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 border-2 active:scale-95",
+                                  isNo
+                                    ? "bg-amber-500 text-white border-amber-500 shadow-md"
+                                    : "bg-background text-charcoal border-border hover:border-amber-400 hover:bg-amber-50"
+                                )}
+                              >
+                                ✗ No
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
                     );
                   })}
                   {/* Progress counter */}
-                  <div className="text-center text-sm text-muted-foreground">
-                    {Object.values(eligibility).filter(v => v !== "").length} of {eligibilityQuestions.length} questions answered
+                  <div className="text-center text-sm text-muted-foreground py-1">
+                    {Object.values(eligibility).filter(v => v !== "").length} of {eligibilityQuestions.length} answered
                   </div>
                 </div>
-                <div className="flex justify-between mt-8">
-                  <Button variant="outline" size="lg" onClick={() => setStep(1)}>
+                <div className="flex justify-between mt-6 md:mt-8">
+                  <Button variant="outline" size="lg" className="h-12 md:h-11 px-5" onClick={() => setStep(1)}>
                     <ArrowLeft className="mr-2 h-5 w-5" /> Back
                   </Button>
-                  <Button variant="default" size="lg" disabled={!isStep2Valid} onClick={() => setStep(3)}>
-                    Next: Select Cohort <ArrowRight className="ml-2 h-5 w-5" />
+                  <Button variant="default" size="lg" className="h-12 md:h-11 px-5" disabled={!isStep2Valid} onClick={() => setStep(3)}>
+                    Next <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
               </div>
