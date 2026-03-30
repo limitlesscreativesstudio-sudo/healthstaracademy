@@ -843,13 +843,13 @@ const PreQualificationPage = () => {
                 )}
 
                 {/* Disclaimer Acknowledgment (Column O) */}
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mt-6">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 md:p-5 mt-6">
                   <div className="flex items-start gap-3">
                     <Checkbox
                       id="disclaimer"
                       checked={disclaimerAcknowledged}
                       onCheckedChange={(checked) => setDisclaimerAcknowledged(checked === true)}
-                      className="mt-0.5"
+                      className="mt-0.5 h-5 w-5 md:h-4 md:w-4"
                     />
                     <Label htmlFor="disclaimer" className="text-sm text-charcoal cursor-pointer leading-relaxed">
                       I understand that providing false or misleading information on this questionnaire may result in disqualification from the program. All information provided is truthful and accurate to the best of my knowledge. *
@@ -858,13 +858,13 @@ const PreQualificationPage = () => {
                 </div>
 
                 {/* Consent (Column Q) */}
-                <div className="bg-cyan/10 rounded-xl p-5 mt-4">
+                <div className="bg-cyan/10 rounded-xl p-4 md:p-5 mt-4">
                   <div className="flex items-start gap-3">
                     <Checkbox
                       id="consent"
                       checked={consentGiven}
                       onCheckedChange={(checked) => setConsentGiven(checked === true)}
-                      className="mt-0.5"
+                      className="mt-0.5 h-5 w-5 md:h-4 md:w-4"
                     />
                     <Label htmlFor="consent" className="text-sm text-charcoal cursor-pointer leading-relaxed">
                       I consent to Health Star Academy collecting and processing my personal information for enrollment purposes in accordance with the <a href="/privacy-policy" target="_blank" className="text-purple hover:underline">Privacy Policy</a>. A <strong>non-refundable $175 application fee</strong> is required if you meet eligibility and wish to proceed with full enrollment. *
@@ -872,11 +872,11 @@ const PreQualificationPage = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between mt-8">
-                  <Button variant="outline" size="lg" onClick={() => setStep(2)}>
+                <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 mt-6 md:mt-8">
+                  <Button variant="outline" size="lg" className="h-12 md:h-11 px-5" onClick={() => setStep(2)}>
                     <ArrowLeft className="mr-2 h-5 w-5" /> Back
                   </Button>
-                  <Button variant="default" size="lg" disabled={!isStep3Valid || isSubmitting} onClick={handleSubmit}>
+                  <Button variant="default" size="lg" className="h-12 md:h-11 px-6 w-full sm:w-auto" disabled={!isStep3Valid || isSubmitting} onClick={handleSubmit}>
                     {isSubmitting ? (
                       <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Submitting...</>
                     ) : (
