@@ -191,14 +191,20 @@ const PreQualificationPage = () => {
 
       setNeedsExam(data.needs_exam || false);
       setNeedsConsent(data.needs_consent || false);
+      setQualificationNotes(data.qualification_notes || "");
       // Build cohort date label
       const cohort = cohorts.find(c => c.start_date === selectedCohort);
       if (cohort) {
         const startDate = new Date(cohort.start_date + "T00:00:00");
         const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + 42); // 6 weeks
+        endDate.setDate(endDate.getDate() + 42);
         const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
         setCohortDateLabel(`${fmt(startDate)} – ${fmt(endDate)}`);
+      } else if (selectedCohort) {
+        // Weekend cohort - build from schedule data
+        const startDate = new Date(selectedCohort + "T00:00:00");
+        const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+        setCohortDateLabel(fmt(startDate));
       }
       setSubmitResult(data.qualification_status === "qualified" ? "qualified" : "disqualified");
     } catch (err) {
