@@ -200,6 +200,12 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
             >
               Terms of Service
             </Link>
+            <Link
+              to="/refund-policy"
+              className="text-gray-medium hover:text-primary-foreground transition-colors text-sm"
+            >
+              Refund Policy
+            </Link>
           </div>
         </div>
       </div>
