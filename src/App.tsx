@@ -64,6 +64,7 @@ const App = () => (
               <Route path="/blog/cna-training-excellence" element={<CNATrainingExcellence />} />
               <Route path="/blog/nursing-career-foundations" element={<NursingCareerFoundations />} />
               <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+              <Route path="/refund-policy" element={<RefundPolicyPage />} />
               <Route path="/terms-of-service" element={<TermsOfServicePage />} />
               <Route path="/admin" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
