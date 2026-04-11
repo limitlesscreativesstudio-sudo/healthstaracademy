@@ -737,7 +737,7 @@ const PreQualificationPage = () => {
                         <span className="bg-cyan/20 text-cyan text-xs font-bold px-2 py-0.5 rounded">NEW</span>
                       </div>
                       <p className="text-sm text-muted-foreground">Sat & Sun, 6:00 AM – 6:00 PM</p>
-                      <p className="text-xs text-muted-foreground">7 weekends (14 class days)</p>
+                      <p className="text-xs text-muted-foreground">8 weekends (16 class days)</p>
                     </button>
                   </div>
                 </div>
@@ -802,7 +802,7 @@ const PreQualificationPage = () => {
                                   {w.startDate} — {w.endDate}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                  7 weekends · Sat & Sun 6 AM – 6 PM
+                                  8 weekends · Sat & Sun 6 AM – 6 PM
                                 </p>
                                 <p className="text-xs text-cyan font-medium mt-1">
                                   ⏰ Apply by: {w.deadline}
