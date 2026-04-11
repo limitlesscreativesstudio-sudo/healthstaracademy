@@ -7,21 +7,34 @@ const AnnouncementBar = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
-  const nextCohort = useMemo(() => getNextUpcomingCohort(), []);
-  const deadlineDate = useMemo(() => new Date(nextCohort.deadlineISO + 'T23:59:59'), [nextCohort]);
+  const nextDaytime = useMemo(() => getNextUpcomingCohort("daytime"), []);
+  const nextWeekend = useMemo(() => getNextUpcomingCohort("weekend"), []);
+  const deadlineDate = useMemo(() => new Date(nextDaytime.deadlineISO + 'T23:59:59'), [nextDaytime]);
+
+  const stripDay = (d: string) => d.replace(/^Monday, |^Tuesday, |^Wednesday, |^Thursday, |^Friday, |^Saturday, |^Sunday, /, '');
 
   const announcements = useMemo(() => [
     {
-      id: 'cohort',
+      id: 'cohort-daytime',
       type: 'info',
       icon: Calendar,
-      title: `Next Cohort Starts ${nextCohort.startDate} — Secure Your Spot by ${nextCohort.deadline.replace(/^Monday, |^Tuesday, |^Wednesday, |^Thursday, |^Friday, |^Saturday, |^Sunday, /, '')}!`,
-      subtitle: `Apply now for the ${nextCohort.startDate} cohort`,
+      title: `Daytime Cohort Starts ${nextDaytime.startDate} — Apply by ${stripDay(nextDaytime.deadline)}!`,
+      subtitle: `Apply now for the ${nextDaytime.startDate} cohort`,
       ctaText: 'View Cohorts',
       ctaLink: '/programs/cohorts',
       hasCountdown: true,
     },
-  ], [nextCohort]);
+    {
+      id: 'cohort-weekend',
+      type: 'info',
+      icon: Calendar,
+      title: `Weekend Program Starts ${nextWeekend.startDate} — 8 Weekends, Sat & Sun!`,
+      subtitle: `Apply now for the ${nextWeekend.startDate} weekend cohort`,
+      ctaText: 'Weekend Info',
+      ctaLink: '/programs/cohorts',
+      hasCountdown: false,
+    },
+  ], [nextDaytime, nextWeekend]);
 
   useEffect(() => {
     const calculateCountdown = () => {
