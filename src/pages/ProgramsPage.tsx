@@ -345,7 +345,7 @@ const ProgramsPage = () => {
               <span className="inline-block bg-cyan/20 text-cyan text-xs font-bold px-2 py-0.5 rounded mb-2">NEW</span>
               <p className="text-cyan font-medium mb-1">Saturday & Sunday</p>
               <p className="text-gray-dark text-sm mb-1">Classroom & Clinical: 6:00 AM – 6:00 PM</p>
-              <p className="text-charcoal font-semibold mb-3">7 Weekends (14 class days)</p>
+              <p className="text-charcoal font-semibold mb-3">8 Weekends (16 class days)</p>
               <div className="bg-cyan/5 border border-cyan/20 rounded-lg p-2 text-xs text-muted-foreground">
                 ⚠️ Minimum 15 students required per cohort
               </div>

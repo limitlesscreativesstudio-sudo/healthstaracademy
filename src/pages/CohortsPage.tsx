@@ -44,7 +44,7 @@ const formatDate = (dateStr: string) => {
 
 const getEndDate = (startDateStr: string, isWeekend: boolean) => {
   const d = new Date(startDateStr + "T00:00:00");
-  d.setDate(d.getDate() + (isWeekend ? 43 : 42));
+  d.setDate(d.getDate() + (isWeekend ? 50 : 42));
   return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 };
 
@@ -133,7 +133,7 @@ const CohortsPage = () => {
             <p className="text-gray-dark font-medium">
               {startDateFormatted} – {endDateFormatted}
             </p>
-            <p className="text-sm text-gray-medium">{isWeekend ? "7 weekends (14 class days)" : "6 weeks"}</p>
+            <p className="text-sm text-gray-medium">{isWeekend ? "8 weekends (16 class days)" : "6 weeks"}</p>
             {!isClosed && (
               <p className={cn("text-sm font-semibold mt-1", isWeekend ? "text-cyan" : "text-purple")}>
                 ⏰ Apply by: {deadline}
@@ -311,7 +311,7 @@ const CohortsPage = () => {
                   Weekend Cohorts
                   <span className="ml-3 inline-block bg-cyan/20 text-cyan text-sm font-bold px-3 py-1 rounded-full align-middle">NEW</span>
                 </h2>
-                <p className="text-gray-dark max-w-2xl mx-auto">Saturday & Sunday, 6:00 AM – 6:00 PM · 7 weekends (14 class days)</p>
+                <p className="text-gray-dark max-w-2xl mx-auto">Saturday & Sunday, 6:00 AM – 6:00 PM · 8 weekends (16 class days)</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
                 {weekendCohorts.map((c, i) => renderCohortCard(c, i, true))}
