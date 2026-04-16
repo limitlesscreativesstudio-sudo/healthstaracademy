@@ -42,8 +42,9 @@ import { useToast } from "@/hooks/use-toast";
 const COHORT_OPTIONS_QUERY = async () => {
   const { data, error } = await supabase
     .from("cohorts")
-    .select("id, name, start_date, status, capacity")
+    .select("id, name, start_date, status, capacity, program_type")
     .eq("status", "open")
+    .eq("program_type", "daytime")
     .order("start_date", { ascending: true });
   if (error) throw error;
   return data;
