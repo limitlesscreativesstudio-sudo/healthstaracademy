@@ -33,8 +33,8 @@ const trackCtaClick = (cohortType: 'daytime' | 'weekend', variant: Variant, ctaT
   }
 };
 
-// Build date string is the static deploy time — used as the "Last updated" indicator.
-const LAST_UPDATED = new Date(typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : Date.now());
+// Module-load time acts as the "Last updated" indicator (refreshes on each deploy).
+const LAST_UPDATED = new Date();
 
 const AnnouncementBar = () => {
   const [isVisible, setIsVisible] = useState(true);
