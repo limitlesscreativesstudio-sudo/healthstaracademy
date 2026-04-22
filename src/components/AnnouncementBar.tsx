@@ -28,7 +28,7 @@ const AnnouncementBar = () => {
       id: 'cohort-weekend',
       type: 'info',
       icon: Calendar,
-      title: `Weekend Program Starts ${nextWeekend.startDate} — 8 Weekends, Sat & Sun!`,
+      title: `Weekend Cohort Starts ${nextWeekend.startDate} — Apply by ${stripDay(nextWeekend.deadline)} (8 Weekends, Sat & Sun)`,
       subtitle: `Apply now for the ${nextWeekend.startDate} weekend cohort`,
       ctaText: 'Weekend Info',
       ctaLink: '/programs/cohorts',
