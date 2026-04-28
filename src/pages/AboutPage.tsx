@@ -54,7 +54,7 @@ const leadership = [
     <>
       <SEO
         title="About Health Star Academy | CNA School in Stockton, CA"
-        description="Founded by healthcare leaders with 60+ years of combined experience, Health Star Academy delivers CDPH-approved CNA training rooted in compassion and excellence."
+        description="Founded by healthcare leaders with 60+ years of combined experience. Health Star Academy delivers CDPH-approved CNA training built on compassion."
         canonical="/about"
         keywords="about Health Star Academy, CNA school Stockton, CNA instructors California, nursing school mission, CDPH approved CNA program, healthcare education Stockton"
         structuredData={buildBreadcrumbSchema([{ name: "About Us", path: "/about" }])}

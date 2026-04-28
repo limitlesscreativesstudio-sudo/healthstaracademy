@@ -266,7 +266,7 @@ const ExamPrepPage = () => {
   return (
     <QuizProvider>
       <SEO
-        title="Free CNA State Exam Prep: 175 Practice Questions | Health Star"
+        title="Free CNA State Exam Prep: 175 Practice Questions"
         description="Free California CNA state exam prep: 175 CDPH-aligned questions across 15 categories. Study mode, timed exams, and category drills — track your progress."
         canonical="/programs/exam-prep"
         keywords="CNA practice exam California, CDPH CNA questions, California CNA test prep, free CNA practice test, CNA study guide, nursing assistant state exam"

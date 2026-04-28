@@ -166,7 +166,7 @@ const LocationsPage = () => {
   return (
     <div className="min-h-screen">
       <SEO 
-        title="CNA Clinical Locations: Stockton, Lodi & Hayward | Health Star"
+        title="CNA Clinical Locations: Stockton, Lodi & Hayward"
         description="CNA clinical training at partner skilled nursing facilities in Stockton, Lodi, and Bay Area Skilled Nursing (Hayward). Real patients, licensed nurse mentors."
         canonical="/locations"
         keywords="CNA clinical sites Stockton, Lodi CNA training, Hayward CNA classes, Bay Area Skilled Nursing, Central Valley CNA, CNA training near me California"

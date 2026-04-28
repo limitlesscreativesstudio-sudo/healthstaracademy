@@ -99,7 +99,7 @@ const BlogPage = () => {
   return (
     <>
       <SEO
-        title="CNA Blog: Careers, Certification & Training Tips | Health Star"
+        title="CNA Blog: Careers, Certification & Training | Health Star"
         description="Expert articles on CNA careers, California certification, exam prep, and hybrid training tips from Health Star Academy. Start your healthcare journey today."
         canonical="/blog"
         keywords="CNA blog California, nursing assistant career tips, CNA certification guide, CNA exam prep articles, healthcare career advice, CNA training blog"

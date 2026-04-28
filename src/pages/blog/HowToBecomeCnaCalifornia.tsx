@@ -23,7 +23,7 @@ const HowToBecomeCnaCalifornia = () => {
     <>
       <SEO
         title="How to Become a CNA in California: Step-by-Step Guide (2026)"
-        description="Learn how to become a Certified Nursing Assistant in California. CDPH requirements, 160 training hours, state exam steps, costs, and timeline to get certified fast."
+        description="How to become a CNA in California: CDPH requirements, 160 training hours, state exam steps, costs, and timeline to get certified fast."
         canonical="/blog/how-to-become-cna-in-california"
         keywords="how to become a CNA in California, CNA certification California, CDPH CNA requirements, California CNA state exam, CNA training California, become a certified nursing assistant California"
         type="article"
