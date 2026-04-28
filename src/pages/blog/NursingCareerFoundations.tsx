@@ -11,10 +11,10 @@ const NursingCareerFoundations = () => {
   return (
     <>
       <SEO
-        title="Nursing Career Foundations: From CNA to Advanced Nursing Roles"
-        description="Explore how starting as a CNA opens doors to LVN, RN, and advanced nursing positions. Learn about career advancement, salary growth, and education pathways in nursing."
+        title="From CNA to RN: Nursing Career Pathways in California"
+        description="How CNAs grow into LVN, RN, and advanced nursing roles in California. Salary ranges, education timelines, and the smartest path to climb the nursing ladder."
         canonical="/blog/nursing-career-foundations"
-        keywords="CNA to RN career path, nursing career advancement, LVN training, RN salary California, nursing career ladder, healthcare career progression"
+        keywords="CNA to RN California, nursing career advancement, LVN training California, RN salary California, nursing career ladder, CNA career growth"
         type="article"
         author="Health Star Academy"
         publishedTime="2024-12-05"

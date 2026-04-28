@@ -22,7 +22,7 @@ const CdphApprovedCnaSacramento = () => {
   return (
     <>
       <SEO
-        title="CDPH-Approved CNA Training in Sacramento | Hybrid 6-Week Program"
+        title="CDPH-Approved CNA Training Serving Sacramento | 6 Weeks"
         description="CDPH-approved CNA training serving Sacramento students. Online theory + in-person clinicals in Stockton and Lodi. State-exam ready in 6 weeks."
         canonical="/blog/cdph-approved-cna-training-sacramento"
         keywords="CDPH approved CNA training Sacramento, CNA classes Sacramento, certified nursing assistant Sacramento, CNA program Sacramento CA, hybrid CNA Sacramento, CNA school Sacramento"

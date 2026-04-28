@@ -71,10 +71,10 @@ const ContactPage = () => {
   return (
     <>
       <SEO
-        title="Contact Us | Health Star Academy | CNA Training Stockton CA"
-        description="Contact Health Star Academy for CNA training inquiries. Call (209) 323-4169 or visit us at 5250 Claremont Avenue, Suite 127, Stockton, CA 95207. Get answers within 1 business hour!"
+        title="Contact Health Star Academy | CNA Training Stockton CA"
+        description="Reach Health Star Academy: call (209) 323-4169 or visit 5250 Claremont Ave, Suite 127, Stockton, CA 95207. Replies within 1 business hour."
         canonical="/contact"
-        keywords="contact Health Star Academy, CNA school phone number, nursing assistant training Stockton address, CNA program inquiries, healthcare school contact"
+        keywords="contact Health Star Academy, CNA school Stockton phone, CNA program inquiry, Stockton CNA address, nursing assistant school contact California"
         structuredData={buildBreadcrumbSchema([{ name: "Contact", path: "/contact" }])}
       />
       <main className="pt-28 md:pt-32">

@@ -53,10 +53,10 @@ const leadership = [
   return (
     <>
       <SEO
-        title="About Us | Health Star Academy | CNA School in Stockton, CA"
-        description="Learn about Health Star Academy's mission to train exceptional CNAs. Founded by experienced healthcare professionals with 60+ years combined experience. CDPH-approved program in Stockton, CA."
+        title="About Health Star Academy | CNA School in Stockton, CA"
+        description="Founded by healthcare leaders with 60+ years of combined experience. Health Star Academy delivers CDPH-approved CNA training built on compassion."
         canonical="/about"
-        keywords="about Health Star Academy, CNA school Stockton, nursing assistant training California, healthcare education, CNA instructors, nursing school mission"
+        keywords="about Health Star Academy, CNA school Stockton, CNA instructors California, nursing school mission, CDPH approved CNA program, healthcare education Stockton"
         structuredData={buildBreadcrumbSchema([{ name: "About Us", path: "/about" }])}
       />
       <main className="pt-28 md:pt-32">

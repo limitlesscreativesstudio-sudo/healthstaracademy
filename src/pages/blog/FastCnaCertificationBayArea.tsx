@@ -22,7 +22,7 @@ const FastCnaCertificationBayArea = () => {
   return (
     <>
       <SEO
-        title="Fast CNA Certification Program in the Bay Area | 6-Week Hybrid"
+        title="Fast CNA Certification in the Bay Area | 6-Week Hybrid"
         description="Get CNA certified fast in the Bay Area. CDPH-approved 6-week hybrid program with online theory and in-person clinicals at our Hayward partner facility."
         canonical="/blog/fast-cna-certification-bay-area"
         keywords="fast CNA certification Bay Area, accelerated CNA program Bay Area, 6 week CNA course Hayward, CNA training Bay Area, quick CNA certification California, fast track CNA Hayward"

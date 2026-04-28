@@ -8,8 +8,8 @@ const RefundPolicyPage = () => {
   return (
     <>
       <SEO
-        title="Refund Policy | Health Star Academy | CNA Training Stockton CA"
-        description="Health Star Academy's Refund Policy outlines tuition refund eligibility, withdrawal procedures, and fee details for our CNA training program."
+        title="Refund Policy | Health Star Academy CNA Program"
+        description="Tuition refund eligibility, the $175 application fee, $495 administrative fee, and withdrawal procedures for the Health Star Academy CNA program."
         canonical="/refund-policy"
         robots="noindex, follow"
         structuredData={buildBreadcrumbSchema([{ name: "Refund Policy", path: "/refund-policy" }])}

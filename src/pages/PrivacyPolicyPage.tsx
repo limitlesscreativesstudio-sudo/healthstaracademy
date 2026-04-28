@@ -8,8 +8,8 @@ const PrivacyPolicyPage = () => {
   return (
     <>
       <SEO
-        title="Privacy Policy | Health Star Academy | CNA Training Stockton CA"
-        description="Health Star Academy's Privacy Policy explains how we collect, use, and protect your personal information when you use our website and CNA training services."
+        title="Privacy Policy | Health Star Academy"
+        description="How Health Star Academy collects, uses, and protects your personal information across our website, applications, and CNA training services."
         canonical="/privacy-policy"
         robots="noindex, follow"
         structuredData={buildBreadcrumbSchema([{ name: "Privacy Policy", path: "/privacy-policy" }])}

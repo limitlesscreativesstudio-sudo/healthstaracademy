@@ -60,10 +60,10 @@ const CareersPage = () => {
   return (
     <>
       <SEO
-        title="Careers | Join Our Team | Health Star Academy"
-        description="Join Health Star Academy as a CNA Instructor. We're hiring experienced RNs and LVNs passionate about healthcare education. Competitive pay, flexible hours, and meaningful work."
+        title="Careers at Health Star Academy | RN & LVN Instructor Jobs"
+        description="Join Health Star Academy as a Classroom Instructor. Hiring experienced RNs and LVNs to train the next generation of CNAs. Competitive, meaningful work."
         canonical="/careers"
-        keywords="CNA instructor jobs, nursing instructor California, healthcare educator jobs, RN teaching jobs, LVN instructor positions, Health Star Academy careers"
+        keywords="CNA instructor jobs Stockton, RN teaching jobs California, LVN instructor positions, nursing educator Sacramento, Health Star Academy careers"
         structuredData={buildBreadcrumbSchema([{ name: "Careers", path: "/careers" }])}
       />
       <main className="pt-28 md:pt-32">
