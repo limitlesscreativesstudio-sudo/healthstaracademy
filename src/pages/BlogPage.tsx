@@ -10,13 +10,58 @@ import cnaStudentsConfident from "@/assets/cna-students-confident.jpg";
 import studentCareTraining from "@/assets/student-care-training.jpg";
 
 const BlogPage = () => {
-  const articles = [
+  const allArticles = [
+    {
+      slug: "how-to-become-cna-in-california",
+      title: "How to Become a CNA in California: Step-by-Step Certification Guide",
+      excerpt: "The complete 2026 guide to becoming a Certified Nursing Assistant in California — CDPH requirements, training hours, state exam, costs, and timeline.",
+      author: "Health Star Academy",
+      date: "April 28, 2026",
+      publishDate: new Date("2026-04-28"),
+      readTime: "11 min read",
+      category: "Career Guide",
+      image: studentsVitalsPractice,
+    },
+    {
+      slug: "fast-cna-certification-bay-area",
+      title: "Fast CNA Certification Program in the Bay Area: Certified in 6 Weeks",
+      excerpt: "Get CDPH-approved CNA certification fast. Hybrid 6-week program with online theory and Bay Area clinicals in Hayward.",
+      author: "Health Star Academy",
+      date: "May 5, 2026",
+      publishDate: new Date("2026-05-05"),
+      readTime: "9 min read",
+      category: "Bay Area",
+      image: cnaStudentsConfident,
+    },
+    {
+      slug: "cdph-approved-cna-training-sacramento",
+      title: "CDPH-Approved CNA Training in Sacramento: Your Hybrid Path",
+      excerpt: "CDPH-approved hybrid CNA training serving Sacramento students. Online theory plus clinicals in Stockton and Lodi.",
+      author: "Health Star Academy",
+      date: "May 12, 2026",
+      publishDate: new Date("2026-05-12"),
+      readTime: "9 min read",
+      category: "Sacramento",
+      image: instructorTeachingMannequin,
+    },
+    {
+      slug: "hybrid-cna-classes-near-stockton",
+      title: "Hybrid CNA Classes Near Stockton, CA: Study Online, Clinicals Local",
+      excerpt: "Stockton's home for hybrid CNA training. Online theory plus in-person clinicals at our local Stockton facility.",
+      author: "Health Star Academy",
+      date: "May 19, 2026",
+      publishDate: new Date("2026-05-19"),
+      readTime: "8 min read",
+      category: "Stockton",
+      image: studentCareTraining,
+    },
     {
       slug: "healthcare-career-path",
       title: "The Healthcare Career Path: Your Complete Guide to Starting a Rewarding Career in Healthcare",
       excerpt: "Discover the many opportunities available in healthcare and learn why becoming a Certified Nursing Assistant is the perfect first step toward a fulfilling career helping others.",
       author: "Health Star Academy",
       date: "December 10, 2024",
+      publishDate: new Date("2024-12-10"),
       readTime: "12 min read",
       category: "Career Guide",
       image: studentsVitalsPractice,
@@ -27,6 +72,7 @@ const BlogPage = () => {
       excerpt: "Learn what to look for in a CNA training program and discover how Health Star Academy's comprehensive curriculum prepares you for success in the healthcare industry.",
       author: "Health Star Academy",
       date: "December 8, 2024",
+      publishDate: new Date("2024-12-08"),
       readTime: "10 min read",
       category: "Training",
       image: instructorTeachingMannequin,
@@ -37,11 +83,18 @@ const BlogPage = () => {
       excerpt: "Explore how starting as a CNA can open doors to LVN, RN, and advanced nursing positions. Learn about career advancement opportunities in the nursing profession.",
       author: "Health Star Academy",
       date: "December 5, 2024",
+      publishDate: new Date("2024-12-05"),
       readTime: "11 min read",
       category: "Career Advancement",
       image: cnaStudentsConfident,
     },
   ];
+
+  // Only show articles whose scheduled publish date has arrived
+  const now = new Date();
+  const articles = allArticles
+    .filter((a) => a.publishDate <= now)
+    .sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime());
 
   return (
     <>
