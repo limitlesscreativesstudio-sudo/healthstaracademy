@@ -454,10 +454,10 @@ const PreQualificationPage = () => {
   return (
     <>
       <SEO
-        title="Pre-Qualification Questionnaire | CNA Program | Health Star Academy"
-        description="Complete our quick pre-qualification questionnaire to check your eligibility for Health Star Academy's CNA program. Find out in minutes if you're ready to enroll!"
+        title="Free CNA Pre-Qualification | 2-Minute Eligibility Check"
+        description="Free 2-minute pre-qualification for Health Star Academy's CDPH-approved CNA program. Check your eligibility and reserve a seat in the next cohort."
         canonical="/pre-qualification"
-        keywords="CNA pre-qualification, nursing assistant eligibility, CNA program requirements, Health Star Academy enrollment"
+        keywords="CNA pre-qualification California, CNA eligibility check, CNA program requirements Stockton, free CNA assessment, CNA enrollment Sacramento"
         structuredData={buildBreadcrumbSchema([{ name: "Pre-Qualification", path: "/pre-qualification" }])}
       />
       <main className="pt-28 md:pt-32">
