@@ -147,6 +147,30 @@ const ProgramsPage = () => {
     }
   };
 
+  const programFaqs = [
+    { question: "Is Health Star Academy's CNA program approved by the CDPH?", answer: "Yes. Our 160-hour CNA training program is fully approved by the California Department of Public Health (CDPH) and meets all state requirements to qualify graduates to sit for the California CNA state competency exam." },
+    { question: "How long does it take to complete the CNA program?", answer: "The program totals 160 hours (60 hours online theory + 100 hours in-person clinicals). Our Daytime track finishes in 6 weeks, and our Weekend track finishes in 8 weekends, giving working adults flexibility." },
+    { question: "What is a hybrid CNA program?", answer: "Hybrid means the 60 hours of theory are completed online through our learning portal, while the 100 hours of clinical training are completed in person at our partner facilities in Stockton, Lodi, or Hayward (Bay Area Skilled Nursing)." },
+    { question: "How much does the CNA program cost?", answer: "Total tuition is $2,499, which includes textbooks, workbook, uniform, BP cuff/stethoscope, lab supplies, and Chromebook use. A separate $175 application/enrollment fee is required to apply, and a $495 administrative fee applies in specific refund scenarios outlined in our refund policy." },
+    { question: "Where are the clinical sites located?", answer: "Clinical training is held at approved partner facilities in Stockton, Lodi, and Hayward (Bay Area Skilled Nursing). Students attend the location assigned to their cohort." },
+    { question: "When does the next cohort start?", answer: "We launch new Daytime and Weekend cohorts on a rolling schedule. Visit our Cohorts page for upcoming start dates and application deadlines (applications close 14 days before each cohort start date)." },
+    { question: "What are the requirements to enroll?", answer: "Applicants must be 16+, pass a LiveScan background check, provide a physical original government-issued ID, and either hold a high school diploma/GED or pass our entrance exam with 75% or higher." },
+    { question: "Will I be qualified to take the California CNA state exam?", answer: "Yes. Upon successful completion of the 160-hour program, you will receive a CDPH-approved certificate of completion that qualifies you to sit for the California CNA state competency exam." }
+  ];
+
+  const programFaqStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": programFaqs.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  };
+
   return (
     <>
       <SEO
@@ -154,7 +178,7 @@ const ProgramsPage = () => {
         description="160-hour CDPH-approved CNA program: 60 hrs online theory + 100 hrs clinicals in Stockton, Lodi & Hayward. Finish in 6 weeks or 8 weekends."
         canonical="/programs"
         keywords="CNA program Stockton, CDPH approved CNA training, 160 hour CNA course, hybrid CNA California, CNA curriculum, CNA clinical training Lodi, weekend CNA program"
-        structuredData={[courseStructuredData, buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }])]}
+        structuredData={[courseStructuredData, programFaqStructuredData, buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }])]}
       />
       <main className="pt-28 md:pt-32">
       {/* Hero Section - 16:9 */}
