@@ -26,7 +26,7 @@ const RefundPolicyPage = () => {
               <section>
                 <h2 className="font-heading text-xl font-bold text-charcoal mb-3">1. Tuition Overview</h2>
                 <p className="leading-relaxed">
-                  The total tuition for Health Star Academy's Certified Nursing Assistant (CNA) training program is <strong>$2,499</strong>. A separate, non-refundable <strong>$175 enrollment fee</strong> is required at the start of the application process to secure your seat.
+                  The total tuition for Health Star Academy's Certified Nursing Assistant (CNA) training program is <strong>$2,499</strong>. A separate, non-refundable <strong>$175 application fee</strong> is required at the start of the application process to secure your seat.
                 </p>
               </section>
 
@@ -46,9 +46,9 @@ const RefundPolicyPage = () => {
               </section>
 
               <section>
-                <h2 className="font-heading text-xl font-bold text-charcoal mb-3">3. Enrollment Fee</h2>
+                <h2 className="font-heading text-xl font-bold text-charcoal mb-3">3. Application Fee</h2>
                 <p className="leading-relaxed">
-                  The <strong>$175 enrollment fee</strong> is non-refundable and is required to initiate the application process. This fee covers administrative processing, application review, and seat reservation in your selected cohort.
+                  The <strong>$175 application fee</strong> is non-refundable and is required to initiate the application process. This fee covers application review, document processing, and seat reservation in your selected cohort. It is separate from the $495 administrative fee referenced in Section 4.
                 </p>
               </section>
 
@@ -85,14 +85,59 @@ const RefundPolicyPage = () => {
               </section>
 
               <section>
-                <h2 className="font-heading text-xl font-bold text-charcoal mb-3">7. Payment Plans</h2>
+                <h2 className="font-heading text-xl font-bold text-charcoal mb-3">7. Fee FAQ: $175 Application Fee vs. $495 Administrative Fee</h2>
+                <p className="leading-relaxed mb-4">
+                  These two fees are distinct and serve different purposes. Use this quick reference to understand the difference:
+                </p>
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-neutral-light rounded-xl p-5 border-l-4 border-purple">
+                    <h3 className="font-heading text-lg font-bold text-charcoal mb-2">$175 Application Fee</h3>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <li><strong>When:</strong> Paid upfront with your enrollment application</li>
+                      <li><strong>Purpose:</strong> Covers application review, document processing, and seat reservation</li>
+                      <li><strong>Refundable?</strong> No — non-refundable under all circumstances</li>
+                      <li><strong>Counts toward tuition?</strong> No — separate from the $2,499 tuition</li>
+                    </ul>
+                  </div>
+                  <div className="bg-neutral-light rounded-xl p-5 border-l-4 border-cyan">
+                    <h3 className="font-heading text-lg font-bold text-charcoal mb-2">$495 Administrative Fee</h3>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <li><strong>When:</strong> Only applies if you withdraw within 5 days of program start</li>
+                      <li><strong>Purpose:</strong> Covers administrative costs of processing a withdrawal and refund</li>
+                      <li><strong>Refundable?</strong> N/A — it is deducted from your tuition refund</li>
+                      <li><strong>Counts toward tuition?</strong> No — withheld from the $2,499 refund amount</li>
+                    </ul>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <p className="font-semibold text-charcoal">Q: Are the $175 application fee and $495 administrative fee the same thing?</p>
+                    <p className="text-gray-dark">A: No. They are two completely separate fees. The $175 application fee is paid when you apply. The $495 administrative fee is only charged if you enroll and then withdraw within 5 days of the program start date.</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-charcoal">Q: If I withdraw within 5 days, do I lose both fees?</p>
+                    <p className="text-gray-dark">A: Yes. The $175 application fee is non-refundable, and the $495 administrative fee is deducted from your tuition refund. Your maximum refund is $2,004 ($2,499 tuition − $495 administrative fee).</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-charcoal">Q: Will I ever pay the $495 administrative fee if I complete the program?</p>
+                    <p className="text-gray-dark">A: No. The $495 administrative fee only applies to withdrawals within the 5-day refund window. Students who complete the program never pay it.</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-charcoal">Q: Does the $175 application fee count toward my $2,499 tuition?</p>
+                    <p className="text-gray-dark">A: No. The $175 application fee is a separate, non-refundable charge in addition to the $2,499 tuition.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h2 className="font-heading text-xl font-bold text-charcoal mb-3">8. Payment Plans</h2>
                 <p className="leading-relaxed">
                   Students enrolled in a payment plan through Denefits who withdraw from the program remain responsible for any outstanding balance per the terms of their payment plan agreement. Please review your payment plan terms carefully before enrolling.
                 </p>
               </section>
 
               <section>
-                <h2 className="font-heading text-xl font-bold text-charcoal mb-3">8. Contact Us</h2>
+                <h2 className="font-heading text-xl font-bold text-charcoal mb-3">9. Contact Us</h2>
                 <p className="leading-relaxed">
                   If you have questions about our refund policy, please contact us:
                 </p>

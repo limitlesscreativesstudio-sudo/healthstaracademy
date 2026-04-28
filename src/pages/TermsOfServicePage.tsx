@@ -47,7 +47,7 @@ const TermsOfServicePage = () => {
                   <li>Be able to pass a criminal background check (LiveScan)</li>
                   <li>Provide proof of good health (physical examination clearance)</li>
                   <li>Have reliable transportation to clinical training sites</li>
-                  <li>Complete the enrollment application and pay the $175 non-refundable enrollment fee</li>
+                  <li>Complete the enrollment application and pay the $175 non-refundable application fee</li>
                   <li>Submit all required documents at least 10 calendar days prior to the cohort start date</li>
                 </ul>
                 <p className="leading-relaxed mt-3">
@@ -58,7 +58,7 @@ const TermsOfServicePage = () => {
               <section>
                 <h2 className="font-heading text-xl font-bold text-charcoal mb-3">4. Tuition and Payment</h2>
                 <ul className="list-disc pl-6 space-y-2">
-                  <li><strong>Enrollment Fee:</strong> $175 non-refundable enrollment fee due with application submission</li>
+                  <li><strong>Application Fee:</strong> $175 non-refundable application fee due with application submission</li>
                   <li><strong>Program Tuition:</strong> $2,499 due at least 14 days prior to the cohort start date</li>
                   <li><strong>Payment Methods:</strong> Full payment via Stripe (credit/debit card, Klarna, Afterpay, digital wallets), 5-week payment plan ($499.80/week via Stripe), or third-party financing through Denefits</li>
                   <li><strong>Included Materials:</strong> Tuition includes a Chromebook provided for use during the program (must be returned upon completion), scrubs, course materials, and access to Canvas LMS</li>
@@ -69,12 +69,12 @@ const TermsOfServicePage = () => {
                 <h2 className="font-heading text-xl font-bold text-charcoal mb-3">5. Refund Policy</h2>
                 <p className="leading-relaxed mb-3">Health Star Academy's refund policy is as follows:</p>
                 <ul className="list-disc pl-6 space-y-2">
-                  <li>The $175 enrollment fee is <strong>non-refundable</strong> under all circumstances</li>
-                  <li><strong>Before Program Start:</strong> Students who withdraw at least 7 business days before the cohort start date are eligible for a full tuition refund (excluding the enrollment fee)</li>
-                  <li><strong>Within First Week:</strong> Students who withdraw within the first week of instruction are eligible for a 75% tuition refund</li>
-                  <li><strong>After First Week:</strong> No tuition refund is available after the first week of instruction</li>
+                  <li>The $175 application fee is <strong>non-refundable</strong> under all circumstances</li>
+                  <li><strong>Within 5 Days of Program Start:</strong> Students who withdraw within 5 days of the program start date are eligible for a tuition refund minus a <strong>$495 administrative fee</strong> (maximum refund: $2,004)</li>
+                  <li><strong>After 5 Days:</strong> No tuition refund is available after the 5-day window</li>
                   <li>Refund requests must be submitted in writing to info@healthstaracademy.org</li>
                   <li>Refunds will be processed within 30 business days of approval</li>
+                  <li>See the <a href="/refund-policy" className="text-purple hover:underline">Refund Policy</a> page for full details and FAQ</li>
                 </ul>
               </section>
 
