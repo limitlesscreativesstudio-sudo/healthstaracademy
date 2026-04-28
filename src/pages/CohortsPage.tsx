@@ -199,10 +199,10 @@ const CohortsPage = () => {
   return (
     <>
       <SEO
-        title="Cohorts & Pricing | CNA Program Enrollment | Health Star Academy"
-        description="Choose your CNA training cohort and payment option. Total tuition $2,499 - pay in full or use our weekly payment plan. New classes start monthly at Health Star Academy."
+        title="CNA Cohorts & Pricing | Daytime & Weekend | Health Star"
+        description="Pick your CNA cohort: 6-week daytime or 8-weekend track. Tuition $2,499 — pay in full or finance with Denefits. Apply 14 days before start."
         canonical="/programs/cohorts"
-        keywords="CNA program cost, CNA tuition payment, nursing assistant training price, CNA class schedule, Health Star Academy enrollment, CNA payment plan"
+        keywords="CNA cohort schedule Stockton, CNA class start dates, weekend CNA program California, CNA tuition $2499, CNA payment plan, daytime CNA classes"
         structuredData={buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }, { name: "Cohorts & Pricing", path: "/programs/cohorts" }])}
       />
       <main className="pt-28 md:pt-32">

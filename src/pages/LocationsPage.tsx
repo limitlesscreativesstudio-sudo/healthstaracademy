@@ -166,10 +166,10 @@ const LocationsPage = () => {
   return (
     <div className="min-h-screen">
       <SEO 
-        title="Training Locations | Health Star Academy"
-        description="Find Health Star Academy CNA training locations throughout California's Central Valley and Bay Area. Clinical training sites in Stockton, Lodi, and Hayward."
+        title="CNA Clinical Locations: Stockton, Lodi & Hayward | Health Star"
+        description="CNA clinical training at partner skilled nursing facilities in Stockton, Lodi, and Bay Area Skilled Nursing (Hayward). Real patients, licensed nurse mentors."
         canonical="/locations"
-        keywords="CNA training locations, nursing assistant school California, Stockton CNA, Lodi CNA, Hayward CNA, Central Valley healthcare training"
+        keywords="CNA clinical sites Stockton, Lodi CNA training, Hayward CNA classes, Bay Area Skilled Nursing, Central Valley CNA, CNA training near me California"
         structuredData={[
           {
             "@context": "https://schema.org",

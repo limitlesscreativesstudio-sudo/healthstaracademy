@@ -11,10 +11,10 @@ const CNATrainingExcellence = () => {
   return (
     <>
       <SEO
-        title="CNA Training Excellence: What Makes a Quality Nursing Assistant Program"
-        description="Learn what to look for in a CNA training program. Discover California requirements, curriculum essentials, clinical training importance, and how Health Star Academy prepares you for success."
+        title="What Makes a Quality CNA Training Program in California"
+        description="How to evaluate a CNA program: CDPH approval, 160-hour curriculum, real clinical hours, and exam-pass support. Learn what separates great programs."
         canonical="/blog/cna-training-excellence"
-        keywords="quality CNA training, nursing assistant program California, CDPH approved CNA course, CNA curriculum, clinical training requirements, CNA exam preparation"
+        keywords="quality CNA training California, CDPH approved CNA course, CNA curriculum, CNA clinical hours, CNA exam preparation, choosing a CNA school"
         type="article"
         author="Health Star Academy"
         publishedTime="2024-12-08"

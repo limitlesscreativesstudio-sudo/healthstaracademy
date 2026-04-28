@@ -64,9 +64,9 @@ const AdmissionsPage = () => {
     <>
       <SEO
         title="CNA Admissions & Enrollment | Health Star Academy"
-        description="Apply to our CNA program. $2,499 tuition with payment plans. Requirements: 18+, valid ID, background check. New classes monthly."
+        description="Apply to our CDPH-approved CNA program. $2,499 tuition + $175 application fee. Denefits financing available, no credit check. New cohorts monthly."
         canonical="/programs/admissions"
-        keywords="CNA program enrollment, nursing assistant admission requirements, CNA tuition cost, payment plans CNA training, enroll CNA program California, Health Star Academy application"
+        keywords="CNA enrollment Stockton, CNA admission requirements California, CNA tuition cost, Denefits CNA financing, CNA payment plan, apply CNA program Sacramento"
         structuredData={[faqStructuredData, buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }, { name: "Admissions", path: "/programs/admissions" }])]}
       />
       <main className="pt-28 md:pt-32">

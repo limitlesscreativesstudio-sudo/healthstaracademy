@@ -25,10 +25,10 @@ const GalleryPage = () => {
   return (
     <>
       <SEO
-        title="Photo Gallery | CNA Students & Training | Health Star Academy"
-        description="View photos of Health Star Academy CNA students, clinical training, and patient care practice. See our diverse student community and hands-on learning environment in Stockton, CA."
+        title="Photo Gallery | CNA Students in Action | Health Star Academy"
+        description="See real photos of Health Star Academy CNA students in clinicals, skills labs, and patient care practice across our Stockton, Lodi, and Hayward sites."
         canonical="/gallery"
-        keywords="CNA student photos, nursing assistant training pictures, Health Star Academy gallery, clinical training images, CNA school Stockton photos"
+        keywords="CNA student photos Stockton, nursing assistant training pictures, clinical training photos, Health Star Academy gallery, CNA skills lab"
         structuredData={buildBreadcrumbSchema([{ name: "Gallery", path: "/gallery" }])}
       />
       <main className="pt-28 md:pt-32">

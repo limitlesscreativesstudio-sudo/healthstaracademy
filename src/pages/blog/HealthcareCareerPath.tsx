@@ -11,10 +11,10 @@ const HealthcareCareerPath = () => {
   return (
     <>
       <SEO
-        title="The Healthcare Career Path: Complete Guide to Starting a Healthcare Career"
-        description="Discover opportunities in healthcare and learn why becoming a Certified Nursing Assistant (CNA) is the perfect first step. Explore career paths, salary expectations, and training options in California."
+        title="Healthcare Career Path: Why Start as a CNA in California"
+        description="Why becoming a CNA is the smartest first step into healthcare. Career paths, California salary ranges, and training options to launch your nursing journey."
         canonical="/blog/healthcare-career-path"
-        keywords="healthcare career path, CNA career guide, nursing assistant jobs, healthcare career opportunities, how to become a CNA, healthcare industry growth"
+        keywords="healthcare career path California, CNA career guide, how to start healthcare career, CNA to RN pathway, nursing assistant jobs California, healthcare industry growth"
         type="article"
         author="Health Star Academy"
         publishedTime="2024-12-10"

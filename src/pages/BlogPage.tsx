@@ -99,10 +99,10 @@ const BlogPage = () => {
   return (
     <>
       <SEO
-        title="Blog | CNA Career Tips & Healthcare Insights | Health Star Academy"
-        description="Read expert articles on CNA careers, healthcare training tips, and nursing assistant certification guidance from Health Star Academy. Start your healthcare journey with valuable insights."
+        title="CNA Blog: Careers, Certification & Training Tips | Health Star"
+        description="Expert articles on CNA careers, California certification, exam prep, and hybrid training tips from Health Star Academy. Start your healthcare journey today."
         canonical="/blog"
-        keywords="CNA blog, nursing assistant career tips, healthcare career advice, CNA training articles, certified nursing assistant guide, healthcare education blog"
+        keywords="CNA blog California, nursing assistant career tips, CNA certification guide, CNA exam prep articles, healthcare career advice, CNA training blog"
         structuredData={buildBreadcrumbSchema([{ name: "Blog", path: "/blog" }])}
       />
       <main className="pt-28 md:pt-32">

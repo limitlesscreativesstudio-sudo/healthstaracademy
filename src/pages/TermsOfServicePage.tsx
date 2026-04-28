@@ -8,8 +8,8 @@ const TermsOfServicePage = () => {
   return (
     <>
       <SEO
-        title="Terms of Service | Health Star Academy | CNA Training Stockton CA"
-        description="Terms of Service for Health Star Academy's CDPH-approved CNA training program. Enrollment agreements, refund policy, and student responsibilities."
+        title="Terms of Service | Health Star Academy"
+        description="Terms of Service for Health Star Academy's CDPH-approved CNA program: enrollment agreements, refund policy, and student responsibilities."
         canonical="/terms-of-service"
         robots="noindex, follow"
         structuredData={buildBreadcrumbSchema([{ name: "Terms of Service", path: "/terms-of-service" }])}

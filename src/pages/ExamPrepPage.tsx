@@ -266,10 +266,10 @@ const ExamPrepPage = () => {
   return (
     <QuizProvider>
       <SEO
-        title="CNA State Exam Prep | Health Star Academy"
-        description="Practice with 175 CDPH-aligned questions for the California CNA certification exam. Study mode, timed exams, and category drills."
+        title="Free CNA State Exam Prep: 175 Practice Questions | Health Star"
+        description="Free California CNA state exam prep: 175 CDPH-aligned questions across 15 categories. Study mode, timed exams, and category drills — track your progress."
         canonical="/programs/exam-prep"
-        keywords="CNA practice exam, California CNA test prep, nursing assistant certification exam, CDPH CNA questions, CNA study guide, state exam practice, CNA certification test"
+        keywords="CNA practice exam California, CDPH CNA questions, California CNA test prep, free CNA practice test, CNA study guide, nursing assistant state exam"
         structuredData={buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }, { name: "Exam Prep", path: "/programs/exam-prep" }])}
       />
       <div className="container-custom section-padding">
