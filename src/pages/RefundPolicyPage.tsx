@@ -55,10 +55,10 @@ const RefundPolicyPage = () => {
               <section>
                 <h2 className="font-heading text-xl font-bold text-charcoal mb-3">4. Refund Eligibility</h2>
                 <p className="leading-relaxed">
-                  Students who withdraw from the program <strong>within 5 days of the program start date</strong> are entitled to a refund of tuition minus a <strong>$495 administrative/application fee</strong>. This means the maximum refund amount is <strong>$2,004</strong> ($2,499 − $495).
+                  Students who withdraw from the program <strong>within 5 days of the program start date</strong> are entitled to a refund of tuition minus a <strong>$495 administrative fee</strong>. This means the maximum refund amount is <strong>$2,004</strong> ($2,499 − $495).
                 </p>
                 <p className="leading-relaxed mt-3">
-                  The $175 enrollment fee is <strong>not included</strong> in the refund calculation and is non-refundable under all circumstances.
+                  Please note: the <strong>$495 administrative fee</strong> is separate from and distinct from the <strong>$175 application/enrollment fee</strong>. The $175 application fee is paid at the start of the application process, is non-refundable under all circumstances, and is not included in the refund calculation above.
                 </p>
               </section>
 

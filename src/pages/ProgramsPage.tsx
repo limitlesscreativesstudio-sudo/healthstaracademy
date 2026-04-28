@@ -105,7 +105,7 @@ const ProgramsPage = () => {
   const clinicalLocations = [
     { city: "Stockton", facility: "Meadowood Health and Rehabilitation Center", url: "https://maps.google.com/?q=Meadowood+Health+and+Rehabilitation+Center+Stockton+CA" },
     { city: "Lodi", facility: "Lodi Creek Post-Acute", url: "https://maps.google.com/?q=Lodi+Creek+Post-Acute+Lodi+CA" },
-    { city: "Hayward", facility: "Approved Skilled Nursing Facility", url: "https://maps.google.com/?q=Hayward+CA" },
+    { city: "Hayward", facility: "Bay Area Skilled Nursing Facility", url: "https://maps.google.com/?q=Hayward+CA" },
   ];
 
   const [isCourseworkOpen, setIsCourseworkOpen] = useState(false);
