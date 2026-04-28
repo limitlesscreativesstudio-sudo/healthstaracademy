@@ -23,6 +23,10 @@ import BlogPage from "./pages/BlogPage";
 import HealthcareCareerPath from "./pages/blog/HealthcareCareerPath";
 import CNATrainingExcellence from "./pages/blog/CNATrainingExcellence";
 import NursingCareerFoundations from "./pages/blog/NursingCareerFoundations";
+import HowToBecomeCnaCalifornia from "./pages/blog/HowToBecomeCnaCalifornia";
+import FastCnaCertificationBayArea from "./pages/blog/FastCnaCertificationBayArea";
+import CdphApprovedCnaSacramento from "./pages/blog/CdphApprovedCnaSacramento";
+import HybridCnaClassesStockton from "./pages/blog/HybridCnaClassesStockton";
 import ExamPrepPage from "./pages/ExamPrepPage";
 import CareersPage from "./pages/CareersPage";
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -63,6 +67,10 @@ const App = () => (
               <Route path="/blog/healthcare-career-path" element={<HealthcareCareerPath />} />
               <Route path="/blog/cna-training-excellence" element={<CNATrainingExcellence />} />
               <Route path="/blog/nursing-career-foundations" element={<NursingCareerFoundations />} />
+              <Route path="/blog/how-to-become-cna-in-california" element={<HowToBecomeCnaCalifornia />} />
+              <Route path="/blog/fast-cna-certification-bay-area" element={<FastCnaCertificationBayArea />} />
+              <Route path="/blog/cdph-approved-cna-training-sacramento" element={<CdphApprovedCnaSacramento />} />
+              <Route path="/blog/hybrid-cna-classes-near-stockton" element={<HybridCnaClassesStockton />} />
               <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
               <Route path="/refund-policy" element={<RefundPolicyPage />} />
               <Route path="/terms-of-service" element={<TermsOfServicePage />} />
