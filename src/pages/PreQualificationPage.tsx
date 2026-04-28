@@ -289,7 +289,7 @@ const PreQualificationPage = () => {
                   </li>
                   <li className="flex gap-3">
                     <span className="font-bold text-purple min-w-[24px]">2.</span>
-                    <span><strong>Pay Enrollment Fee:</strong> Submit your $175 non-refundable application fee using the payment link below</span>
+                    <span><strong>Pay Application Fee:</strong> Submit your $175 non-refundable application fee using the payment link below</span>
                   </li>
                   <li className="flex gap-3">
                     <span className="font-bold text-purple min-w-[24px]">3.</span>
@@ -315,7 +315,7 @@ const PreQualificationPage = () => {
                 </Button>
                 <Button variant="default" size="lg" asChild>
                   <a href="https://buy.stripe.com/dRm28k2j1fwx9Kv36X6sw02" target="_blank" rel="noopener noreferrer">
-                    💳 Pay Enrollment Fee ($175)
+                    💳 Pay Application Fee ($175)
                   </a>
                 </Button>
               </div>
