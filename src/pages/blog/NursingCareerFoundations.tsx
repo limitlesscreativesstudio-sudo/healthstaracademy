@@ -222,7 +222,7 @@ const NursingCareerFoundations = () => {
               We're proud to be accredited by the Better Business Bureau and committed to transparency in all operations. Our job placement support helps graduates connect with employment opportunities, beginning their journey up the nursing career ladder.
             </p>
             <p className="text-gray-dark mb-6 leading-relaxed">
-              New classes start monthly, and our admissions team is available Monday through Thursday from 9 AM to 5 PM, and Friday from 9 AM to 1 PM to answer questions and guide you through enrollment. Contact us at (209) 323-4169 or healthstaracademy01@gmail.com to begin your nursing career foundation today.
+              New classes start monthly, and our admissions team is available Monday through Thursday from 9 AM to 5 PM, and Friday from 9 AM to 1 PM to answer questions and guide you through enrollment. Contact us at (209) 323-4169 to begin your nursing career foundation today.
             </p>
 
             <div className="bg-neutral-light rounded-xl p-8 mt-10 text-center">

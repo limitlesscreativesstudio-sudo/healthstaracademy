@@ -209,7 +209,7 @@ const CNATrainingExcellence = () => {
               Visit facilities if possible, or request virtual tours. Speak with current students or recent graduates about their experiences. Quality programs welcome these inquiries because they're confident in what they offer.
             </p>
             <p className="text-gray-dark mb-6 leading-relaxed">
-              At Health Star Academy, we encourage prospective students to contact our admissions team with any questions. We're available Monday through Thursday from 9 AM to 5 PM, and Friday from 9 AM to 1 PM at (209) 323-4169 or healthstaracademy01@gmail.com.
+              At Health Star Academy, we encourage prospective students to contact our admissions team with any questions. We're available Monday through Thursday from 9 AM to 5 PM, and Friday from 9 AM to 1 PM at (209) 323-4169.
             </p>
 
             <div className="bg-neutral-light rounded-xl p-8 mt-10 text-center">
