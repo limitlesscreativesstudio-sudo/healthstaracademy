@@ -235,9 +235,9 @@ const AdmissionsPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8">
             {/* Cost */}
-            <div className="bg-neutral-light rounded-xl p-6 shadow-soft border-t-4 border-teal">
-              <div className="w-12 h-12 bg-teal/10 rounded-full flex items-center justify-center mb-4">
-                <DollarSign className="h-6 w-6 text-teal" />
+            <div className="bg-neutral-light rounded-xl p-6 shadow-soft border-t-4 border-purple">
+              <div className="w-12 h-12 bg-purple/10 rounded-full flex items-center justify-center mb-4">
+                <DollarSign className="h-6 w-6 text-purple" />
               </div>
               <h3 className="font-heading font-bold text-lg text-charcoal mb-2">
                 "Can I really afford this?"
@@ -249,7 +249,7 @@ const AdmissionsPage = () => {
               </p>
               <Link
                 to={ENROLLMENT_LINK}
-                className="inline-flex items-center text-teal font-semibold text-sm hover:underline"
+                className="inline-flex items-center text-purple font-semibold text-sm hover:underline"
               >
                 See payment options <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
@@ -276,9 +276,9 @@ const AdmissionsPage = () => {
             </div>
 
             {/* Confidence / Fear of Failure */}
-            <div className="bg-neutral-light rounded-xl p-6 shadow-soft border-t-4 border-coral">
-              <div className="w-12 h-12 bg-coral/10 rounded-full flex items-center justify-center mb-4">
-                <Heart className="h-6 w-6 text-coral" />
+            <div className="bg-neutral-light rounded-xl p-6 shadow-soft border-t-4 border-magenta">
+              <div className="w-12 h-12 bg-magenta/10 rounded-full flex items-center justify-center mb-4">
+                <Heart className="h-6 w-6 text-magenta" />
               </div>
               <h3 className="font-heading font-bold text-lg text-charcoal mb-2">
                 "What if I'm not good enough?"
@@ -290,7 +290,7 @@ const AdmissionsPage = () => {
               </p>
               <Link
                 to={ENROLLMENT_LINK}
-                className="inline-flex items-center text-coral font-semibold text-sm hover:underline"
+                className="inline-flex items-center text-magenta font-semibold text-sm hover:underline"
               >
                 Enroll with confidence <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
