@@ -10,13 +10,6 @@ export interface CohortSchedule {
 export const cohortSchedule: CohortSchedule[] = [
   // 2026 — Daytime (6 weeks each, 1 week gap)
   {
-    startDate: "May 4, 2026",
-    endDate: "June 11, 2026",
-    deadline: "Monday, April 20, 2026",
-    deadlineISO: "2026-04-20",
-    startISO: "2026-05-04",
-  },
-  {
     startDate: "June 22, 2026",
     endDate: "July 30, 2026",
     deadline: "Monday, June 8, 2026",
