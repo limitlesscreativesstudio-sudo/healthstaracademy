@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, Users, ClipboardCheck, CreditCard, GraduationCap, ArrowRight, ChevronDown, ChevronUp, HelpCircle, Download, Laptop, CheckCircle, BookOpen, CalendarCheck, UserCheck } from "lucide-react";
+import { FileText, Users, ClipboardCheck, CreditCard, GraduationCap, ArrowRight, ChevronDown, ChevronUp, HelpCircle, Download, Laptop, CheckCircle, BookOpen, CalendarCheck, UserCheck, DollarSign, Clock, Heart } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
@@ -215,6 +215,92 @@ const AdmissionsPage = () => {
             <Button variant="default" size="lg" asChild>
               <Link to="/programs/cohorts">
                 View Cohorts & Pricing <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Answers: Cost, Time, Confidence */}
+      <section className="section-padding bg-background">
+        <div className="container-custom">
+          <div className="text-center mb-10">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
+              Worried About Cost, Time, or Failing? Read This First.
+            </h2>
+            <p className="text-gray-dark max-w-2xl mx-auto">
+              Three honest answers to the questions that hold most students back.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8">
+            {/* Cost */}
+            <div className="bg-neutral-light rounded-xl p-6 shadow-soft border-t-4 border-purple">
+              <div className="w-12 h-12 bg-purple/10 rounded-full flex items-center justify-center mb-4">
+                <DollarSign className="h-6 w-6 text-purple" />
+              </div>
+              <h3 className="font-heading font-bold text-lg text-charcoal mb-2">
+                "Can I really afford this?"
+              </h3>
+              <p className="text-gray-dark text-sm leading-relaxed mb-4">
+                Total tuition is <strong>$2,499</strong> with a <strong>$175 application fee</strong> to start.
+                We accept Stripe (Klarna, Afterpay, Zip, Apple Pay), Self-Help Federal Credit Union, and{" "}
+                <strong>Denefits — no credit check, instant pre-approval</strong>. Most students start for under $200 down.
+              </p>
+              <Link
+                to={ENROLLMENT_LINK}
+                className="inline-flex items-center text-purple font-semibold text-sm hover:underline"
+              >
+                See payment options <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Time */}
+            <div className="bg-neutral-light rounded-xl p-6 shadow-soft border-t-4 border-cyan">
+              <div className="w-12 h-12 bg-cyan/10 rounded-full flex items-center justify-center mb-4">
+                <Clock className="h-6 w-6 text-cyan" />
+              </div>
+              <h3 className="font-heading font-bold text-lg text-charcoal mb-2">
+                "Do I have time for this?"
+              </h3>
+              <p className="text-gray-dark text-sm leading-relaxed mb-4">
+                Daytime track finishes in <strong>just 6 weeks</strong>. Theory is online so you study on your schedule;
+                clinicals are at approved sites in <strong>Stockton, Lodi, and Hayward</strong>. Working adults complete this program every cohort.
+              </p>
+              <Link
+                to={ENROLLMENT_LINK}
+                className="inline-flex items-center text-cyan font-semibold text-sm hover:underline"
+              >
+                Start your application <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Confidence / Fear of Failure */}
+            <div className="bg-neutral-light rounded-xl p-6 shadow-soft border-t-4 border-magenta">
+              <div className="w-12 h-12 bg-magenta/10 rounded-full flex items-center justify-center mb-4">
+                <Heart className="h-6 w-6 text-magenta" />
+              </div>
+              <h3 className="font-heading font-bold text-lg text-charcoal mb-2">
+                "What if I'm not good enough?"
+              </h3>
+              <p className="text-gray-dark text-sm leading-relaxed mb-4">
+                You don't need prior experience. Our CDPH-approved curriculum, hands-on clinical practice, and{" "}
+                <strong>state exam prep with 175+ practice questions</strong> are built so first-time students pass with confidence.
+                Instructors support you every step.
+              </p>
+              <Link
+                to={ENROLLMENT_LINK}
+                className="inline-flex items-center text-magenta font-semibold text-sm hover:underline"
+              >
+                Enroll with confidence <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Button variant="default" size="lg" asChild>
+              <Link to={ENROLLMENT_LINK}>
+                Enroll Now <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
           </div>
