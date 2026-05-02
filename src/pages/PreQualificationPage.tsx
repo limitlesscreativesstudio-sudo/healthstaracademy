@@ -40,11 +40,17 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 const COHORT_OPTIONS_QUERY = async () => {
+  // Only show cohorts whose 14-day enrollment deadline hasn't passed yet
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() + 14);
+  const cutoffISO = cutoff.toISOString().slice(0, 10);
+
   const { data, error } = await supabase
     .from("cohorts")
     .select("id, name, start_date, status, capacity, program_type")
     .eq("status", "open")
     .eq("program_type", "daytime")
+    .gte("start_date", cutoffISO)
     .order("start_date", { ascending: true });
   if (error) throw error;
   return data;
