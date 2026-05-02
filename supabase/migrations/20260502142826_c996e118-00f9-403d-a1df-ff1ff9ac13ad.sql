@@ -1,0 +1,1 @@
+UPDATE public.cohorts SET status = 'closed' WHERE start_date = '2026-05-04';
