@@ -256,9 +256,9 @@ const AdmissionsPage = () => {
             </div>
 
             {/* Time */}
-            <div className="bg-neutral-light rounded-xl p-6 shadow-soft border-t-4 border-purple">
-              <div className="w-12 h-12 bg-purple/10 rounded-full flex items-center justify-center mb-4">
-                <Clock className="h-6 w-6 text-purple" />
+            <div className="bg-neutral-light rounded-xl p-6 shadow-soft border-t-4 border-cyan">
+              <div className="w-12 h-12 bg-cyan/10 rounded-full flex items-center justify-center mb-4">
+                <Clock className="h-6 w-6 text-cyan" />
               </div>
               <h3 className="font-heading font-bold text-lg text-charcoal mb-2">
                 "Do I have time for this?"
@@ -269,7 +269,7 @@ const AdmissionsPage = () => {
               </p>
               <Link
                 to={ENROLLMENT_LINK}
-                className="inline-flex items-center text-purple font-semibold text-sm hover:underline"
+                className="inline-flex items-center text-cyan font-semibold text-sm hover:underline"
               >
                 Start your application <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
