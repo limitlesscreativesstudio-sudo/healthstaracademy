@@ -205,7 +205,7 @@ const CareersPage = () => {
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                     <Button variant="default" size="lg" asChild>
-                      <a href="mailto:careers@healthstaracademy.org?subject=CNA Instructor Application">
+                      <a href="mailto:healthstaracademy01@gmail.com?subject=CNA Instructor Application">
                         <Mail className="h-5 w-5 mr-2" />
                         Apply via Email
                       </a>
@@ -286,7 +286,7 @@ const CareersPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button variant="default" size="lg" asChild>
-                <a href="mailto:careers@healthstaracademy.org?subject=General Employment Inquiry">
+                <a href="mailto:healthstaracademy01@gmail.com?subject=General Employment Inquiry">
                   Send Your Resume <ArrowRight className="ml-2 h-5 w-5" />
                 </a>
               </Button>
