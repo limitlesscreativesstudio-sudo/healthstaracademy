@@ -1,149 +1,73 @@
+# Community Resources — Financial Assistance Hub
 
+A new dedicated page showcasing local/state organizations that help with tuition, childcare, food, and transportation costs — paired with soft entry points from the pages where prospects feel cost anxiety. **External resources only** (Denefits/payment plans stay on Admissions where they already live).
 
-# SEO Optimization Plan for Health Star Academy Website
+## Why a dedicated page (not another sticky banner)
 
-## Current State Assessment
+You already have a sticky `AnnouncementBar` (cohort countdown) plus the `TopInfoBar`. Adding a third stacked bar would push the hero below the fold and dilute the cohort-deadline urgency that's currently driving conversions. Financial assistance is reference content — people need phone numbers, eligibility info, and links they can copy. That's a page, not a one-liner.
 
-The website has a solid SEO foundation with `react-helmet-async` and a reusable `SEO.tsx` component. However, there are several areas that need improvement for optimal search engine visibility.
+Instead, we'll surface the page through **three contextual touchpoints** where the cost objection actually shows up.
 
-### What's Already Working
-- SEO component with dynamic meta tags (title, description, keywords, canonical, Open Graph, Twitter Cards)
-- Structured data (JSON-LD) in index.html for EducationalOrganization schema
-- Geo-location tags for local SEO
-- Blog articles with article-specific metadata (author, publishedTime)
+## What gets built
 
-### Issues Identified
+### 1. New page: `/community-resources`
 
-| Page | Issue |
-|------|-------|
-| **LocationsPage** | Missing `canonical` prop in SEO component |
-| **ExamPrepPage** | Missing `canonical` and `keywords` props |
-| **GalleryPage** | Already has full SEO implementation |
-| **NotFound** | No SEO component (users shouldn't index 404 pages, but needs noindex meta) |
-| **index.html** | Uses placeholder Lovable OG image instead of Health Star Academy branded image |
-| **All Pages** | Open Graph image is Lovable default, not academy-branded |
-| **SEO Component** | Missing robots meta tag support for noindex pages |
+Hero banner (16:9, brand-compliant) → intro paragraph → resource cards organized by category. No fluff, no AI imagery.
 
----
+**Categories & seeded organizations** (researched, California-focused, verified before launch):
 
-## Implementation Plan
+```text
+WORKFORCE & TUITION ASSISTANCE
+  - WIOA — San Joaquin County WorkNet (Stockton)
+  - WIOA — Alameda County / Eden Area Career Center (Hayward)
+  - WIOA — Sacramento Works
+  - California Department of Rehabilitation (DOR) — vocational training
+  - CalWORKs Welfare-to-Work — county social services
+  - Veterans Education Benefits (CalVet / GI Bill)
 
-### 1. Fix Missing SEO Props on Pages
+EDUCATION GRANTS & SCHOLARSHIPS
+  - Sutter Health / Kaiser community scholarship programs
+  - California Healthcare Workforce grants (HCAI)
+  - Local community foundation scholarships
 
-**LocationsPage.tsx**
-- Add missing `canonical="/locations"` prop
-
-**ExamPrepPage.tsx**  
-- Add `canonical="/programs/exam-prep"`
-- Add relevant keywords: `"CNA practice exam, California CNA test prep, nursing assistant certification exam, CDPH CNA questions, CNA study guide, state exam practice"`
-
-### 2. Enhance SEO Component with Additional Features
-
-**SEO.tsx Updates:**
-- Add `robots` prop for controlling indexing (noindex, nofollow support)
-- Add `viewport` meta tag (fallback)
-- Add structured data support for pages (Course, FAQPage schemas)
-
-### 3. Add SEO to NotFound Page
-
-**NotFound.tsx:**
-- Add SEO component with `robots="noindex, nofollow"` to prevent search engines from indexing 404 pages
-- Add proper title and description for user experience
-
-### 4. Update Open Graph Images
-
-Currently all pages use the default Lovable OG image: `https://lovable.dev/opengraph-image-p98pqg.png`
-
-**Recommendation:**
-- Upload a branded Health Star Academy OG image (1200x630px recommended)
-- Update default image in SEO.tsx component
-- Update OG image in index.html
-
-### 5. Add Page-Specific Structured Data
-
-**ProgramsPage.tsx:**
-Add Course schema for the CNA program:
-```json
-{
-  "@type": "Course",
-  "name": "Certified Nursing Assistant Training Program",
-  "description": "160-hour CDPH-approved hybrid CNA program",
-  "provider": { "@type": "Organization", "name": "Health Star Academy" },
-  "courseMode": "blended",
-  "duration": "P6W"
-}
+WRAPAROUND SUPPORT (so students can attend)
+  - Childcare: CA Alternative Payment Program (APP)
+  - Food: Second Harvest of San Joaquin, Sacramento Food Bank, Alameda County Community Food Bank
+  - Transportation: county transit vouchers, gas-card programs
 ```
 
-**AdmissionsPage.tsx:**
-Add FAQPage schema for the FAQ section to enable rich snippets in Google search results.
+Each card includes: organization name, what they help with, who qualifies (1-line eligibility hint), website link, and phone where public. Clear disclaimer that Health Star Academy is not affiliated with these organizations and eligibility/availability is determined by each provider.
 
-**LocationsPage.tsx:**
-Add LocalBusiness schema for each training location.
+### 2. Soft entry points (no new sticky banners)
 
-### 6. Improve Keywords Consistency
+- **Admissions page** — Add a fourth Quick Answers card next to Cost/Time/Confidence: *"Need help paying?"* with HandHeart icon, magenta accent, linking to `/community-resources`.
+- **Pre-Qualification page** — Reassurance line under the form intro: *"Worried about cost? Explore community resources for financial assistance →"*
+- **Global Footer** — Add "Community Resources" link under the existing resources/links column so it's reachable from every page.
+- **Header nav** — Add it as a sub-item under the existing "Admissions" or "Resources" dropdown (whichever fits the current nav structure).
 
-Ensure all pages have comprehensive, location-specific keywords that target:
-- Primary: CNA training + location (Stockton, Lodi, Hayward, California)
-- Secondary: CDPH approved, hybrid program, online CNA
-- Long-tail: "how to become a CNA in California", "CNA certification near me"
+### 3. SEO
 
----
+Standard `<SEO />` metadata + `JSON-LD` for the page. Target queries like *"WIOA CNA training Stockton"*, *"financial assistance for CNA school California"* — fits existing regional SEO strategy (Sacramento, Bay Area, Stockton, Hayward).
 
-## Technical Details
+## What this is NOT
 
-### Files to Modify
+- Not a sticky top banner — would conflict with cohort countdown
+- Not an endorsement — disclaimer makes affiliations clear
+- Not financial aid we administer — Denefits/payment plans remain on Admissions
+- No backend, no database, no edge function — purely static React page
 
-| File | Changes |
-|------|---------|
-| `src/components/SEO.tsx` | Add `robots` prop, enhance structured data support |
-| `src/pages/LocationsPage.tsx` | Add `canonical` prop |
-| `src/pages/ExamPrepPage.tsx` | Add `canonical` and `keywords` props |
-| `src/pages/NotFound.tsx` | Add SEO component with noindex directive |
-| `index.html` | Update OG image URL (once branded image is available) |
+## Technical notes
 
-### SEO.tsx Enhanced Props
+- New file: `src/pages/CommunityResourcesPage.tsx` using `HeroBanner`, `Card`, brand color tokens, `lucide-react` icons (HandHeart, Briefcase, GraduationCap, Utensils, Bus, Baby).
+- Route added to `src/App.tsx` (`/community-resources`), with `ScrollToTop` and lazy-load pattern matching other pages.
+- Resource data lives in a typed array at the top of the page file so you can edit copy without touching layout.
+- Header nav update: small edit to `src/components/Header.tsx`.
+- Footer update: small edit to `src/components/Footer.tsx`.
+- Admissions card: extends the existing Quick Answers grid in `src/pages/AdmissionsPage.tsx` (3-col → 4-col on desktop, 2-col on tablet).
+- Pre-Qualification reassurance line: small edit to `src/pages/PreQualificationPage.tsx`.
+- All links open in new tab with `rel="noopener noreferrer"`.
+- 16:9 hero banner image — I'll reuse an existing brand-compliant photo from your gallery (or you can swap later).
 
-```typescript
-interface SEOProps {
-  title: string;
-  description: string;
-  canonical?: string;
-  keywords?: string;
-  type?: "website" | "article";
-  image?: string;
-  author?: string;
-  publishedTime?: string;
-  robots?: string; // NEW: "index, follow" | "noindex, nofollow" | etc.
-  structuredData?: object; // NEW: Page-specific JSON-LD
-}
-```
+## Open question for after approval
 
-### Updated NotFound.tsx SEO
-
-```tsx
-<SEO
-  title="Page Not Found | Health Star Academy"
-  description="The page you're looking for doesn't exist. Return to Health Star Academy's homepage to explore our CDPH-approved CNA training programs."
-  robots="noindex, nofollow"
-/>
-```
-
----
-
-## Summary of All SEO Fixes
-
-1. **LocationsPage** - Add canonical URL
-2. **ExamPrepPage** - Add canonical URL and keywords
-3. **NotFound** - Add SEO component with noindex
-4. **SEO Component** - Add robots meta tag support
-5. **All pages** - Verify OG image strategy (user may need to provide branded image)
-
-### Additional Recommendations (Optional/Future)
-
-- Create and upload a branded Open Graph image (1200x630px)
-- Add sitemap.xml for better crawling
-- Add robots.txt configuration
-- Consider adding LocalBusiness schema for each clinical location
-- Add BreadcrumbList schema for navigation hierarchy
-- Implement FAQ schema on Admissions page for rich snippets
-
+Once you approve, I'll verify each organization's current website URL and public phone number before shipping (so no dead links on launch). If you'd rather provide your own shortlist of partners that you've already vetted, you can drop them in and I'll add them too.
