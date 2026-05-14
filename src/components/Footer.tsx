@@ -89,6 +89,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
                 { name: "Admissions", path: "/programs/admissions" },
                 { name: "Blog", path: "/blog" },
                 { name: "Gallery", path: "/gallery" },
+                { name: "Community Resources", path: "/community-resources" },
                 { name: "Contact", path: "/contact" },
               ].map((link) => (
                 <li key={link.path}>
