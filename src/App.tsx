@@ -29,6 +29,7 @@ import CdphApprovedCnaSacramento from "./pages/blog/CdphApprovedCnaSacramento";
 import HybridCnaClassesStockton from "./pages/blog/HybridCnaClassesStockton";
 import ExamPrepPage from "./pages/ExamPrepPage";
 import CareersPage from "./pages/CareersPage";
+import CommunityResourcesPage from "./pages/CommunityResourcesPage";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/careers" element={<CareersPage />} />
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/community-resources" element={<CommunityResourcesPage />} />
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/healthcare-career-path" element={<HealthcareCareerPath />} />
               <Route path="/blog/cna-training-excellence" element={<CNATrainingExcellence />} />

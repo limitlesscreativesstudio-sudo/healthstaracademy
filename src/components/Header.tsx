@@ -27,6 +27,7 @@ const navLinks = [
       { name: "Cohorts & Pricing", path: "/programs/cohorts" },
       { name: "Admissions", path: "/programs/admissions" },
       { name: "State Exam Prep", path: "/programs/exam-prep" },
+      { name: "Community Resources", path: "/community-resources" },
     ]
   },
   { name: "Blog", path: "/blog" },
