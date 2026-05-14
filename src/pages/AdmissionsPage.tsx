@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, Users, ClipboardCheck, CreditCard, GraduationCap, ArrowRight, ChevronDown, ChevronUp, HelpCircle, Download, Laptop, CheckCircle, BookOpen, CalendarCheck, UserCheck, DollarSign, Clock, Heart } from "lucide-react";
+import { FileText, Users, ClipboardCheck, CreditCard, GraduationCap, ArrowRight, ChevronDown, ChevronUp, HelpCircle, Download, Laptop, CheckCircle, BookOpen, CalendarCheck, UserCheck, DollarSign, Clock, Heart, HandHeart } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
@@ -233,7 +233,7 @@ const AdmissionsPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto mb-8">
             {/* Cost */}
             <div className="bg-neutral-light rounded-xl p-6 shadow-soft border-t-4 border-purple">
               <div className="w-12 h-12 bg-purple/10 rounded-full flex items-center justify-center mb-4">
@@ -293,6 +293,27 @@ const AdmissionsPage = () => {
                 className="inline-flex items-center text-magenta font-semibold text-sm hover:underline"
               >
                 Enroll with confidence <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Community Resources */}
+            <div className="bg-neutral-light rounded-xl p-6 shadow-soft border-t-4 border-cyan">
+              <div className="w-12 h-12 bg-cyan/10 rounded-full flex items-center justify-center mb-4">
+                <HandHeart className="h-6 w-6 text-cyan" />
+              </div>
+              <h3 className="font-heading font-bold text-lg text-charcoal mb-2">
+                "Need help paying?"
+              </h3>
+              <p className="text-gray-dark text-sm leading-relaxed mb-4">
+                You may qualify for outside support. We've gathered <strong>WIOA, CalWORKs, veterans benefits,
+                scholarships, childcare, and food assistance</strong> in one place — local programs that have helped
+                CNA students before.
+              </p>
+              <Link
+                to="/community-resources"
+                className="inline-flex items-center text-cyan font-semibold text-sm hover:underline"
+              >
+                Explore community resources <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </div>
           </div>

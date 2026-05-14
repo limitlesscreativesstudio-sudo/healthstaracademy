@@ -474,6 +474,16 @@ const PreQualificationPage = () => {
           subtitle="Find out if you're ready to enroll — takes less than 2 minutes!"
         />
 
+        {/* Soft financial-assistance link */}
+        <section className="bg-cyan/5 border-b border-cyan/20">
+          <div className="container-custom py-3 text-center text-sm text-gray-dark">
+            💜 Worried about cost?{" "}
+            <a href="/community-resources" className="text-cyan font-semibold hover:underline">
+              Explore community resources for financial assistance →
+            </a>
+          </div>
+        </section>
+
         {/* Progress indicator */}
         <section className="bg-background border-b border-border">
           <div className="container-custom py-6">
