@@ -32,6 +32,11 @@ import CareersPage from "./pages/CareersPage";
 import CommunityResourcesPage from "./pages/CommunityResourcesPage";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import PortalLogin from "./pages/portal/PortalLogin";
+import StudentDashboard from "./pages/portal/StudentDashboard";
+import CourseView from "./pages/portal/CourseView";
+import InstructorDashboard from "./pages/portal/teach/InstructorDashboard";
+import CourseEditor from "./pages/portal/teach/CourseEditor";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import RefundPolicyPage from "./pages/RefundPolicyPage";
@@ -78,6 +83,12 @@ const App = () => (
               <Route path="/terms-of-service" element={<TermsOfServicePage />} />
               <Route path="/admin" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/portal/login" element={<PortalLogin />} />
+              <Route path="/portal" element={<StudentDashboard />} />
+              <Route path="/portal/courses" element={<StudentDashboard />} />
+              <Route path="/portal/courses/:courseId/*" element={<CourseView />} />
+              <Route path="/portal/teach" element={<InstructorDashboard />} />
+              <Route path="/portal/teach/courses/:courseId" element={<CourseEditor />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
