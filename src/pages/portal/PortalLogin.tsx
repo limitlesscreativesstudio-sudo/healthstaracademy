@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { GraduationCap, Loader2 } from "lucide-react";
 
@@ -16,6 +17,7 @@ const PortalLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [isInstructor, setIsInstructor] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -43,12 +45,12 @@ const PortalLogin = () => {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/portal`,
-        data: { full_name: fullName },
+        data: { full_name: fullName, requested_role: isInstructor ? "instructor" : "student" },
       },
     });
     setLoading(false);
     if (error) toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
-    else toast({ title: "Check your email", description: "Confirm your email to finish signing up." });
+    else toast({ title: "Check your email", description: isInstructor ? "Confirm your email. An admin will review your instructor request." : "Confirm your email to finish signing up." });
   };
 
   const handleGoogle = async () => {
@@ -69,7 +71,7 @@ const PortalLogin = () => {
           <div className="mx-auto w-12 h-12 rounded-full bg-purple/10 flex items-center justify-center mb-2">
             <GraduationCap className="h-6 w-6 text-purple" />
           </div>
-          <CardTitle>Health Star Academy Portal</CardTitle>
+          <CardTitle>Health Star Academy LMS Portal</CardTitle>
           <CardDescription>Student & Instructor Learning Portal</CardDescription>
         </CardHeader>
         <CardContent>
@@ -92,6 +94,13 @@ const PortalLogin = () => {
                 <div><Label>Full Name</Label><Input required value={fullName} onChange={e => setFullName(e.target.value)} /></div>
                 <div><Label>Email</Label><Input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
                 <div><Label>Password</Label><Input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} /></div>
+                <div className="flex items-center justify-between rounded-md border p-3">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="instructor-toggle" className="cursor-pointer">I'm an instructor</Label>
+                    <p className="text-xs text-muted-foreground">Requires admin approval</p>
+                  </div>
+                  <Switch id="instructor-toggle" checked={isInstructor} onCheckedChange={setIsInstructor} />
+                </div>
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
                 </Button>

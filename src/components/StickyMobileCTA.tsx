@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { GraduationCap, LogIn } from "lucide-react";
 
 const ENROLLMENT_LINK = "/pre-qualification";
-const STUDENT_LOGIN_LINK = "/portal/login";
+const PORTAL_LOGIN_LINK = "/portal/login";
 
 const StickyMobileCTA = forwardRef<HTMLDivElement>((_, ref) => {
   return (
@@ -17,9 +17,9 @@ const StickyMobileCTA = forwardRef<HTMLDivElement>((_, ref) => {
           </Link>
         </Button>
         <Button variant="gray-outline" size="default" asChild className="flex-1">
-          <Link to={STUDENT_LOGIN_LINK}>
+          <Link to={PORTAL_LOGIN_LINK}>
             <LogIn className="h-4 w-4" />
-            Student Portal
+            LMS Portal
           </Link>
         </Button>
       </div>

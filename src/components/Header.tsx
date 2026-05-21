@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import logo from "@/assets/healthstar-logo.png";
 
 const ENROLLMENT_LINK = "/pre-qualification";
-const STUDENT_LOGIN_LINK = "/portal/login";
+const PORTAL_LOGIN_LINK = "/portal/login";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -150,8 +150,8 @@ const Header = () => {
               <Link to={ENROLLMENT_LINK}>Enroll Now</Link>
             </Button>
             <Button variant="gray-outline" asChild>
-              <a href={STUDENT_LOGIN_LINK} target="_blank" rel="noopener noreferrer">
-                Student Portal
+              <a href={PORTAL_LOGIN_LINK} target="_blank" rel="noopener noreferrer">
+                LMS Portal
               </a>
             </Button>
           </div>
@@ -226,8 +226,8 @@ const Header = () => {
                     <Link to={ENROLLMENT_LINK}>Enroll Now</Link>
                   </Button>
                   <Button variant="gray-outline" asChild className="w-full">
-                    <a href={STUDENT_LOGIN_LINK} target="_blank" rel="noopener noreferrer">
-                      Student Portal
+                    <a href={PORTAL_LOGIN_LINK} target="_blank" rel="noopener noreferrer">
+                      LMS Portal
                     </a>
                   </Button>
                 </div>
