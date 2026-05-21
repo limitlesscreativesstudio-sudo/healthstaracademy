@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import logo from "@/assets/healthstar-logo.png";
 
 const ENROLLMENT_LINK = "/pre-qualification";
-const STUDENT_LOGIN_LINK = "https://b2b0c970-8c97-44e8-bc56-a029b47c90c1.iad.login.instructure.com/?goto=https%3A%2F%2Fb2b0c970-8c97-44e8-bc56-a029b47c90c1.iad.login.instructure.com%2Fam%2Foauth2%2Falpha%2Fauthorize%3Fauthentication_provider%3D79175795-479a-4154-8335-43264065b1fb%26client_id%3Dcanvas-prod-iad%26nonce%3D403e5a2755edd4c40c665dc5c3271f93250931b9c28e46f8%26org_id%3Db2b0c970-8c97-44e8-bc56-a029b47c90c1%26redirect_uri%3Dhttps%3A%2F%2Fsso.canvaslms.com%2Flogin%2Foauth2%2Fcallback%26response_type%3Dcode%26scope%3Dopenid%2520profile%26state%3DeyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhYWNfaWQiOjcwMDAwMDAwMDAxNzUyLCJub25jZSI6IjQwM2U1YTI3NTVlZGQ0YzQwYzY2NWRjNWMzMjcxZjkzMjUwOTMxYjljMjhlNDZmOCIsImhvc3QiOiJjYW52YXMuaW5zdHJ1Y3R1cmUuY29tIiwidGFyZ2V0X2F1dGhfcHJvdmlkZXIiOiI3OTE3NTc5NS00NzlhLTQxNTQtODMzNS00MzI2NDA2NWIxZmIiLCJleHAiOjE3NjM4MjU0NTB9.C78jiivDj07cmp0NG17KRNBokyS84zBVicCx-tJvOtg%26target_domain%3Dhttps%3A%2F%2Fcanvas.instructure.com&realm=/alpha";
+const STUDENT_LOGIN_LINK = "/portal/login";
 
 const navLinks = [
   { name: "Home", path: "/" },
