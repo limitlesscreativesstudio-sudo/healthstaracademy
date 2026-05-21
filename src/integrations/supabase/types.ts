@@ -169,6 +169,24 @@ export type Database = {
           },
         ]
       }
+      instructor_invites: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
       lms_announcements: {
         Row: {
           body: string
