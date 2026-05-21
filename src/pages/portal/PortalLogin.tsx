@@ -94,6 +94,13 @@ const PortalLogin = () => {
                 <div><Label>Full Name</Label><Input required value={fullName} onChange={e => setFullName(e.target.value)} /></div>
                 <div><Label>Email</Label><Input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
                 <div><Label>Password</Label><Input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} /></div>
+                <div className="flex items-center justify-between rounded-md border p-3">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="instructor-toggle" className="cursor-pointer">I'm an instructor</Label>
+                    <p className="text-xs text-muted-foreground">Requires admin approval</p>
+                  </div>
+                  <Switch id="instructor-toggle" checked={isInstructor} onCheckedChange={setIsInstructor} />
+                </div>
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
                 </Button>
