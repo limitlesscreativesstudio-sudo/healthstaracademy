@@ -1,73 +1,115 @@
-# Community Resources — Financial Assistance Hub
 
-A new dedicated page showcasing local/state organizations that help with tuition, childcare, food, and transportation costs — paired with soft entry points from the pages where prospects feel cost anxiety. **External resources only** (Denefits/payment plans stay on Admissions where they already live).
+# HSA Learning Portal — Canvas-style LMS
 
-## Why a dedicated page (not another sticky banner)
+Since Canvas is currently inaccessible (hack), the priority is getting students learning again **fast**. I'll build a Canvas-*inspired* LMS — same mental model (Dashboard → Course → Modules → Items) but HSA-branded. We ship in 4 phases. Phase 1 is the foundation you need before anything else works.
 
-You already have a sticky `AnnouncementBar` (cohort countdown) plus the `TopInfoBar`. Adding a third stacked bar would push the hero below the fold and dilute the cohort-deadline urgency that's currently driving conversions. Financial assistance is reference content — people need phone numbers, eligibility info, and links they can copy. That's a page, not a one-liner.
+---
 
-Instead, we'll surface the page through **three contextual touchpoints** where the cost objection actually shows up.
+## Phase 1 — Foundation (this build)
 
-## What gets built
+**Goal: Agnes & Kimberly can create a course, upload modules, and students can log in and view content.**
 
-### 1. New page: `/community-resources`
+### Auth & roles
+- Email/password + Google login on a new `/portal/login` page
+- Replace the existing Instructure "Student Portal" button → points to `/portal`
+- 3 roles in `user_roles`: `student`, `instructor`, `admin`
+- Instructor accounts seeded for **Agnes Edebe** and **Kimberly Nelson** (you give me their emails, or I send invites)
 
-Hero banner (16:9, brand-compliant) → intro paragraph → resource cards organized by category. No fluff, no AI imagery.
+### Database (new tables)
+- `courses` — title, code, term, cover image, instructor_id, status (published/draft)
+- `enrollments` — student ↔ course, role, enrolled_at
+- `modules` — course_id, title, position, published
+- `module_items` — module_id, title, type (`page` | `file` | `link` | `assignment` | `quiz` | `discussion` | `video`), content/url, position, published
+- `pages` — rich-text course pages (HTML)
+- `files` — name, mime, size, storage_provider (`drive` | `cloud`), drive_file_id or storage_path, course_id
+- `announcements` — course_id, title, body, posted_at
+- All with RLS: students see only their enrolled courses; instructors manage their own courses; admins see all.
 
-**Categories & seeded organizations** (researched, California-focused, verified before launch):
+### Storage (hybrid as requested)
+- **Lovable Cloud storage**: small assets (images, PDFs <10 MB, page attachments) → instant, no extra setup
+- **Google Drive connector**: large files (PowerPoints, videos, case studies) → I'll wire the Google Drive connector so uploads stream to your Drive and the portal embeds them
+- Upload UI auto-routes by file size/type
 
-```text
-WORKFORCE & TUITION ASSISTANCE
-  - WIOA — San Joaquin County WorkNet (Stockton)
-  - WIOA — Alameda County / Eden Area Career Center (Hayward)
-  - WIOA — Sacramento Works
-  - California Department of Rehabilitation (DOR) — vocational training
-  - CalWORKs Welfare-to-Work — county social services
-  - Veterans Education Benefits (CalVet / GI Bill)
+### Student portal (`/portal`)
+- **Dashboard**: course cards (cover image, title, instructor, progress bar)
+- **Course view**: left sidebar (Home, Modules, Announcements, Grades, Files), main content area
+- **Modules page**: collapsible module list, items with type icons, click to view
+- **Content viewers**: PDF inline, PowerPoint via Google Drive embed, video player, rich-text pages, external links
 
-EDUCATION GRANTS & SCHOLARSHIPS
-  - Sutter Health / Kaiser community scholarship programs
-  - California Healthcare Workforce grants (HCAI)
-  - Local community foundation scholarships
+### Instructor portal (`/portal/teach`)
+- **My Courses** dashboard
+- **Course editor**: edit course details, manage enrollments (add students by email or CSV)
+- **Module builder**: drag-to-reorder modules and items, add/edit/delete, publish toggle
+- **Content creator**: rich-text page editor (TipTap), file uploader (auto-routes Drive vs Cloud), link adder
+- **Announcements**: post to course
+- **Roster**: see enrolled students
 
-WRAPAROUND SUPPORT (so students can attend)
-  - Childcare: CA Alternative Payment Program (APP)
-  - Food: Second Harvest of San Joaquin, Sacramento Food Bank, Alameda County Community Food Bank
-  - Transportation: county transit vouchers, gas-card programs
-```
+### Design
+Matches HSA brand (Purple #7C4DFF, Teal CTAs). Layout pattern mirrors Canvas (familiar for returning students) without copying its proprietary UI.
 
-Each card includes: organization name, what they help with, who qualifies (1-line eligibility hint), website link, and phone where public. Clear disclaimer that Health Star Academy is not affiliated with these organizations and eligibility/availability is determined by each provider.
+---
 
-### 2. Soft entry points (no new sticky banners)
+## Phase 2 — Assessments
+- Assignments (instructions, due date, file/text submission, grading)
+- Quizzes (multiple choice, true/false, short answer) — reusing your existing exam-prep engine
+- Gradebook (per-student, per-assignment, weighted categories, export to CSV)
+- Submissions inbox for instructors with inline grading + feedback
 
-- **Admissions page** — Add a fourth Quick Answers card next to Cost/Time/Confidence: *"Need help paying?"* with HandHeart icon, magenta accent, linking to `/community-resources`.
-- **Pre-Qualification page** — Reassurance line under the form intro: *"Worried about cost? Explore community resources for financial assistance →"*
-- **Global Footer** — Add "Community Resources" link under the existing resources/links column so it's reachable from every page.
-- **Header nav** — Add it as a sub-item under the existing "Admissions" or "Resources" dropdown (whichever fits the current nav structure).
+## Phase 3 — Interaction & schedule
+- Threaded discussions (course-level + per-topic)
+- Course calendar (auto-populated from due dates) + iCal feed
+- Notifications (email via Resend + in-app bell)
+- Direct messages student ↔ instructor
 
-### 3. SEO
+## Phase 4 — Polish & advanced
+- Rubrics + speed-grader
+- Attendance tracker (important for clinicals)
+- Certificates of completion (PDF generation)
+- Bulk import from old Canvas exports (.imscc) once you regain access
+- Mobile-optimized PWA
 
-Standard `<SEO />` metadata + `JSON-LD` for the page. Target queries like *"WIOA CNA training Stockton"*, *"financial assistance for CNA school California"* — fits existing regional SEO strategy (Sacramento, Bay Area, Stockton, Hayward).
-
-## What this is NOT
-
-- Not a sticky top banner — would conflict with cohort countdown
-- Not an endorsement — disclaimer makes affiliations clear
-- Not financial aid we administer — Denefits/payment plans remain on Admissions
-- No backend, no database, no edge function — purely static React page
+---
 
 ## Technical notes
 
-- New file: `src/pages/CommunityResourcesPage.tsx` using `HeroBanner`, `Card`, brand color tokens, `lucide-react` icons (HandHeart, Briefcase, GraduationCap, Utensils, Bus, Baby).
-- Route added to `src/App.tsx` (`/community-resources`), with `ScrollToTop` and lazy-load pattern matching other pages.
-- Resource data lives in a typed array at the top of the page file so you can edit copy without touching layout.
-- Header nav update: small edit to `src/components/Header.tsx`.
-- Footer update: small edit to `src/components/Footer.tsx`.
-- Admissions card: extends the existing Quick Answers grid in `src/pages/AdmissionsPage.tsx` (3-col → 4-col on desktop, 2-col on tablet).
-- Pre-Qualification reassurance line: small edit to `src/pages/PreQualificationPage.tsx`.
-- All links open in new tab with `rel="noopener noreferrer"`.
-- 16:9 hero banner image — I'll reuse an existing brand-compliant photo from your gallery (or you can swap later).
+```text
+src/pages/portal/
+  LoginPage.tsx            # student + instructor login
+  StudentDashboard.tsx     # course cards
+  CourseView.tsx           # shell with sidebar nav
+    ModulesTab.tsx
+    AnnouncementsTab.tsx
+    GradesTab.tsx
+    FilesTab.tsx
+  ItemViewer.tsx           # routes by item type
+  teach/
+    InstructorDashboard.tsx
+    CourseEditor.tsx
+    ModuleBuilder.tsx
+    PageEditor.tsx         # TipTap rich text
+    Roster.tsx
+src/components/portal/
+  CourseCard.tsx
+  ModuleList.tsx
+  FileUploader.tsx         # hybrid Drive/Cloud routing
+  PortalLayout.tsx
 
-## Open question for after approval
+supabase/functions/
+  drive-upload/            # signed upload to Google Drive
+  drive-stream/            # proxy/embed Drive files
+  enroll-student/          # invite by email
+```
 
-Once you approve, I'll verify each organization's current website URL and public phone number before shipping (so no dead links on launch). If you'd rather provide your own shortlist of partners that you've already vetted, you can drop them in and I'll add them too.
+- **Auth state**: standard `onAuthStateChange` pattern, redirect by role after login.
+- **Google Drive**: I'll connect the Google Drive connector when we get there — files land in a "HSA Courses" folder in your Drive, organized by course.
+- **Realtime**: announcements + new submissions use Supabase realtime so instructors see activity live.
+
+---
+
+## What I need from you to start Phase 1
+
+1. **Confirm this plan** (or tell me what to cut/change)
+2. **Instructor emails** for Agnes Edebe and Kimberly Nelson (so I can seed their accounts) — or say "I'll add them after login is built"
+3. **Do you want the existing Instructure "Student Portal" link removed immediately, or kept until Phase 1 launches?** (recommend: keep until ready)
+
+Once you approve, Phase 1 will take several iterations to fully ship. I'll build it in working chunks (auth → schema → student view → instructor view → file storage) so you can test each piece as we go.
