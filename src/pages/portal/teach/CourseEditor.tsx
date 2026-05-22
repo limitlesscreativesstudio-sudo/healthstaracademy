@@ -13,6 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2, Upload, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
+import AssignmentsTab from "./AssignmentsTab";
+import QuizzesTab from "./QuizzesTab";
+import GradebookTab from "./GradebookTab";
 
 const CourseEditor = () => {
   const { courseId } = useParams();
@@ -52,8 +55,11 @@ const CourseEditor = () => {
         </div>
 
         <Tabs defaultValue="modules">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="modules">Modules</TabsTrigger>
+            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
+            <TabsTrigger value="gradebook">Gradebook</TabsTrigger>
             <TabsTrigger value="roster">Roster</TabsTrigger>
             <TabsTrigger value="announcements">Announcements</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -61,6 +67,15 @@ const CourseEditor = () => {
 
           <TabsContent value="modules">
             <ModulesEditor courseId={courseId!} modules={modules} items={items} reload={load} />
+          </TabsContent>
+          <TabsContent value="assignments">
+            <AssignmentsTab courseId={courseId!} />
+          </TabsContent>
+          <TabsContent value="quizzes">
+            <QuizzesTab courseId={courseId!} />
+          </TabsContent>
+          <TabsContent value="gradebook">
+            <GradebookTab courseId={courseId!} />
           </TabsContent>
           <TabsContent value="roster">
             <RosterEditor courseId={courseId!} />
