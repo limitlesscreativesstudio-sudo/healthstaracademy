@@ -10,7 +10,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Upload, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Upload, Eye, EyeOff, ArrowLeft, Sparkles, ListPlus } from "lucide-react";
+
+const CDPH_MODULES = [
+  "1. Introduction to Nurse Assistant",
+  "2. Patient Rights",
+  "3. Communication / Interpersonal Skills",
+  "4. Prevention and Management of Catastrophe and Unusual Occurrences",
+  "5. Body Mechanics",
+  "6. Medical and Surgical Asepsis",
+  "7. Weights and Measures",
+  "8. Patient Care Skills",
+  "9. Patient Care Procedures",
+  "10. Vital Signs",
+  "11. Nutrition",
+  "12. Emergency Procedures",
+  "13. Long Term Care Resident",
+  "14. Rehabilitative Nursing",
+  "15. Observation and Charting",
+  "16. Death and Dying",
+  "17. Abuse",
+];
 import { toast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 import AssignmentsTab from "./AssignmentsTab";
