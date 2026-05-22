@@ -243,44 +243,72 @@ const AddItemDialog = ({ moduleId, courseId, position, reload }: any) => {
 const RosterEditor = ({ courseId }: { courseId: string }) => {
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const call = async (body: any) => {
+    const { data, error } = await supabase.functions.invoke("course-roster", { body });
+    if (error) throw new Error(error.message);
+    if (data?.error) throw new Error(data.error);
+    return data;
+  };
 
   const load = async () => {
-    const { data } = await supabase.from("enrollments").select("*").eq("course_id", courseId);
-    if (!data) return setEnrollments([]);
-    const userIds = data.map(e => e.user_id);
-    const { data: profs } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
-    setEnrollments(data.map(e => ({ ...e, full_name: profs?.find(p => p.user_id === e.user_id)?.full_name })));
+    try {
+      const data = await call({ action: "list", courseId });
+      setEnrollments(data.enrollments ?? []);
+    } catch (e: any) {
+      toast({ title: "Failed to load roster", description: e.message, variant: "destructive" });
+    }
   };
   useEffect(() => { load(); }, [courseId]);
 
   const addStudent = async () => {
     if (!email.trim()) return;
-    // Look up user by email via profiles isn't possible (no email column). Use lookup edge function pattern: try the existing student_lookup-style approach with admin RPC.
-    // Simpler approach: search profiles where full_name matches OR ask admin to look up via Cloud
-    toast({
-      title: "Manual enrollment needed",
-      description: "Student must have created a portal account first. Ask an admin to enroll them by user ID from the admin dashboard. (CSV/email invite coming in next phase.)",
-    });
-    setEmail("");
+    setBusy(true);
+    try {
+      await call({ action: "add", courseId, email });
+      toast({ title: "Student enrolled", description: email });
+      setEmail("");
+      load();
+    } catch (e: any) {
+      toast({ title: "Enrollment failed", description: e.message, variant: "destructive" });
+    } finally { setBusy(false); }
   };
 
   const removeEnrollment = async (id: string) => {
-    await supabase.from("enrollments").delete().eq("id", id);
-    load();
+    if (!confirm("Remove this student from the course?")) return;
+    try {
+      await call({ action: "remove", courseId, enrollmentId: id });
+      load();
+    } catch (e: any) {
+      toast({ title: "Remove failed", description: e.message, variant: "destructive" });
+    }
   };
 
   return (
     <Card className="mt-4"><CardContent className="pt-6 space-y-4">
       <div className="flex gap-2">
-        <Input placeholder="Student email…" value={email} onChange={e => setEmail(e.target.value)} />
-        <Button onClick={addStudent}>Enroll</Button>
+        <Input
+          type="email"
+          placeholder="student@example.com"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && addStudent()}
+        />
+        <Button onClick={addStudent} disabled={busy}>{busy ? "Enrolling…" : "Enroll"}</Button>
       </div>
+      <p className="text-xs text-muted-foreground">
+        Student must already have a Portal account at <span className="font-mono">/portal/login</span> before you can enroll them.
+      </p>
       <div className="text-sm">
-        {enrollments.length === 0 ? <p className="text-muted-foreground">No students enrolled.</p> : (
+        {enrollments.length === 0 ? <p className="text-muted-foreground">No students enrolled yet.</p> : (
           <ul className="space-y-1">
             {enrollments.map(e => (
               <li key={e.id} className="flex items-center justify-between p-2 bg-muted/30 rounded">
-                <span>{e.full_name ?? e.user_id}</span>
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{e.full_name ?? "(no name)"}</div>
+                  <div className="text-xs text-muted-foreground truncate">{e.email ?? e.user_id}</div>
+                </div>
                 <Button size="sm" variant="ghost" onClick={() => removeEnrollment(e.id)}><Trash2 className="h-4 w-4" /></Button>
               </li>
             ))}
