@@ -38,6 +38,10 @@ import StudentDashboard from "./pages/portal/StudentDashboard";
 import CourseView from "./pages/portal/CourseView";
 import InstructorDashboard from "./pages/portal/teach/InstructorDashboard";
 import CourseEditor from "./pages/portal/teach/CourseEditor";
+import QuizEditor from "./pages/portal/teach/QuizEditor";
+import SubmissionsInbox from "./pages/portal/teach/SubmissionsInbox";
+import AssignmentView from "./pages/portal/AssignmentView";
+import QuizView from "./pages/portal/QuizView";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import RefundPolicyPage from "./pages/RefundPolicyPage";
@@ -90,7 +94,11 @@ const App = () => (
               <Route path="/portal/courses" element={<StudentDashboard />} />
               <Route path="/portal/courses/:courseId/*" element={<CourseView />} />
               <Route path="/portal/teach" element={<InstructorDashboard />} />
+              <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<AssignmentView />} />
+              <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<QuizView />} />
               <Route path="/portal/teach/courses/:courseId" element={<CourseEditor />} />
+              <Route path="/portal/teach/courses/:courseId/quizzes/:quizId" element={<QuizEditor />} />
+              <Route path="/portal/teach/courses/:courseId/assignments/:assignmentId" element={<SubmissionsInbox />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
