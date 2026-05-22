@@ -16,17 +16,19 @@ const HeroBanner = forwardRef<HTMLElement, HeroBannerProps>(
         {/* 16:9 Aspect Ratio Container */}
         <div className="relative w-full aspect-[16/9] max-h-[60vh] overflow-hidden">
           <div className="absolute inset-0 flex">
-            {/* Image Side - Left Half */}
-            <div className="w-1/2 h-full relative">
+            {/* Image Side - full width on mobile, left half on md+ */}
+            <div className="w-full md:w-1/2 h-full relative">
               <img
                 src={imageSrc}
                 alt={imageAlt}
                 className="w-full h-full object-cover"
                 loading="eager"
               />
+              {/* Mobile-only gradient overlay so text is readable on top of image */}
+              <div className="md:hidden absolute inset-0 bg-gradient-to-br from-purple/85 via-purple/70 to-magenta/80" />
             </div>
-            {/* Gradient Side - Right Half */}
-            <div className="w-1/2 h-full bg-gradient-to-br from-purple via-purple/90 to-magenta flex items-center justify-center">
+            {/* Text Side - overlay on mobile, right half gradient on md+ */}
+            <div className="absolute inset-0 md:static md:w-1/2 md:h-full md:bg-gradient-to-br md:from-purple md:via-purple/90 md:to-magenta flex items-center justify-center">
               <div className="text-center px-6 md:px-12">
                 <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-3 md:mb-4 animate-fade-in-up uppercase tracking-wide leading-tight">
                   {title}
