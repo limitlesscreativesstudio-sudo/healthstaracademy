@@ -24,7 +24,7 @@ const PortalLayout = ({ children }: { children: React.ReactNode }) => {
           <GraduationCap className="h-6 w-6 text-cyan shrink-0" />
           <span className="hidden md:inline font-semibold text-sm">HSA Portal</span>
         </Link>
-        <nav className="flex-1 p-2 space-y-1">
+        <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
           <NavItem to="/portal" icon={Home} label="Dashboard" />
           <NavItem to="/portal/courses" icon={BookOpen} label="Courses" />
           {isInstructor && <NavItem to="/portal/teach" icon={Users} label="Teach" />}
@@ -36,7 +36,19 @@ const PortalLayout = ({ children }: { children: React.ReactNode }) => {
           </button>
         </div>
       </aside>
-      <main className="flex-1 overflow-x-hidden">{children}</main>
+      <main className="flex-1 flex flex-col overflow-x-hidden">
+        {/* Top header with user info & logout */}
+        <header className="h-14 bg-background border-b border-border flex items-center justify-between px-4 md:px-6 shrink-0">
+          <div className="text-sm text-muted-foreground truncate">
+            {user.email}
+          </div>
+          <Button size="sm" variant="ghost" onClick={logout} className="gap-1">
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Log out</span>
+          </Button>
+        </header>
+        <div className="flex-1 overflow-y-auto">{children}</div>
+      </main>
     </div>
   );
 };
