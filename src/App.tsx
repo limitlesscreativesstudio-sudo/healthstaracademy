@@ -49,6 +49,61 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AppShell = () => {
+  const { pathname } = useLocation();
+  const isApp = pathname.startsWith("/portal") || pathname.startsWith("/admin");
+  return (
+    <div className="min-h-screen flex flex-col">
+      {!isApp && <TopInfoBar />}
+      {!isApp && <Header />}
+      {!isApp && <AnnouncementBar />}
+      <div className="flex-grow">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/programs" element={<ProgramsPage />} />
+          <Route path="/programs/cohorts" element={<CohortsPage />} />
+          <Route path="/programs/admissions" element={<AdmissionsPage />} />
+          <Route path="/pre-qualification" element={<PreQualificationPage />} />
+          <Route path="/programs/exam-prep" element={<ExamPrepPage />} />
+          <Route path="/locations" element={<LocationsPage />} />
+          <Route path="/careers" element={<CareersPage />} />
+          <Route path="/gallery" element={<GalleryPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/community-resources" element={<CommunityResourcesPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/healthcare-career-path" element={<HealthcareCareerPath />} />
+          <Route path="/blog/cna-training-excellence" element={<CNATrainingExcellence />} />
+          <Route path="/blog/nursing-career-foundations" element={<NursingCareerFoundations />} />
+          <Route path="/blog/how-to-become-cna-in-california" element={<HowToBecomeCnaCalifornia />} />
+          <Route path="/blog/fast-cna-certification-bay-area" element={<FastCnaCertificationBayArea />} />
+          <Route path="/blog/cdph-approved-cna-training-sacramento" element={<CdphApprovedCnaSacramento />} />
+          <Route path="/blog/hybrid-cna-classes-near-stockton" element={<HybridCnaClassesStockton />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/refund-policy" element={<RefundPolicyPage />} />
+          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/portal/login" element={<PortalLogin />} />
+          <Route path="/portal/accept-invite" element={<AcceptInvite />} />
+          <Route path="/portal" element={<StudentDashboard />} />
+          <Route path="/portal/courses" element={<StudentDashboard />} />
+          <Route path="/portal/courses/:courseId/*" element={<CourseView />} />
+          <Route path="/portal/teach" element={<InstructorDashboard />} />
+          <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<AssignmentView />} />
+          <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<QuizView />} />
+          <Route path="/portal/teach/courses/:courseId" element={<CourseEditor />} />
+          <Route path="/portal/teach/courses/:courseId/quizzes/:quizId" element={<QuizEditor />} />
+          <Route path="/portal/teach/courses/:courseId/assignments/:assignmentId" element={<SubmissionsInbox />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+      {!isApp && <Footer />}
+      {!isApp && <StickyMobileCTA />}
+    </div>
+  );
+};
+
 const App = () => (
   <HelmetProvider>
   <QueryClientProvider client={queryClient}>
@@ -57,54 +112,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ScrollToTop />
-        <div className="min-h-screen flex flex-col">
-          <TopInfoBar />
-          <Header />
-          <AnnouncementBar />
-          <div className="flex-grow">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/programs" element={<ProgramsPage />} />
-              <Route path="/programs/cohorts" element={<CohortsPage />} />
-              <Route path="/programs/admissions" element={<AdmissionsPage />} />
-              <Route path="/pre-qualification" element={<PreQualificationPage />} />
-              <Route path="/programs/exam-prep" element={<ExamPrepPage />} />
-              <Route path="/locations" element={<LocationsPage />} />
-              <Route path="/careers" element={<CareersPage />} />
-              <Route path="/gallery" element={<GalleryPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/community-resources" element={<CommunityResourcesPage />} />
-              <Route path="/blog" element={<BlogPage />} />
-              <Route path="/blog/healthcare-career-path" element={<HealthcareCareerPath />} />
-              <Route path="/blog/cna-training-excellence" element={<CNATrainingExcellence />} />
-              <Route path="/blog/nursing-career-foundations" element={<NursingCareerFoundations />} />
-              <Route path="/blog/how-to-become-cna-in-california" element={<HowToBecomeCnaCalifornia />} />
-              <Route path="/blog/fast-cna-certification-bay-area" element={<FastCnaCertificationBayArea />} />
-              <Route path="/blog/cdph-approved-cna-training-sacramento" element={<CdphApprovedCnaSacramento />} />
-              <Route path="/blog/hybrid-cna-classes-near-stockton" element={<HybridCnaClassesStockton />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-              <Route path="/refund-policy" element={<RefundPolicyPage />} />
-              <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-              <Route path="/admin" element={<AdminLogin />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/portal/login" element={<PortalLogin />} />
-              <Route path="/portal/accept-invite" element={<AcceptInvite />} />
-              <Route path="/portal" element={<StudentDashboard />} />
-              <Route path="/portal/courses" element={<StudentDashboard />} />
-              <Route path="/portal/courses/:courseId/*" element={<CourseView />} />
-              <Route path="/portal/teach" element={<InstructorDashboard />} />
-              <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<AssignmentView />} />
-              <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<QuizView />} />
-              <Route path="/portal/teach/courses/:courseId" element={<CourseEditor />} />
-              <Route path="/portal/teach/courses/:courseId/quizzes/:quizId" element={<QuizEditor />} />
-              <Route path="/portal/teach/courses/:courseId/assignments/:assignmentId" element={<SubmissionsInbox />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-          <Footer />
-          <StickyMobileCTA />
-        </div>
+        <AppShell />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
