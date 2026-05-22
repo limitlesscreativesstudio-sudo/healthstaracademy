@@ -12,25 +12,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Upload, Eye, EyeOff, ArrowLeft, Sparkles, ListPlus } from "lucide-react";
 
-const CDPH_MODULES = [
-  "1. Introduction to Nurse Assistant",
-  "2. Patient Rights",
-  "3. Communication / Interpersonal Skills",
-  "4. Prevention and Management of Catastrophe and Unusual Occurrences",
-  "5. Body Mechanics",
-  "6. Medical and Surgical Asepsis",
-  "7. Weights and Measures",
-  "8. Patient Care Skills",
-  "9. Patient Care Procedures",
-  "10. Vital Signs",
-  "11. Nutrition",
-  "12. Emergency Procedures",
-  "13. Long Term Care Resident",
-  "14. Rehabilitative Nursing",
-  "15. Observation and Charting",
-  "16. Death and Dying",
-  "17. Abuse",
+const CDPH_MODULES: { title: string; pdf: string }[] = [
+  { title: "Module 1: Introduction to Nurse Assistant", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-1.pdf" },
+  { title: "Module 2: Patient/Resident Rights", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-2.pdf" },
+  { title: "Module 3: Communication/Interpersonal Skills", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-3.pdf" },
+  { title: "Module 4: Prevention and Management of Catastrophe and Unusual Occurrences", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-4.pdf" },
+  { title: "Module 5: Body Mechanics", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-5.pdf" },
+  { title: "Module 6: Medical and Surgical Asepsis", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-6.pdf" },
+  { title: "Module 7: Weights and Measures", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-7.pdf" },
+  { title: "Module 8: Patient Care Skills", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-8.pdf" },
+  { title: "Module 9: Patient Care Procedures", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-9.pdf" },
+  { title: "Module 10: Vital Signs", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-10.pdf" },
+  { title: "Module 11: Nutrition", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-11.pdf" },
+  { title: "Module 12: Emergency Procedures", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-12.pdf" },
+  { title: "Module 13: Long Term Care Patient/Resident", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-13.pdf" },
+  { title: "Module 14: Rehabilitative Nursing", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-14.pdf" },
+  { title: "Module 15: Observation and Charting", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-15.pdf" },
+  { title: "Module 16: Death and Dying", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-16.pdf" },
+  { title: "Module 17: Abuse", pdf: "" },
 ];
+const CDPH_INTRO_PDF = "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-introduction-and-list-of-modules.pdf";
 import { toast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 import AssignmentsTab from "./AssignmentsTab";
@@ -136,14 +137,33 @@ const ModulesEditor = ({ courseId, modules, items, reload }: any) => {
   };
 
   const seedCdph = async () => {
-    if (modules.length > 0 && !confirm("Course already has modules. Add the 17 CDPH modules anyway?")) return;
+    if (modules.length > 0 && !confirm("Course already has modules. Add the CoADN CDPH curriculum anyway?")) return;
     const base = modules.length;
-    const rows = CDPH_MODULES.map((title, i) => ({
-      course_id: courseId, title, position: base + i, published: false,
+    const rows = CDPH_MODULES.map((m, i) => ({
+      course_id: courseId, title: m.title, position: base + i, published: false,
     }));
-    const { error } = await supabase.from("modules").insert(rows);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Seeded 17 CDPH modules" }); reload(); }
+    const { data: inserted, error } = await supabase.from("modules").insert(rows).select();
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+
+    // Auto-attach each official PDF as the first item in its module
+    const items = (inserted ?? [])
+      .map((mod, idx) => {
+        const pdf = CDPH_MODULES[idx].pdf;
+        if (!pdf) return null;
+        return {
+          module_id: mod.id,
+          title: `${CDPH_MODULES[idx].title} — Official PDF`,
+          item_type: "link",
+          url: pdf,
+          position: 0,
+          published: true,
+        };
+      })
+      .filter(Boolean) as any[];
+    if (items.length) await supabase.from("module_items").insert(items);
+
+    toast({ title: `Seeded ${CDPH_MODULES.length} modules + ${items.length} PDFs` });
+    reload();
   };
 
   return (
@@ -155,7 +175,7 @@ const ModulesEditor = ({ courseId, modules, items, reload }: any) => {
         </div>
         {modules.length === 0 && (
           <Button variant="purple-outline" onClick={seedCdph} className="w-full">
-            <Sparkles className="h-4 w-4" /> Seed 17 CDPH Modules
+            <Sparkles className="h-4 w-4" /> Seed CDPH Curriculum (17 modules + official PDFs)
           </Button>
         )}
       </CardContent></Card>
