@@ -1,7 +1,7 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, LogOut, BookOpen, Users, Home } from "lucide-react";
+import { GraduationCap, LogOut, BookOpen, Users, LayoutDashboard, Calendar, Inbox, History, HelpCircle, User } from "lucide-react";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 
 const PortalLayout = ({ children }: { children: React.ReactNode }) => {
@@ -18,46 +18,59 @@ const PortalLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-muted flex">
-      {/* Global sidebar */}
-      <aside className="w-16 md:w-56 bg-charcoal text-primary-foreground flex flex-col">
-        <Link to="/portal" className="p-4 flex items-center gap-2 border-b border-white/10">
-          <GraduationCap className="h-6 w-6 text-cyan shrink-0" />
-          <span className="hidden md:inline font-semibold text-sm">HSA Portal</span>
+      {/* Canvas-style icon rail */}
+      <aside className="w-[72px] bg-charcoal text-primary-foreground flex flex-col items-center py-3 shrink-0">
+        <Link to="/portal" className="mb-4 p-2 rounded hover:bg-white/10">
+          <GraduationCap className="h-7 w-7 text-cyan" />
         </Link>
-        <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
-          <NavItem to="/portal" icon={Home} label="Dashboard" />
-          <NavItem to="/portal/courses" icon={BookOpen} label="Courses" />
-          {isInstructor && <NavItem to="/portal/teach" icon={Users} label="Teach" />}
+        <nav className="flex-1 flex flex-col items-center gap-1 w-full px-2">
+          <RailItem to="/portal/account" icon={User} label="Account" />
+          <RailItem to="/portal" icon={LayoutDashboard} label="Dashboard" exact />
+          <RailItem to="/portal/courses" icon={BookOpen} label="Courses" />
+          <RailItem to="/portal/calendar" icon={Calendar} label="Calendar" />
+          <RailItem to="/portal/inbox" icon={Inbox} label="Inbox" />
+          <RailItem to="/portal/history" icon={History} label="History" />
+          {isInstructor && <RailItem to="/portal/teach" icon={Users} label="Teach" />}
         </nav>
-        <div className="p-2 border-t border-white/10">
-          <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-sm">
-            <LogOut className="h-4 w-4 shrink-0" />
-            <span className="hidden md:inline">Sign Out</span>
+        <div className="flex flex-col items-center gap-1 w-full px-2">
+          <button onClick={logout} className="group relative w-full flex flex-col items-center gap-0.5 py-2 rounded hover:bg-white/10" title="Sign Out">
+            <LogOut className="h-5 w-5" />
+            <span className="text-[10px] leading-tight">Logout</span>
           </button>
+          <Link to="/portal/help" className="group relative w-full flex flex-col items-center gap-0.5 py-2 rounded hover:bg-white/10">
+            <HelpCircle className="h-5 w-5" />
+            <span className="text-[10px] leading-tight">Help</span>
+          </Link>
         </div>
       </aside>
-      <main className="flex-1 flex flex-col overflow-x-hidden">
-        {/* Top header with user info & logout */}
-        <header className="h-14 bg-background border-b border-border flex items-center justify-between px-4 md:px-6 shrink-0">
-          <div className="text-sm text-muted-foreground truncate">
-            {user.email}
-          </div>
+
+      <main className="flex-1 flex flex-col overflow-x-hidden min-w-0">
+        <header className="h-12 bg-background border-b border-border flex items-center justify-between px-4 md:px-6 shrink-0">
+          <div className="text-sm text-muted-foreground truncate">{user.email}</div>
           <Button size="sm" variant="ghost" onClick={logout} className="gap-1">
             <LogOut className="h-4 w-4" />
             <span className="hidden sm:inline">Log out</span>
           </Button>
         </header>
-        <div className="flex-1 overflow-y-auto">{children}</div>
+        <div className="flex-1 overflow-y-auto bg-background">{children}</div>
       </main>
     </div>
   );
 };
 
-const NavItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: string }) => (
-  <Link to={to} className="flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 text-sm">
-    <Icon className="h-4 w-4 shrink-0" />
-    <span className="hidden md:inline">{label}</span>
-  </Link>
-);
+const RailItem = ({ to, icon: Icon, label, exact }: { to: string; icon: any; label: string; exact?: boolean }) => {
+  const location = useLocation();
+  const active = exact ? location.pathname === to : location.pathname.startsWith(to);
+  return (
+    <Link
+      to={to}
+      className={`w-full flex flex-col items-center gap-0.5 py-2 rounded text-center ${active ? "bg-white/15 text-cyan" : "hover:bg-white/10"}`}
+      title={label}
+    >
+      <Icon className="h-5 w-5" />
+      <span className="text-[10px] leading-tight">{label}</span>
+    </Link>
+  );
+};
 
 export default PortalLayout;
