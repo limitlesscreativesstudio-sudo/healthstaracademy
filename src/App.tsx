@@ -33,6 +33,7 @@ import CommunityResourcesPage from "./pages/CommunityResourcesPage";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import PortalLogin from "./pages/portal/PortalLogin";
+import AcceptInvite from "./pages/portal/AcceptInvite";
 import StudentDashboard from "./pages/portal/StudentDashboard";
 import CourseView from "./pages/portal/CourseView";
 import InstructorDashboard from "./pages/portal/teach/InstructorDashboard";
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="/admin" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/portal/login" element={<PortalLogin />} />
+              <Route path="/portal/accept-invite" element={<AcceptInvite />} />
               <Route path="/portal" element={<StudentDashboard />} />
               <Route path="/portal/courses" element={<StudentDashboard />} />
               <Route path="/portal/courses/:courseId/*" element={<CourseView />} />

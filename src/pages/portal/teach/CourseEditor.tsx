@@ -242,6 +242,7 @@ const AddItemDialog = ({ moduleId, courseId, position, reload }: any) => {
 
 const RosterEditor = ({ courseId }: { courseId: string }) => {
   const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [invites, setInvites] = useState<any[]>([]);
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -256,22 +257,26 @@ const RosterEditor = ({ courseId }: { courseId: string }) => {
     try {
       const data = await call({ action: "list", courseId });
       setEnrollments(data.enrollments ?? []);
+      setInvites(data.invites ?? []);
     } catch (e: any) {
       toast({ title: "Failed to load roster", description: e.message, variant: "destructive" });
     }
   };
   useEffect(() => { load(); }, [courseId]);
 
-  const addStudent = async () => {
+  const inviteStudent = async () => {
     if (!email.trim()) return;
     setBusy(true);
     try {
-      await call({ action: "add", courseId, email });
-      toast({ title: "Student enrolled", description: email });
+      const res = await call({ action: "invite", courseId, email, origin: window.location.origin });
+      toast({
+        title: res.enrolled ? "Student enrolled" : "Invitation sent",
+        description: res.message ?? `${email} will receive an email to accept and set a password.`,
+      });
       setEmail("");
       load();
     } catch (e: any) {
-      toast({ title: "Enrollment failed", description: e.message, variant: "destructive" });
+      toast({ title: "Invite failed", description: e.message, variant: "destructive" });
     } finally { setBusy(false); }
   };
 
@@ -285,26 +290,59 @@ const RosterEditor = ({ courseId }: { courseId: string }) => {
     }
   };
 
+  const revokeInvite = async (id: string) => {
+    if (!confirm("Revoke this pending invitation?")) return;
+    try {
+      await call({ action: "revoke", courseId, inviteId: id });
+      load();
+    } catch (e: any) {
+      toast({ title: "Revoke failed", description: e.message, variant: "destructive" });
+    }
+  };
+
   return (
-    <Card className="mt-4"><CardContent className="pt-6 space-y-4">
-      <div className="flex gap-2">
-        <Input
-          type="email"
-          placeholder="student@example.com"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && addStudent()}
-        />
-        <Button onClick={addStudent} disabled={busy}>{busy ? "Enrolling…" : "Enroll"}</Button>
+    <Card className="mt-4"><CardContent className="pt-6 space-y-6">
+      <div>
+        <div className="flex gap-2">
+          <Input
+            type="email"
+            placeholder="student@example.com"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && inviteStudent()}
+          />
+          <Button onClick={inviteStudent} disabled={busy}>{busy ? "Sending…" : "Send Invite"}</Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          The student receives an email with a secure link to accept and create their password. Invites expire after 14 days.
+        </p>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Student must already have a Portal account at <span className="font-mono">/portal/login</span> before you can enroll them.
-      </p>
-      <div className="text-sm">
-        {enrollments.length === 0 ? <p className="text-muted-foreground">No students enrolled yet.</p> : (
+
+      {invites.length > 0 && (
+        <div>
+          <h4 className="text-sm font-semibold mb-2 text-muted-foreground">Pending invitations ({invites.length})</h4>
+          <ul className="space-y-1">
+            {invites.map(i => (
+              <li key={i.id} className="flex items-center justify-between p-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded text-sm">
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{i.email}</div>
+                  <div className="text-xs text-muted-foreground">
+                    Sent {new Date(i.created_at).toLocaleDateString()} · expires {new Date(i.expires_at).toLocaleDateString()}
+                  </div>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => revokeInvite(i.id)}><Trash2 className="h-4 w-4" /></Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div>
+        <h4 className="text-sm font-semibold mb-2 text-muted-foreground">Enrolled students ({enrollments.length})</h4>
+        {enrollments.length === 0 ? <p className="text-sm text-muted-foreground">No students enrolled yet.</p> : (
           <ul className="space-y-1">
             {enrollments.map(e => (
-              <li key={e.id} className="flex items-center justify-between p-2 bg-muted/30 rounded">
+              <li key={e.id} className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm">
                 <div className="min-w-0">
                   <div className="font-medium truncate">{e.full_name ?? "(no name)"}</div>
                   <div className="text-xs text-muted-foreground truncate">{e.email ?? e.user_id}</div>
