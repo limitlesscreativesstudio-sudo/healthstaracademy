@@ -5,7 +5,7 @@ import PortalLayout from "@/components/portal/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Megaphone, BookOpen, FileText, Home, ChevronRight, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap, BarChart3, MessageSquare, Users as UsersIcon, FolderOpen, ScrollText, Target, Grid3x3, Settings as SettingsIcon } from "lucide-react";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
-import { Button } from "@/components/ui/button";
+
 import StudentGrades from "./StudentGrades";
 
 type Course = { id: string; title: string; code: string | null; description: string | null; instructor_id: string };
