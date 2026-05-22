@@ -10,7 +10,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Upload, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Upload, Eye, EyeOff, ArrowLeft, Sparkles, ListPlus } from "lucide-react";
+
+const CDPH_MODULES = [
+  "1. Introduction to Nurse Assistant",
+  "2. Patient Rights",
+  "3. Communication / Interpersonal Skills",
+  "4. Prevention and Management of Catastrophe and Unusual Occurrences",
+  "5. Body Mechanics",
+  "6. Medical and Surgical Asepsis",
+  "7. Weights and Measures",
+  "8. Patient Care Skills",
+  "9. Patient Care Procedures",
+  "10. Vital Signs",
+  "11. Nutrition",
+  "12. Emergency Procedures",
+  "13. Long Term Care Resident",
+  "14. Rehabilitative Nursing",
+  "15. Observation and Charting",
+  "16. Death and Dying",
+  "17. Abuse",
+];
 import { toast } from "@/hooks/use-toast";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 import AssignmentsTab from "./AssignmentsTab";
@@ -115,11 +135,29 @@ const ModulesEditor = ({ courseId, modules, items, reload }: any) => {
     reload();
   };
 
+  const seedCdph = async () => {
+    if (modules.length > 0 && !confirm("Course already has modules. Add the 17 CDPH modules anyway?")) return;
+    const base = modules.length;
+    const rows = CDPH_MODULES.map((title, i) => ({
+      course_id: courseId, title, position: base + i, published: false,
+    }));
+    const { error } = await supabase.from("modules").insert(rows);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: "Seeded 17 CDPH modules" }); reload(); }
+  };
+
   return (
     <div className="space-y-4 mt-4">
-      <Card><CardContent className="pt-6 flex gap-2">
-        <Input placeholder="New module title…" value={newModule} onChange={e => setNewModule(e.target.value)} onKeyDown={e => e.key === "Enter" && addModule()} />
-        <Button onClick={addModule}><Plus className="h-4 w-4" /> Add</Button>
+      <Card><CardContent className="pt-6 space-y-3">
+        <div className="flex gap-2">
+          <Input placeholder="New module title…" value={newModule} onChange={e => setNewModule(e.target.value)} onKeyDown={e => e.key === "Enter" && addModule()} />
+          <Button onClick={addModule}><Plus className="h-4 w-4" /> Add</Button>
+        </div>
+        {modules.length === 0 && (
+          <Button variant="purple-outline" onClick={seedCdph} className="w-full">
+            <Sparkles className="h-4 w-4" /> Seed 17 CDPH Modules
+          </Button>
+        )}
       </CardContent></Card>
 
       {modules.map((m: any) => (
@@ -137,7 +175,7 @@ const ModulesEditor = ({ courseId, modules, items, reload }: any) => {
             {items.filter((i: any) => i.module_id === m.id).map((i: any) => (
               <div key={i.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded text-sm">
                 <span className="text-xs px-2 py-0.5 bg-background rounded">{i.item_type}</span>
-                <span className="flex-1">{i.title}</span>
+                <span className="flex-1 truncate">{i.title}</span>
                 <Button size="sm" variant="ghost" onClick={async () => {
                   await supabase.from("module_items").update({ published: !i.published }).eq("id", i.id);
                   reload();
@@ -147,11 +185,76 @@ const ModulesEditor = ({ courseId, modules, items, reload }: any) => {
                 }}><Trash2 className="h-4 w-4" /></Button>
               </div>
             ))}
-            <AddItemDialog moduleId={m.id} courseId={courseId} position={items.filter((i: any) => i.module_id === m.id).length} reload={reload} />
+            <div className="flex gap-2">
+              <AddItemDialog moduleId={m.id} courseId={courseId} position={items.filter((i: any) => i.module_id === m.id).length} reload={reload} />
+              <BulkLinksDialog moduleId={m.id} startPosition={items.filter((i: any) => i.module_id === m.id).length} reload={reload} />
+            </div>
           </CardContent>
         </Card>
       ))}
     </div>
+  );
+};
+
+const BulkLinksDialog = ({ moduleId, startPosition, reload }: { moduleId: string; startPosition: number; reload: () => void }) => {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return;
+    setBusy(true);
+    try {
+      const rows = lines.map((line, idx) => {
+        const [a, b] = line.split("|").map(s => s?.trim());
+        const url = (b || a) ?? "";
+        const title = (b ? a : (url.split("/").pop() || url)) || "Untitled";
+        const isVideo = /youtube\.com|youtu\.be|vimeo\.com|\.mp4/i.test(url);
+        return {
+          module_id: moduleId,
+          title,
+          item_type: isVideo ? "video" : "link",
+          url,
+          position: startPosition + idx,
+          published: false,
+        };
+      });
+      const { error } = await supabase.from("module_items").insert(rows);
+      if (error) throw error;
+      toast({ title: `Added ${rows.length} item${rows.length === 1 ? "" : "s"}` });
+      setOpen(false); setText(""); reload();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally { setBusy(false); }
+  };
+
+  const count = text.split("\n").filter(l => l.trim()).length;
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" className="w-full"><ListPlus className="h-4 w-4" /> Bulk Add Links</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Bulk Add Links</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            One per line. Format: <code className="text-xs bg-muted px-1 rounded">Title | URL</code> or just a URL.
+            YouTube / Vimeo / .mp4 links are auto-tagged as videos.
+          </p>
+          <Textarea
+            rows={10}
+            placeholder={"Intro Video | https://youtu.be/xxxxx\nPatient Rights PDF | https://drive.google.com/file/d/.../view\nhttps://example.com/handout.pdf"}
+            value={text}
+            onChange={e => setText(e.target.value)}
+          />
+          <Button onClick={submit} disabled={busy || count === 0} className="w-full">
+            {busy ? "Adding…" : `Add ${count} item${count === 1 ? "" : "s"}`}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
