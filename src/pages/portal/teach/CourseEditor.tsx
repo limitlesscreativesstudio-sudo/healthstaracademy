@@ -137,14 +137,33 @@ const ModulesEditor = ({ courseId, modules, items, reload }: any) => {
   };
 
   const seedCdph = async () => {
-    if (modules.length > 0 && !confirm("Course already has modules. Add the 17 CDPH modules anyway?")) return;
+    if (modules.length > 0 && !confirm("Course already has modules. Add the CoADN CDPH curriculum anyway?")) return;
     const base = modules.length;
-    const rows = CDPH_MODULES.map((title, i) => ({
-      course_id: courseId, title, position: base + i, published: false,
+    const rows = CDPH_MODULES.map((m, i) => ({
+      course_id: courseId, title: m.title, position: base + i, published: false,
     }));
-    const { error } = await supabase.from("modules").insert(rows);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Seeded 17 CDPH modules" }); reload(); }
+    const { data: inserted, error } = await supabase.from("modules").insert(rows).select();
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+
+    // Auto-attach each official PDF as the first item in its module
+    const items = (inserted ?? [])
+      .map((mod, idx) => {
+        const pdf = CDPH_MODULES[idx].pdf;
+        if (!pdf) return null;
+        return {
+          module_id: mod.id,
+          title: `${CDPH_MODULES[idx].title} — Official PDF`,
+          item_type: "link",
+          url: pdf,
+          position: 0,
+          published: true,
+        };
+      })
+      .filter(Boolean) as any[];
+    if (items.length) await supabase.from("module_items").insert(items);
+
+    toast({ title: `Seeded ${CDPH_MODULES.length} modules + ${items.length} PDFs` });
+    reload();
   };
 
   return (
