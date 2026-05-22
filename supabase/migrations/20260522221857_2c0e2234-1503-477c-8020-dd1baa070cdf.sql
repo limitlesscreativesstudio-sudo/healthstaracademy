@@ -1,0 +1,1 @@
+UPDATE public.courses SET title = 'CNA CLASS COHORT (Daytime)' WHERE id = '4d7f5a1d-3e09-4d3a-a63c-66896be173cd';
