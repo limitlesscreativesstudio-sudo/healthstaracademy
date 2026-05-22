@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { GraduationCap, Loader2 } from "lucide-react";
 
@@ -14,6 +15,7 @@ const PortalLogin = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -31,6 +33,25 @@ const PortalLogin = () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) toast({ title: "Sign in failed", description: error.message, variant: "destructive" });
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/portal`,
+        data: { full_name: fullName },
+      },
+    });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Account created", description: "Check your email to confirm, then sign in." });
+    }
   };
 
   const handleGoogle = async () => {
@@ -52,16 +73,34 @@ const PortalLogin = () => {
             <GraduationCap className="h-6 w-6 text-purple" />
           </div>
           <CardTitle>Health Star Academy LMS Portal</CardTitle>
-          <CardDescription>Sign in to your student or instructor account</CardDescription>
+          <CardDescription>Sign in or create your account</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div><Label>Email</Label><Input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
-            <div><Label>Password</Label><Input type="password" required value={password} onChange={e => setPassword(e.target.value)} /></div>
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
-            </Button>
-          </form>
+          <Tabs defaultValue="signin">
+            <TabsList className="grid grid-cols-2 w-full mb-4">
+              <TabsTrigger value="signin">Sign In</TabsTrigger>
+              <TabsTrigger value="signup">Create Account</TabsTrigger>
+            </TabsList>
+            <TabsContent value="signin">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div><Label>Email</Label><Input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
+                <div><Label>Password</Label><Input type="password" required value={password} onChange={e => setPassword(e.target.value)} /></div>
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
+                </Button>
+              </form>
+            </TabsContent>
+            <TabsContent value="signup">
+              <form onSubmit={handleSignUp} className="space-y-4">
+                <div><Label>Full Name</Label><Input required value={fullName} onChange={e => setFullName(e.target.value)} /></div>
+                <div><Label>Email</Label><Input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
+                <div><Label>Password</Label><Input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} /><p className="text-xs text-muted-foreground mt-1">At least 6 characters.</p></div>
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
             <div className="relative flex justify-center text-xs uppercase">
@@ -72,7 +111,7 @@ const PortalLogin = () => {
             Continue with Google
           </Button>
           <p className="text-xs text-center text-muted-foreground mt-6">
-            Portal access is by invitation only. Your instructor will email you a link to join your course.
+            Instructor accounts are auto-granted based on invitation list.
           </p>
         </CardContent>
       </Card>
