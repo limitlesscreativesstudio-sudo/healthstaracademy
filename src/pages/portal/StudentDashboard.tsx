@@ -77,8 +77,11 @@ const StudentDashboard = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {courses.map((c, idx) => {
                   const gradient = CARD_COLORS[idx % CARD_COLORS.length];
+                  const linkTo = isInstructor && c.instructor_id === user?.id
+                    ? `/portal/teach/courses/${c.id}`
+                    : `/portal/courses/${c.id}`;
                   return (
-                    <Link key={c.id} to={`/portal/courses/${c.id}`}>
+                    <Link key={c.id} to={linkTo}>
                       <Card className="overflow-hidden hover:shadow-medium transition-shadow h-full border">
                         <div
                           className={`h-36 bg-gradient-to-br ${gradient} flex items-start p-3 text-white relative`}
@@ -93,7 +96,6 @@ const StudentDashboard = () => {
                         <CardContent className="pt-3 pb-3">
                           <h3 className="font-semibold text-sm text-purple line-clamp-1">{c.title}</h3>
                           {c.code && <div className="text-xs text-muted-foreground mt-0.5">{c.code}</div>}
-                          {c.term && <div className="text-xs text-muted-foreground">{c.term}</div>}
                           <div className="flex items-center gap-3 mt-3 text-muted-foreground">
                             <ClipboardList className="h-4 w-4" />
                             <MessageSquare className="h-4 w-4" />
@@ -105,6 +107,7 @@ const StudentDashboard = () => {
                   );
                 })}
               </div>
+
             )}
 
             <h2 className="text-base font-semibold text-foreground mt-8 mb-3">
