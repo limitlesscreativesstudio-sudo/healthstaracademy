@@ -175,7 +175,7 @@ const ModulesEditor = ({ courseId, modules, items, reload }: any) => {
         </div>
         {modules.length === 0 && (
           <Button variant="purple-outline" onClick={seedCdph} className="w-full">
-            <Sparkles className="h-4 w-4" /> Seed 17 CDPH Modules
+            <Sparkles className="h-4 w-4" /> Seed CDPH Curriculum (17 modules + official PDFs)
           </Button>
         )}
       </CardContent></Card>
