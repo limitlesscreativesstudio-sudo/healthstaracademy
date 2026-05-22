@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignments: {
+        Row: {
+          course_id: string
+          created_at: string
+          due_at: string | null
+          id: string
+          instructions: string | null
+          module_item_id: string | null
+          points: number
+          published: boolean
+          submission_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          instructions?: string | null
+          module_item_id?: string | null
+          points?: number
+          published?: boolean
+          submission_type?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          instructions?: string | null
+          module_item_id?: string | null
+          points?: number
+          published?: boolean
+          submission_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cohorts: {
         Row: {
           capacity: number
@@ -206,6 +248,59 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grades: {
+        Row: {
+          assignment_id: string | null
+          course_id: string
+          created_at: string
+          feedback: string | null
+          graded_at: string
+          graded_by: string | null
+          id: string
+          max_score: number
+          quiz_attempt_id: string | null
+          score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          course_id: string
+          created_at?: string
+          feedback?: string | null
+          graded_at?: string
+          graded_by?: string | null
+          id?: string
+          max_score?: number
+          quiz_attempt_id?: string | null
+          score?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string | null
+          course_id?: string
+          created_at?: string
+          feedback?: string | null
+          graded_at?: string
+          graded_by?: string | null
+          id?: string
+          max_score?: number
+          quiz_attempt_id?: string | null
+          score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grades_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
             referencedColumns: ["id"]
           },
         ]
@@ -460,6 +555,139 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_attempts: {
+        Row: {
+          answers: Json
+          created_at: string
+          id: string
+          max_score: number | null
+          quiz_id: string
+          score: number | null
+          started_at: string
+          submitted_at: string | null
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          max_score?: number | null
+          quiz_id: string
+          score?: number | null
+          started_at?: string
+          submitted_at?: string | null
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          max_score?: number | null
+          quiz_id?: string
+          score?: number | null
+          started_at?: string
+          submitted_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempts_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_questions: {
+        Row: {
+          correct_answer: Json | null
+          created_at: string
+          id: string
+          options: Json
+          points: number
+          position: number
+          prompt: string
+          question_type: string
+          quiz_id: string
+        }
+        Insert: {
+          correct_answer?: Json | null
+          created_at?: string
+          id?: string
+          options?: Json
+          points?: number
+          position?: number
+          prompt: string
+          question_type?: string
+          quiz_id: string
+        }
+        Update: {
+          correct_answer?: Json | null
+          created_at?: string
+          id?: string
+          options?: Json
+          points?: number
+          position?: number
+          prompt?: string
+          question_type?: string
+          quiz_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizzes: {
+        Row: {
+          attempts_allowed: number
+          course_id: string
+          created_at: string
+          due_at: string | null
+          id: string
+          instructions: string | null
+          module_item_id: string | null
+          published: boolean
+          time_limit_minutes: number | null
+          title: string
+          total_points: number
+          updated_at: string
+        }
+        Insert: {
+          attempts_allowed?: number
+          course_id: string
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          instructions?: string | null
+          module_item_id?: string | null
+          published?: boolean
+          time_limit_minutes?: number | null
+          title: string
+          total_points?: number
+          updated_at?: string
+        }
+        Update: {
+          attempts_allowed?: number
+          course_id?: string
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          instructions?: string | null
+          module_item_id?: string | null
+          published?: boolean
+          time_limit_minutes?: number | null
+          title?: string
+          total_points?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           can_pass_background: boolean | null
@@ -560,6 +788,47 @@ export type Database = {
             columns: ["cohort_id"]
             isOneToOne: false
             referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submissions: {
+        Row: {
+          assignment_id: string
+          body: string | null
+          file_name: string | null
+          file_url: string | null
+          id: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_id: string
+          body?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string
+          body?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
             referencedColumns: ["id"]
           },
         ]
