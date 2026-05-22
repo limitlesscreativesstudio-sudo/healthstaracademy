@@ -53,6 +53,47 @@ export type Database = {
         }
         Relationships: []
       }
+      course_invites: {
+        Row: {
+          accepted_at: string | null
+          course_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          course_id: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          token: string
+        }
+        Update: {
+          accepted_at?: string | null
+          course_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_invites_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           code: string | null
