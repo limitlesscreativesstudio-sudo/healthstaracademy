@@ -3,9 +3,10 @@ import { Link, useParams, NavLink, Routes, Route, Navigate } from "react-router-
 import { supabase } from "@/integrations/supabase/client";
 import PortalLayout from "@/components/portal/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Megaphone, BookOpen, FileText, Home, ChevronRight, FileIcon, Link as LinkIcon, Video } from "lucide-react";
+import { Megaphone, BookOpen, FileText, Home, ChevronRight, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap, BarChart3 } from "lucide-react";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 import { Button } from "@/components/ui/button";
+import StudentGrades from "./StudentGrades";
 
 type Course = { id: string; title: string; code: string | null; description: string | null; instructor_id: string };
 type Module = { id: string; title: string; position: number; published: boolean };
@@ -13,7 +14,7 @@ type ModuleItem = { id: string; module_id: string; title: string; item_type: str
 type Announcement = { id: string; title: string; body: string; posted_at: string };
 
 const itemIcon = (t: string) => {
-  const map: Record<string, any> = { page: FileText, file: FileIcon, link: LinkIcon, video: Video };
+  const map: Record<string, any> = { page: FileText, file: FileIcon, link: LinkIcon, video: Video, assignment: ClipboardList, quiz: GraduationCap };
   const I = map[t] ?? FileText;
   return <I className="h-4 w-4" />;
 };
@@ -45,6 +46,9 @@ const CourseView = () => {
           <nav className="space-y-1 text-sm">
             <CourseNav to={`/portal/courses/${courseId}`} end icon={Home}>Home</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/modules`} icon={BookOpen}>Modules</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/assignments`} icon={ClipboardList}>Assignments</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/quizzes`} icon={GraduationCap}>Quizzes</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/grades`} icon={BarChart3}>Grades</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/announcements`} icon={Megaphone}>Announcements</CourseNav>
           </nav>
           {isInstructor && (
@@ -60,6 +64,9 @@ const CourseView = () => {
             <Route index element={<CourseHome course={course} />} />
             <Route path="modules" element={<ModulesTab courseId={course.id} />} />
             <Route path="modules/:itemId" element={<ItemViewer courseId={course.id} />} />
+            <Route path="assignments" element={<AssignmentsList courseId={course.id} />} />
+            <Route path="quizzes" element={<QuizzesList courseId={course.id} />} />
+            <Route path="grades" element={<StudentGrades courseId={course.id} />} />
             <Route path="announcements" element={<AnnouncementsTab courseId={course.id} />} />
             <Route path="*" element={<Navigate to="." replace />} />
           </Routes>
