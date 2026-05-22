@@ -39,27 +39,31 @@ const CourseView = () => {
   return (
     <PortalLayout>
       <div className="flex min-h-[calc(100vh)]">
-        {/* Course sidebar */}
-        <aside className="w-48 bg-background border-r border-border p-4">
-          <Link to="/portal" className="text-xs text-muted-foreground hover:underline">← All Courses</Link>
-          <h2 className="font-heading font-bold text-base mt-2 mb-4 line-clamp-2">{course.title}</h2>
-          <nav className="space-y-1 text-sm">
+        {/* Course sidebar - Canvas style */}
+        <aside className="w-56 bg-background border-r border-border py-4 shrink-0">
+          <div className="px-4 mb-3">
+            <Link to="/portal" className="text-xs text-muted-foreground hover:underline">← All Courses</Link>
+            <h2 className="font-heading font-bold text-base mt-2 line-clamp-2">{course.title}</h2>
+            {course.code && <div className="text-xs text-muted-foreground font-mono mt-1">{course.code}</div>}
+          </div>
+          <nav className="text-sm">
             <CourseNav to={`/portal/courses/${courseId}`} end icon={Home}>Home</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/modules`} icon={BookOpen}>Modules</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/assignments`} icon={ClipboardList}>Assignments</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/quizzes`} icon={GraduationCap}>Quizzes</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/grades`} icon={BarChart3}>Grades</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/announcements`} icon={Megaphone}>Announcements</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/assignments`} icon={ClipboardList}>Assignments</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/discussions`} icon={MessageSquare}>Discussions</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/grades`} icon={BarChart3}>Grades</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/people`} icon={UsersIcon}>People</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/pages`} icon={FileText}>Pages</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/files`} icon={FolderOpen}>Files</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/syllabus`} icon={ScrollText}>Syllabus</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/outcomes`} icon={Target}>Outcomes</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/rubrics`} icon={Grid3x3}>Rubrics</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/quizzes`} icon={GraduationCap}>Quizzes</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/modules`} icon={BookOpen}>Modules</CourseNav>
+            {isInstructor && <CourseNav to={`/portal/teach/courses/${courseId}`} icon={SettingsIcon}>Settings</CourseNav>}
           </nav>
-          {isInstructor && (
-            <div className="mt-6 pt-4 border-t border-border">
-              <Link to={`/portal/teach/courses/${courseId}`}>
-                <Button size="sm" variant="purple-outline" className="w-full">Edit Course</Button>
-              </Link>
-            </div>
-          )}
         </aside>
-        <div className="flex-1 p-6 max-w-4xl">
+        <div className="flex-1 p-6 max-w-5xl min-w-0">
           <Routes>
             <Route index element={<CourseHome course={course} />} />
             <Route path="modules" element={<ModulesTab courseId={course.id} />} />
@@ -68,6 +72,13 @@ const CourseView = () => {
             <Route path="quizzes" element={<QuizzesList courseId={course.id} />} />
             <Route path="grades" element={<StudentGrades courseId={course.id} />} />
             <Route path="announcements" element={<AnnouncementsTab courseId={course.id} />} />
+            <Route path="discussions" element={<ComingSoon title="Discussions" />} />
+            <Route path="people" element={<ComingSoon title="People" />} />
+            <Route path="pages" element={<ComingSoon title="Pages" />} />
+            <Route path="files" element={<ComingSoon title="Files" />} />
+            <Route path="syllabus" element={<ComingSoon title="Syllabus" />} />
+            <Route path="outcomes" element={<ComingSoon title="Outcomes" />} />
+            <Route path="rubrics" element={<ComingSoon title="Rubrics" />} />
             <Route path="*" element={<Navigate to="." replace />} />
           </Routes>
         </div>
@@ -76,9 +87,16 @@ const CourseView = () => {
   );
 };
 
+const ComingSoon = ({ title }: { title: string }) => (
+  <div>
+    <h2 className="font-heading text-2xl font-bold mb-2">{title}</h2>
+    <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">Nothing here yet.</CardContent></Card>
+  </div>
+);
+
 const CourseNav = ({ to, end, icon: Icon, children }: any) => (
   <NavLink to={to} end={end} className={({ isActive }) =>
-    `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-purple/10 text-purple font-medium" : "hover:bg-muted text-foreground"}`}>
+    `flex items-center gap-2 px-4 py-2 border-l-2 ${isActive ? "border-purple bg-purple/5 text-purple font-medium" : "border-transparent hover:bg-muted text-foreground"}`}>
     <Icon className="h-4 w-4" /> {children}
   </NavLink>
 );
