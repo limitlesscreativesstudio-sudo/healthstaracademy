@@ -111,15 +111,26 @@ const CourseNav = ({ to, end, icon: Icon, children }: any) => (
   </NavLink>
 );
 
-const CourseHome = ({ course }: { course: Course }) => (
-  <div className="flex flex-col gap-6">
-    <div>
-      <h1 className="font-heading text-3xl font-bold mb-2">{course.title}</h1>
-      {course.code && <div className="text-sm text-muted-foreground font-mono">{course.code}</div>}
+const CourseHome = ({ course }: { course: Course }) => {
+  const sanitized = course.description ? DOMPurify.sanitize(course.description) : "";
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="border-b border-border pb-4">
+        <h1 className="font-heading text-3xl font-bold mb-2">{course.title}</h1>
+        {course.code && <div className="text-sm text-muted-foreground font-mono">{course.code}</div>}
+      </div>
+      {sanitized ? (
+        <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: sanitized }} />
+      ) : (
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground text-sm">
+            Welcome to {course.title}. Use the sidebar to navigate to Modules, Announcements, Quizzes, and more.
+          </CardContent>
+        </Card>
+      )}
     </div>
-    <ModulesTab courseId={course.id} />
-  </div>
-);
+  );
+};
 
 const ModulesTab = ({ courseId }: { courseId: string }) => {
   const [modules, setModules] = useState<Module[]>([]);
