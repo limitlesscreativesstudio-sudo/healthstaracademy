@@ -48,9 +48,8 @@ const CourseView = () => {
             {course.code && <div className="text-xs text-muted-foreground font-mono mt-1">{course.code}</div>}
           </div>
           <nav className="text-sm">
-            <CourseNav to={`/portal/courses/${courseId}`} end icon={Home}>Home</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}`} end icon={BookOpen}>Home</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/announcements`} icon={Megaphone}>Announcements</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/assignments`} icon={ClipboardList}>Assignments</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/discussions`} icon={MessageSquare}>Discussions</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/grades`} icon={BarChart3}>Grades</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/people`} icon={UsersIcon}>People</CourseNav>
@@ -60,7 +59,11 @@ const CourseView = () => {
             <CourseNav to={`/portal/courses/${courseId}/outcomes`} icon={Target}>Outcomes</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/rubrics`} icon={Grid3x3}>Rubrics</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/quizzes`} icon={GraduationCap}>Quizzes</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/modules`} icon={BookOpen}>Modules</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/bigbluebutton`} icon={Video}>BigBlueButton</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/collaborations`} icon={Handshake}>Collaborations</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/attendance`} icon={ClipboardCheck}>Attendance</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/analytics`} icon={LineChart}>New Analytics</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/lucid`} icon={PenSquare}>Lucid (Whiteboard)</CourseNav>
             {isInstructor && <CourseNav to={`/portal/teach/courses/${courseId}`} icon={SettingsIcon}>Settings</CourseNav>}
           </nav>
         </aside>
