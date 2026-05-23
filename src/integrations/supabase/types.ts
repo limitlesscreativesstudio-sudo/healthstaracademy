@@ -931,6 +931,18 @@ export type Database = {
       }
     }
     Functions: {
+      get_quiz_questions_for_student: {
+        Args: { _quiz_id: string }
+        Returns: {
+          id: string
+          options: Json
+          points: number
+          position: number
+          prompt: string
+          question_type: string
+          quiz_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
