@@ -17,6 +17,17 @@ interface EmailRequest {
   qualification_notes?: string;
 }
 
+// HTML-escape user-supplied values before interpolating into email HTML
+function esc(s: string | undefined | null): string {
+  if (s === undefined || s === null) return "";
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr + "T00:00:00");
   return date.toLocaleDateString("en-US", {
