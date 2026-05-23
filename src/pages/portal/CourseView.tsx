@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import DOMPurify from "dompurify";
 import { Link, useParams, NavLink, Routes, Route, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PortalLayout from "@/components/portal/PortalLayout";
@@ -211,6 +212,7 @@ const ItemViewer = ({ courseId }: { courseId: string }) => {
   const { itemId } = useParams();
   const [item, setItem] = useState<ModuleItem | null>(null);
   const [body, setBody] = useState<string | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!itemId) return;
