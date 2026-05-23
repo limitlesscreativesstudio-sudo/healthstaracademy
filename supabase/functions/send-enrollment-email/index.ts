@@ -83,7 +83,7 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
     return {
       subject: "Health Star Academy — Important Update About Your Application",
       body: `
-        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
+        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${esc(firstName)},</h2>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thank you for taking the time to complete the pre-qualification questionnaire for our CNA program. We truly appreciate your interest in pursuing a career in healthcare! 💜</p>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">After reviewing your responses, we noticed that you currently do not have a <strong>valid, physical government-issued ID</strong>, which is a requirement for enrollment.</p>
         <div style="background:linear-gradient(135deg,rgba(124,58,237,0.05),rgba(6,182,212,0.05));border:2px solid #7c3aed;border-radius:12px;padding:24px;margin:24px 0;">
@@ -109,7 +109,7 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
     return {
       subject: "Health Star Academy — Important Update About Your Application",
       body: `
-        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
+        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${esc(firstName)},</h2>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thank you for taking the time to complete the pre-qualification questionnaire for our CNA program. We truly appreciate your interest in pursuing a career in healthcare! 💜</p>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">After reviewing your responses, we noticed that you currently do not have your <strong>physical Social Security Card</strong>, which is required for enrollment and clinical placement.</p>
         <div style="background:linear-gradient(135deg,rgba(124,58,237,0.05),rgba(6,182,212,0.05));border:2px solid #7c3aed;border-radius:12px;padding:24px;margin:24px 0;">
@@ -135,7 +135,7 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
     return {
       subject: "Health Star Academy — Important Update About Your Application",
       body: `
-        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
+        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${esc(firstName)},</h2>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thank you for taking the time to complete the pre-qualification questionnaire for our CNA program. We truly appreciate your interest in pursuing a career in healthcare! 💜</p>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">After reviewing your responses, we understand that you may have concerns about passing the <strong>LiveScan criminal background check</strong>, which is a state requirement for CNA certification and clinical placement.</p>
         <div style="background:linear-gradient(135deg,rgba(124,58,237,0.05),rgba(6,182,212,0.05));border:2px solid #7c3aed;border-radius:12px;padding:24px;margin:24px 0;">
@@ -162,7 +162,7 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
     return {
       subject: "Health Star Academy — Important Update About Your Application",
       body: `
-        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
+        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${esc(firstName)},</h2>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thank you for taking the time to complete the pre-qualification questionnaire for our CNA program. We truly appreciate your interest in pursuing a career in healthcare! 💜</p>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">After reviewing your responses, we noticed that you are currently unable to provide <strong>proof of good health</strong>, which is a state requirement for CNA students entering clinical rotations.</p>
         <div style="background:linear-gradient(135deg,rgba(124,58,237,0.05),rgba(6,182,212,0.05));border:2px solid #7c3aed;border-radius:12px;padding:24px;margin:24px 0;">
@@ -189,7 +189,7 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
     return {
       subject: "Health Star Academy — Important Update About Your Application",
       body: `
-        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
+        <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${esc(firstName)},</h2>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thank you for taking the time to complete the pre-qualification questionnaire for our CNA program. We truly appreciate your interest in pursuing a career in healthcare! 💜</p>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">After reviewing your responses, we understand that you currently do not have <strong>reliable transportation</strong> to our clinical training sites in Stockton, Lodi, or Hayward, which is required for completing the hands-on portion of the program.</p>
         <div style="background:linear-gradient(135deg,rgba(124,58,237,0.05),rgba(6,182,212,0.05));border:2px solid #7c3aed;border-radius:12px;padding:24px;margin:24px 0;">
@@ -215,11 +215,11 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
   return {
     subject: "Health Star Academy — Important Update About Your Application",
     body: `
-      <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
+      <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${esc(firstName)},</h2>
       <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thank you for taking the time to complete the pre-qualification questionnaire for our CNA program. We truly appreciate your interest in pursuing a career in healthcare! 💜</p>
       <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">After reviewing your responses, we are unable to proceed with your enrollment at this time:</p>
       <div style="background-color:#fffbeb;border-left:4px solid #f59e0b;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
-        <p style="color:#92400e;margin:0;font-size:14px;">${notes || "One or more enrollment requirements were not met."}</p>
+        <p style="color:#92400e;margin:0;font-size:14px;">${esc(notes) || "One or more enrollment requirements were not met."}</p>
       </div>
       <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
         <p style="color:#166534;margin:0;font-size:15px;">🌟 If your circumstances change, we warmly encourage you to reapply! We'd love to welcome you into our program.</p>
@@ -250,7 +250,7 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
       return {
         subject: `🎉 Congratulations! You're Qualified — Cohort Starting ${cohortFormatted}`,
         html: getEmailWrapper(`
-          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Congratulations, ${firstName}! 🎉</h2>
+          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Congratulations, ${esc(firstName)}! 🎉</h2>
           <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We're thrilled to let you know that you've been <strong>pre-qualified</strong> for the Health Star Academy CNA Program!</p>
           <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
             <p style="color:#166534;margin:0 0 4px;font-size:14px;font-weight:600;">Your Selected Cohort Start Date:</p>
@@ -276,7 +276,7 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
       return {
         subject: "Health Star Academy — Complete Your LiveScan Background Check",
         html: getEmailWrapper(`
-          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Hi ${firstName},</h2>
+          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Hi ${esc(firstName)},</h2>
           <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Great news — we've received your enrollment documents! The next step is to complete your <strong>LiveScan fingerprinting</strong> for the required background check.</p>
           <h3 style="color:#1e1b2e;margin:24px 0 12px;font-size:18px;">📍 LiveScan Location</h3>
           <div style="background-color:#f0f9ff;border:1px solid #bae6fd;padding:20px;border-radius:8px;margin:16px 0;">
@@ -300,7 +300,7 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
       return {
         subject: `Health Star Academy — Tuition Payment Options | Cohort: ${cohortFormatted}`,
         html: getEmailWrapper(`
-          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Hi ${firstName},</h2>
+          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Hi ${esc(firstName)},</h2>
           <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Your background check has cleared! Now it's time to select your tuition payment option and confirm your spot in the cohort.</p>
           <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
             <p style="color:#166534;margin:0 0 4px;font-size:14px;font-weight:600;">Confirmed Cohort Start Date:</p>
@@ -331,7 +331,7 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
       return {
         subject: `Health Star Academy — Mandatory Orientation: ${orientationFormatted}`,
         html: getEmailWrapper(`
-          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Hi ${firstName},</h2>
+          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Hi ${esc(firstName)},</h2>
           <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Your payment has been received and your enrollment is confirmed! Here are the details for your <strong>mandatory orientation</strong>.</p>
           <div style="background:linear-gradient(135deg,rgba(124,58,237,0.1),rgba(6,182,212,0.1));border:2px solid #7c3aed;border-radius:12px;padding:24px;margin:24px 0;text-align:center;">
             <p style="color:#7c3aed;margin:0 0 4px;font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Orientation Date</p>
@@ -363,7 +363,7 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
       return {
         subject: "Health Star Academy — Scrub Size & Shipping Info Needed",
         html: getEmailWrapper(`
-          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Hi ${firstName},</h2>
+          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Hi ${esc(firstName)},</h2>
           <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We need your scrub uniform sizes and shipping information so we can have everything ready for your first day!</p>
           <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Please reply to this email with:</p>
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin:20px 0;">
@@ -412,7 +412,7 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
       return {
         subject: `🎓 See You Soon! Your Cohort Starts ${cohortFormatted}`,
         html: getEmailWrapper(`
-          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${firstName},</h2>
+          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Dear ${esc(firstName)},</h2>
           <p style="color:#4a4a5a;line-height:1.7;font-size:24px;text-align:center;margin:24px 0;">🎓 ✨ 💜</p>
           <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">This is it — your cohort begins <strong>${cohortFormatted}</strong>!</p>
           <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We want you to know how proud we are of you for taking this step toward your healthcare career. You've completed every requirement, and you are <strong>ready</strong>.</p>
