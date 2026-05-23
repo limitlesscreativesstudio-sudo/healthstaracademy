@@ -4,7 +4,7 @@ import { Link, useParams, NavLink, Routes, Route, Navigate } from "react-router-
 import { supabase } from "@/integrations/supabase/client";
 import PortalLayout from "@/components/portal/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Megaphone, BookOpen, FileText, Home, ChevronRight, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap, BarChart3, MessageSquare, Users as UsersIcon, FolderOpen, ScrollText, Target, Grid3x3, Settings as SettingsIcon } from "lucide-react";
+import { Megaphone, BookOpen, FileText, ChevronRight, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap, BarChart3, MessageSquare, Users as UsersIcon, FolderOpen, ScrollText, Target, Grid3x3, Settings as SettingsIcon, ClipboardCheck, LineChart, PenSquare, Handshake } from "lucide-react";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 
 import StudentGrades from "./StudentGrades";
@@ -48,9 +48,8 @@ const CourseView = () => {
             {course.code && <div className="text-xs text-muted-foreground font-mono mt-1">{course.code}</div>}
           </div>
           <nav className="text-sm">
-            <CourseNav to={`/portal/courses/${courseId}`} end icon={Home}>Home</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}`} end icon={BookOpen}>Home</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/announcements`} icon={Megaphone}>Announcements</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/assignments`} icon={ClipboardList}>Assignments</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/discussions`} icon={MessageSquare}>Discussions</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/grades`} icon={BarChart3}>Grades</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/people`} icon={UsersIcon}>People</CourseNav>
@@ -60,7 +59,11 @@ const CourseView = () => {
             <CourseNav to={`/portal/courses/${courseId}/outcomes`} icon={Target}>Outcomes</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/rubrics`} icon={Grid3x3}>Rubrics</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/quizzes`} icon={GraduationCap}>Quizzes</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/modules`} icon={BookOpen}>Modules</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/bigbluebutton`} icon={Video}>BigBlueButton</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/collaborations`} icon={Handshake}>Collaborations</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/attendance`} icon={ClipboardCheck}>Attendance</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/analytics`} icon={LineChart}>New Analytics</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/lucid`} icon={PenSquare}>Lucid (Whiteboard)</CourseNav>
             {isInstructor && <CourseNav to={`/portal/teach/courses/${courseId}`} icon={SettingsIcon}>Settings</CourseNav>}
           </nav>
         </aside>
@@ -80,6 +83,11 @@ const CourseView = () => {
             <Route path="syllabus" element={<ComingSoon title="Syllabus" />} />
             <Route path="outcomes" element={<ComingSoon title="Outcomes" />} />
             <Route path="rubrics" element={<ComingSoon title="Rubrics" />} />
+            <Route path="bigbluebutton" element={<ComingSoon title="BigBlueButton" />} />
+            <Route path="collaborations" element={<ComingSoon title="Collaborations" />} />
+            <Route path="attendance" element={<ComingSoon title="Attendance" />} />
+            <Route path="analytics" element={<ComingSoon title="New Analytics" />} />
+            <Route path="lucid" element={<ComingSoon title="Lucid (Whiteboard)" />} />
             <Route path="*" element={<Navigate to="." replace />} />
           </Routes>
         </div>
@@ -103,10 +111,12 @@ const CourseNav = ({ to, end, icon: Icon, children }: any) => (
 );
 
 const CourseHome = ({ course }: { course: Course }) => (
-  <div>
-    <h1 className="font-heading text-3xl font-bold mb-2">{course.title}</h1>
-    {course.code && <div className="text-sm text-muted-foreground font-mono mb-4">{course.code}</div>}
-    {course.description && <p className="text-foreground/80 whitespace-pre-wrap">{course.description}</p>}
+  <div className="flex flex-col gap-6">
+    <div>
+      <h1 className="font-heading text-3xl font-bold mb-2">{course.title}</h1>
+      {course.code && <div className="text-sm text-muted-foreground font-mono">{course.code}</div>}
+    </div>
+    <ModulesTab courseId={course.id} />
   </div>
 );
 
