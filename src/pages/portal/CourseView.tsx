@@ -59,6 +59,7 @@ const CourseView = () => {
             <CourseNav to={`/portal/courses/${courseId}/outcomes`} icon={Target}>Outcomes</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/rubrics`} icon={Grid3x3}>Rubrics</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/quizzes`} icon={GraduationCap}>Quizzes</CourseNav>
+            <CourseNav to={`/portal/courses/${courseId}/modules`} icon={BookOpen}>Modules</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/bigbluebutton`} icon={Video}>BigBlueButton</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/collaborations`} icon={Handshake}>Collaborations</CourseNav>
             <CourseNav to={`/portal/courses/${courseId}/attendance`} icon={ClipboardCheck}>Attendance</CourseNav>
