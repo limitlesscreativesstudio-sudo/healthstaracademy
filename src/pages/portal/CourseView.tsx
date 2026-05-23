@@ -111,10 +111,12 @@ const CourseNav = ({ to, end, icon: Icon, children }: any) => (
 );
 
 const CourseHome = ({ course }: { course: Course }) => (
-  <div>
-    <h1 className="font-heading text-3xl font-bold mb-2">{course.title}</h1>
-    {course.code && <div className="text-sm text-muted-foreground font-mono mb-4">{course.code}</div>}
-    {course.description && <p className="text-foreground/80 whitespace-pre-wrap">{course.description}</p>}
+  <div className="flex flex-col gap-6">
+    <div>
+      <h1 className="font-heading text-3xl font-bold mb-2">{course.title}</h1>
+      {course.code && <div className="text-sm text-muted-foreground font-mono">{course.code}</div>}
+    </div>
+    <ModulesTab courseId={course.id} />
   </div>
 );
 
