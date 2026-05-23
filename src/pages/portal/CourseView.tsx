@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import DOMPurify from "dompurify";
 import { Link, useParams, NavLink, Routes, Route, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PortalLayout from "@/components/portal/PortalLayout";
@@ -211,6 +212,7 @@ const ItemViewer = ({ courseId }: { courseId: string }) => {
   const { itemId } = useParams();
   const [item, setItem] = useState<ModuleItem | null>(null);
   const [body, setBody] = useState<string | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!itemId) return;
@@ -230,13 +232,18 @@ const ItemViewer = ({ courseId }: { courseId: string }) => {
           } else if (f.storage_provider === "drive" && f.drive_file_id) {
             url = `https://drive.google.com/file/d/${f.drive_file_id}/preview`;
           }
-          setBody(url ? `<iframe src="${url}" class="w-full h-[80vh] border rounded" allow="autoplay"></iframe>` : "<p>File unavailable</p>");
+          setFileUrl(url ?? null);
+          setBody("");
         }
       }
     })();
   }, [itemId]);
 
   if (!item) return <div>Loading…</div>;
+
+  // Only allow http(s) URLs in the iframe — block javascript:, data:, etc.
+  const safeFileUrl = fileUrl && /^https?:\/\//i.test(fileUrl) ? fileUrl : null;
+  const sanitizedBody = body ? DOMPurify.sanitize(body) : "";
 
   return (
     <div>
@@ -245,7 +252,12 @@ const ItemViewer = ({ courseId }: { courseId: string }) => {
       {(item.item_type === "link" || item.item_type === "video") && item.url && (
         <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-purple underline">{item.url}</a>
       )}
-      {body !== null && <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: body }} />}
+      {safeFileUrl && (
+        <iframe src={safeFileUrl} className="w-full h-[80vh] border rounded" allow="autoplay" />
+      )}
+      {!safeFileUrl && body && (
+        <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: sanitizedBody }} />
+      )}
     </div>
   );
 };
