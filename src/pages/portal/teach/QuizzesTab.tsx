@@ -45,42 +45,67 @@ const QuizzesTab = ({ courseId }: { courseId: string }) => {
     load();
   };
 
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(true);
+
+  const filtered = items.filter(q => q.title.toLowerCase().includes(search.toLowerCase()));
+
   return (
     <div className="space-y-4 mt-4">
-      <div className="flex justify-between items-center">
-        <h3 className="font-semibold">Quizzes ({items.length})</h3>
+      <div className="flex justify-between items-center gap-3">
+        <Input
+          placeholder="Search for Quiz"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
         <NewQuizDialog courseId={courseId} onCreated={load} />
       </div>
-      {items.length === 0 && (
-        <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">
-          No quizzes yet. Create one to get started.
-        </CardContent></Card>
-      )}
-      {items.map(q => (
-        <Card key={q.id}>
-          <CardContent className="pt-5 flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="font-semibold">{q.title}</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {q.total_points} pts · {q.attempts_allowed} attempt{q.attempts_allowed === 1 ? "" : "s"}
-                {q.time_limit_minutes && <> · {q.time_limit_minutes} min</>}
-                {q.due_at && <> · Due {new Date(q.due_at).toLocaleDateString()}</>}
+
+      <Card className="overflow-hidden">
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="w-full flex items-center gap-2 bg-muted px-4 py-3 border-b text-left hover:bg-muted/80"
+        >
+          {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          <span className="font-semibold">Assignment Quizzes</span>
+          <span className="text-xs text-muted-foreground ml-auto">{filtered.length}</span>
+        </button>
+        {open && (
+          <div className="divide-y">
+            {filtered.length === 0 && (
+              <div className="py-8 text-center text-sm text-muted-foreground">No quizzes.</div>
+            )}
+            {filtered.map(q => (
+              <div key={q.id} className="flex items-start justify-between gap-3 px-4 py-3 hover:bg-muted/30">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <FileText className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                  <div className="min-w-0">
+                    <div className="font-semibold">{q.title}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {!q.published && <span className="mr-2">Closed</span>}
+                      {q.total_points} pt{q.total_points === 1 ? "" : "s"}
+                      {q.time_limit_minutes && <> · {q.time_limit_minutes} min</>}
+                      {q.due_at && <> · Due {new Date(q.due_at).toLocaleDateString()}</>}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <Link to={`/portal/teach/courses/${courseId}/quizzes/${q.id}`}>
+                    <Button size="sm" variant="purple-outline"><Pencil className="h-4 w-4 mr-1" /> Edit</Button>
+                  </Link>
+                  <Button size="sm" variant="ghost" onClick={() => togglePublish(q)}>
+                    {q.published ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => remove(q.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
-            <div className="flex gap-1 shrink-0">
-              <Link to={`/portal/teach/courses/${courseId}/quizzes/${q.id}`}>
-                <Button size="sm" variant="purple-outline"><Pencil className="h-4 w-4 mr-1" /> Edit</Button>
-              </Link>
-              <Button size="sm" variant="ghost" onClick={() => togglePublish(q)}>
-                {q.published ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => remove(q.id)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            ))}
+          </div>
+        )}
+      </Card>
     </div>
   );
 };
