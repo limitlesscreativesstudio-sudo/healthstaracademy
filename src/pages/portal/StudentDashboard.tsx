@@ -77,9 +77,7 @@ const StudentDashboard = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {courses.map((c, idx) => {
                   const gradient = CARD_COLORS[idx % CARD_COLORS.length];
-                  const linkTo = isInstructor && c.instructor_id === user?.id
-                    ? `/portal/teach/courses/${c.id}`
-                    : `/portal/courses/${c.id}`;
+                  const linkTo = `/portal/courses/${c.id}`;
                   return (
                     <Link key={c.id} to={linkTo}>
                       <Card className="overflow-hidden hover:shadow-medium transition-shadow h-full border">
