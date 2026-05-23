@@ -83,6 +83,11 @@ const CourseView = () => {
             <Route path="syllabus" element={<ComingSoon title="Syllabus" />} />
             <Route path="outcomes" element={<ComingSoon title="Outcomes" />} />
             <Route path="rubrics" element={<ComingSoon title="Rubrics" />} />
+            <Route path="bigbluebutton" element={<ComingSoon title="BigBlueButton" />} />
+            <Route path="collaborations" element={<ComingSoon title="Collaborations" />} />
+            <Route path="attendance" element={<ComingSoon title="Attendance" />} />
+            <Route path="analytics" element={<ComingSoon title="New Analytics" />} />
+            <Route path="lucid" element={<ComingSoon title="Lucid (Whiteboard)" />} />
             <Route path="*" element={<Navigate to="." replace />} />
           </Routes>
         </div>
