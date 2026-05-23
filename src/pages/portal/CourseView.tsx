@@ -112,21 +112,67 @@ const CourseNav = ({ to, end, icon: Icon, children }: any) => (
 );
 
 const CourseHome = ({ course }: { course: Course }) => {
-  const sanitized = course.description ? DOMPurify.sanitize(course.description) : "";
+  const [modules, setModules] = useState<Module[]>([]);
+  const [items, setItems] = useState<ModuleItem[]>([]);
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    (async () => {
+      const { data: mods } = await supabase.from("modules").select("*").eq("course_id", course.id).order("position");
+      const list = mods ?? [];
+      setModules(list);
+      setOpen(Object.fromEntries(list.map(m => [m.id, true])));
+      const ids = list.map(m => m.id);
+      if (ids.length) {
+        const { data: its } = await supabase.from("module_items").select("*").in("module_id", ids).order("position");
+        setItems(its ?? []);
+      }
+    })();
+  }, [course.id]);
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="border-b border-border pb-4">
-        <h1 className="font-heading text-3xl font-bold mb-2">{course.title}</h1>
-        {course.code && <div className="text-sm text-muted-foreground font-mono">{course.code}</div>}
+    <div className="flex flex-col gap-4">
+      <div className="border-b border-border pb-3">
+        <h1 className="font-heading text-2xl font-bold">{course.title}</h1>
+        {course.code && <div className="text-xs text-muted-foreground font-mono mt-1">{course.code}</div>}
       </div>
-      {sanitized ? (
-        <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: sanitized }} />
+
+      {modules.length === 0 ? (
+        <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No content published yet.</CardContent></Card>
       ) : (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground text-sm">
-            Welcome to {course.title}. Use the sidebar to navigate to Modules, Announcements, Quizzes, and more.
-          </CardContent>
-        </Card>
+        <div className="border border-border rounded-md overflow-hidden bg-background">
+          {modules.map(m => {
+            const isOpen = open[m.id] ?? true;
+            const modItems = items.filter(i => i.module_id === m.id);
+            return (
+              <div key={m.id} className="border-b border-border last:border-0">
+                <button
+                  onClick={() => setOpen(o => ({ ...o, [m.id]: !isOpen }))}
+                  className="w-full flex items-center gap-2 px-4 py-3 bg-muted/40 hover:bg-muted/60 text-left"
+                >
+                  <ChevronRight className={`h-4 w-4 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                  <span className="font-semibold text-sm">{m.title}</span>
+                </button>
+                {isOpen && (
+                  <div>
+                    {modItems.length === 0 ? (
+                      <div className="px-12 py-3 text-xs text-muted-foreground">No items.</div>
+                    ) : modItems.map(i => (
+                      <Link
+                        key={i.id}
+                        to={`/portal/courses/${course.id}/modules/${i.id}`}
+                        className="flex items-center gap-3 pl-12 pr-4 py-2.5 border-t border-border/50 hover:bg-muted/30 text-sm"
+                      >
+                        <span className="text-emerald-600">{itemIcon(i.item_type)}</span>
+                        <span className="flex-1 font-medium">{i.title}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
