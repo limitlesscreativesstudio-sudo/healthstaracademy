@@ -42,6 +42,7 @@ import QuizEditor from "./pages/portal/teach/QuizEditor";
 import SubmissionsInbox from "./pages/portal/teach/SubmissionsInbox";
 import AssignmentView from "./pages/portal/AssignmentView";
 import QuizView from "./pages/portal/QuizView";
+import Account from "./pages/portal/Account";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import RefundPolicyPage from "./pages/RefundPolicyPage";
