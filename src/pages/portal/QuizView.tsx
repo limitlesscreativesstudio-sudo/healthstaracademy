@@ -24,7 +24,6 @@ type Question = {
   question_type: string;
   prompt: string;
   options: any;
-  correct_answer: any;
   points: number;
 };
 
@@ -41,7 +40,8 @@ const QuizView = () => {
   const load = async () => {
     const { data: q } = await supabase.from("quizzes").select("*").eq("id", quizId!).maybeSingle();
     setQuiz(q as any);
-    const { data: qs } = await supabase.from("quiz_questions").select("*").eq("quiz_id", quizId!).order("position");
+    // Server-side function returns questions WITHOUT correct_answer
+    const { data: qs } = await supabase.rpc("get_quiz_questions_for_student", { _quiz_id: quizId! });
     setQuestions((qs ?? []) as any);
     if (user) {
       const { data: at } = await supabase
@@ -69,34 +69,17 @@ const QuizView = () => {
   const submitAttempt = async () => {
     if (!active || !quiz) return;
     setBusy(true);
-    let score = 0;
-    let max = 0;
-    questions.forEach(q => {
-      max += Number(q.points);
-      const ans = answers[q.id];
-      if (q.question_type === "multiple_choice") {
-        if (Number(ans) === Number(q.correct_answer)) score += Number(q.points);
-      } else if (q.question_type === "true_false") {
-        if (ans === q.correct_answer || String(ans) === String(q.correct_answer)) score += Number(q.points);
-      } else if (q.question_type === "short_answer") {
-        if (q.correct_answer && String(ans ?? "").trim().toLowerCase() === String(q.correct_answer).trim().toLowerCase()) {
-          score += Number(q.points);
-        }
-      }
+    // Scoring happens server-side; correct answers never leave the database
+    const { data, error } = await supabase.functions.invoke("submit-quiz-attempt", {
+      body: { attempt_id: active.id, answers },
     });
-    const { error } = await supabase.from("quiz_attempts").update({
-      answers, score, max_score: max, submitted_at: new Date().toISOString(),
-    }).eq("id", active.id);
-    if (error) { setBusy(false); return toast({ title: "Error", description: error.message, variant: "destructive" }); }
-    // Save grade snapshot (auto-graded portion)
-    if (user) {
-      await supabase.from("grades").insert({
-        course_id: quiz.course_id, user_id: user.id, quiz_attempt_id: active.id,
-        score, max_score: max, feedback: "Auto-graded",
-      });
+    if (error || (data as any)?.error) {
+      setBusy(false);
+      return toast({ title: "Error", description: (data as any)?.error ?? error?.message, variant: "destructive" });
     }
+    const { score, max_score } = data as { score: number; max_score: number };
     setBusy(false);
-    toast({ title: `Submitted — ${score}/${max}` });
+    toast({ title: `Submitted — ${score}/${max_score}` });
     setActive(null); setAnswers({});
     load();
   };
