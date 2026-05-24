@@ -315,8 +315,8 @@ const ItemViewer = ({ courseId }: { courseId: string }) => {
         if (f) {
           let url = f.external_url;
           if (f.storage_provider === "cloud" && f.storage_path) {
-            const { data } = supabase.storage.from("course-assets").getPublicUrl(f.storage_path);
-            url = data.publicUrl;
+            const { data } = await supabase.storage.from("course-assets").createSignedUrl(f.storage_path, 3600);
+            url = data?.signedUrl ?? null;
           } else if (f.storage_provider === "drive" && f.drive_file_id) {
             url = `https://drive.google.com/file/d/${f.drive_file_id}/preview`;
           }
