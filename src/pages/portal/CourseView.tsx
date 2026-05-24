@@ -166,10 +166,13 @@ const CourseHome = ({ course, isInstructor }: { course: Course; isInstructor: bo
                       <Link
                         key={i.id}
                         to={`/portal/courses/${course.id}/modules/${i.id}`}
-                        className="flex items-center gap-3 pl-12 pr-4 py-2.5 border-t border-border/50 hover:bg-muted/30 text-sm"
+                        className={`flex items-center gap-3 pl-12 pr-4 py-2.5 border-t border-border/50 hover:bg-muted/30 text-sm ${!i.published ? "opacity-60" : ""}`}
                       >
                         <span className="text-emerald-600">{itemIcon(i.item_type)}</span>
                         <span className="flex-1 font-medium">{i.title}</span>
+                        {isInstructor && !i.published && (
+                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1.5 py-0.5">Hidden</span>
+                        )}
                       </Link>
                     ))}
                   </div>
