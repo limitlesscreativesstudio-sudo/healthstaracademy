@@ -111,24 +111,29 @@ const CourseNav = ({ to, end, icon: Icon, children }: any) => (
   </NavLink>
 );
 
-const CourseHome = ({ course }: { course: Course }) => {
+const CourseHome = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
   const [modules, setModules] = useState<Module[]>([]);
   const [items, setItems] = useState<ModuleItem[]>([]);
   const [open, setOpen] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     (async () => {
-      const { data: mods } = await supabase.from("modules").select("*").eq("course_id", course.id).order("position");
+      let modQuery = supabase.from("modules").select("*").eq("course_id", course.id).order("position");
+      if (!isInstructor) modQuery = modQuery.eq("published", true);
+      const { data: mods } = await modQuery;
       const list = mods ?? [];
       setModules(list);
       setOpen(Object.fromEntries(list.map(m => [m.id, true])));
       const ids = list.map(m => m.id);
       if (ids.length) {
-        const { data: its } = await supabase.from("module_items").select("*").in("module_id", ids).order("position");
+        let itQuery = supabase.from("module_items").select("*").in("module_id", ids).order("position");
+        if (!isInstructor) itQuery = itQuery.eq("published", true);
+        const { data: its } = await itQuery;
         setItems(its ?? []);
       }
     })();
-  }, [course.id]);
+  }, [course.id, isInstructor]);
+
 
   return (
     <div className="flex flex-col gap-4">
