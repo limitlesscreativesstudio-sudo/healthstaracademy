@@ -173,11 +173,44 @@ const CourseHome = ({ course, isInstructor }: { course: Course; isInstructor: bo
   );
 };
 
-const ActivityStream = ({ courseId }: { courseId: string }) => (
-  <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">
-    Recent course activity appears above. Post an announcement to populate the stream.
-  </CardContent></Card>
-);
+const ActivityStream = ({ courseId }: { courseId: string }) => {
+  const [items, setItems] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    supabase.from("lms_announcements")
+      .select("*").eq("course_id", courseId)
+      .order("posted_at", { ascending: false }).limit(20)
+      .then(({ data }) => { setItems(data ?? []); setLoading(false); });
+  }, [courseId]);
+
+  if (loading) {
+    return <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Loading recent activity…</CardContent></Card>;
+  }
+  if (items.length === 0) {
+    return <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">
+      No recent activity yet. Post an announcement to populate the stream.
+    </CardContent></Card>;
+  }
+  return (
+    <div className="border border-border rounded-md bg-background divide-y divide-border">
+      <div className="px-4 py-2 bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+        <Megaphone className="h-3.5 w-3.5" /> Recent Activity
+      </div>
+      {items.map(a => (
+        <Link key={a.id} to={`/portal/courses/${courseId}/announcements`} className="block px-4 py-3 hover:bg-muted/30">
+          <div className="flex items-start justify-between gap-3 mb-1">
+            <div className="flex items-center gap-2">
+              <Megaphone className="h-4 w-4 text-purple shrink-0" />
+              <span className="font-semibold text-sm">{a.title}</span>
+            </div>
+            <span className="text-[11px] text-muted-foreground whitespace-nowrap">{new Date(a.posted_at).toLocaleString()}</span>
+          </div>
+          <p className="text-xs text-foreground/70 line-clamp-2 whitespace-pre-wrap ml-6">{a.body}</p>
+        </Link>
+      ))}
+    </div>
+  );
+};
 
 const FrontPageView = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
   const html = course.front_page_html ?? "";
