@@ -14,6 +14,7 @@ import SyllabusTab from "./SyllabusTab";
 type Course = {
   id: string; title: string; code: string | null; description: string | null; instructor_id: string;
   nav_order: NavKey[] | null; nav_visibility: Record<string, boolean> | null; default_view: string | null;
+  home_page_type: string | null; front_page_html: string | null;
 };
 type Module = { id: string; title: string; position: number; published: boolean };
 type ModuleItem = { id: string; module_id: string; title: string; item_type: string; content_ref: string | null; url: string | null; position: number; published: boolean };
