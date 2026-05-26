@@ -15,6 +15,7 @@ import ReadinessTab from "./ReadinessTab";
 import AttendanceTab from "./AttendanceTab";
 import ModulesTabAuthor from "@/components/portal/ModulesTabAuthor";
 import PagesTab from "./PagesTab";
+import ChooseHomePageDialog from "@/components/portal/ChooseHomePageDialog";
 
 type Course = {
   id: string; title: string; code: string | null; description: string | null; instructor_id: string;
@@ -130,14 +131,30 @@ const CourseNav = ({ to, end, icon: Icon, children }: any) => (
 );
 
 const CourseHome = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
-  const homeType = course.home_page_type ?? "modules";
+  const [homeType, setHomeType] = useState<string>(course.home_page_type ?? "modules");
+  const [hasFrontPage, setHasFrontPage] = useState<boolean>(!!course.front_page_html);
+  useEffect(() => {
+    if (!isInstructor) return;
+    supabase.from("courses").select("front_page_html").eq("id", course.id).maybeSingle()
+      .then(({ data }) => setHasFrontPage(!!data?.front_page_html));
+  }, [course.id, isInstructor]);
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
       <div className="min-w-0 space-y-6">
         <RecentAnnouncements courseId={course.id} />
-        <div className="border-b border-border pb-3">
-          <h1 className="font-heading text-2xl font-bold">{course.title}</h1>
-          {course.code && <div className="text-xs text-muted-foreground font-mono mt-1">{course.code}</div>}
+        <div className="border-b border-border pb-3 flex items-start justify-between gap-3">
+          <div>
+            <h1 className="font-heading text-2xl font-bold">{course.title}</h1>
+            {course.code && <div className="text-xs text-muted-foreground font-mono mt-1">{course.code}</div>}
+          </div>
+          {isInstructor && (
+            <ChooseHomePageDialog
+              courseId={course.id}
+              current={homeType}
+              hasFrontPage={hasFrontPage}
+              onChanged={(v) => setHomeType(v)}
+            />
+          )}
         </div>
         {homeType === "front_page" ? (
           <FrontPageView course={course} isInstructor={isInstructor} />
@@ -145,6 +162,8 @@ const CourseHome = ({ course, isInstructor }: { course: Course; isInstructor: bo
           <SyllabusTab courseId={course.id} isInstructor={isInstructor} />
         ) : homeType === "assignments" ? (
           <AssignmentsList courseId={course.id} />
+        ) : homeType === "activity" ? (
+          <ActivityStream courseId={course.id} />
         ) : (
           <ModulesHomeList courseId={course.id} isInstructor={isInstructor} />
         )}
@@ -153,6 +172,12 @@ const CourseHome = ({ course, isInstructor }: { course: Course; isInstructor: bo
     </div>
   );
 };
+
+const ActivityStream = ({ courseId }: { courseId: string }) => (
+  <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">
+    Recent course activity appears above. Post an announcement to populate the stream.
+  </CardContent></Card>
+);
 
 const FrontPageView = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
   const html = course.front_page_html ?? "";
