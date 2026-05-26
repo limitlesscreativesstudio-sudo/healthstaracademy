@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Users, GraduationCap, Mail, Activity, RefreshCw } from "lucide-react";
+import { LogOut, Users, GraduationCap, Mail, Activity, RefreshCw, LayoutDashboard } from "lucide-react";
 import StudentPipeline from "./components/StudentPipeline";
 import CohortManager from "./components/CohortManager";
+import CohortOpsHub from "./components/CohortOpsHub";
 import EmailLog from "./components/EmailLog";
 import WebhookInfo from "./components/WebhookInfo";
 
-type Tab = "pipeline" | "cohorts" | "emails" | "webhooks";
+type Tab = "pipeline" | "cohorts" | "cohort_hub" | "emails" | "webhooks";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<Tab>("pipeline");
