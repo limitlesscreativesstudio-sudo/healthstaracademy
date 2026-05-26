@@ -35,6 +35,7 @@ export const COURSE_NAV_ITEMS: NavItem[] = [
   { key: "quizzes",        label: "Quizzes",         path: "quizzes",         icon: GraduationCap },
   { key: "modules",        label: "Modules",         path: "modules",         icon: BookOpen },
   { key: "clinical",       label: "Clinical & Skills", path: "clinical",      icon: Stethoscope },
+  { key: "readiness",      label: "Exam Readiness",  path: "readiness",       icon: TrendingUp },
   { key: "bigbluebutton",  label: "BigBlueButton",   path: "bigbluebutton",   icon: Video },
   { key: "collaborations", label: "Collaborations",  path: "collaborations",  icon: Handshake, hiddenByDefault: true },
   { key: "attendance",     label: "Attendance",      path: "attendance",      icon: ClipboardCheck },
