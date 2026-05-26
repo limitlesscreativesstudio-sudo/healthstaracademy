@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import DOMPurify from "dompurify";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor, { sanitizeHtml } from "@/components/portal/RichTextEditor";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
@@ -206,7 +205,7 @@ const PageRow = ({ page, isInstructor, onEdit, onReload }: {
 const PagePreview = ({ page, onClose, onEdit, isInstructor }: {
   page: Page; onClose: () => void; onEdit: () => void; isInstructor: boolean;
 }) => {
-  const sanitized = DOMPurify.sanitize(page.body_html || "<p><em>This page is empty.</em></p>");
+  const sanitized = sanitizeHtml(page.body_html || "<p><em>This page is empty.</em></p>");
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
       <div className="max-w-4xl mx-auto p-6">
@@ -287,20 +286,14 @@ const PageEditor = ({ page, courseId, onCancel, onSaved }: {
             <div>
               <Label>Preview</Label>
               <div className="border border-border rounded-md p-4 min-h-[400px] prose max-w-none"
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body || "<p><em>Nothing to preview yet.</em></p>") }} />
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(body || "<p><em>Nothing to preview yet.</em></p>") }} />
             </div>
           ) : (
             <div>
-              <Label>Body (HTML supported)</Label>
-              <Textarea
-                rows={20}
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="Write your content here. You can use HTML tags like &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;&lt;li&gt;, &lt;a href&gt;, &lt;strong&gt;, &lt;img src&gt;, &lt;iframe&gt; (for videos), etc."
-                className="font-mono text-sm"
-              />
+              <Label>Content</Label>
+              <RichTextEditor value={body} onChange={setBody} />
               <p className="text-xs text-muted-foreground mt-2">
-                Tip: Once saved, use the page menu to publish it as your course Home Page, copy it to the Syllabus, or attach it to a Module item.
+                Tip: Use the toolbar to format text, add headings, links, images, and lists. Switch to HTML to paste embed codes (e.g. YouTube iframes). Once saved, use the page menu to publish it as your course Home Page, copy it to the Syllabus, or attach it to a Module item.
               </p>
             </div>
           )}
