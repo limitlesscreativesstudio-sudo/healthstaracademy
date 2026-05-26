@@ -189,6 +189,8 @@ export type Database = {
           nav_visibility: Json
           start_at: string | null
           status: string
+          syllabus_html: string
+          syllabus_show_summary: boolean
           term: string | null
           time_zone: string | null
           title: string
@@ -209,6 +211,8 @@ export type Database = {
           nav_visibility?: Json
           start_at?: string | null
           status?: string
+          syllabus_html?: string
+          syllabus_show_summary?: boolean
           term?: string | null
           time_zone?: string | null
           title: string
@@ -229,6 +233,8 @@ export type Database = {
           nav_visibility?: Json
           start_at?: string | null
           status?: string
+          syllabus_html?: string
+          syllabus_show_summary?: boolean
           term?: string | null
           time_zone?: string | null
           title?: string

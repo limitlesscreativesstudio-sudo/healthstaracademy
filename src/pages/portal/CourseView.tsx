@@ -9,6 +9,7 @@ import { usePortalAuth } from "@/hooks/usePortalAuth";
 import { COURSE_NAV_ITEMS, orderedNavKeys, isNavVisibleToStudent, type NavKey } from "@/lib/courseNav";
 
 import StudentGrades from "./StudentGrades";
+import SyllabusTab from "./SyllabusTab";
 
 type Course = {
   id: string; title: string; code: string | null; description: string | null; instructor_id: string;
@@ -84,7 +85,7 @@ const CourseView = () => {
             <Route path="people" element={<ComingSoon title="People" />} />
             <Route path="pages" element={<ComingSoon title="Pages" />} />
             <Route path="files" element={<ComingSoon title="Files" />} />
-            <Route path="syllabus" element={<ComingSoon title="Syllabus" />} />
+            <Route path="syllabus" element={<SyllabusTab courseId={course.id} isInstructor={isInstructor} />} />
             <Route path="outcomes" element={<ComingSoon title="Outcomes" />} />
             <Route path="rubrics" element={<ComingSoon title="Rubrics" />} />
             <Route path="bigbluebutton" element={<ComingSoon title="BigBlueButton" />} />
