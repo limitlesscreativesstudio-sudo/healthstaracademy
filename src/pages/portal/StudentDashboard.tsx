@@ -451,6 +451,9 @@ const StudentDashboard = () => {
                     <GraduationCap className="h-4 w-4" /> Teach Dashboard
                   </Link>
                 )}
+                <Link to="/portal/required" className="flex items-center gap-2 text-sm text-purple hover:underline">
+                  <ClipboardList className="h-4 w-4" /> Required Work
+                </Link>
                 <Link to="/portal/grades" className="flex items-center gap-2 text-sm text-purple hover:underline">
                   <Star className="h-4 w-4" /> View Grades
                 </Link>
