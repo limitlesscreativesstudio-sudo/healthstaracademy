@@ -535,11 +535,15 @@ const SettingsEditor = ({ course, reload }: any) => {
       <Tabs defaultValue="details">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="details">Course Details</TabsTrigger>
+          <TabsTrigger value="home">Home Page</TabsTrigger>
           <TabsTrigger value="sections">Sections</TabsTrigger>
           <TabsTrigger value="navigation">Navigation</TabsTrigger>
         </TabsList>
         <TabsContent value="details">
           <CourseDetailsSettings course={course} reload={reload} />
+        </TabsContent>
+        <TabsContent value="home">
+          <HomePageSettings course={course} reload={reload} />
         </TabsContent>
         <TabsContent value="sections">
           <SectionsSettings courseId={course.id} />
@@ -549,6 +553,47 @@ const SettingsEditor = ({ course, reload }: any) => {
         </TabsContent>
       </Tabs>
     </div>
+  );
+};
+
+const HomePageSettings = ({ course, reload }: any) => {
+  const [homeType, setHomeType] = useState(course.home_page_type ?? "modules");
+  const [html, setHtml] = useState(course.front_page_html ?? "");
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase.from("courses").update({
+      home_page_type: homeType,
+      front_page_html: html,
+    }).eq("id", course.id);
+    setSaving(false);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: "Home page saved" }); reload(); }
+  };
+  return (
+    <Card className="mt-4"><CardContent className="pt-6 space-y-4">
+      <div>
+        <Label>Choose Home Page</Label>
+        <Select value={homeType} onValueChange={setHomeType}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="front_page">Front Page (custom rich content)</SelectItem>
+            <SelectItem value="modules">Course Modules</SelectItem>
+            <SelectItem value="syllabus">Syllabus</SelectItem>
+            <SelectItem value="assignments">Assignments List</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground mt-1">Recent Announcements and the right-side "Coming Up" panel always appear on the home page.</p>
+      </div>
+      {homeType === "front_page" && (
+        <div>
+          <Label>Front Page Content (HTML supported)</Label>
+          <Textarea rows={12} value={html} onChange={e => setHtml(e.target.value)}
+            placeholder={'<h2>Welcome to the course!</h2>\n<p>Office hours, Zoom link, weekly overview, instructor photo, etc.</p>'} />
+        </div>
+      )}
+      <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save Home Page"}</Button>
+    </CardContent></Card>
   );
 };
 
