@@ -182,6 +182,8 @@ export type Database = {
           default_view: string
           description: string | null
           end_at: string | null
+          front_page_html: string
+          home_page_type: string
           id: string
           instructor_id: string
           license: string | null
@@ -204,6 +206,8 @@ export type Database = {
           default_view?: string
           description?: string | null
           end_at?: string | null
+          front_page_html?: string
+          home_page_type?: string
           id?: string
           instructor_id: string
           license?: string | null
@@ -226,6 +230,8 @@ export type Database = {
           default_view?: string
           description?: string | null
           end_at?: string | null
+          front_page_html?: string
+          home_page_type?: string
           id?: string
           instructor_id?: string
           license?: string | null
