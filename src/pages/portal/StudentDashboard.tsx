@@ -406,20 +406,30 @@ const StudentDashboard = () => {
                     const due = new Date(a.due_at);
                     const days = differenceInDays(due, new Date());
                     const urgent = days <= 2;
+                    const statusMeta: Record<SubmissionStatus, { label: string; cls: string; Icon: any }> = {
+                      graded: { label: a.score != null ? `${a.score}/${a.max_score} graded` : "Graded", cls: "bg-purple/15 text-purple border-purple/30", Icon: CheckCircle2 },
+                      submitted: { label: "Submitted", cls: "bg-cyan/15 text-cyan border-cyan/30", Icon: CheckCircle2 },
+                      missing: { label: "Missing", cls: "bg-coral/15 text-coral border-coral/30", Icon: AlertCircle },
+                      not_started: { label: "Not started", cls: "bg-muted text-muted-foreground border-border", Icon: Clock },
+                    };
+                    const sm = statusMeta[a.status];
                     return (
                       <Link key={a.id} to={`/portal/courses/${a.course_id}/assignments/${a.id}`} className="block">
-                        <Card className={`hover:shadow-soft transition-shadow ${urgent ? "border-coral/40 bg-coral/5" : ""}`}>
+                        <Card className={`hover:shadow-soft transition-shadow ${urgent && a.status === "not_started" ? "border-coral/40 bg-coral/5" : ""}`}>
                           <CardContent className="py-3 px-3">
                             <div className="flex items-start gap-2">
-                              {urgent && <AlertCircle className="h-4 w-4 text-coral mt-0.5 flex-shrink-0" />}
+                              {urgent && a.status === "not_started" && <AlertCircle className="h-4 w-4 text-coral mt-0.5 flex-shrink-0" />}
                               <div className="min-w-0 flex-1">
                                 <div className="font-medium text-sm text-foreground line-clamp-1">{a.title}</div>
                                 <div className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{a.course_title}</div>
-                                <div className="flex items-center justify-between mt-1.5">
-                                  <span className={`text-xs ${urgent ? "text-coral font-semibold" : "text-muted-foreground"}`}>
-                                    Due {isPast(due) ? "now" : formatDistanceToNow(due, { addSuffix: true })}
+                                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                                  <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border ${sm.cls}`}>
+                                    <sm.Icon className="h-3 w-3" /> {sm.label}
                                   </span>
-                                  <span className="text-[10px] text-muted-foreground">{a.points} pts</span>
+                                  <span className={`text-xs ${urgent && a.status === "not_started" ? "text-coral font-semibold" : "text-muted-foreground"}`}>
+                                    · Due {isPast(due) ? "now" : formatDistanceToNow(due, { addSuffix: true })}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground ml-auto">{a.points} pts</span>
                                 </div>
                               </div>
                             </div>
