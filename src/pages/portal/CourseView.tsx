@@ -38,7 +38,13 @@ const CourseView = () => {
   useEffect(() => {
     if (!courseId) return;
     supabase.from("courses").select("id, title, code, description, instructor_id, nav_order, nav_visibility, default_view, home_page_type, front_page_html").eq("id", courseId).maybeSingle()
-      .then(({ data }) => { setCourse(data as Course | null); setLoading(false); });
+      .then(({ data }) => {
+        setCourse(data as Course | null);
+        setLoading(false);
+        if (data) {
+          try { localStorage.setItem("hsa:lastCourse", JSON.stringify({ courseId, title: data.title })); } catch { /* ignore */ }
+        }
+      });
   }, [courseId]);
 
   if (loading) return <PortalLayout><div className="p-6">Loading…</div></PortalLayout>;
