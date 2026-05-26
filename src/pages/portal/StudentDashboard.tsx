@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PortalLayout from "@/components/portal/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Calendar as CalendarIcon, ClipboardList, FolderOpen, MessageSquare, Star, Briefcase } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { BookOpen, Calendar as CalendarIcon, ClipboardList, FolderOpen, MessageSquare, Star, Briefcase, AlertCircle, Megaphone, ArrowRight, GraduationCap } from "lucide-react";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
+import { formatDistanceToNow, isPast, differenceInDays } from "date-fns";
 
 type Course = {
   id: string;
@@ -13,6 +15,24 @@ type Course = {
   term: string | null;
   cover_image_url: string | null;
   instructor_id: string;
+};
+
+type UpcomingAssignment = {
+  id: string;
+  title: string;
+  due_at: string;
+  course_id: string;
+  points: number;
+  course_title?: string;
+};
+
+type Announcement = {
+  id: string;
+  title: string;
+  body: string;
+  posted_at: string;
+  course_id: string;
+  course_title?: string;
 };
 
 // Canvas-style rotating card header colors
@@ -28,6 +48,9 @@ const CARD_COLORS = [
 const StudentDashboard = () => {
   const { user, isInstructor } = usePortalAuth();
   const [courses, setCourses] = useState<Course[]>([]);
+  const [upcoming, setUpcoming] = useState<UpcomingAssignment[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [lastVisited, setLastVisited] = useState<{ courseId: string; title: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,11 +58,51 @@ const StudentDashboard = () => {
     (async () => {
       const { data: enrollments } = await supabase.from("enrollments").select("course_id").eq("user_id", user.id);
       const enrolledIds = (enrollments ?? []).map(e => e.course_id);
-      const { data } = await supabase
+      const { data: courseData } = await supabase
         .from("courses")
         .select("id, title, code, term, cover_image_url, instructor_id")
         .or(`instructor_id.eq.${user.id}${enrolledIds.length ? `,id.in.(${enrolledIds.join(",")})` : ""}`);
-      setCourses(data ?? []);
+      const myCourses = courseData ?? [];
+      setCourses(myCourses);
+
+      const courseIds = myCourses.map(c => c.id);
+      if (courseIds.length) {
+        const titleMap = Object.fromEntries(myCourses.map(c => [c.id, c.title]));
+        const nowIso = new Date().toISOString();
+        const in14 = new Date(Date.now() + 14 * 86400000).toISOString();
+
+        const [{ data: asgn }, { data: ann }] = await Promise.all([
+          supabase
+            .from("assignments")
+            .select("id, title, due_at, course_id, points, published")
+            .in("course_id", courseIds)
+            .eq("published", true)
+            .not("due_at", "is", null)
+            .gte("due_at", nowIso)
+            .lte("due_at", in14)
+            .order("due_at", { ascending: true })
+            .limit(8),
+          supabase
+            .from("lms_announcements")
+            .select("id, title, body, posted_at, course_id")
+            .in("course_id", courseIds)
+            .order("posted_at", { ascending: false })
+            .limit(5),
+        ]);
+
+        setUpcoming((asgn ?? []).map(a => ({ ...a, course_title: titleMap[a.course_id] })));
+        setAnnouncements((ann ?? []).map(a => ({ ...a, course_title: titleMap[a.course_id] })));
+      }
+
+      // Last visited course from localStorage (set by CourseView)
+      try {
+        const stored = localStorage.getItem("hsa:lastCourse");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (myCourses.find(c => c.id === parsed.courseId)) setLastVisited(parsed);
+        }
+      } catch { /* ignore */ }
+
       setLoading(false);
     })();
   }, [user]);
@@ -47,9 +110,33 @@ const StudentDashboard = () => {
   return (
     <PortalLayout>
       <div className="px-6 py-5 max-w-[1400px] mx-auto w-full">
-        <h1 className="font-heading text-3xl font-bold text-foreground mb-5">Dashboard</h1>
+        <h1 className="font-heading text-3xl font-bold text-foreground mb-1">Dashboard</h1>
+        <p className="text-sm text-muted-foreground mb-5">Welcome back. Pick up where you left off.</p>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+        {/* Resume card */}
+        {lastVisited && (
+          <Card className="mb-6 border-purple/30 bg-gradient-to-r from-purple/5 to-cyan/5">
+            <CardContent className="py-4 px-5 flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-purple/15 flex items-center justify-center">
+                  <BookOpen className="h-5 w-5 text-purple" />
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Continue where you left off</div>
+                  <div className="font-semibold text-foreground">{lastVisited.title}</div>
+                </div>
+              </div>
+              <Link
+                to={`/portal/courses/${lastVisited.courseId}`}
+                className="inline-flex items-center gap-1 text-sm font-semibold text-purple hover:underline"
+              >
+                Resume <ArrowRight className="h-4 w-4" />
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
           {/* Main column */}
           <div>
             <h2 className="text-base font-semibold text-foreground mb-3">
@@ -105,39 +192,103 @@ const StudentDashboard = () => {
                   );
                 })}
               </div>
-
             )}
 
-            <h2 className="text-base font-semibold text-foreground mt-8 mb-3">
-              Unpublished Courses (0)
+            {/* Recent Announcements */}
+            <h2 className="text-base font-semibold text-foreground mt-8 mb-3 flex items-center gap-2">
+              <Megaphone className="h-4 w-4 text-purple" /> Recent Announcements
             </h2>
-            <p className="text-sm text-muted-foreground">No courses to display</p>
+            {announcements.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No recent announcements.</p>
+            ) : (
+              <div className="space-y-3">
+                {announcements.map((a) => (
+                  <Card key={a.id} className="border-l-4 border-l-purple">
+                    <CardContent className="py-3 px-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="secondary" className="text-[10px]">{a.course_title}</Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(a.posted_at), { addSuffix: true })}
+                            </span>
+                          </div>
+                          <div className="font-semibold text-sm text-foreground line-clamp-1">{a.title}</div>
+                          <div className="text-xs text-muted-foreground line-clamp-2 mt-1">{a.body}</div>
+                        </div>
+                        <Link to={`/portal/courses/${a.course_id}`} className="text-xs text-purple hover:underline whitespace-nowrap">
+                          Open
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right rail */}
-          <aside className="space-y-5">
+          <aside className="space-y-6">
+            {/* To-do list (upcoming assignments next 14 days) */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold text-foreground">Coming Up</h3>
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4 text-purple" /> To Do
+                </h3>
                 <Link to="/portal/calendar" className="text-xs text-purple hover:underline flex items-center gap-1">
-                  <CalendarIcon className="h-3 w-3" /> View Calendar
+                  <CalendarIcon className="h-3 w-3" /> Calendar
                 </Link>
               </div>
-              <p className="text-xs text-muted-foreground">Nothing for the next week</p>
+              {upcoming.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Nothing due in the next 14 days.</p>
+              ) : (
+                <div className="space-y-2">
+                  {upcoming.map((a) => {
+                    const due = new Date(a.due_at);
+                    const days = differenceInDays(due, new Date());
+                    const urgent = days <= 2;
+                    return (
+                      <Link key={a.id} to={`/portal/courses/${a.course_id}/assignments/${a.id}`} className="block">
+                        <Card className={`hover:shadow-soft transition-shadow ${urgent ? "border-coral/40 bg-coral/5" : ""}`}>
+                          <CardContent className="py-3 px-3">
+                            <div className="flex items-start gap-2">
+                              {urgent && <AlertCircle className="h-4 w-4 text-coral mt-0.5 flex-shrink-0" />}
+                              <div className="min-w-0 flex-1">
+                                <div className="font-medium text-sm text-foreground line-clamp-1">{a.title}</div>
+                                <div className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{a.course_title}</div>
+                                <div className="flex items-center justify-between mt-1.5">
+                                  <span className={`text-xs ${urgent ? "text-coral font-semibold" : "text-muted-foreground"}`}>
+                                    Due {isPast(due) ? "now" : formatDistanceToNow(due, { addSuffix: true })}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground">{a.points} pts</span>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            <div className="space-y-2">
-              {isInstructor && (
-                <Link to="/portal/teach" className="block">
-                  <div className="text-sm text-purple hover:underline">Start a New Course</div>
+            {/* Quick links */}
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-2">Quick Links</h3>
+              <div className="space-y-2">
+                {isInstructor && (
+                  <Link to="/portal/teach" className="flex items-center gap-2 text-sm text-purple hover:underline">
+                    <GraduationCap className="h-4 w-4" /> Teach Dashboard
+                  </Link>
+                )}
+                <Link to="/portal/grades" className="flex items-center gap-2 text-sm text-purple hover:underline">
+                  <Star className="h-4 w-4" /> View Grades
                 </Link>
-              )}
-              <Link to="/portal/grades" className="flex items-center gap-2 text-sm text-purple hover:underline">
-                <Star className="h-4 w-4" /> View Grades
-              </Link>
-              <Link to="/portal/career" className="flex items-center gap-2 text-sm text-purple hover:underline">
-                <Briefcase className="h-4 w-4" /> Career Portal
-              </Link>
+                <Link to="/portal/career" className="flex items-center gap-2 text-sm text-purple hover:underline">
+                  <Briefcase className="h-4 w-4" /> Career Portal
+                </Link>
+              </div>
             </div>
           </aside>
         </div>
