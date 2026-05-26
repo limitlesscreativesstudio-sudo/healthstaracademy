@@ -6,10 +6,14 @@ import PortalLayout from "@/components/portal/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Megaphone, BookOpen, FileText, ChevronRight, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap, BarChart3, MessageSquare, Users as UsersIcon, FolderOpen, ScrollText, Target, Grid3x3, Settings as SettingsIcon, ClipboardCheck, LineChart, PenSquare, Handshake } from "lucide-react";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
+import { COURSE_NAV_ITEMS, orderedNavKeys, isNavVisibleToStudent, type NavKey } from "@/lib/courseNav";
 
 import StudentGrades from "./StudentGrades";
 
-type Course = { id: string; title: string; code: string | null; description: string | null; instructor_id: string };
+type Course = {
+  id: string; title: string; code: string | null; description: string | null; instructor_id: string;
+  nav_order: NavKey[] | null; nav_visibility: Record<string, boolean> | null; default_view: string | null;
+};
 type Module = { id: string; title: string; position: number; published: boolean };
 type ModuleItem = { id: string; module_id: string; title: string; item_type: string; content_ref: string | null; url: string | null; position: number; published: boolean };
 type Announcement = { id: string; title: string; body: string; posted_at: string };
@@ -28,8 +32,8 @@ const CourseView = () => {
 
   useEffect(() => {
     if (!courseId) return;
-    supabase.from("courses").select("id, title, code, description, instructor_id").eq("id", courseId).maybeSingle()
-      .then(({ data }) => { setCourse(data); setLoading(false); });
+    supabase.from("courses").select("id, title, code, description, instructor_id, nav_order, nav_visibility, default_view").eq("id", courseId).maybeSingle()
+      .then(({ data }) => { setCourse(data as Course | null); setLoading(false); });
   }, [courseId]);
 
   if (loading) return <PortalLayout><div className="p-6">Loading…</div></PortalLayout>;
@@ -48,24 +52,23 @@ const CourseView = () => {
             {course.code && <div className="text-xs text-muted-foreground font-mono mt-1">{course.code}</div>}
           </div>
           <nav className="text-sm">
-            <CourseNav to={`/portal/courses/${courseId}`} end icon={BookOpen}>Home</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/announcements`} icon={Megaphone}>Announcements</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/discussions`} icon={MessageSquare}>Discussions</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/grades`} icon={BarChart3}>Grades</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/people`} icon={UsersIcon}>People</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/pages`} icon={FileText}>Pages</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/files`} icon={FolderOpen}>Files</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/syllabus`} icon={ScrollText}>Syllabus</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/outcomes`} icon={Target}>Outcomes</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/rubrics`} icon={Grid3x3}>Rubrics</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/quizzes`} icon={GraduationCap}>Quizzes</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/modules`} icon={BookOpen}>Modules</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/bigbluebutton`} icon={Video}>BigBlueButton</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/collaborations`} icon={Handshake}>Collaborations</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/attendance`} icon={ClipboardCheck}>Attendance</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/analytics`} icon={LineChart}>New Analytics</CourseNav>
-            <CourseNav to={`/portal/courses/${courseId}/lucid`} icon={PenSquare}>Lucid (Whiteboard)</CourseNav>
-            {isInstructor && <CourseNav to={`/portal/teach/courses/${courseId}`} icon={SettingsIcon}>Settings</CourseNav>}
+            {orderedNavKeys(course.nav_order).map(key => {
+              const item = COURSE_NAV_ITEMS.find(i => i.key === key)!;
+              const visibleToStudent = isNavVisibleToStudent(key, course.nav_visibility);
+              if (!isInstructor && !visibleToStudent) return null;
+              const to = item.path ? `/portal/courses/${courseId}/${item.path}` : `/portal/courses/${courseId}`;
+              return (
+                <CourseNav key={key} to={to} end={!item.path} icon={item.icon}>
+                  <span className="flex-1">{item.label}</span>
+                  {isInstructor && !visibleToStudent && (
+                    <span className="text-[9px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1 py-0.5 ml-1">Hidden</span>
+                  )}
+                </CourseNav>
+              );
+            })}
+            {isInstructor && (
+              <CourseNav to={`/portal/teach/courses/${courseId}`} icon={SettingsIcon}>Settings</CourseNav>
+            )}
           </nav>
         </aside>
         <div className="flex-1 p-6 max-w-5xl min-w-0">

@@ -10,7 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Upload, Eye, EyeOff, ArrowLeft, Sparkles, ListPlus } from "lucide-react";
+import { Plus, Trash2, Upload, Eye, EyeOff, ArrowLeft, Sparkles, ListPlus, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { COURSE_NAV_ITEMS, defaultNavOrder, type NavKey } from "@/lib/courseNav";
 
 const CDPH_MODULES: { title: string; pdf: string }[] = [
   { title: "Module 1: Introduction to Nurse Assistant", pdf: "https://coadn.org/public/uploads/images/cccco-na-model-curriculum-module-1.pdf" },
@@ -528,38 +530,274 @@ const AnnouncementsEditor = ({ courseId, userId }: { courseId: string; userId?: 
 };
 
 const SettingsEditor = ({ course, reload }: any) => {
+  return (
+    <div className="mt-4">
+      <Tabs defaultValue="details">
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="details">Course Details</TabsTrigger>
+          <TabsTrigger value="sections">Sections</TabsTrigger>
+          <TabsTrigger value="navigation">Navigation</TabsTrigger>
+        </TabsList>
+        <TabsContent value="details">
+          <CourseDetailsSettings course={course} reload={reload} />
+        </TabsContent>
+        <TabsContent value="sections">
+          <SectionsSettings courseId={course.id} />
+        </TabsContent>
+        <TabsContent value="navigation">
+          <NavigationSettings course={course} reload={reload} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+const TIME_ZONES = [
+  "America/Los_Angeles", "America/Denver", "America/Chicago", "America/New_York",
+  "America/Phoenix", "America/Anchorage", "Pacific/Honolulu", "UTC",
+];
+
+const toLocalInput = (iso: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+const fromLocalInput = (v: string) => (v ? new Date(v).toISOString() : null);
+
+const CourseDetailsSettings = ({ course, reload }: any) => {
   const [title, setTitle] = useState(course.title);
   const [code, setCode] = useState(course.code ?? "");
   const [term, setTerm] = useState(course.term ?? "");
   const [description, setDescription] = useState(course.description ?? "");
+  const [coverImageUrl, setCoverImageUrl] = useState(course.cover_image_url ?? "");
   const [status, setStatus] = useState(course.status);
+  const [startAt, setStartAt] = useState(toLocalInput(course.start_at));
+  const [endAt, setEndAt] = useState(toLocalInput(course.end_at));
+  const [timeZone, setTimeZone] = useState(course.time_zone ?? "America/Los_Angeles");
+  const [license, setLicense] = useState(course.license ?? "private");
+  const [visibility, setVisibility] = useState(course.visibility ?? "course");
+  const [defaultView, setDefaultView] = useState(course.default_view ?? "modules");
+  const [saving, setSaving] = useState(false);
 
   const save = async () => {
-    const { error } = await supabase.from("courses").update({ title, code: code || null, term: term || null, description: description || null, status }).eq("id", course.id);
+    setSaving(true);
+    const { error } = await supabase.from("courses").update({
+      title,
+      code: code || null,
+      term: term || null,
+      description: description || null,
+      cover_image_url: coverImageUrl || null,
+      status,
+      start_at: fromLocalInput(startAt),
+      end_at: fromLocalInput(endAt),
+      time_zone: timeZone,
+      license,
+      visibility,
+      default_view: defaultView,
+    }).eq("id", course.id);
+    setSaving(false);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Saved" }); reload(); }
+    else { toast({ title: "Course details saved" }); reload(); }
   };
 
   return (
-    <Card className="mt-4"><CardContent className="pt-6 space-y-3">
-      <div><Label>Title</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
+    <Card className="mt-4"><CardContent className="pt-6 space-y-4">
+      <div><Label>Course Name</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
       <div className="grid grid-cols-2 gap-3">
-        <div><Label>Code</Label><Input value={code} onChange={e => setCode(e.target.value)} /></div>
-        <div><Label>Term</Label><Input value={term} onChange={e => setTerm(e.target.value)} /></div>
+        <div><Label>Course Code</Label><Input value={code} onChange={e => setCode(e.target.value)} placeholder="HSA-CNA-101" /></div>
+        <div><Label>Term</Label><Input value={term} onChange={e => setTerm(e.target.value)} placeholder="Fall 2026" /></div>
       </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div><Label>Starts</Label><Input type="datetime-local" value={startAt} onChange={e => setStartAt(e.target.value)} /></div>
+        <div><Label>Ends</Label><Input type="datetime-local" value={endAt} onChange={e => setEndAt(e.target.value)} /></div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label>Time Zone</Label>
+          <Select value={timeZone} onValueChange={setTimeZone}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>{TIME_ZONES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>License</Label>
+          <Select value={license} onValueChange={setLicense}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="private">Private (Copyrighted)</SelectItem>
+              <SelectItem value="cc_by">CC Attribution</SelectItem>
+              <SelectItem value="cc_by_sa">CC Attribution Share Alike</SelectItem>
+              <SelectItem value="cc_by_nc">CC Attribution Non-Commercial</SelectItem>
+              <SelectItem value="public_domain">Public Domain</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label>Visibility</Label>
+          <Select value={visibility} onValueChange={setVisibility}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="course">Course (enrolled students only)</SelectItem>
+              <SelectItem value="institution">Institution (any signed-in user)</SelectItem>
+              <SelectItem value="public">Public</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-1">Note: only Course visibility is enforced today.</p>
+        </div>
+        <div>
+          <Label>Default Home View</Label>
+          <Select value={defaultView} onValueChange={setDefaultView}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="modules">Course Modules</SelectItem>
+              <SelectItem value="syllabus">Syllabus</SelectItem>
+              <SelectItem value="assignments">Assignments List</SelectItem>
+              <SelectItem value="announcements">Announcements / Activity</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div><Label>Cover Image URL</Label><Input value={coverImageUrl} onChange={e => setCoverImageUrl(e.target.value)} placeholder="https://…" /></div>
       <div><Label>Description</Label><Textarea rows={3} value={description} onChange={e => setDescription(e.target.value)} /></div>
       <div>
-        <Label>Status</Label>
+        <Label>Course Status</Label>
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="draft">Draft (hidden from students)</SelectItem>
+            <SelectItem value="draft">Unpublished (hidden from students)</SelectItem>
             <SelectItem value="published">Published (visible to enrolled students)</SelectItem>
             <SelectItem value="archived">Archived</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      <Button onClick={save}>Save Changes</Button>
+      <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Update Course Details"}</Button>
+    </CardContent></Card>
+  );
+};
+
+const SectionsSettings = ({ courseId }: { courseId: string }) => {
+  const [sections, setSections] = useState<any[]>([]);
+  const [name, setName] = useState("");
+
+  const load = () => supabase.from("course_sections").select("*").eq("course_id", courseId).order("created_at")
+    .then(({ data }) => setSections(data ?? []));
+  useEffect(() => { load(); }, [courseId]);
+
+  const add = async () => {
+    if (!name.trim()) return;
+    const { error } = await supabase.from("course_sections").insert({ course_id: courseId, name });
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { setName(""); load(); }
+  };
+  const del = async (id: string) => {
+    if (!confirm("Delete this section?")) return;
+    await supabase.from("course_sections").delete().eq("id", id);
+    load();
+  };
+
+  return (
+    <Card className="mt-4"><CardContent className="pt-6 space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Sections let you group enrolled students (e.g. by cohort or clinical site). Assignments and the gradebook can later be filtered by section.
+      </p>
+      <div className="flex gap-2">
+        <Input placeholder="Section name (e.g. Stockton AM Cohort)" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && add()} />
+        <Button onClick={add}><Plus className="h-4 w-4" /> Add</Button>
+      </div>
+      {sections.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No sections yet.</p>
+      ) : (
+        <ul className="space-y-1">
+          {sections.map(s => (
+            <li key={s.id} className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm">
+              <span className="font-medium">{s.name}</span>
+              <Button size="sm" variant="ghost" onClick={() => del(s.id)}><Trash2 className="h-4 w-4" /></Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </CardContent></Card>
+  );
+};
+
+const NavigationSettings = ({ course, reload }: any) => {
+  const initialOrder: NavKey[] = (Array.isArray(course.nav_order) && course.nav_order.length
+    ? course.nav_order : defaultNavOrder()) as NavKey[];
+  // Sanitize/repair against canonical list
+  const repair = (arr: NavKey[]): NavKey[] => {
+    const all = defaultNavOrder();
+    const seen = new Set<NavKey>();
+    const out: NavKey[] = [];
+    for (const k of arr) if (all.includes(k) && !seen.has(k)) { out.push(k); seen.add(k); }
+    for (const k of all) if (!seen.has(k)) out.push(k);
+    return out;
+  };
+
+  const [order, setOrder] = useState<NavKey[]>(repair(initialOrder));
+  const [visibility, setVisibility] = useState<Record<string, boolean>>(
+    (course.nav_visibility && typeof course.nav_visibility === "object") ? course.nav_visibility : {}
+  );
+  const [saving, setSaving] = useState(false);
+
+  const isVisible = (key: NavKey) => {
+    const item = COURSE_NAV_ITEMS.find(i => i.key === key)!;
+    if (item.required) return true;
+    const v = visibility[key];
+    return v === undefined ? !item.hiddenByDefault : v;
+  };
+
+  const toggle = (key: NavKey) => {
+    const item = COURSE_NAV_ITEMS.find(i => i.key === key)!;
+    if (item.required) return;
+    setVisibility(v => ({ ...v, [key]: !isVisible(key) }));
+  };
+
+  const move = (idx: number, dir: -1 | 1) => {
+    const j = idx + dir;
+    if (j < 0 || j >= order.length) return;
+    const next = [...order];
+    [next[idx], next[j]] = [next[j], next[idx]];
+    setOrder(next);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase.from("courses").update({
+      nav_order: order,
+      nav_visibility: visibility,
+    }).eq("id", course.id);
+    setSaving(false);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: "Navigation saved" }); reload(); }
+  };
+
+  return (
+    <Card className="mt-4"><CardContent className="pt-6 space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Drag-style reorder with the arrows. Hidden items stay accessible to instructors but disappear from the student sidebar. Home cannot be hidden.
+      </p>
+      <ul className="border border-border rounded divide-y divide-border">
+        {order.map((key, idx) => {
+          const item = COURSE_NAV_ITEMS.find(i => i.key === key)!;
+          const visible = isVisible(key);
+          const Icon = item.icon;
+          return (
+            <li key={key} className={`flex items-center gap-2 px-3 py-2 ${visible ? "" : "bg-muted/40"}`}>
+              <GripVertical className="h-4 w-4 text-muted-foreground" />
+              <Icon className="h-4 w-4 text-muted-foreground" />
+              <span className={`flex-1 text-sm ${visible ? "" : "text-muted-foreground line-through"}`}>{item.label}</span>
+              {item.required && <span className="text-[10px] uppercase text-muted-foreground border border-border rounded px-1.5 py-0.5">Required</span>}
+              <Button size="sm" variant="ghost" onClick={() => move(idx, -1)} disabled={idx === 0}><ArrowUp className="h-4 w-4" /></Button>
+              <Button size="sm" variant="ghost" onClick={() => move(idx, 1)} disabled={idx === order.length - 1}><ArrowDown className="h-4 w-4" /></Button>
+              <Switch checked={visible} disabled={item.required} onCheckedChange={() => toggle(key)} />
+            </li>
+          );
+        })}
+      </ul>
+      <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save Navigation"}</Button>
     </CardContent></Card>
   );
 };
