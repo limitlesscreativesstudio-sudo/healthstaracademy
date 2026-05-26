@@ -56,6 +56,93 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_hours: {
+        Row: {
+          activity_summary: string | null
+          clinical_site: string
+          course_id: string
+          created_at: string
+          hours: number
+          id: string
+          shift_date: string
+          student_user_id: string
+          supervisor_name: string | null
+          updated_at: string
+          verified: boolean
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          activity_summary?: string | null
+          clinical_site: string
+          course_id: string
+          created_at?: string
+          hours: number
+          id?: string
+          shift_date: string
+          student_user_id: string
+          supervisor_name?: string | null
+          updated_at?: string
+          verified?: boolean
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          activity_summary?: string | null
+          clinical_site?: string
+          course_id?: string
+          created_at?: string
+          hours?: number
+          id?: string
+          shift_date?: string
+          student_user_id?: string
+          supervisor_name?: string | null
+          updated_at?: string
+          verified?: boolean
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      cna_skills: {
+        Row: {
+          active: boolean
+          category: string
+          cdph_module: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          position: number
+          required_for_certification: boolean
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          cdph_module?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          position?: number
+          required_for_certification?: boolean
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          cdph_module?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          position?: number
+          required_for_certification?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cohorts: {
         Row: {
           capacity: number
@@ -771,6 +858,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      student_skill_signoffs: {
+        Row: {
+          attempts: number
+          clinical_site: string | null
+          course_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          signed_off_at: string | null
+          signed_off_by: string | null
+          skill_id: string
+          status: string
+          student_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          clinical_site?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          signed_off_at?: string | null
+          signed_off_by?: string | null
+          skill_id: string
+          status?: string
+          student_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          clinical_site?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          signed_off_at?: string | null
+          signed_off_by?: string | null
+          skill_id?: string
+          status?: string
+          student_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_skill_signoffs_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "cna_skills"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       students: {
         Row: {
