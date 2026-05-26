@@ -150,9 +150,11 @@ const CourseNav = ({ to, end, icon: Icon, children }: any) => (
   </NavLink>
 );
 
-const CourseHome = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
+const CourseHome = ({ course, isInstructor, reloadCourse }: { course: Course; isInstructor: boolean; reloadCourse?: () => void }) => {
   const [homeType, setHomeType] = useState<string>(course.home_page_type ?? "modules");
   const [hasFrontPage, setHasFrontPage] = useState<boolean>(!!course.front_page_html);
+  useEffect(() => { setHomeType(course.home_page_type ?? "modules"); }, [course.home_page_type]);
+  useEffect(() => { setHasFrontPage(!!course.front_page_html); }, [course.front_page_html]);
   useEffect(() => {
     if (!isInstructor) return;
     supabase.from("courses").select("front_page_html").eq("id", course.id).maybeSingle()
@@ -172,12 +174,12 @@ const CourseHome = ({ course, isInstructor }: { course: Course; isInstructor: bo
               courseId={course.id}
               current={homeType}
               hasFrontPage={hasFrontPage}
-              onChanged={(v) => setHomeType(v)}
+              onChanged={(v) => { setHomeType(v); reloadCourse?.(); }}
             />
           )}
         </div>
         {homeType === "front_page" ? (
-          <FrontPageView course={course} isInstructor={isInstructor} />
+          <FrontPageView courseId={course.id} isInstructor={isInstructor} />
         ) : homeType === "syllabus" ? (
           <SyllabusTab courseId={course.id} isInstructor={isInstructor} />
         ) : homeType === "assignments" ? (
