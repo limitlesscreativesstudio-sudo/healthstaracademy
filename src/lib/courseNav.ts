@@ -1,13 +1,14 @@
 import {
   BookOpen, Megaphone, MessageSquare, BarChart3, Users, FileText, FolderOpen,
   ScrollText, Target, Grid3x3, GraduationCap, Video, Handshake, ClipboardCheck,
-  LineChart, PenSquare,
+  LineChart, PenSquare, Stethoscope,
 } from "lucide-react";
 
 export type NavKey =
   | "home" | "announcements" | "discussions" | "grades" | "people" | "pages"
   | "files" | "syllabus" | "outcomes" | "rubrics" | "quizzes" | "modules"
-  | "bigbluebutton" | "collaborations" | "attendance" | "analytics" | "lucid";
+  | "bigbluebutton" | "collaborations" | "attendance" | "analytics" | "lucid"
+  | "clinical";
 
 export type NavItem = {
   key: NavKey;
@@ -33,6 +34,7 @@ export const COURSE_NAV_ITEMS: NavItem[] = [
   { key: "rubrics",        label: "Rubrics",         path: "rubrics",         icon: Grid3x3, hiddenByDefault: true },
   { key: "quizzes",        label: "Quizzes",         path: "quizzes",         icon: GraduationCap },
   { key: "modules",        label: "Modules",         path: "modules",         icon: BookOpen },
+  { key: "clinical",       label: "Clinical & Skills", path: "clinical",      icon: Stethoscope },
   { key: "bigbluebutton",  label: "BigBlueButton",   path: "bigbluebutton",   icon: Video },
   { key: "collaborations", label: "Collaborations",  path: "collaborations",  icon: Handshake, hiddenByDefault: true },
   { key: "attendance",     label: "Attendance",      path: "attendance",      icon: ClipboardCheck },
