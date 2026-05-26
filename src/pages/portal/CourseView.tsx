@@ -95,7 +95,7 @@ const CourseView = () => {
             <Route path="announcements" element={<AnnouncementsTab courseId={course.id} />} />
             <Route path="discussions" element={<ComingSoon title="Discussions" />} />
             <Route path="people" element={<ComingSoon title="People" />} />
-            <Route path="pages" element={<ComingSoon title="Pages" />} />
+            <Route path="pages" element={<PagesTab courseId={course.id} isInstructor={isInstructor} />} />
             <Route path="files" element={<ComingSoon title="Files" />} />
             <Route path="syllabus" element={<SyllabusTab courseId={course.id} isInstructor={isInstructor} />} />
             <Route path="outcomes" element={<ComingSoon title="Outcomes" />} />
