@@ -86,7 +86,7 @@ const CourseView = () => {
         <div className="flex-1 p-6 max-w-5xl min-w-0">
           <Routes>
             <Route index element={<CourseHome course={course} isInstructor={isInstructor} />} />
-            <Route path="modules" element={<ModulesTab courseId={course.id} isInstructor={isInstructor} />} />
+            <Route path="modules" element={<ModulesTabAuthor courseId={course.id} isInstructor={isInstructor} />} />
             <Route path="modules/:itemId" element={<ItemViewer courseId={course.id} />} />
             <Route path="assignments" element={<AssignmentsList courseId={course.id} />} />
             <Route path="quizzes" element={<QuizzesList courseId={course.id} />} />
