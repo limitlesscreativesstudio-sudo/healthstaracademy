@@ -1,14 +1,14 @@
 import {
   BookOpen, Megaphone, MessageSquare, BarChart3, Users, FileText, FolderOpen,
   ScrollText, Target, Grid3x3, GraduationCap, Video, Handshake, ClipboardCheck,
-  LineChart, PenSquare, Stethoscope,
+  LineChart, PenSquare, Stethoscope, TrendingUp,
 } from "lucide-react";
 
 export type NavKey =
   | "home" | "announcements" | "discussions" | "grades" | "people" | "pages"
   | "files" | "syllabus" | "outcomes" | "rubrics" | "quizzes" | "modules"
   | "bigbluebutton" | "collaborations" | "attendance" | "analytics" | "lucid"
-  | "clinical";
+  | "clinical" | "readiness";
 
 export type NavItem = {
   key: NavKey;
