@@ -99,6 +99,7 @@ const AdminDashboard = () => {
       <div className="p-6 max-w-7xl mx-auto">
         {activeTab === "pipeline" && <StudentPipeline />}
         {activeTab === "cohorts" && <CohortManager />}
+        {activeTab === "cohort_hub" && <CohortOpsHub />}
         {activeTab === "emails" && <EmailLog />}
         {activeTab === "webhooks" && <WebhookInfo />}
       </div>
