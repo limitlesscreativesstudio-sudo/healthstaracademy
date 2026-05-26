@@ -56,6 +56,69 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_attendance: {
+        Row: {
+          clinical_site: string
+          clock_in_at: string | null
+          clock_in_lat: number | null
+          clock_in_lng: number | null
+          clock_out_at: string | null
+          clock_out_lat: number | null
+          clock_out_lng: number | null
+          course_id: string
+          created_at: string
+          hours_worked: number | null
+          id: string
+          notes: string | null
+          shift_date: string
+          student_user_id: string
+          updated_at: string
+          verified: boolean
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          clinical_site: string
+          clock_in_at?: string | null
+          clock_in_lat?: number | null
+          clock_in_lng?: number | null
+          clock_out_at?: string | null
+          clock_out_lat?: number | null
+          clock_out_lng?: number | null
+          course_id: string
+          created_at?: string
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+          shift_date?: string
+          student_user_id: string
+          updated_at?: string
+          verified?: boolean
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          clinical_site?: string
+          clock_in_at?: string | null
+          clock_in_lat?: number | null
+          clock_in_lng?: number | null
+          clock_out_at?: string | null
+          clock_out_lat?: number | null
+          clock_out_lng?: number | null
+          course_id?: string
+          created_at?: string
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+          shift_date?: string
+          student_user_id?: string
+          updated_at?: string
+          verified?: boolean
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
       clinical_hours: {
         Row: {
           activity_summary: string | null
@@ -958,42 +1021,54 @@ export type Database = {
           clinical_site: string | null
           course_id: string
           created_at: string
+          evaluator_name: string | null
+          evaluator_signature: string | null
           id: string
           notes: string | null
+          photo_url: string | null
           signed_off_at: string | null
           signed_off_by: string | null
           skill_id: string
           status: string
           student_user_id: string
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           attempts?: number
           clinical_site?: string | null
           course_id: string
           created_at?: string
+          evaluator_name?: string | null
+          evaluator_signature?: string | null
           id?: string
           notes?: string | null
+          photo_url?: string | null
           signed_off_at?: string | null
           signed_off_by?: string | null
           skill_id: string
           status?: string
           student_user_id: string
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           attempts?: number
           clinical_site?: string | null
           course_id?: string
           created_at?: string
+          evaluator_name?: string | null
+          evaluator_signature?: string | null
           id?: string
           notes?: string | null
+          photo_url?: string | null
           signed_off_at?: string | null
           signed_off_by?: string | null
           skill_id?: string
           status?: string
           student_user_id?: string
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: [
           {
