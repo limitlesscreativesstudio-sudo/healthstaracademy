@@ -77,6 +77,28 @@ const StudentPipeline = () => {
 
   useEffect(() => { fetchStudents(); }, [filterStatus]);
 
+  const provisionPortal = async (studentId: string) => {
+    setProvisioning(studentId);
+    try {
+      const { data, error } = await supabase.functions.invoke("provision-student", {
+        body: { student_id: studentId },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({
+        title: "Portal access provisioned",
+        description: (data as any)?.enrollment_created
+          ? "Invite email sent and student enrolled in their course."
+          : "Invite email sent (student was already enrolled in the course).",
+      });
+      fetchStudents();
+    } catch (err: any) {
+      toast({ title: "Provision failed", description: err?.message ?? String(err), variant: "destructive" });
+    } finally {
+      setProvisioning(null);
+    }
+  };
+
   const updateStatus = async (studentId: string, newStatus: string) => {
     const { error } = await supabase
       .from("students")
@@ -84,10 +106,18 @@ const StudentPipeline = () => {
       .eq("id", studentId);
     if (error) {
       toast({ title: "Update failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Status updated" });
-      fetchStudents();
+      return;
     }
+    toast({ title: "Status updated" });
+    // Auto-provision portal access when admin marks the student as enrolled
+    if (newStatus === "enrolled") {
+      const s = students.find(x => x.id === studentId);
+      if (s && !s.provisioned_at) {
+        await provisionPortal(studentId);
+        return;
+      }
+    }
+    fetchStudents();
   };
 
   const filtered = students.filter(s =>
