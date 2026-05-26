@@ -286,20 +286,14 @@ const PageEditor = ({ page, courseId, onCancel, onSaved }: {
             <div>
               <Label>Preview</Label>
               <div className="border border-border rounded-md p-4 min-h-[400px] prose max-w-none"
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body || "<p><em>Nothing to preview yet.</em></p>") }} />
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(body || "<p><em>Nothing to preview yet.</em></p>") }} />
             </div>
           ) : (
             <div>
-              <Label>Body (HTML supported)</Label>
-              <Textarea
-                rows={20}
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="Write your content here. You can use HTML tags like &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;&lt;li&gt;, &lt;a href&gt;, &lt;strong&gt;, &lt;img src&gt;, &lt;iframe&gt; (for videos), etc."
-                className="font-mono text-sm"
-              />
+              <Label>Content</Label>
+              <RichTextEditor value={body} onChange={setBody} />
               <p className="text-xs text-muted-foreground mt-2">
-                Tip: Once saved, use the page menu to publish it as your course Home Page, copy it to the Syllabus, or attach it to a Module item.
+                Tip: Use the toolbar to format text, add headings, links, images, and lists. Switch to HTML to paste embed codes (e.g. YouTube iframes). Once saved, use the page menu to publish it as your course Home Page, copy it to the Syllabus, or attach it to a Module item.
               </p>
             </div>
           )}
