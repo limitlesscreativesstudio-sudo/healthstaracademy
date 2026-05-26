@@ -789,14 +789,11 @@ const NavigationSettings = ({ course, reload }: any) => {
 
   const isVisible = (key: NavKey) => {
     const item = COURSE_NAV_ITEMS.find(i => i.key === key)!;
-    if (item.required) return true;
     const v = visibility[key];
     return v === undefined ? !item.hiddenByDefault : v;
   };
 
   const toggle = (key: NavKey) => {
-    const item = COURSE_NAV_ITEMS.find(i => i.key === key)!;
-    if (item.required) return;
     setVisibility(v => ({ ...v, [key]: !isVisible(key) }));
   };
 
@@ -822,7 +819,7 @@ const NavigationSettings = ({ course, reload }: any) => {
   return (
     <Card className="mt-4"><CardContent className="pt-6 space-y-4">
       <p className="text-sm text-muted-foreground">
-        Drag-style reorder with the arrows. Hidden items stay accessible to instructors but disappear from the student sidebar. Home cannot be hidden.
+        Reorder with the arrows. Click the eye to show or hide a tab from the student sidebar. Hidden tabs stay accessible to instructors via direct link.
       </p>
       <ul className="border border-border rounded divide-y divide-border">
         {order.map((key, idx) => {
@@ -834,10 +831,17 @@ const NavigationSettings = ({ course, reload }: any) => {
               <GripVertical className="h-4 w-4 text-muted-foreground" />
               <Icon className="h-4 w-4 text-muted-foreground" />
               <span className={`flex-1 text-sm ${visible ? "" : "text-muted-foreground line-through"}`}>{item.label}</span>
-              {item.required && <span className="text-[10px] uppercase text-muted-foreground border border-border rounded px-1.5 py-0.5">Required</span>}
               <Button size="sm" variant="ghost" onClick={() => move(idx, -1)} disabled={idx === 0}><ArrowUp className="h-4 w-4" /></Button>
               <Button size="sm" variant="ghost" onClick={() => move(idx, 1)} disabled={idx === order.length - 1}><ArrowDown className="h-4 w-4" /></Button>
-              <Switch checked={visible} disabled={item.required} onCheckedChange={() => toggle(key)} />
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => toggle(key)}
+                title={visible ? "Visible to students — click to hide" : "Hidden from students — click to show"}
+                aria-label={visible ? `Hide ${item.label} from students` : `Show ${item.label} to students`}
+              >
+                {visible ? <Eye className="h-4 w-4 text-purple" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+              </Button>
             </li>
           );
         })}
@@ -846,5 +850,6 @@ const NavigationSettings = ({ course, reload }: any) => {
     </CardContent></Card>
   );
 };
+
 
 export default CourseEditor;

@@ -51,11 +51,11 @@ export const isNavVisibleToStudent = (
 ): boolean => {
   const item = COURSE_NAV_ITEMS.find(i => i.key === key);
   if (!item) return false;
-  if (item.required) return true;
   const v = visibility?.[key];
   if (v === undefined) return !item.hiddenByDefault;
   return v;
 };
+
 
 export const orderedNavKeys = (order: NavKey[] | null | undefined): NavKey[] => {
   const all = defaultNavOrder();
