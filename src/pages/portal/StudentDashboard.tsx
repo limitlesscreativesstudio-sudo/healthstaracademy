@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import PortalLayout from "@/components/portal/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Calendar as CalendarIcon, ClipboardList, FolderOpen, MessageSquare, Star, Briefcase, AlertCircle, Megaphone, ArrowRight, GraduationCap } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { BookOpen, Calendar as CalendarIcon, ClipboardList, FolderOpen, MessageSquare, Star, Briefcase, AlertCircle, Megaphone, ArrowRight, GraduationCap, CheckCircle2, Clock, Activity, Trophy } from "lucide-react";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 import { formatDistanceToNow, isPast, differenceInDays } from "date-fns";
 
