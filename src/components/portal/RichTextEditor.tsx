@@ -206,6 +206,15 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
           suppressContentEditableWarning
           onInput={handleInput}
           onBlur={handleInput}
+          onPaste={(e) => {
+            const file = Array.from(e.clipboardData?.files ?? []).find(f => f.type.startsWith("image/"));
+            if (file) { e.preventDefault(); uploadAndInsertImage(file); }
+          }}
+          onDragOver={(e) => { if (e.dataTransfer?.types.includes("Files")) e.preventDefault(); }}
+          onDrop={(e) => {
+            const file = Array.from(e.dataTransfer?.files ?? []).find(f => f.type.startsWith("image/"));
+            if (file) { e.preventDefault(); uploadAndInsertImage(file); }
+          }}
           className="prose max-w-none p-4 focus:outline-none"
           style={{ minHeight }}
         />
