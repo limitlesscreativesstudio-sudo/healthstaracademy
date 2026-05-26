@@ -234,16 +234,23 @@ const ActivityStream = ({ courseId }: { courseId: string }) => {
   );
 };
 
-const FrontPageView = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
-  const html = course.front_page_html ?? "";
-  const sanitized = html ? DOMPurify.sanitize(html) : "";
+const FrontPageView = ({ courseId, isInstructor }: { courseId: string; isInstructor: boolean }) => {
+  const [html, setHtml] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.from("courses").select("front_page_html").eq("id", courseId).maybeSingle()
+      .then(({ data }) => setHtml(data?.front_page_html ?? ""));
+  }, [courseId]);
+  if (html === null) {
+    return <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">Loading…</CardContent></Card>;
+  }
   if (!html) {
     return (
       <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">
-        {isInstructor ? "No front page content yet. Edit it from Course Settings." : "Welcome! Your instructor hasn't added a front page yet."}
+        {isInstructor ? "No front page content yet. Go to Pages → ⋯ → Use as Front Page on the page you want shown here." : "Welcome! Your instructor hasn't added a front page yet."}
       </CardContent></Card>
     );
   }
+  const sanitized = DOMPurify.sanitize(html);
   return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: sanitized }} />;
 };
 
