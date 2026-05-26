@@ -3,6 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, LogOut, BookOpen, Users, LayoutDashboard, Calendar, Inbox, History, HelpCircle, User } from "lucide-react";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
+import NotificationBell from "./NotificationBell";
+
+
 
 const PortalLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, isInstructor, loading } = usePortalAuth(true);
@@ -47,10 +50,13 @@ const PortalLayout = ({ children }: { children: React.ReactNode }) => {
       <main className="flex-1 flex flex-col overflow-x-hidden min-w-0">
         <header className="h-12 bg-background border-b border-border flex items-center justify-between px-4 md:px-6 shrink-0">
           <div className="text-sm text-muted-foreground truncate">{user.email}</div>
-          <Button size="sm" variant="ghost" onClick={logout} className="gap-1">
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Log out</span>
-          </Button>
+          <div className="flex items-center gap-1">
+            <NotificationBell userId={user.id} />
+            <Button size="sm" variant="ghost" onClick={logout} className="gap-1">
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Log out</span>
+            </Button>
+          </div>
         </header>
         <div className="flex-1 overflow-y-auto bg-background">{children}</div>
       </main>
