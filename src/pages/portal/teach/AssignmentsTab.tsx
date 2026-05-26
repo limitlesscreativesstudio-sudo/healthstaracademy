@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2, Eye, EyeOff, Inbox } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Inbox, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 type Assignment = {
@@ -21,9 +21,18 @@ type Assignment = {
   published: boolean;
 };
 
+const toLocal = (iso: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 const AssignmentsTab = ({ courseId }: { courseId: string }) => {
   const [items, setItems] = useState<Assignment[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [search, setSearch] = useState("");
+  const [editing, setEditing] = useState<Assignment | null>(null);
 
   const load = async () => {
     const { data } = await supabase
@@ -55,23 +64,32 @@ const AssignmentsTab = ({ courseId }: { courseId: string }) => {
     load();
   };
 
+  const filtered = items.filter(a => a.title.toLowerCase().includes(search.toLowerCase()));
+
   return (
     <div className="space-y-4 mt-4">
-      <div className="flex justify-between items-center">
-        <h3 className="font-semibold">Assignments ({items.length})</h3>
-        <NewAssignmentDialog courseId={courseId} onCreated={load} />
+      <div className="flex justify-between items-center gap-3">
+        <Input
+          placeholder="Search for Assignment"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
+        <AssignmentDialog courseId={courseId} onSaved={load} />
       </div>
-      {items.length === 0 && (
+
+      {filtered.length === 0 && (
         <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">
-          No assignments yet. Create one to get started.
+          {items.length === 0 ? "No assignments yet. Create one to get started." : "No matches."}
         </CardContent></Card>
       )}
-      {items.map(a => (
+      {filtered.map(a => (
         <Card key={a.id}>
           <CardContent className="pt-5 flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="font-semibold">{a.title}</div>
               <div className="text-xs text-muted-foreground mt-1">
+                {!a.published && <span className="mr-2">Closed</span>}
                 {a.points} pts · {a.submission_type}
                 {a.due_at && <> · Due {new Date(a.due_at).toLocaleDateString()}</>}
               </div>
@@ -86,6 +104,9 @@ const AssignmentsTab = ({ courseId }: { courseId: string }) => {
                 </Button>
               </Link>
               <div className="flex gap-1">
+                <Button size="sm" variant="ghost" onClick={() => setEditing(a)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
                 <Button size="sm" variant="ghost" onClick={() => togglePublish(a)}>
                   {a.published ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </Button>
@@ -97,45 +118,73 @@ const AssignmentsTab = ({ courseId }: { courseId: string }) => {
           </CardContent>
         </Card>
       ))}
+
+      {editing && (
+        <AssignmentDialog
+          courseId={courseId}
+          existing={editing}
+          open
+          onOpenChange={(o) => { if (!o) setEditing(null); }}
+          onSaved={() => { setEditing(null); load(); }}
+        />
+      )}
     </div>
   );
 };
 
-const NewAssignmentDialog = ({ courseId, onCreated }: { courseId: string; onCreated: () => void }) => {
-  const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [instructions, setInstructions] = useState("");
-  const [points, setPoints] = useState(100);
-  const [dueAt, setDueAt] = useState("");
-  const [submissionType, setSubmissionType] = useState("text");
+const AssignmentDialog = ({
+  courseId, onSaved, existing, open: controlledOpen, onOpenChange,
+}: {
+  courseId: string;
+  onSaved: () => void;
+  existing?: Assignment;
+  open?: boolean;
+  onOpenChange?: (o: boolean) => void;
+}) => {
+  const isControlled = controlledOpen !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = (o: boolean) => { isControlled ? onOpenChange?.(o) : setInternalOpen(o); };
+
+  const [title, setTitle] = useState(existing?.title ?? "");
+  const [instructions, setInstructions] = useState(existing?.instructions ?? "");
+  const [points, setPoints] = useState(existing?.points ?? 100);
+  const [dueAt, setDueAt] = useState(toLocal(existing?.due_at ?? null));
+  const [submissionType, setSubmissionType] = useState(existing?.submission_type ?? "text");
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
     if (!title.trim()) return;
     setBusy(true);
-    const { error } = await supabase.from("assignments").insert({
-      course_id: courseId,
+    const payload = {
       title,
       instructions,
       points,
       submission_type: submissionType,
       due_at: dueAt ? new Date(dueAt).toISOString() : null,
-    });
+    };
+    const { error } = existing
+      ? await supabase.from("assignments").update(payload).eq("id", existing.id)
+      : await supabase.from("assignments").insert({ ...payload, course_id: courseId });
     setBusy(false);
     if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: "Assignment created" });
+    toast({ title: existing ? "Assignment updated" : "Assignment created" });
     setOpen(false);
-    setTitle(""); setInstructions(""); setPoints(100); setDueAt(""); setSubmissionType("text");
-    onCreated();
+    if (!existing) {
+      setTitle(""); setInstructions(""); setPoints(100); setDueAt(""); setSubmissionType("text");
+    }
+    onSaved();
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button><Plus className="h-4 w-4 mr-1" /> New Assignment</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>New Assignment</DialogTitle></DialogHeader>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button><Plus className="h-4 w-4 mr-1" /> New Assignment</Button>
+        </DialogTrigger>
+      )}
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{existing ? "Edit Assignment" : "New Assignment"}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label>Title</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
           <div><Label>Instructions</Label><Textarea rows={5} value={instructions} onChange={e => setInstructions(e.target.value)} /></div>
@@ -154,7 +203,9 @@ const NewAssignmentDialog = ({ courseId, onCreated }: { courseId: string; onCrea
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={submit} disabled={busy} className="w-full">{busy ? "Saving…" : "Create"}</Button>
+          <Button onClick={submit} disabled={busy} className="w-full">
+            {busy ? "Saving…" : existing ? "Save changes" : "Create"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

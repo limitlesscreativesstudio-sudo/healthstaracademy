@@ -12,7 +12,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
-type Quiz = { id: string; course_id: string; title: string; total_points: number };
+type Quiz = {
+  id: string;
+  course_id: string;
+  title: string;
+  instructions: string;
+  due_at: string | null;
+  time_limit_minutes: number | null;
+  attempts_allowed: number;
+  total_points: number;
+};
 type Question = {
   id: string;
   position: number;
@@ -62,7 +71,9 @@ const QuizEditor = () => {
           <ArrowLeft className="h-4 w-4" /> Back to course
         </Link>
         <h1 className="font-heading text-3xl font-bold mb-1">{quiz.title}</h1>
-        <p className="text-sm text-muted-foreground mb-6">Total: {quiz.total_points} pts · {questions.length} question{questions.length === 1 ? "" : "s"}</p>
+        <p className="text-sm text-muted-foreground mb-4">Total: {quiz.total_points} pts · {questions.length} question{questions.length === 1 ? "" : "s"}</p>
+
+        <QuizSettingsCard quiz={quiz} onSaved={load} />
 
         <div className="space-y-3">
           {questions.map((q, i) => (
@@ -350,6 +361,62 @@ SA: Certified Nursing Assistant`;
         </div>
       </DialogContent>
     </Dialog>
+  );
+};
+
+const toLocal = (iso: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+const QuizSettingsCard = ({ quiz, onSaved }: { quiz: Quiz; onSaved: () => void }) => {
+  const [title, setTitle] = useState(quiz.title);
+  const [instructions, setInstructions] = useState(quiz.instructions ?? "");
+  const [dueAt, setDueAt] = useState(toLocal(quiz.due_at));
+  const [timeLimit, setTimeLimit] = useState<string>(quiz.time_limit_minutes ? String(quiz.time_limit_minutes) : "");
+  const [attempts, setAttempts] = useState(quiz.attempts_allowed ?? 1);
+  const [busy, setBusy] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const save = async () => {
+    setBusy(true);
+    const { error } = await supabase.from("quizzes").update({
+      title,
+      instructions,
+      due_at: dueAt ? new Date(dueAt).toISOString() : null,
+      time_limit_minutes: timeLimit ? Number(timeLimit) : null,
+      attempts_allowed: attempts,
+    }).eq("id", quiz.id);
+    setBusy(false);
+    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
+    toast({ title: "Quiz settings saved" });
+    onSaved();
+  };
+
+  return (
+    <Card className="mb-6">
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="w-full flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30 text-left hover:bg-muted/50"
+      >
+        <span className="font-semibold text-sm">Quiz settings</span>
+        <span className="text-xs text-muted-foreground">{expanded ? "Hide" : "Edit"}</span>
+      </button>
+      {expanded && (
+        <CardContent className="pt-5 space-y-3">
+          <div><Label>Title</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
+          <div><Label>Instructions</Label><Textarea rows={3} value={instructions} onChange={e => setInstructions(e.target.value)} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Due date</Label><Input type="datetime-local" value={dueAt} onChange={e => setDueAt(e.target.value)} /></div>
+            <div><Label>Time limit (min)</Label><Input type="number" min={0} value={timeLimit} placeholder="Optional" onChange={e => setTimeLimit(e.target.value)} /></div>
+          </div>
+          <div><Label>Attempts allowed</Label><Input type="number" min={1} value={attempts} onChange={e => setAttempts(Number(e.target.value))} /></div>
+          <Button onClick={save} disabled={busy}>{busy ? "Saving…" : "Save settings"}</Button>
+        </CardContent>
+      )}
+    </Card>
   );
 };
 
