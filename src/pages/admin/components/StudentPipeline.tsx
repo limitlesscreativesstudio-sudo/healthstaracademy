@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { RefreshCw, Search, ChevronDown, ChevronUp, UserPlus, CheckCircle2 } from "lucide-react";
+import { RefreshCw, Search, ChevronDown, ChevronUp, UserPlus, CheckCircle2, Download } from "lucide-react";
 
 interface Student {
   id: string;
@@ -124,6 +124,42 @@ const StudentPipeline = () => {
     `${s.first_name} ${s.last_name} ${s.email}`.toLowerCase().includes(search.toLowerCase())
   );
 
+  const exportCsv = () => {
+    if (!filtered.length) {
+      toast({ title: "Nothing to export", description: "No students match the current filters." });
+      return;
+    }
+    const headers = [
+      "Last Name","First Name","Email","Phone","Enrollment Status","Payment Status",
+      "Cohort Date","Orientation Date","Entrance Exam Needed","Parent Consent Needed",
+      "Scrub Top","Scrub Bottom","Portal Provisioned","Created At",
+    ];
+    const esc = (v: any) => {
+      const s = v === null || v === undefined ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = filtered.map(s => [
+      s.last_name, s.first_name, s.email, s.phone ?? "",
+      s.enrollment_status, s.payment_status,
+      s.selected_cohort_date ?? "", s.orientation_date ?? "",
+      s.needs_entrance_exam ? "Yes" : "No",
+      s.needs_parent_consent ? "Yes" : "No",
+      s.scrub_top_size ?? "", s.scrub_bottom_size ?? "",
+      s.provisioned_at ? new Date(s.provisioned_at).toISOString() : "",
+      new Date(s.created_at).toISOString(),
+    ].map(esc).join(","));
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `hsa-students-${filterStatus}-${stamp}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast({ title: "Exported", description: `${filtered.length} student${filtered.length === 1 ? "" : "s"} exported.` });
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -144,6 +180,9 @@ const StudentPipeline = () => {
         </Select>
         <Button variant="outline" size="icon" onClick={fetchStudents} disabled={loading}>
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+        </Button>
+        <Button variant="outline" onClick={exportCsv} className="gap-2">
+          <Download className="h-4 w-4" /> Export CSV
         </Button>
       </div>
 
