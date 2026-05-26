@@ -13,6 +13,7 @@ import SyllabusTab from "./SyllabusTab";
 import ClinicalSkillsTab from "./ClinicalSkillsTab";
 import ReadinessTab from "./ReadinessTab";
 import AttendanceTab from "./AttendanceTab";
+import ModulesTabAuthor from "@/components/portal/ModulesTabAuthor";
 
 type Course = {
   id: string; title: string; code: string | null; description: string | null; instructor_id: string;
@@ -85,7 +86,7 @@ const CourseView = () => {
         <div className="flex-1 p-6 max-w-5xl min-w-0">
           <Routes>
             <Route index element={<CourseHome course={course} isInstructor={isInstructor} />} />
-            <Route path="modules" element={<ModulesTab courseId={course.id} isInstructor={isInstructor} />} />
+            <Route path="modules" element={<ModulesTabAuthor courseId={course.id} isInstructor={isInstructor} />} />
             <Route path="modules/:itemId" element={<ItemViewer courseId={course.id} />} />
             <Route path="assignments" element={<AssignmentsList courseId={course.id} />} />
             <Route path="quizzes" element={<QuizzesList courseId={course.id} />} />
@@ -311,59 +312,7 @@ const HomeSidebar = ({ course, isInstructor }: { course: Course; isInstructor: b
   );
 };
 
-const ModulesTab = ({ courseId, isInstructor }: { courseId: string; isInstructor: boolean }) => {
-  const [modules, setModules] = useState<Module[]>([]);
-  const [items, setItems] = useState<ModuleItem[]>([]);
-
-  useEffect(() => {
-    (async () => {
-      let modQuery = supabase.from("modules").select("*").eq("course_id", courseId).order("position");
-      if (!isInstructor) modQuery = modQuery.eq("published", true);
-      const { data: mods } = await modQuery;
-      setModules(mods ?? []);
-      const ids = (mods ?? []).map(m => m.id);
-      if (ids.length) {
-        let itQuery = supabase.from("module_items").select("*").in("module_id", ids).order("position");
-        if (!isInstructor) itQuery = itQuery.eq("published", true);
-        const { data: its } = await itQuery;
-        setItems(its ?? []);
-      }
-    })();
-  }, [courseId, isInstructor]);
-
-  if (modules.length === 0) return <Card><CardContent className="py-8 text-center text-muted-foreground">No modules published yet.</CardContent></Card>;
-
-  return (
-    <div className="space-y-4">
-      <h2 className="font-heading text-2xl font-bold">Modules</h2>
-      {modules.map(m => (
-        <Card key={m.id}>
-          <div className="px-5 py-3 border-b border-border bg-muted/30 font-semibold flex items-center gap-2">
-            <span>{m.title}</span>
-            {isInstructor && !m.published && (
-              <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1.5 py-0.5">Hidden</span>
-            )}
-          </div>
-          <CardContent className="p-0">
-            {items.filter(i => i.module_id === m.id).length === 0 ? (
-              <div className="p-4 text-sm text-muted-foreground">No items in this module.</div>
-            ) : items.filter(i => i.module_id === m.id).map(i => (
-              <Link key={i.id} to={`/portal/courses/${courseId}/modules/${i.id}`}
-                className={`flex items-center gap-3 px-5 py-3 border-b border-border last:border-0 hover:bg-muted/40 ${!i.published ? "opacity-60" : ""}`}>
-                {itemIcon(i.item_type)}
-                <span className="flex-1 text-sm">{i.title}</span>
-                {isInstructor && !i.published && (
-                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1.5 py-0.5">Hidden</span>
-                )}
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-};
+// ModulesTab replaced by ModulesTabAuthor (src/components/portal/ModulesTabAuthor.tsx)
 
 const AssignmentsList = ({ courseId }: { courseId: string }) => {
   const [items, setItems] = useState<any[]>([]);
