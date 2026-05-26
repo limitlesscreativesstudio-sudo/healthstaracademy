@@ -5,10 +5,12 @@ import { Separator } from "@/components/ui/separator";
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3, List, ListOrdered, Quote, Code,
-  Link as LinkIcon, Image as ImageIcon, Undo, Redo,
+  Link as LinkIcon, Image as ImageIcon, Upload, Undo, Redo,
   AlignLeft, AlignCenter, AlignRight, Eraser, Code2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 type Props = {
   value: string;
@@ -35,6 +37,8 @@ const ToolbarBtn = ({
 
 const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
   const editorRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
   const [mode, setMode] = useState<"rich" | "html">("rich");
   const [htmlDraft, setHtmlDraft] = useState(value);
 
@@ -61,6 +65,40 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
   const insertImage = () => {
     const url = window.prompt("Image URL", "https://");
     if (url) exec("insertImage", url);
+  };
+
+  const uploadAndInsertImage = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Please choose an image file", variant: "destructive" });
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "Image too large", description: "Max 10MB.", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("page-images").upload(path, file, {
+        contentType: file.type, upsert: false,
+      });
+      if (error) throw error;
+      const { data } = supabase.storage.from("page-images").getPublicUrl(path);
+      // restore focus so insertImage targets the editor
+      editorRef.current?.focus();
+      exec("insertImage", data.publicUrl);
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onFileChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) uploadAndInsertImage(f);
+    e.target.value = "";
   };
 
   const handleInput = () => {
@@ -123,7 +161,20 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
         <Separator orientation="vertical" className="mx-1 h-6" />
 
         <ToolbarBtn title="Insert link" onClick={insertLink}><LinkIcon className="h-4 w-4" /></ToolbarBtn>
-        <ToolbarBtn title="Insert image" onClick={insertImage}><ImageIcon className="h-4 w-4" /></ToolbarBtn>
+        <ToolbarBtn title="Insert image by URL" onClick={insertImage}><ImageIcon className="h-4 w-4" /></ToolbarBtn>
+        <ToolbarBtn
+          title={uploading ? "Uploading…" : "Upload image from your device"}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Upload className={cn("h-4 w-4", uploading && "animate-pulse")} />
+        </ToolbarBtn>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onFileChosen}
+        />
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
@@ -155,6 +206,15 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
           suppressContentEditableWarning
           onInput={handleInput}
           onBlur={handleInput}
+          onPaste={(e) => {
+            const file = Array.from(e.clipboardData?.files ?? []).find(f => f.type.startsWith("image/"));
+            if (file) { e.preventDefault(); uploadAndInsertImage(file); }
+          }}
+          onDragOver={(e) => { if (e.dataTransfer?.types.includes("Files")) e.preventDefault(); }}
+          onDrop={(e) => {
+            const file = Array.from(e.dataTransfer?.files ?? []).find(f => f.type.startsWith("image/"));
+            if (file) { e.preventDefault(); uploadAndInsertImage(file); }
+          }}
           className="prose max-w-none p-4 focus:outline-none"
           style={{ minHeight }}
         />
