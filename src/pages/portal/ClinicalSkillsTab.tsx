@@ -22,6 +22,8 @@ type Signoff = {
   status: "not_started" | "in_progress" | "competent" | "needs_remediation";
   clinical_site: string | null; attempts: number; signed_off_by: string | null;
   signed_off_at: string | null; notes: string | null;
+  photo_url?: string | null; video_url?: string | null;
+  evaluator_signature?: string | null; evaluator_name?: string | null;
 };
 type ClinicalHour = {
   id: string; student_user_id: string; course_id: string; shift_date: string;
@@ -323,6 +325,25 @@ const SignoffEditor = ({ signoff, onSave }: {
   const [site, setSite] = useState(signoff?.clinical_site ?? "");
   const [attempts, setAttempts] = useState(signoff?.attempts ?? 0);
   const [notes, setNotes] = useState(signoff?.notes ?? "");
+  const [evaluatorName, setEvaluatorName] = useState(signoff?.evaluator_name ?? "");
+  const [evaluatorSig, setEvaluatorSig] = useState(signoff?.evaluator_signature ?? "");
+  const [photoUrl, setPhotoUrl] = useState(signoff?.photo_url ?? "");
+  const [uploading, setUploading] = useState(false);
+
+  const handlePhoto = async (file: File) => {
+    if (!signoff) { toast({ title: "Save sign-off first before uploading evidence" }); return; }
+    setUploading(true);
+    const { data: u } = await supabase.auth.getUser();
+    const uid = u.user?.id;
+    if (!uid) { setUploading(false); return; }
+    const path = `${uid}/${signoff.skill_id}-${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from("skill-evidence").upload(path, file, { upsert: true });
+    setUploading(false);
+    if (error) { toast({ title: "Upload failed", description: error.message, variant: "destructive" }); return; }
+    setPhotoUrl(path);
+    toast({ title: "Photo uploaded" });
+  };
+
   return (
     <div className="px-4 py-4 bg-muted/20 border-t border-border space-y-3">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -353,11 +374,38 @@ const SignoffEditor = ({ signoff, onSave }: {
           <Input type="number" min={0} value={attempts} onChange={e => setAttempts(Number(e.target.value))} />
         </div>
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <Label className="text-xs">Evaluator Name (RN)</Label>
+          <Input value={evaluatorName} onChange={e => setEvaluatorName(e.target.value)} placeholder="e.g. Jane Smith, RN" />
+        </div>
+        <div>
+          <Label className="text-xs">Evaluator Signature</Label>
+          <Input value={evaluatorSig} onChange={e => setEvaluatorSig(e.target.value)} placeholder="Type full name to sign" />
+        </div>
+      </div>
+      <div>
+        <Label className="text-xs">Photo Evidence (CDPH skill demonstration)</Label>
+        <div className="flex items-center gap-3 mt-1">
+          <Input type="file" accept="image/*,video/*" capture="environment"
+            onChange={e => e.target.files?.[0] && handlePhoto(e.target.files[0])}
+            disabled={uploading || !signoff} />
+          {photoUrl && (
+            <Badge variant="secondary" className="bg-emerald-100 text-emerald-900">Evidence on file</Badge>
+          )}
+        </div>
+        {!signoff && <p className="text-[11px] text-muted-foreground mt-1">Save sign-off once before uploading photo evidence.</p>}
+      </div>
       <div>
         <Label className="text-xs">Notes</Label>
         <Textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional remediation notes, supervisor feedback…" />
       </div>
-      <Button size="sm" onClick={() => onSave({ status, clinical_site: site || null, attempts, notes })}>
+      <Button size="sm" onClick={() => onSave({
+        status, clinical_site: site || null, attempts, notes,
+        evaluator_name: evaluatorName || null,
+        evaluator_signature: evaluatorSig || null,
+        photo_url: photoUrl || null,
+      })}>
         Save Sign-Off
       </Button>
     </div>
