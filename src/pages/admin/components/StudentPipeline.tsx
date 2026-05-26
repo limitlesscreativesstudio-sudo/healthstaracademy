@@ -58,6 +58,7 @@ const StudentPipeline = () => {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [provisioning, setProvisioning] = useState<string | null>(null);
 
   const fetchStudents = async () => {
     setLoading(true);
