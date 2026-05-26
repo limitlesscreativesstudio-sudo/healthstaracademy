@@ -59,12 +59,13 @@ export default function ChooseHomePageDialog({
         <div className="space-y-2 pt-2">
           {OPTIONS.map(o => {
             const disabled = o.value === "front_page" && !hasFrontPage;
+            const isCurrent = (current as HomeType) === o.value;
             return (
               <label
                 key={o.value}
-                className={`flex gap-3 items-start p-3 rounded border cursor-pointer transition ${
-                  value === o.value ? "border-purple bg-purple/5" : "border-border hover:bg-muted/50"
-                } ${disabled ? "opacity-60" : ""}`}
+                className={`flex gap-3 items-start p-3 rounded border transition ${
+                  disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+                } ${value === o.value ? "border-purple bg-purple/5" : "border-border hover:bg-muted/50"}`}
               >
                 <input
                   type="radio"
@@ -75,11 +76,18 @@ export default function ChooseHomePageDialog({
                   onChange={() => setValue(o.value)}
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium">{o.label}</div>
+                  <div className="text-sm font-medium flex items-center gap-2">
+                    {o.label}
+                    {isCurrent && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wide bg-muted text-muted-foreground rounded px-1.5 py-0.5">
+                        Current
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-muted-foreground mt-0.5">{o.help}</div>
                   {disabled && (
                     <div className="flex items-center gap-1 text-[11px] text-amber-600 mt-1">
-                      <AlertCircle className="h-3 w-3" /> No Front Page set yet
+                      <AlertCircle className="h-3 w-3" /> Mark a Page as Front Page in the Pages tab to enable this option.
                     </div>
                   )}
                 </div>
