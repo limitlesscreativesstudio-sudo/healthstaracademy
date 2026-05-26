@@ -9,6 +9,7 @@ import { usePortalAuth } from "@/hooks/usePortalAuth";
 import { COURSE_NAV_ITEMS, orderedNavKeys, isNavVisibleToStudent, type NavKey } from "@/lib/courseNav";
 
 import StudentGrades from "./StudentGrades";
+import SyllabusTab from "./SyllabusTab";
 
 type Course = {
   id: string; title: string; code: string | null; description: string | null; instructor_id: string;
