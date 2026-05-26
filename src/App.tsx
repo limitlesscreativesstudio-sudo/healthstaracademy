@@ -43,6 +43,7 @@ import SubmissionsInbox from "./pages/portal/teach/SubmissionsInbox";
 import AssignmentView from "./pages/portal/AssignmentView";
 import QuizView from "./pages/portal/QuizView";
 import Account from "./pages/portal/Account";
+import CareerPortal from "./pages/portal/CareerPortal";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import RefundPolicyPage from "./pages/RefundPolicyPage";
@@ -89,6 +90,7 @@ const AppShell = () => {
           <Route path="/portal/accept-invite" element={<AcceptInvite />} />
           <Route path="/portal" element={<StudentDashboard />} />
           <Route path="/portal/account" element={<Account />} />
+          <Route path="/portal/career" element={<CareerPortal />} />
           <Route path="/portal/courses" element={<StudentDashboard />} />
           <Route path="/portal/courses/:courseId/*" element={<CourseView />} />
           <Route path="/portal/teach" element={<InstructorDashboard />} />

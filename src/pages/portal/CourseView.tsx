@@ -12,6 +12,7 @@ import StudentGrades from "./StudentGrades";
 import SyllabusTab from "./SyllabusTab";
 import ClinicalSkillsTab from "./ClinicalSkillsTab";
 import ReadinessTab from "./ReadinessTab";
+import AttendanceTab from "./AttendanceTab";
 
 type Course = {
   id: string; title: string; code: string | null; description: string | null; instructor_id: string;
@@ -93,7 +94,7 @@ const CourseView = () => {
             <Route path="rubrics" element={<ComingSoon title="Rubrics" />} />
             <Route path="bigbluebutton" element={<ComingSoon title="BigBlueButton" />} />
             <Route path="collaborations" element={<ComingSoon title="Collaborations" />} />
-            <Route path="attendance" element={<ComingSoon title="Attendance" />} />
+            <Route path="attendance" element={<AttendanceTab courseId={course.id} isInstructor={isInstructor} />} />
             <Route path="clinical" element={<ClinicalSkillsTab courseId={course.id} isInstructor={isInstructor} />} />
             <Route path="readiness" element={<ReadinessTab courseId={course.id} isInstructor={isInstructor} />} />
             <Route path="analytics" element={<ComingSoon title="New Analytics" />} />
