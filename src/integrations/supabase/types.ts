@@ -146,9 +146,13 @@ export type Database = {
       cohorts: {
         Row: {
           capacity: number
+          clinical_site: string | null
           created_at: string
+          enrollment_deadline: string | null
           id: string
+          min_to_run: number | null
           name: string
+          notes: string | null
           paid_in_full_link: string | null
           payment_plan_link: string | null
           program_type: string | null
@@ -158,9 +162,13 @@ export type Database = {
         }
         Insert: {
           capacity?: number
+          clinical_site?: string | null
           created_at?: string
+          enrollment_deadline?: string | null
           id?: string
+          min_to_run?: number | null
           name?: string
+          notes?: string | null
           paid_in_full_link?: string | null
           payment_plan_link?: string | null
           program_type?: string | null
@@ -170,9 +178,13 @@ export type Database = {
         }
         Update: {
           capacity?: number
+          clinical_site?: string | null
           created_at?: string
+          enrollment_deadline?: string | null
           id?: string
+          min_to_run?: number | null
           name?: string
+          notes?: string | null
           paid_in_full_link?: string | null
           payment_plan_link?: string | null
           program_type?: string | null
