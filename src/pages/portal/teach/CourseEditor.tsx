@@ -819,7 +819,7 @@ const NavigationSettings = ({ course, reload }: any) => {
   return (
     <Card className="mt-4"><CardContent className="pt-6 space-y-4">
       <p className="text-sm text-muted-foreground">
-        Reorder with the arrows. Click the eye to show or hide a tab from the student sidebar. Hidden tabs stay accessible to instructors via direct link.
+        Reorder with the arrows. Click the eye to show or hide a tab from the student sidebar. Hidden tabs stay accessible to instructors via direct link. Every show/hide is recorded in the audit log below.
       </p>
       <ul className="border border-border rounded divide-y divide-border">
         {order.map((key, idx) => {
@@ -846,10 +846,84 @@ const NavigationSettings = ({ course, reload }: any) => {
           );
         })}
       </ul>
-      <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save Navigation"}</Button>
+      <div className="flex items-center gap-2">
+        <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save Navigation"}</Button>
+        <Link to={`/portal/courses/${course.id}`} className="text-sm text-purple hover:underline">
+          Preview as student →
+        </Link>
+      </div>
+      <NavAuditLog courseId={course.id} reloadKey={saving ? 1 : 0} />
     </CardContent></Card>
   );
 };
+
+const labelFor = (k: string) => COURSE_NAV_ITEMS.find(i => i.key === k)?.label ?? k;
+
+const NavAuditLog = ({ courseId, reloadKey }: { courseId: string; reloadKey: number }) => {
+  const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    supabase.from("course_nav_audit").select("*")
+      .eq("course_id", courseId).order("created_at", { ascending: false }).limit(50)
+      .then(({ data }) => { setRows(data ?? []); setLoading(false); });
+  }, [courseId, reloadKey, open]);
+
+  const summarize = (row: any): string => {
+    const oldV = row.old_visibility || {};
+    const newV = row.new_visibility || {};
+    const keys = Array.from(new Set([...Object.keys(oldV), ...Object.keys(newV)]));
+    const diffs: string[] = [];
+    for (const k of keys) {
+      const before = oldV[k];
+      const after = newV[k];
+      if (before !== after) {
+        const becameVisible = after === true || (after === undefined && before === false);
+        diffs.push(`${becameVisible ? "Showed" : "Hid"} ${labelFor(k)}`);
+      }
+    }
+    if (JSON.stringify(row.old_order) !== JSON.stringify(row.new_order)) {
+      diffs.push("Reordered tabs");
+    }
+    return diffs.length ? diffs.join(" · ") : "No visible change";
+  };
+
+  return (
+    <div className="border border-border rounded">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold bg-muted/30 hover:bg-muted/50"
+      >
+        <span>Navigation Audit Log {rows.length > 0 && <span className="text-xs font-normal text-muted-foreground">({rows.length} entr{rows.length === 1 ? "y" : "ies"})</span>}</span>
+        <span className="text-xs text-muted-foreground">{open ? "Hide" : "Show"}</span>
+      </button>
+      {open && (
+        <div className="p-2 max-h-80 overflow-y-auto">
+          {loading ? (
+            <div className="text-xs text-muted-foreground p-2">Loading…</div>
+          ) : rows.length === 0 ? (
+            <div className="text-xs text-muted-foreground p-2">No changes recorded yet.</div>
+          ) : (
+            <ul className="divide-y divide-border text-xs">
+              {rows.map(r => (
+                <li key={r.id} className="px-2 py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium">{summarize(r)}</span>
+                    <span className="text-muted-foreground whitespace-nowrap">{new Date(r.created_at).toLocaleString()}</span>
+                  </div>
+                  <div className="text-muted-foreground mt-0.5">by {r.changed_by_email || r.changed_by || "system"}</div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 
 export default CourseEditor;
