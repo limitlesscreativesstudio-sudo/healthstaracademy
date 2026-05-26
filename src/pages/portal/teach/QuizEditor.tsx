@@ -99,8 +99,9 @@ const QuizEditor = () => {
           ))}
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
           <AddQuestionDialog quizId={quizId!} position={questions.length} onAdded={async () => { await load(); }} />
+          <BulkImportDialog quizId={quizId!} startPosition={questions.length} onAdded={async () => { await load(); }} />
         </div>
       </div>
     </PortalLayout>
@@ -207,6 +208,145 @@ const AddQuestionDialog = ({ quizId, position, onAdded }: { quizId: string; posi
 
           <div><Label>Points</Label><Input type="number" min={0} value={points} onChange={e => setPoints(Number(e.target.value))} /></div>
           <Button onClick={submit} disabled={busy} className="w-full">{busy ? "Saving…" : "Add"}</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const BulkImportDialog = ({ quizId, startPosition, onAdded }: { quizId: string; startPosition: number; onAdded: () => void }) => {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [defaultPoints, setDefaultPoints] = useState(1);
+  const [busy, setBusy] = useState(false);
+
+  const parse = (raw: string) => {
+    // Format per question (blocks separated by blank line OR ---):
+    //   Q: What is 2 + 2?
+    //   A) 3
+    //   B) 4 *
+    //   C) 5
+    //   D) 22
+    // True/False:
+    //   Q: The sky is blue.
+    //   T/F: true
+    // Short answer:
+    //   Q: Capital of California?
+    //   SA: Sacramento
+    const blocks = raw
+      .split(/\n\s*(?:---+|\n)\s*\n/)
+      .map(b => b.trim())
+      .filter(Boolean);
+    const rows: any[] = [];
+    let pos = startPosition;
+    for (const block of blocks) {
+      const lines = block.split("\n").map(l => l.trim()).filter(Boolean);
+      if (!lines.length) continue;
+      const promptLine = lines.shift()!;
+      const prompt = promptLine.replace(/^Q\s*[:.)-]\s*/i, "").trim();
+      if (!prompt) continue;
+
+      // True / False
+      const tfLine = lines.find(l => /^T\s*\/\s*F\s*[:.)-]/i.test(l));
+      if (tfLine) {
+        const val = tfLine.replace(/^T\s*\/\s*F\s*[:.)-]\s*/i, "").trim().toLowerCase();
+        rows.push({
+          quiz_id: quizId, position: pos++, question_type: "true_false",
+          prompt, options: [], correct_answer: val.startsWith("t"), points: defaultPoints,
+        });
+        continue;
+      }
+      // Short answer
+      const saLine = lines.find(l => /^(SA|ANS|ANSWER)\s*[:.)-]/i.test(l));
+      if (saLine) {
+        const ans = saLine.replace(/^(SA|ANS|ANSWER)\s*[:.)-]\s*/i, "").trim();
+        rows.push({
+          quiz_id: quizId, position: pos++, question_type: "short_answer",
+          prompt, options: [], correct_answer: ans || null, points: defaultPoints,
+        });
+        continue;
+      }
+      // Multiple choice
+      const opts: string[] = [];
+      let correctIdx = -1;
+      for (const l of lines) {
+        const m = l.match(/^([A-Za-z])\s*[).:-]\s*(.+)$/);
+        if (!m) continue;
+        let body = m[2].trim();
+        const starred = /\s\*$|\s\(correct\)$|\s\[correct\]$/i.test(body) || body.endsWith("*");
+        if (starred) {
+          body = body.replace(/\s*\*$|\s*\(correct\)$|\s*\[correct\]$/i, "").trim();
+          correctIdx = opts.length;
+        }
+        opts.push(body);
+      }
+      if (opts.length >= 2 && correctIdx >= 0) {
+        rows.push({
+          quiz_id: quizId, position: pos++, question_type: "multiple_choice",
+          prompt, options: opts, correct_answer: correctIdx, points: defaultPoints,
+        });
+      }
+    }
+    return rows;
+  };
+
+  const preview = parse(text);
+
+  const submit = async () => {
+    if (!preview.length) return;
+    setBusy(true);
+    const { error } = await supabase.from("quiz_questions").insert(preview);
+    if (error) {
+      setBusy(false);
+      return toast({ title: "Import failed", description: error.message, variant: "destructive" });
+    }
+    const { data: all } = await supabase.from("quiz_questions").select("points").eq("quiz_id", quizId);
+    const total = (all ?? []).reduce((s: number, x: any) => s + Number(x.points || 0), 0);
+    await supabase.from("quizzes").update({ total_points: total }).eq("id", quizId);
+    setBusy(false);
+    toast({ title: `Imported ${preview.length} question${preview.length === 1 ? "" : "s"}` });
+    setOpen(false); setText(""); onAdded();
+  };
+
+  const sample = `Q: What is the normal adult oral temperature range (°F)?
+A) 96.0 – 97.0
+B) 97.6 – 99.6 *
+C) 99.7 – 101.4
+D) 101.5 – 103.0
+
+Q: Hand hygiene is the single most important infection-control measure.
+T/F: true
+
+Q: What does CNA stand for?
+SA: Certified Nursing Assistant`;
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setText(""); }}>
+      <DialogTrigger asChild>
+        <Button variant="purple-outline" className="w-full"><Plus className="h-4 w-4 mr-1" /> Bulk Import Questions</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Bulk Import Questions</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p>Separate questions with a blank line or <code className="bg-muted px-1 rounded">---</code>. Mark the correct multiple-choice option with <code className="bg-muted px-1 rounded">*</code>.</p>
+            <p>Supported: Multiple choice (<code>A) … *</code>), True/False (<code>T/F: true</code>), Short answer (<code>SA: …</code>).</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-xs">Default points per question</Label>
+            <Input type="number" min={0} className="w-20 h-8"
+              value={defaultPoints} onChange={e => setDefaultPoints(Number(e.target.value))} />
+            <Button size="sm" variant="ghost" className="ml-auto h-8 text-xs"
+              onClick={() => setText(sample)}>Insert sample</Button>
+          </div>
+          <Textarea rows={14} value={text} onChange={e => setText(e.target.value)} placeholder={sample}
+            className="font-mono text-xs" />
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Parsed: <strong className="text-foreground">{preview.length}</strong> question{preview.length === 1 ? "" : "s"}</span>
+          </div>
+          <Button onClick={submit} disabled={busy || preview.length === 0} className="w-full">
+            {busy ? "Importing…" : `Import ${preview.length} question${preview.length === 1 ? "" : "s"}`}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
