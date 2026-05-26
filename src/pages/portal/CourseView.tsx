@@ -93,6 +93,7 @@ const CourseView = () => {
             <Route path="bigbluebutton" element={<ComingSoon title="BigBlueButton" />} />
             <Route path="collaborations" element={<ComingSoon title="Collaborations" />} />
             <Route path="attendance" element={<ComingSoon title="Attendance" />} />
+            <Route path="clinical" element={<ClinicalSkillsTab courseId={course.id} isInstructor={isInstructor} />} />
             <Route path="analytics" element={<ComingSoon title="New Analytics" />} />
             <Route path="lucid" element={<ComingSoon title="Lucid (Whiteboard)" />} />
             <Route path="*" element={<Navigate to="." replace />} />
