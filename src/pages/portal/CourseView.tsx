@@ -11,6 +11,7 @@ import { COURSE_NAV_ITEMS, orderedNavKeys, isNavVisibleToStudent, type NavKey } 
 import StudentGrades from "./StudentGrades";
 import SyllabusTab from "./SyllabusTab";
 import ClinicalSkillsTab from "./ClinicalSkillsTab";
+import ReadinessTab from "./ReadinessTab";
 
 type Course = {
   id: string; title: string; code: string | null; description: string | null; instructor_id: string;
@@ -94,6 +95,7 @@ const CourseView = () => {
             <Route path="collaborations" element={<ComingSoon title="Collaborations" />} />
             <Route path="attendance" element={<ComingSoon title="Attendance" />} />
             <Route path="clinical" element={<ClinicalSkillsTab courseId={course.id} isInstructor={isInstructor} />} />
+            <Route path="readiness" element={<ReadinessTab courseId={course.id} isInstructor={isInstructor} />} />
             <Route path="analytics" element={<ComingSoon title="New Analytics" />} />
             <Route path="lucid" element={<ComingSoon title="Lucid (Whiteboard)" />} />
             <Route path="*" element={<Navigate to="." replace />} />
