@@ -57,6 +57,7 @@ const AdminDashboard = () => {
   const tabs = [
     { id: "pipeline" as Tab, label: "Student Pipeline", icon: Users },
     { id: "cohorts" as Tab, label: "Cohorts", icon: GraduationCap },
+    { id: "cohort_hub" as Tab, label: "Cohort Hub", icon: LayoutDashboard },
     { id: "emails" as Tab, label: "Email Log", icon: Mail },
     { id: "webhooks" as Tab, label: "Zapier Setup", icon: Activity },
   ];
