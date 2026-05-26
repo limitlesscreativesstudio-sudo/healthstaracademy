@@ -51,6 +51,7 @@ import AssignmentView from "./pages/portal/AssignmentView";
 import QuizView from "./pages/portal/QuizView";
 import Account from "./pages/portal/Account";
 import CareerPortal from "./pages/portal/CareerPortal";
+import RequiredWork from "./pages/portal/RequiredWork";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/TermsOfServicePage";
 import RefundPolicyPage from "./pages/RefundPolicyPage";
@@ -105,6 +106,7 @@ const AppShell = () => {
           <Route path="/portal" element={<StudentDashboard />} />
           <Route path="/portal/account" element={<Account />} />
           <Route path="/portal/career" element={<CareerPortal />} />
+          <Route path="/portal/required" element={<RequiredWork />} />
           <Route path="/portal/courses" element={<StudentDashboard />} />
           <Route path="/portal/courses/:courseId/*" element={<CourseView />} />
           <Route path="/portal/teach" element={<InstructorDashboard />} />
