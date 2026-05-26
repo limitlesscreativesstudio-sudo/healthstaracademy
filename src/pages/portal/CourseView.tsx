@@ -11,6 +11,7 @@ import { COURSE_NAV_ITEMS, orderedNavKeys, isNavVisibleToStudent, type NavKey } 
 import StudentGrades from "./StudentGrades";
 import SyllabusTab from "./SyllabusTab";
 import ClinicalSkillsTab from "./ClinicalSkillsTab";
+import ReadinessTab from "./ReadinessTab";
 
 type Course = {
   id: string; title: string; code: string | null; description: string | null; instructor_id: string;
