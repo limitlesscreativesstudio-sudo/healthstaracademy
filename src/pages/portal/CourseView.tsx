@@ -117,13 +117,51 @@ const CourseNav = ({ to, end, icon: Icon, children }: any) => (
 );
 
 const CourseHome = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
+  const homeType = course.home_page_type ?? "modules";
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+      <div className="min-w-0 space-y-6">
+        <RecentAnnouncements courseId={course.id} />
+        <div className="border-b border-border pb-3">
+          <h1 className="font-heading text-2xl font-bold">{course.title}</h1>
+          {course.code && <div className="text-xs text-muted-foreground font-mono mt-1">{course.code}</div>}
+        </div>
+        {homeType === "front_page" ? (
+          <FrontPageView course={course} isInstructor={isInstructor} />
+        ) : homeType === "syllabus" ? (
+          <SyllabusTab courseId={course.id} isInstructor={isInstructor} />
+        ) : homeType === "assignments" ? (
+          <AssignmentsList courseId={course.id} />
+        ) : (
+          <ModulesHomeList courseId={course.id} isInstructor={isInstructor} />
+        )}
+      </div>
+      <HomeSidebar course={course} isInstructor={isInstructor} />
+    </div>
+  );
+};
+
+const FrontPageView = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
+  const html = course.front_page_html ?? "";
+  const sanitized = html ? DOMPurify.sanitize(html) : "";
+  if (!html) {
+    return (
+      <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">
+        {isInstructor ? "No front page content yet. Edit it from Course Settings." : "Welcome! Your instructor hasn't added a front page yet."}
+      </CardContent></Card>
+    );
+  }
+  return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: sanitized }} />;
+};
+
+const ModulesHomeList = ({ courseId, isInstructor }: { courseId: string; isInstructor: boolean }) => {
   const [modules, setModules] = useState<Module[]>([]);
   const [items, setItems] = useState<ModuleItem[]>([]);
   const [open, setOpen] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     (async () => {
-      let modQuery = supabase.from("modules").select("*").eq("course_id", course.id).order("position");
+      let modQuery = supabase.from("modules").select("*").eq("course_id", courseId).order("position");
       if (!isInstructor) modQuery = modQuery.eq("published", true);
       const { data: mods } = await modQuery;
       const list = mods ?? [];
@@ -137,57 +175,128 @@ const CourseHome = ({ course, isInstructor }: { course: Course; isInstructor: bo
         setItems(its ?? []);
       }
     })();
-  }, [course.id, isInstructor]);
+  }, [courseId, isInstructor]);
 
+  if (modules.length === 0) {
+    return <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No content published yet.</CardContent></Card>;
+  }
+  return (
+    <div className="border border-border rounded-md overflow-hidden bg-background">
+      {modules.map(m => {
+        const isOpen = open[m.id] ?? true;
+        const modItems = items.filter(i => i.module_id === m.id);
+        return (
+          <div key={m.id} className="border-b border-border last:border-0">
+            <button onClick={() => setOpen(o => ({ ...o, [m.id]: !isOpen }))}
+              className="w-full flex items-center gap-2 px-4 py-3 bg-muted/40 hover:bg-muted/60 text-left">
+              <ChevronRight className={`h-4 w-4 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+              <span className="font-semibold text-sm">{m.title}</span>
+            </button>
+            {isOpen && (
+              <div>
+                {modItems.length === 0 ? (
+                  <div className="px-12 py-3 text-xs text-muted-foreground">No items.</div>
+                ) : modItems.map(i => (
+                  <Link key={i.id} to={`/portal/courses/${courseId}/modules/${i.id}`}
+                    className={`flex items-center gap-3 pl-12 pr-4 py-2.5 border-t border-border/50 hover:bg-muted/30 text-sm ${!i.published ? "opacity-60" : ""}`}>
+                    <span className="text-emerald-600">{itemIcon(i.item_type)}</span>
+                    <span className="flex-1 font-medium">{i.title}</span>
+                    {isInstructor && !i.published && (
+                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1.5 py-0.5">Hidden</span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const RecentAnnouncements = ({ courseId }: { courseId: string }) => {
+  const [items, setItems] = useState<Announcement[]>([]);
+  useEffect(() => {
+    supabase.from("lms_announcements").select("*").eq("course_id", courseId).order("posted_at", { ascending: false }).limit(3)
+      .then(({ data }) => setItems(data ?? []));
+  }, [courseId]);
+  if (items.length === 0) return null;
+  return (
+    <div className="border border-border rounded-md bg-muted/20">
+      <div className="px-4 py-2 border-b border-border text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+        <Megaphone className="h-3.5 w-3.5" /> Recent Announcements
+      </div>
+      <div className="divide-y divide-border">
+        {items.map(a => (
+          <div key={a.id} className="px-4 py-3">
+            <div className="flex items-start justify-between gap-3 mb-1">
+              <Link to={`/portal/courses/${courseId}/announcements`} className="font-semibold text-sm hover:underline">{a.title}</Link>
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap">{new Date(a.posted_at).toLocaleDateString()}</span>
+            </div>
+            <p className="text-xs text-foreground/70 line-clamp-2 whitespace-pre-wrap">{a.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const HomeSidebar = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
+  const [upcoming, setUpcoming] = useState<{ id: string; title: string; due_at: string; kind: "assignment" | "quiz" }[]>([]);
+  useEffect(() => {
+    (async () => {
+      const now = new Date().toISOString();
+      const in7 = new Date(Date.now() + 7 * 86400000).toISOString();
+      const [a, q] = await Promise.all([
+        supabase.from("assignments").select("id, title, due_at").eq("course_id", course.id).eq("published", true).not("due_at", "is", null).gte("due_at", now).lte("due_at", in7),
+        supabase.from("quizzes").select("id, title, due_at").eq("course_id", course.id).eq("published", true).not("due_at", "is", null).gte("due_at", now).lte("due_at", in7),
+      ]);
+      const merged = [
+        ...(a.data ?? []).map((x: any) => ({ ...x, kind: "assignment" as const })),
+        ...(q.data ?? []).map((x: any) => ({ ...x, kind: "quiz" as const })),
+      ].sort((x, y) => x.due_at.localeCompare(y.due_at));
+      setUpcoming(merged);
+    })();
+  }, [course.id]);
+
+  const SidebarBtn = ({ to, icon: Icon, children }: any) => (
+    <Link to={to} className="flex items-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50">
+      <Icon className="h-4 w-4 text-muted-foreground" /> {children}
+    </Link>
+  );
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="border-b border-border pb-3">
-        <h1 className="font-heading text-2xl font-bold">{course.title}</h1>
-        {course.code && <div className="text-xs text-muted-foreground font-mono mt-1">{course.code}</div>}
-      </div>
-
-      {modules.length === 0 ? (
-        <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No content published yet.</CardContent></Card>
-      ) : (
-        <div className="border border-border rounded-md overflow-hidden bg-background">
-          {modules.map(m => {
-            const isOpen = open[m.id] ?? true;
-            const modItems = items.filter(i => i.module_id === m.id);
-            return (
-              <div key={m.id} className="border-b border-border last:border-0">
-                <button
-                  onClick={() => setOpen(o => ({ ...o, [m.id]: !isOpen }))}
-                  className="w-full flex items-center gap-2 px-4 py-3 bg-muted/40 hover:bg-muted/60 text-left"
-                >
-                  <ChevronRight className={`h-4 w-4 transition-transform ${isOpen ? "rotate-90" : ""}`} />
-                  <span className="font-semibold text-sm">{m.title}</span>
-                </button>
-                {isOpen && (
-                  <div>
-                    {modItems.length === 0 ? (
-                      <div className="px-12 py-3 text-xs text-muted-foreground">No items.</div>
-                    ) : modItems.map(i => (
-                      <Link
-                        key={i.id}
-                        to={`/portal/courses/${course.id}/modules/${i.id}`}
-                        className={`flex items-center gap-3 pl-12 pr-4 py-2.5 border-t border-border/50 hover:bg-muted/30 text-sm ${!i.published ? "opacity-60" : ""}`}
-                      >
-                        <span className="text-emerald-600">{itemIcon(i.item_type)}</span>
-                        <span className="flex-1 font-medium">{i.title}</span>
-                        {isInstructor && !i.published && (
-                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1.5 py-0.5">Hidden</span>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+    <aside className="space-y-4">
+      {isInstructor && (
+        <div className="space-y-2">
+          <SidebarBtn to={`/portal/teach/courses/${course.id}`} icon={SettingsIcon}>Choose Home Page</SidebarBtn>
+          <SidebarBtn to={`/portal/courses/${course.id}/announcements`} icon={Megaphone}>New Announcement</SidebarBtn>
+          <SidebarBtn to={`/portal/teach/courses/${course.id}`} icon={LineChart}>Course Analytics</SidebarBtn>
         </div>
       )}
-    </div>
+      <div className="border border-border rounded-md">
+        <div className="px-3 py-2 border-b border-border text-xs font-semibold uppercase tracking-wide text-muted-foreground">Coming Up</div>
+        <div className="p-3">
+          {upcoming.length === 0 ? (
+            <div className="text-xs text-muted-foreground">Nothing for the next week</div>
+          ) : (
+            <ul className="space-y-2">
+              {upcoming.map(u => (
+                <li key={`${u.kind}-${u.id}`} className="text-xs">
+                  <Link to={`/portal/courses/${course.id}/${u.kind === "quiz" ? "quizzes" : "assignments"}/${u.id}`}
+                    className="font-medium hover:underline flex items-start gap-2">
+                    {u.kind === "quiz" ? <GraduationCap className="h-3.5 w-3.5 mt-0.5 text-purple shrink-0" /> : <ClipboardList className="h-3.5 w-3.5 mt-0.5 text-purple shrink-0" />}
+                    <span className="flex-1">{u.title}</span>
+                  </Link>
+                  <div className="text-muted-foreground ml-5 mt-0.5">Due {new Date(u.due_at).toLocaleDateString()}</div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </aside>
   );
 };
 
