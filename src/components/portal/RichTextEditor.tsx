@@ -67,6 +67,40 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
     if (url) exec("insertImage", url);
   };
 
+  const uploadAndInsertImage = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Please choose an image file", variant: "destructive" });
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "Image too large", description: "Max 10MB.", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("page-images").upload(path, file, {
+        contentType: file.type, upsert: false,
+      });
+      if (error) throw error;
+      const { data } = supabase.storage.from("page-images").getPublicUrl(path);
+      // restore focus so insertImage targets the editor
+      editorRef.current?.focus();
+      exec("insertImage", data.publicUrl);
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onFileChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) uploadAndInsertImage(f);
+    e.target.value = "";
+  };
+
   const handleInput = () => {
     if (editorRef.current) onChange(editorRef.current.innerHTML);
   };
