@@ -87,7 +87,7 @@ const StudentDashboard = () => {
         const nowIso = new Date().toISOString();
         const in14 = new Date(Date.now() + 14 * 86400000).toISOString();
 
-        const [{ data: asgn }, { data: ann }] = await Promise.all([
+        const [{ data: asgn }, { data: ann }, { data: allAsgn }, { data: allQuizzes }, { data: mySubs }, { data: myGrades }, { data: myAttempts }] = await Promise.all([
           supabase
             .from("assignments")
             .select("id, title, due_at, course_id, points, published")
@@ -104,10 +104,84 @@ const StudentDashboard = () => {
             .in("course_id", courseIds)
             .order("posted_at", { ascending: false })
             .limit(5),
+          supabase
+            .from("assignments")
+            .select("id, title, due_at, course_id, published")
+            .in("course_id", courseIds)
+            .eq("published", true),
+          supabase
+            .from("quizzes")
+            .select("id, title, due_at, course_id, published")
+            .in("course_id", courseIds)
+            .eq("published", true),
+          supabase.from("submissions").select("assignment_id, submitted_at").eq("user_id", user.id),
+          supabase.from("grades").select("assignment_id, score, max_score").eq("user_id", user.id),
+          supabase.from("quiz_attempts").select("quiz_id, submitted_at, score, started_at").eq("user_id", user.id),
         ]);
 
-        setUpcoming((asgn ?? []).map(a => ({ ...a, course_title: titleMap[a.course_id] })));
+        const subByAsgn = new Map((mySubs ?? []).map(s => [s.assignment_id as string, s]));
+        const gradeByAsgn = new Map((myGrades ?? []).map(g => [g.assignment_id as string, g]));
+        const attemptByQuiz = new Map<string, any>();
+        (myAttempts ?? []).forEach(a => {
+          const prev = attemptByQuiz.get(a.quiz_id);
+          if (!prev || (a.submitted_at && !prev.submitted_at)) attemptByQuiz.set(a.quiz_id, a);
+        });
+
+        // Upcoming with status
+        const upcomingWithStatus: UpcomingAssignment[] = (asgn ?? []).map(a => {
+          const g = gradeByAsgn.get(a.id);
+          const s = subByAsgn.get(a.id);
+          let status: SubmissionStatus = "not_started";
+          if (g) status = "graded";
+          else if (s) status = "submitted";
+          else if (a.due_at && isPast(new Date(a.due_at))) status = "missing";
+          return {
+            ...a,
+            course_title: titleMap[a.course_id],
+            status,
+            score: g?.score ?? null,
+            max_score: g?.max_score ?? null,
+            submitted_at: s?.submitted_at ?? null,
+          };
+        });
+        setUpcoming(upcomingWithStatus);
         setAnnouncements((ann ?? []).map(a => ({ ...a, course_title: titleMap[a.course_id] })));
+
+        // Per-course progress: completed = has submission/grade or attempt
+        const progress: Record<string, CourseProgress> = {};
+        for (const c of myCourses) {
+          const cAsgns = (allAsgn ?? []).filter(a => a.course_id === c.id);
+          const cQuizzes = (allQuizzes ?? []).filter(q => q.course_id === c.id);
+          const total = cAsgns.length + cQuizzes.length;
+          const completed =
+            cAsgns.filter(a => subByAsgn.has(a.id) || gradeByAsgn.has(a.id)).length +
+            cQuizzes.filter(q => attemptByQuiz.get(q.id)?.submitted_at).length;
+          // Next milestone: soonest upcoming due item not yet completed
+          const candidates: { title: string; due_at: string | null; type: "assignment" | "quiz" }[] = [
+            ...cAsgns
+              .filter(a => a.due_at && new Date(a.due_at) >= new Date() && !subByAsgn.has(a.id) && !gradeByAsgn.has(a.id))
+              .map(a => ({ title: a.title, due_at: a.due_at, type: "assignment" as const })),
+            ...cQuizzes
+              .filter(q => q.due_at && new Date(q.due_at) >= new Date() && !attemptByQuiz.get(q.id)?.submitted_at)
+              .map(q => ({ title: q.title, due_at: q.due_at, type: "quiz" as const })),
+          ].sort((a, b) => new Date(a.due_at!).getTime() - new Date(b.due_at!).getTime());
+          progress[c.id] = {
+            completion: total ? Math.round((completed / total) * 100) : 0,
+            completed,
+            total,
+            nextMilestone: candidates[0],
+          };
+        }
+        setProgressByCourse(progress);
+
+        // Last activity = latest submission/attempt timestamp
+        const stamps: number[] = [];
+        (mySubs ?? []).forEach(s => s.submitted_at && stamps.push(new Date(s.submitted_at).getTime()));
+        (myAttempts ?? []).forEach(a => {
+          if (a.submitted_at) stamps.push(new Date(a.submitted_at).getTime());
+          else if (a.started_at) stamps.push(new Date(a.started_at).getTime());
+        });
+        if (stamps.length) setLastActivity(new Date(Math.max(...stamps)));
       }
 
       // Last visited course from localStorage (set by CourseView)
