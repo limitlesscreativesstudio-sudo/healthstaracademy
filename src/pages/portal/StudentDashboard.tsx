@@ -203,6 +203,66 @@ const StudentDashboard = () => {
         <h1 className="font-heading text-3xl font-bold text-foreground mb-1">Dashboard</h1>
         <p className="text-sm text-muted-foreground mb-5">Welcome back. Pick up where you left off.</p>
 
+        {/* Progress metrics strip */}
+        {!loading && courses.length > 0 && (() => {
+          const totals = Object.values(progressByCourse).reduce(
+            (acc, p) => ({ completed: acc.completed + p.completed, total: acc.total + p.total }),
+            { completed: 0, total: 0 }
+          );
+          const overall = totals.total ? Math.round((totals.completed / totals.total) * 100) : 0;
+          const nextMs = Object.entries(progressByCourse)
+            .map(([cid, p]) => p.nextMilestone ? { ...p.nextMilestone, course_id: cid, course_title: courses.find(c => c.id === cid)?.title } : null)
+            .filter(Boolean)
+            .sort((a: any, b: any) => new Date(a.due_at).getTime() - new Date(b.due_at).getTime())[0] as any;
+          return (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+              <Card>
+                <CardContent className="py-4 px-4">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                    <Trophy className="h-3.5 w-3.5 text-purple" /> Overall Completion
+                  </div>
+                  <div className="text-2xl font-bold text-foreground">{overall}%</div>
+                  <Progress value={overall} className="h-1.5 mt-2" />
+                  <div className="text-[11px] text-muted-foreground mt-1">{totals.completed} of {totals.total} items complete</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="py-4 px-4">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                    <Clock className="h-3.5 w-3.5 text-cyan" /> Next Milestone
+                  </div>
+                  {nextMs ? (
+                    <Link to={`/portal/courses/${nextMs.course_id}`} className="block">
+                      <div className="text-sm font-semibold text-foreground line-clamp-1">{nextMs.title}</div>
+                      <div className="text-[11px] text-muted-foreground line-clamp-1">{nextMs.course_title}</div>
+                      <div className="text-xs text-coral font-medium mt-1">
+                        Due {formatDistanceToNow(new Date(nextMs.due_at), { addSuffix: true })}
+                      </div>
+                    </Link>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No upcoming milestones</div>
+                  )}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="py-4 px-4">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                    <Activity className="h-3.5 w-3.5 text-purple" /> Last Activity
+                  </div>
+                  <div className="text-sm font-semibold text-foreground">
+                    {lastActivity ? formatDistanceToNow(lastActivity, { addSuffix: true }) : "No activity yet"}
+                  </div>
+                  {lastActivity && (
+                    <div className="text-[11px] text-muted-foreground mt-1">
+                      {lastActivity.toLocaleDateString()} · {lastActivity.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          );
+        })()}
+
         {/* Resume card */}
         {lastVisited && (
           <Card className="mb-6 border-purple/30 bg-gradient-to-r from-purple/5 to-cyan/5">
