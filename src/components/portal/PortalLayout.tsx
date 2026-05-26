@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, LogOut, BookOpen, Users, LayoutDashboard, Calendar, Inbox, History, HelpCircle, User } from "lucide-react";
+import { GraduationCap, LogOut, BookOpen, Users, LayoutDashboard, Calendar, Inbox, History, HelpCircle, User, ClipboardCheck } from "lucide-react";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 import NotificationBell from "./NotificationBell";
 
@@ -30,6 +30,7 @@ const PortalLayout = ({ children }: { children: React.ReactNode }) => {
           <RailItem to="/portal/account" icon={User} label="Account" />
           <RailItem to="/portal" icon={LayoutDashboard} label="Dashboard" exact />
           <RailItem to="/portal/courses" icon={BookOpen} label="Courses" />
+          <RailItem to="/portal/required" icon={ClipboardCheck} label="Required" />
           <RailItem to="/portal/calendar" icon={Calendar} label="Calendar" />
           <RailItem to="/portal/inbox" icon={Inbox} label="Inbox" />
           <RailItem to="/portal/history" icon={History} label="History" />
