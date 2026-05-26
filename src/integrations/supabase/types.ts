@@ -276,6 +276,7 @@ export type Database = {
       courses: {
         Row: {
           code: string | null
+          cohort_id: string | null
           cover_image_url: string | null
           created_at: string
           default_view: string
@@ -300,6 +301,7 @@ export type Database = {
         }
         Insert: {
           code?: string | null
+          cohort_id?: string | null
           cover_image_url?: string | null
           created_at?: string
           default_view?: string
@@ -324,6 +326,7 @@ export type Database = {
         }
         Update: {
           code?: string | null
+          cohort_id?: string | null
           cover_image_url?: string | null
           created_at?: string
           default_view?: string
@@ -948,6 +951,8 @@ export type Database = {
           payment_method: string | null
           payment_status: string
           phone: string | null
+          portal_user_id: string | null
+          provisioned_at: string | null
           qualification_notes: string | null
           qualification_status: string
           scrub_bottom_size: string | null
@@ -979,6 +984,8 @@ export type Database = {
           payment_method?: string | null
           payment_status?: string
           phone?: string | null
+          portal_user_id?: string | null
+          provisioned_at?: string | null
           qualification_notes?: string | null
           qualification_status?: string
           scrub_bottom_size?: string | null
@@ -1010,6 +1017,8 @@ export type Database = {
           payment_method?: string | null
           payment_status?: string
           phone?: string | null
+          portal_user_id?: string | null
+          provisioned_at?: string | null
           qualification_notes?: string | null
           qualification_status?: string
           scrub_bottom_size?: string | null

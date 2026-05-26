@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { RefreshCw, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { RefreshCw, Search, ChevronDown, ChevronUp, UserPlus, CheckCircle2 } from "lucide-react";
 
 interface Student {
   id: string;
@@ -19,9 +19,12 @@ interface Student {
   needs_entrance_exam: boolean;
   needs_parent_consent: boolean;
   selected_cohort_date: string | null;
+  cohort_id: string | null;
   orientation_date: string | null;
   scrub_top_size: string | null;
   scrub_bottom_size: string | null;
+  portal_user_id: string | null;
+  provisioned_at: string | null;
   created_at: string;
 }
 
@@ -55,6 +58,7 @@ const StudentPipeline = () => {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [provisioning, setProvisioning] = useState<string | null>(null);
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -73,6 +77,28 @@ const StudentPipeline = () => {
 
   useEffect(() => { fetchStudents(); }, [filterStatus]);
 
+  const provisionPortal = async (studentId: string) => {
+    setProvisioning(studentId);
+    try {
+      const { data, error } = await supabase.functions.invoke("provision-student", {
+        body: { student_id: studentId },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({
+        title: "Portal access provisioned",
+        description: (data as any)?.enrollment_created
+          ? "Invite email sent and student enrolled in their course."
+          : "Invite email sent (student was already enrolled in the course).",
+      });
+      fetchStudents();
+    } catch (err: any) {
+      toast({ title: "Provision failed", description: err?.message ?? String(err), variant: "destructive" });
+    } finally {
+      setProvisioning(null);
+    }
+  };
+
   const updateStatus = async (studentId: string, newStatus: string) => {
     const { error } = await supabase
       .from("students")
@@ -80,10 +106,18 @@ const StudentPipeline = () => {
       .eq("id", studentId);
     if (error) {
       toast({ title: "Update failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Status updated" });
-      fetchStudents();
+      return;
     }
+    toast({ title: "Status updated" });
+    // Auto-provision portal access when admin marks the student as enrolled
+    if (newStatus === "enrolled") {
+      const s = students.find(x => x.id === studentId);
+      if (s && !s.provisioned_at) {
+        await provisionPortal(studentId);
+        return;
+      }
+    }
+    fetchStudents();
   };
 
   const filtered = students.filter(s =>
@@ -130,7 +164,12 @@ const StudentPipeline = () => {
               className="grid grid-cols-1 md:grid-cols-[1fr_1fr_150px_150px_120px_40px] gap-2 md:gap-4 px-4 py-3 items-center cursor-pointer hover:bg-muted/30 transition-colors"
               onClick={() => setExpandedId(expandedId === student.id ? null : student.id)}
             >
-              <span className="font-medium text-foreground">{student.first_name} {student.last_name}</span>
+              <span className="font-medium text-foreground flex items-center gap-1.5">
+                {student.first_name} {student.last_name}
+                {student.provisioned_at && (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-green-600" aria-label="Portal provisioned" />
+                )}
+              </span>
               <span className="text-sm text-muted-foreground truncate">{student.email}</span>
               <Badge className={`text-xs justify-center ${STATUS_COLORS[student.enrollment_status] || ""}`}>
                 {student.enrollment_status.replace(/_/g, " ")}
@@ -177,6 +216,39 @@ const StudentPipeline = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="md:col-span-3 border-t border-border/60 pt-3 mt-2">
+                  <p className="text-sm text-muted-foreground mb-2">LMS Portal Access</p>
+                  {student.provisioned_at ? (
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span className="text-green-700 font-medium">Provisioned</span>
+                      <span className="text-muted-foreground">
+                        on {new Date(student.provisioned_at).toLocaleDateString()} — invite email sent to {student.email}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ml-2 h-7 text-xs"
+                        onClick={() => provisionPortal(student.id)}
+                        disabled={provisioning === student.id}
+                      >
+                        Resend Invite
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      onClick={() => provisionPortal(student.id)}
+                      disabled={provisioning === student.id}
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      {provisioning === student.id ? "Provisioning…" : "Provision Portal Access"}
+                    </Button>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Creates the student's portal account, sends a magic-link invite email, and enrolls them in their cohort's course.
+                  </p>
                 </div>
               </div>
             )}
