@@ -37,8 +37,9 @@ const CourseView = () => {
   const { user } = usePortalAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
+  const [previewAsStudent, setPreviewAsStudent] = useState(false);
 
-  useEffect(() => {
+  const loadCourse = () => {
     if (!courseId) return;
     supabase.from("courses").select("id, title, code, description, instructor_id, nav_order, nav_visibility, default_view, home_page_type, front_page_html").eq("id", courseId).maybeSingle()
       .then(({ data }) => {
@@ -48,12 +49,16 @@ const CourseView = () => {
           try { localStorage.setItem("hsa:lastCourse", JSON.stringify({ courseId, title: data.title })); } catch { /* ignore */ }
         }
       });
-  }, [courseId]);
+  };
+
+  useEffect(() => { loadCourse(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [courseId]);
 
   if (loading) return <PortalLayout><div className="p-6">Loading…</div></PortalLayout>;
   if (!course) return <PortalLayout><div className="p-6">Course not found.</div></PortalLayout>;
 
   const isInstructor = user?.id === course.instructor_id;
+  const viewAsStudent = isInstructor && previewAsStudent;
+  const effectiveInstructor = isInstructor && !viewAsStudent;
 
   return (
     <PortalLayout>
@@ -65,30 +70,45 @@ const CourseView = () => {
             <h2 className="font-heading font-bold text-base mt-2 line-clamp-2">{course.title}</h2>
             {course.code && <div className="text-xs text-muted-foreground font-mono mt-1">{course.code}</div>}
           </div>
+          {isInstructor && (
+            <div className="px-4 mb-3">
+              <button
+                onClick={() => setPreviewAsStudent(v => !v)}
+                className={`w-full text-[11px] font-semibold uppercase tracking-wide px-2 py-1.5 rounded border transition ${
+                  previewAsStudent
+                    ? "bg-purple text-white border-purple"
+                    : "bg-muted/40 text-muted-foreground border-border hover:bg-muted"
+                }`}
+                title="Toggle student preview of this sidebar"
+              >
+                {previewAsStudent ? "👁 Previewing as Student — click to exit" : "Preview sidebar as Student"}
+              </button>
+            </div>
+          )}
           <nav className="text-sm">
             {orderedNavKeys(course.nav_order).map(key => {
               const item = COURSE_NAV_ITEMS.find(i => i.key === key)!;
               const visibleToStudent = isNavVisibleToStudent(key, course.nav_visibility);
-              if (!isInstructor && !visibleToStudent) return null;
+              if (!effectiveInstructor && !visibleToStudent) return null;
               const to = item.path ? `/portal/courses/${courseId}/${item.path}` : `/portal/courses/${courseId}`;
               return (
                 <CourseNav key={key} to={to} end={!item.path} icon={item.icon}>
                   <span className="flex-1">{item.label}</span>
-                  {isInstructor && !visibleToStudent && (
+                  {effectiveInstructor && !visibleToStudent && (
                     <span className="text-[9px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1 py-0.5 ml-1">Hidden</span>
                   )}
                 </CourseNav>
               );
             })}
-            {isInstructor && (
+            {effectiveInstructor && (
               <CourseNav to={`/portal/teach/courses/${courseId}`} icon={SettingsIcon}>Settings</CourseNav>
             )}
           </nav>
         </aside>
         <div className="flex-1 p-6 max-w-5xl min-w-0">
           <Routes>
-            <Route index element={<CourseHome course={course} isInstructor={isInstructor} />} />
-            <Route path="modules" element={<ModulesTabAuthor courseId={course.id} isInstructor={isInstructor} />} />
+            <Route index element={<CourseHome course={course} isInstructor={effectiveInstructor} reloadCourse={loadCourse} />} />
+            <Route path="modules" element={<ModulesTabAuthor courseId={course.id} isInstructor={effectiveInstructor} />} />
             <Route path="modules/:itemId" element={<ItemViewer courseId={course.id} />} />
             <Route path="assignments" element={<AssignmentsList courseId={course.id} />} />
             <Route path="quizzes" element={<QuizzesList courseId={course.id} />} />
@@ -96,16 +116,16 @@ const CourseView = () => {
             <Route path="announcements" element={<AnnouncementsTab courseId={course.id} />} />
             <Route path="discussions" element={<ComingSoon title="Discussions" />} />
             <Route path="people" element={<ComingSoon title="People" />} />
-            <Route path="pages" element={<PagesTab courseId={course.id} isInstructor={isInstructor} />} />
+            <Route path="pages" element={<PagesTab courseId={course.id} isInstructor={effectiveInstructor} />} />
             <Route path="files" element={<ComingSoon title="Files" />} />
-            <Route path="syllabus" element={<SyllabusTab courseId={course.id} isInstructor={isInstructor} />} />
+            <Route path="syllabus" element={<SyllabusTab courseId={course.id} isInstructor={effectiveInstructor} />} />
             <Route path="outcomes" element={<ComingSoon title="Outcomes" />} />
             <Route path="rubrics" element={<ComingSoon title="Rubrics" />} />
             <Route path="bigbluebutton" element={<ComingSoon title="BigBlueButton" />} />
             <Route path="collaborations" element={<ComingSoon title="Collaborations" />} />
-            <Route path="attendance" element={<AttendanceTab courseId={course.id} isInstructor={isInstructor} />} />
-            <Route path="clinical" element={<ClinicalSkillsTab courseId={course.id} isInstructor={isInstructor} />} />
-            <Route path="readiness" element={<ReadinessTab courseId={course.id} isInstructor={isInstructor} />} />
+            <Route path="attendance" element={<AttendanceTab courseId={course.id} isInstructor={effectiveInstructor} />} />
+            <Route path="clinical" element={<ClinicalSkillsTab courseId={course.id} isInstructor={effectiveInstructor} />} />
+            <Route path="readiness" element={<ReadinessTab courseId={course.id} isInstructor={effectiveInstructor} />} />
             <Route path="analytics" element={<ComingSoon title="New Analytics" />} />
             <Route path="lucid" element={<ComingSoon title="Lucid (Whiteboard)" />} />
             <Route path="*" element={<Navigate to="." replace />} />
@@ -130,9 +150,11 @@ const CourseNav = ({ to, end, icon: Icon, children }: any) => (
   </NavLink>
 );
 
-const CourseHome = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
+const CourseHome = ({ course, isInstructor, reloadCourse }: { course: Course; isInstructor: boolean; reloadCourse?: () => void }) => {
   const [homeType, setHomeType] = useState<string>(course.home_page_type ?? "modules");
   const [hasFrontPage, setHasFrontPage] = useState<boolean>(!!course.front_page_html);
+  useEffect(() => { setHomeType(course.home_page_type ?? "modules"); }, [course.home_page_type]);
+  useEffect(() => { setHasFrontPage(!!course.front_page_html); }, [course.front_page_html]);
   useEffect(() => {
     if (!isInstructor) return;
     supabase.from("courses").select("front_page_html").eq("id", course.id).maybeSingle()
@@ -152,12 +174,12 @@ const CourseHome = ({ course, isInstructor }: { course: Course; isInstructor: bo
               courseId={course.id}
               current={homeType}
               hasFrontPage={hasFrontPage}
-              onChanged={(v) => setHomeType(v)}
+              onChanged={(v) => { setHomeType(v); reloadCourse?.(); }}
             />
           )}
         </div>
         {homeType === "front_page" ? (
-          <FrontPageView course={course} isInstructor={isInstructor} />
+          <FrontPageView courseId={course.id} isInstructor={isInstructor} />
         ) : homeType === "syllabus" ? (
           <SyllabusTab courseId={course.id} isInstructor={isInstructor} />
         ) : homeType === "assignments" ? (
@@ -212,16 +234,23 @@ const ActivityStream = ({ courseId }: { courseId: string }) => {
   );
 };
 
-const FrontPageView = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
-  const html = course.front_page_html ?? "";
-  const sanitized = html ? DOMPurify.sanitize(html) : "";
+const FrontPageView = ({ courseId, isInstructor }: { courseId: string; isInstructor: boolean }) => {
+  const [html, setHtml] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.from("courses").select("front_page_html").eq("id", courseId).maybeSingle()
+      .then(({ data }) => setHtml(data?.front_page_html ?? ""));
+  }, [courseId]);
+  if (html === null) {
+    return <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">Loading…</CardContent></Card>;
+  }
   if (!html) {
     return (
       <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">
-        {isInstructor ? "No front page content yet. Edit it from Course Settings." : "Welcome! Your instructor hasn't added a front page yet."}
+        {isInstructor ? "No front page content yet. Go to Pages → ⋯ → Use as Front Page on the page you want shown here." : "Welcome! Your instructor hasn't added a front page yet."}
       </CardContent></Card>
     );
   }
+  const sanitized = DOMPurify.sanitize(html);
   return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: sanitized }} />;
 };
 
