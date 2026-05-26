@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PortalLayout from "@/components/portal/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Calendar as CalendarIcon, ClipboardList, FolderOpen, MessageSquare, Star } from "lucide-react";
+import { BookOpen, Calendar as CalendarIcon, ClipboardList, FolderOpen, MessageSquare, Star, Briefcase } from "lucide-react";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 
 type Course = {
@@ -134,6 +134,9 @@ const StudentDashboard = () => {
               )}
               <Link to="/portal/grades" className="flex items-center gap-2 text-sm text-purple hover:underline">
                 <Star className="h-4 w-4" /> View Grades
+              </Link>
+              <Link to="/portal/career" className="flex items-center gap-2 text-sm text-purple hover:underline">
+                <Briefcase className="h-4 w-4" /> Career Portal
               </Link>
             </div>
           </aside>
