@@ -217,6 +217,39 @@ const StudentPipeline = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="md:col-span-3 border-t border-border/60 pt-3 mt-2">
+                  <p className="text-sm text-muted-foreground mb-2">LMS Portal Access</p>
+                  {student.provisioned_at ? (
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span className="text-green-700 font-medium">Provisioned</span>
+                      <span className="text-muted-foreground">
+                        on {new Date(student.provisioned_at).toLocaleDateString()} — invite email sent to {student.email}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ml-2 h-7 text-xs"
+                        onClick={() => provisionPortal(student.id)}
+                        disabled={provisioning === student.id}
+                      >
+                        Resend Invite
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      onClick={() => provisionPortal(student.id)}
+                      disabled={provisioning === student.id}
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      {provisioning === student.id ? "Provisioning…" : "Provision Portal Access"}
+                    </Button>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Creates the student's portal account, sends a magic-link invite email, and enrolls them in their cohort's course.
+                  </p>
+                </div>
               </div>
             )}
           </div>
