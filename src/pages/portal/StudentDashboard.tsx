@@ -64,6 +64,8 @@ const StudentDashboard = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [upcoming, setUpcoming] = useState<UpcomingAssignment[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [progressByCourse, setProgressByCourse] = useState<Record<string, CourseProgress>>({});
+  const [lastActivity, setLastActivity] = useState<Date | null>(null);
   const [lastVisited, setLastVisited] = useState<{ courseId: string; title: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
