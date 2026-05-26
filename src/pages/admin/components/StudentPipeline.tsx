@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { RefreshCw, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { RefreshCw, Search, ChevronDown, ChevronUp, UserPlus, CheckCircle2 } from "lucide-react";
 
 interface Student {
   id: string;
@@ -19,9 +19,12 @@ interface Student {
   needs_entrance_exam: boolean;
   needs_parent_consent: boolean;
   selected_cohort_date: string | null;
+  cohort_id: string | null;
   orientation_date: string | null;
   scrub_top_size: string | null;
   scrub_bottom_size: string | null;
+  portal_user_id: string | null;
+  provisioned_at: string | null;
   created_at: string;
 }
 
