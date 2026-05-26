@@ -136,42 +136,104 @@ export type Database = {
           },
         ]
       }
+      course_sections: {
+        Row: {
+          course_id: string
+          created_at: string
+          end_at: string | null
+          id: string
+          name: string
+          start_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          end_at?: string | null
+          id?: string
+          name: string
+          start_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          end_at?: string | null
+          id?: string
+          name?: string
+          start_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_sections_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           code: string | null
           cover_image_url: string | null
           created_at: string
+          default_view: string
           description: string | null
+          end_at: string | null
           id: string
           instructor_id: string
+          license: string | null
+          nav_order: Json
+          nav_visibility: Json
+          start_at: string | null
           status: string
           term: string | null
+          time_zone: string | null
           title: string
           updated_at: string
+          visibility: string
         }
         Insert: {
           code?: string | null
           cover_image_url?: string | null
           created_at?: string
+          default_view?: string
           description?: string | null
+          end_at?: string | null
           id?: string
           instructor_id: string
+          license?: string | null
+          nav_order?: Json
+          nav_visibility?: Json
+          start_at?: string | null
           status?: string
           term?: string | null
+          time_zone?: string | null
           title: string
           updated_at?: string
+          visibility?: string
         }
         Update: {
           code?: string | null
           cover_image_url?: string | null
           created_at?: string
+          default_view?: string
           description?: string | null
+          end_at?: string | null
           id?: string
           instructor_id?: string
+          license?: string | null
+          nav_order?: Json
+          nav_visibility?: Json
+          start_at?: string | null
           status?: string
           term?: string | null
+          time_zone?: string | null
           title?: string
           updated_at?: string
+          visibility?: string
         }
         Relationships: []
       }
@@ -226,6 +288,7 @@ export type Database = {
           enrolled_at: string
           id: string
           role: string
+          section_id: string | null
           user_id: string
         }
         Insert: {
@@ -233,6 +296,7 @@ export type Database = {
           enrolled_at?: string
           id?: string
           role?: string
+          section_id?: string | null
           user_id: string
         }
         Update: {
@@ -240,6 +304,7 @@ export type Database = {
           enrolled_at?: string
           id?: string
           role?: string
+          section_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -248,6 +313,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "course_sections"
             referencedColumns: ["id"]
           },
         ]
