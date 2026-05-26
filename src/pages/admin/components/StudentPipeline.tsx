@@ -164,7 +164,12 @@ const StudentPipeline = () => {
               className="grid grid-cols-1 md:grid-cols-[1fr_1fr_150px_150px_120px_40px] gap-2 md:gap-4 px-4 py-3 items-center cursor-pointer hover:bg-muted/30 transition-colors"
               onClick={() => setExpandedId(expandedId === student.id ? null : student.id)}
             >
-              <span className="font-medium text-foreground">{student.first_name} {student.last_name}</span>
+              <span className="font-medium text-foreground flex items-center gap-1.5">
+                {student.first_name} {student.last_name}
+                {student.provisioned_at && (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-green-600" aria-label="Portal provisioned" />
+                )}
+              </span>
               <span className="text-sm text-muted-foreground truncate">{student.email}</span>
               <Badge className={`text-xs justify-center ${STATUS_COLORS[student.enrollment_status] || ""}`}>
                 {student.enrollment_status.replace(/_/g, " ")}
