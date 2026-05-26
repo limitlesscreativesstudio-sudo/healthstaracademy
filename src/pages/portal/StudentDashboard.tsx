@@ -331,6 +331,15 @@ const StudentDashboard = () => {
                         <CardContent className="pt-3 pb-3">
                           <h3 className="font-semibold text-sm text-purple line-clamp-1">{c.title}</h3>
                           {c.code && <div className="text-xs text-muted-foreground mt-0.5">{c.code}</div>}
+                          {progressByCourse[c.id] && progressByCourse[c.id].total > 0 && (
+                            <div className="mt-2">
+                              <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+                                <span>{progressByCourse[c.id].completion}% complete</span>
+                                <span>{progressByCourse[c.id].completed}/{progressByCourse[c.id].total}</span>
+                              </div>
+                              <Progress value={progressByCourse[c.id].completion} className="h-1" />
+                            </div>
+                          )}
                           <div className="flex items-center gap-3 mt-3 text-muted-foreground">
                             <ClipboardList className="h-4 w-4" />
                             <MessageSquare className="h-4 w-4" />
