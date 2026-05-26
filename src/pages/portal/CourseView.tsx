@@ -6,10 +6,14 @@ import PortalLayout from "@/components/portal/PortalLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Megaphone, BookOpen, FileText, ChevronRight, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap, BarChart3, MessageSquare, Users as UsersIcon, FolderOpen, ScrollText, Target, Grid3x3, Settings as SettingsIcon, ClipboardCheck, LineChart, PenSquare, Handshake } from "lucide-react";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
+import { COURSE_NAV_ITEMS, orderedNavKeys, isNavVisibleToStudent, type NavKey } from "@/lib/courseNav";
 
 import StudentGrades from "./StudentGrades";
 
-type Course = { id: string; title: string; code: string | null; description: string | null; instructor_id: string };
+type Course = {
+  id: string; title: string; code: string | null; description: string | null; instructor_id: string;
+  nav_order: NavKey[] | null; nav_visibility: Record<string, boolean> | null; default_view: string | null;
+};
 type Module = { id: string; title: string; position: number; published: boolean };
 type ModuleItem = { id: string; module_id: string; title: string; item_type: string; content_ref: string | null; url: string | null; position: number; published: boolean };
 type Announcement = { id: string; title: string; body: string; posted_at: string };
