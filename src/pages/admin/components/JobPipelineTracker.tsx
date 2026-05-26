@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import {
   Briefcase, Award, Calendar, MapPin, DollarSign, Search,
-  RefreshCw, ChevronDown, ChevronUp, TrendingUp, Users, CheckCircle2,
+  RefreshCw, ChevronDown, ChevronUp, TrendingUp, Users, CheckCircle2, AlertTriangle,
 } from "lucide-react";
 
 type Stage =
@@ -205,6 +205,46 @@ const JobPipelineTracker = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Cert renewal alerts */}
+      {(() => {
+        const now = Date.now();
+        const alerts = students
+          .map(s => ({ s, p: pipeline[s.id] }))
+          .filter(x => x.p?.certification_expires)
+          .map(x => {
+            const days = Math.ceil((new Date(x.p!.certification_expires!).getTime() - now) / 86400000);
+            return { ...x, days };
+          })
+          .filter(x => x.days <= 90)
+          .sort((a, b) => a.days - b.days);
+        if (alerts.length === 0) return null;
+        return (
+          <Card className="border-amber-300 bg-amber-50/50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2 text-amber-900 font-semibold text-sm">
+                <AlertTriangle className="h-4 w-4" /> Certification Renewal Alerts ({alerts.length})
+              </div>
+              <div className="space-y-1 text-sm">
+                {alerts.slice(0, 8).map(({ s, days, p }) => (
+                  <div key={s.id} className="flex justify-between items-center py-1 border-t border-amber-200 first:border-0">
+                    <span className="font-medium">{s.first_name} {s.last_name}</span>
+                    <span className="text-xs text-amber-900">
+                      Cert #{p?.certification_number || "—"} ·{" "}
+                      {days < 0 ? <strong className="text-rose-700">Expired {-days}d ago</strong>
+                        : days === 0 ? <strong>Expires today</strong>
+                        : <>Expires in {days}d</>}
+                    </span>
+                  </div>
+                ))}
+                {alerts.length > 8 && <p className="text-xs text-amber-800 pt-1">+{alerts.length - 8} more</p>}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
+
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
