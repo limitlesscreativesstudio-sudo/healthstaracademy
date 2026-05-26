@@ -509,6 +509,84 @@ export type Database = {
         }
         Relationships: []
       }
+      job_pipeline: {
+        Row: {
+          certification_date: string | null
+          certification_expires: string | null
+          certification_number: string | null
+          cohort_id: string | null
+          created_at: string
+          employer_city: string | null
+          employer_name: string | null
+          follow_up_date: string | null
+          hire_date: string | null
+          hourly_wage: number | null
+          id: string
+          job_search_status: string | null
+          job_title: string | null
+          notes: string | null
+          placement_source: string | null
+          portal_user_id: string | null
+          shift_type: string | null
+          stage: string
+          state_exam_date: string | null
+          state_exam_location: string | null
+          state_exam_result: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          certification_date?: string | null
+          certification_expires?: string | null
+          certification_number?: string | null
+          cohort_id?: string | null
+          created_at?: string
+          employer_city?: string | null
+          employer_name?: string | null
+          follow_up_date?: string | null
+          hire_date?: string | null
+          hourly_wage?: number | null
+          id?: string
+          job_search_status?: string | null
+          job_title?: string | null
+          notes?: string | null
+          placement_source?: string | null
+          portal_user_id?: string | null
+          shift_type?: string | null
+          stage?: string
+          state_exam_date?: string | null
+          state_exam_location?: string | null
+          state_exam_result?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          certification_date?: string | null
+          certification_expires?: string | null
+          certification_number?: string | null
+          cohort_id?: string | null
+          created_at?: string
+          employer_city?: string | null
+          employer_name?: string | null
+          follow_up_date?: string | null
+          hire_date?: string | null
+          hourly_wage?: number | null
+          id?: string
+          job_search_status?: string | null
+          job_title?: string | null
+          notes?: string | null
+          placement_source?: string | null
+          portal_user_id?: string | null
+          shift_type?: string | null
+          stage?: string
+          state_exam_date?: string | null
+          state_exam_location?: string | null
+          state_exam_result?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lms_announcements: {
         Row: {
           body: string
