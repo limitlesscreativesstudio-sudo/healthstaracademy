@@ -18,6 +18,8 @@ type Course = {
   instructor_id: string;
 };
 
+type SubmissionStatus = "graded" | "submitted" | "missing" | "not_started";
+
 type UpcomingAssignment = {
   id: string;
   title: string;
@@ -25,6 +27,10 @@ type UpcomingAssignment = {
   course_id: string;
   points: number;
   course_title?: string;
+  status: SubmissionStatus;
+  score?: number | null;
+  max_score?: number | null;
+  submitted_at?: string | null;
 };
 
 type Announcement = {
@@ -34,6 +40,13 @@ type Announcement = {
   posted_at: string;
   course_id: string;
   course_title?: string;
+};
+
+type CourseProgress = {
+  completion: number;
+  completed: number;
+  total: number;
+  nextMilestone?: { title: string; due_at: string | null; type: "assignment" | "quiz" };
 };
 
 // Canvas-style rotating card header colors
