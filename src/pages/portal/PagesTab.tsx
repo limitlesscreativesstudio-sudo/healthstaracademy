@@ -205,7 +205,7 @@ const PageRow = ({ page, isInstructor, onEdit, onReload }: {
 const PagePreview = ({ page, onClose, onEdit, isInstructor }: {
   page: Page; onClose: () => void; onEdit: () => void; isInstructor: boolean;
 }) => {
-  const sanitized = DOMPurify.sanitize(page.body_html || "<p><em>This page is empty.</em></p>");
+  const sanitized = sanitizeHtml(page.body_html || "<p><em>This page is empty.</em></p>");
   return (
     <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
       <div className="max-w-4xl mx-auto p-6">
