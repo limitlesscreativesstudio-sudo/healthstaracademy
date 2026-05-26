@@ -34,7 +34,7 @@ const CourseView = () => {
 
   useEffect(() => {
     if (!courseId) return;
-    supabase.from("courses").select("id, title, code, description, instructor_id, nav_order, nav_visibility, default_view").eq("id", courseId).maybeSingle()
+    supabase.from("courses").select("id, title, code, description, instructor_id, nav_order, nav_visibility, default_view, home_page_type, front_page_html").eq("id", courseId).maybeSingle()
       .then(({ data }) => { setCourse(data as Course | null); setLoading(false); });
   }, [courseId]);
 
