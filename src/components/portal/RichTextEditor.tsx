@@ -5,10 +5,12 @@ import { Separator } from "@/components/ui/separator";
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3, List, ListOrdered, Quote, Code,
-  Link as LinkIcon, Image as ImageIcon, Undo, Redo,
+  Link as LinkIcon, Image as ImageIcon, Upload, Undo, Redo,
   AlignLeft, AlignCenter, AlignRight, Eraser, Code2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 type Props = {
   value: string;
