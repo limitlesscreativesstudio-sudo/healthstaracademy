@@ -32,8 +32,8 @@ const CourseView = () => {
 
   useEffect(() => {
     if (!courseId) return;
-    supabase.from("courses").select("id, title, code, description, instructor_id").eq("id", courseId).maybeSingle()
-      .then(({ data }) => { setCourse(data); setLoading(false); });
+    supabase.from("courses").select("id, title, code, description, instructor_id, nav_order, nav_visibility, default_view").eq("id", courseId).maybeSingle()
+      .then(({ data }) => { setCourse(data as Course | null); setLoading(false); });
   }, [courseId]);
 
   if (loading) return <PortalLayout><div className="p-6">Loading…</div></PortalLayout>;
