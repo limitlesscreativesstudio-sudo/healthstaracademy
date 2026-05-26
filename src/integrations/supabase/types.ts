@@ -298,6 +298,42 @@ export type Database = {
           },
         ]
       }
+      course_nav_audit: {
+        Row: {
+          changed_by: string | null
+          changed_by_email: string | null
+          course_id: string
+          created_at: string
+          id: string
+          new_order: Json | null
+          new_visibility: Json | null
+          old_order: Json | null
+          old_visibility: Json | null
+        }
+        Insert: {
+          changed_by?: string | null
+          changed_by_email?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          new_order?: Json | null
+          new_visibility?: Json | null
+          old_order?: Json | null
+          old_visibility?: Json | null
+        }
+        Update: {
+          changed_by?: string | null
+          changed_by_email?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          new_order?: Json | null
+          new_visibility?: Json | null
+          old_order?: Json | null
+          old_visibility?: Json | null
+        }
+        Relationships: []
+      }
       course_sections: {
         Row: {
           course_id: string
