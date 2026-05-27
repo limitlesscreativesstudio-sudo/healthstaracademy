@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -18,7 +19,8 @@ import {
 import {
   ChevronRight, ChevronDown, Eye, EyeOff, MoreVertical, Plus, GripVertical,
   FileText, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap,
-  Trash2, Pencil, BarChart3, X,
+  Trash2, Pencil, BarChart3, X, ArrowRightLeft, ArrowUp, ArrowDown,
+  ChevronsUp, ChevronsDown, Type,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -43,7 +45,7 @@ const ITEM_TYPES = [
   { value: "file",       label: "File",       icon: FileIcon },
   { value: "link",       label: "External URL", icon: LinkIcon },
   { value: "video",      label: "Video URL",  icon: Video },
-  { value: "header",     label: "Text Header", icon: FileText },
+  { value: "header",     label: "Text Header (non-clickable title)", icon: Type },
 ];
 
 const itemIcon = (t: string) => {
@@ -149,6 +151,40 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
     ));
   };
 
+  // ----- Move item to another module -----
+  const moveItemToModule = async (item: ModuleItem, targetModuleId: string) => {
+    if (item.module_id === targetModuleId) return;
+    const targetCount = items.filter(i => i.module_id === targetModuleId).length;
+    const { error } = await supabase
+      .from("module_items")
+      .update({ module_id: targetModuleId, position: targetCount })
+      .eq("id", item.id);
+    if (error) {
+      toast({ title: "Move failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    const targetTitle = modules.find(m => m.id === targetModuleId)?.title ?? "module";
+    toast({ title: "Item moved", description: `Moved to "${targetTitle}".` });
+    load();
+  };
+
+  // ----- Move module up/down/top/bottom -----
+  const moveModule = async (m: Module, where: "up" | "down" | "top" | "bottom") => {
+    const idx = modules.findIndex(x => x.id === m.id);
+    if (idx < 0) return;
+    let newIdx = idx;
+    if (where === "up") newIdx = Math.max(0, idx - 1);
+    if (where === "down") newIdx = Math.min(modules.length - 1, idx + 1);
+    if (where === "top") newIdx = 0;
+    if (where === "bottom") newIdx = modules.length - 1;
+    if (newIdx === idx) return;
+    const next = arrayMove(modules, idx, newIdx);
+    setModules(next);
+    await Promise.all(next.map((mm, i) =>
+      supabase.from("modules").update({ position: i }).eq("id", mm.id)
+    ));
+  };
+
   if (loading) return <div className="text-sm text-muted-foreground p-4">Loading modules…</div>;
 
   const empty = modules.length === 0;
@@ -219,6 +255,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
                 <SortableModule
                   key={m.id} module={m}
                   items={items.filter(i => i.module_id === m.id)}
+                  allModules={modules}
                   collapsed={collapsed.has(m.id)}
                   isInstructor={isInstructor}
                   courseId={courseId}
@@ -227,10 +264,12 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
                   onEdit={() => setModuleDlg({ open: true, module: m })}
                   onDelete={() => deleteModule(m)}
                   onAddItem={() => setItemDlg({ open: true, moduleId: m.id })}
-                  onEditItem={(it) => setItemDlg({ open: true, moduleId: m.id, item: it })}
+                  onEditItem={(it: ModuleItem) => setItemDlg({ open: true, moduleId: m.id, item: it })}
                   onDeleteItem={deleteItem}
                   onToggleItemPublish={togglePublishItem}
-                  onDragItems={(e) => onDragItems(m.id, e)}
+                  onMoveItem={moveItemToModule}
+                  onMoveModule={(where: "up" | "down" | "top" | "bottom") => moveModule(m, where)}
+                  onDragItems={(e: DragEndEvent) => onDragItems(m.id, e)}
                   sensors={sensors}
                 />
               ))}
@@ -271,12 +310,18 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
 
 // ============ Sortable Module ============
 const SortableModule = ({
-  module: m, items, collapsed, isInstructor, courseId,
+  module: m, items, allModules, collapsed, isInstructor, courseId,
   onToggleCollapse, onTogglePublish, onEdit, onDelete, onAddItem,
-  onEditItem, onDeleteItem, onToggleItemPublish, onDragItems, sensors,
+  onEditItem, onDeleteItem, onToggleItemPublish, onMoveItem, onMoveModule,
+  onDragItems, sensors,
 }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: m.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  const otherModules = (allModules as Module[]).filter(x => x.id !== m.id);
+  const idx = (allModules as Module[]).findIndex(x => x.id === m.id);
+  const isFirst = idx === 0;
+  const isLast = idx === (allModules as Module[]).length - 1;
 
   return (
     <Card ref={setNodeRef} style={style}>
@@ -309,6 +354,20 @@ const SortableModule = ({
                 <DropdownMenuItem onClick={onTogglePublish}>
                   {m.published ? <><EyeOff className="h-4 w-4 mr-2" /> Unpublish</> : <><Eye className="h-4 w-4 mr-2" /> Publish</>}
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem disabled={isFirst} onClick={() => onMoveModule("top")}>
+                  <ChevronsUp className="h-4 w-4 mr-2" /> Move to top
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled={isFirst} onClick={() => onMoveModule("up")}>
+                  <ArrowUp className="h-4 w-4 mr-2" /> Move up
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled={isLast} onClick={() => onMoveModule("down")}>
+                  <ArrowDown className="h-4 w-4 mr-2" /> Move down
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled={isLast} onClick={() => onMoveModule("bottom")}>
+                  <ChevronsDown className="h-4 w-4 mr-2" /> Move to bottom
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onDelete} className="text-destructive"><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -326,16 +385,18 @@ const SortableModule = ({
                 {items.map((i: ModuleItem) => (
                   <SortableItem
                     key={i.id} item={i} courseId={courseId} isInstructor={isInstructor}
+                    otherModules={otherModules}
                     onTogglePublish={() => onToggleItemPublish(i)}
                     onEdit={() => onEditItem(i)}
                     onDelete={() => onDeleteItem(i)}
+                    onMoveTo={(targetId: string) => onMoveItem(i, targetId)}
                   />
                 ))}
               </SortableContext>
             </DndContext>
           )}
           {isInstructor && (
-            <div className="border-t border-border bg-muted/20 px-3 py-2">
+            <div className="border-t border-border bg-muted/20 px-3 py-2 flex gap-2">
               <Button size="sm" variant="ghost" onClick={onAddItem}>
                 <Plus className="h-4 w-4" /> Add item
               </Button>
@@ -348,7 +409,7 @@ const SortableModule = ({
 };
 
 // ============ Sortable Item ============
-const SortableItem = ({ item: i, courseId, isInstructor, onTogglePublish, onEdit, onDelete }: any) => {
+const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onTogglePublish, onEdit, onDelete, onMoveTo }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: i.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
 
@@ -367,7 +428,7 @@ const SortableItem = ({ item: i, courseId, isInstructor, onTogglePublish, onEdit
       )}
       {!isHeader && itemIcon(i.item_type)}
       {isHeader ? (
-        <div className="flex-1 text-sm font-bold uppercase tracking-wide text-muted-foreground">{i.title}</div>
+        <div className="flex-1 text-sm font-bold uppercase tracking-wide text-muted-foreground select-none">{i.title}</div>
       ) : (
         <Link to={to} className="flex-1 text-sm hover:underline">{i.title}</Link>
       )}
@@ -383,8 +444,23 @@ const SortableItem = ({ item: i, courseId, isInstructor, onTogglePublish, onEdit
             <DropdownMenuTrigger asChild>
               <button className="p-1 hover:bg-muted rounded"><MoreVertical className="h-3.5 w-3.5" /></button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="max-h-80 overflow-auto">
               <DropdownMenuItem onClick={onEdit}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
+              {otherModules && otherModules.length > 0 && (
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <ArrowRightLeft className="h-4 w-4 mr-2" /> Move to module
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="max-h-72 overflow-auto">
+                    {otherModules.map((mod: Module) => (
+                      <DropdownMenuItem key={mod.id} onClick={() => onMoveTo(mod.id)}>
+                        {mod.title}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              )}
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onDelete} className="text-destructive"><Trash2 className="h-4 w-4 mr-2" /> Remove</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
