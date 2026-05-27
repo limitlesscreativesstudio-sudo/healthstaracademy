@@ -15,6 +15,7 @@ import ReadinessTab from "./ReadinessTab";
 import AttendanceTab from "./AttendanceTab";
 import ModulesTabAuthor from "@/components/portal/ModulesTabAuthor";
 import PagesTab from "./PagesTab";
+import FilesTab from "./FilesTab";
 import ChooseHomePageDialog from "@/components/portal/ChooseHomePageDialog";
 
 type Course = {
