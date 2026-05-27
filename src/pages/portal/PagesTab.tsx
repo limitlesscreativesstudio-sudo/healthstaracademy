@@ -21,6 +21,8 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
+import SaveStatus from "@/components/portal/SaveStatus";
+import DraftRestoreBanner from "@/components/portal/DraftRestoreBanner";
 
 type Page = {
   id: string; course_id: string; title: string; body_html: string;
