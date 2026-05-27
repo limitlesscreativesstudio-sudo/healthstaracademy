@@ -63,6 +63,7 @@ const CARD_COLORS = [
 const StudentDashboard = () => {
   const { user, isInstructor } = usePortalAuth();
   const [courses, setCourses] = useState<Course[]>([]);
+  const [publishedCourseIds, setPublishedCourseIds] = useState<Set<string>>(new Set());
   const [upcoming, setUpcoming] = useState<UpcomingAssignment[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [progressByCourse, setProgressByCourse] = useState<Record<string, CourseProgress>>({});
