@@ -134,6 +134,59 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
           <option value="pre">Preformatted</option>
         </select>
 
+        <select
+          className="h-8 text-sm bg-transparent border border-border rounded px-2 mr-1"
+          title="Font family"
+          onChange={(e) => { if (e.target.value) { exec("fontName", e.target.value); e.target.value = ""; } }}
+          defaultValue=""
+        >
+          <option value="" disabled>Font</option>
+          <option value="Inter, sans-serif">Inter</option>
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="Helvetica, sans-serif">Helvetica</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="'Times New Roman', serif">Times New Roman</option>
+          <option value="'Courier New', monospace">Courier New</option>
+          <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+          <option value="Verdana, sans-serif">Verdana</option>
+          <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+        </select>
+
+        <select
+          className="h-8 text-sm bg-transparent border border-border rounded px-2 mr-1"
+          title="Font size"
+          onChange={(e) => {
+            const px = e.target.value;
+            if (!px) return;
+            document.execCommand("fontSize", false, "7");
+            const editor = editorRef.current;
+            if (editor) {
+              editor.querySelectorAll('font[size="7"]').forEach((el) => {
+                const span = document.createElement("span");
+                span.style.fontSize = `${px}px`;
+                span.innerHTML = (el as HTMLElement).innerHTML;
+                el.replaceWith(span);
+              });
+              onChange(editor.innerHTML);
+            }
+            e.target.value = "";
+          }}
+          defaultValue=""
+        >
+          <option value="" disabled>Size</option>
+          <option value="12">12px</option>
+          <option value="14">14px</option>
+          <option value="16">16px</option>
+          <option value="18">18px</option>
+          <option value="20">20px</option>
+          <option value="24">24px</option>
+          <option value="28">28px</option>
+          <option value="32">32px</option>
+          <option value="40">40px</option>
+          <option value="48">48px</option>
+          <option value="64">64px</option>
+        </select>
+
         <ToolbarBtn title="Bold" onClick={() => exec("bold")}><Bold className="h-4 w-4" /></ToolbarBtn>
         <ToolbarBtn title="Italic" onClick={() => exec("italic")}><Italic className="h-4 w-4" /></ToolbarBtn>
         <ToolbarBtn title="Underline" onClick={() => exec("underline")}><UnderlineIcon className="h-4 w-4" /></ToolbarBtn>
