@@ -393,8 +393,10 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
           ref={editorRef}
           contentEditable
           suppressContentEditableWarning
-          onInput={handleInput}
-          onBlur={handleInput}
+          onInput={() => { saveSelection(); handleInput(); }}
+          onBlur={() => { saveSelection(); handleInput(); }}
+          onKeyUp={saveSelection}
+          onMouseUp={saveSelection}
           onPaste={(e) => {
             const file = Array.from(e.clipboardData?.files ?? []).find(f => f.type.startsWith("image/"));
             if (file) { e.preventDefault(); uploadAndInsertImage(file); }
