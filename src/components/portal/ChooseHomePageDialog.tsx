@@ -29,6 +29,16 @@ export default function ChooseHomePageDialog({
   const [value, setValue] = useState<HomeType>((current as HomeType) || "modules");
   const [saving, setSaving] = useState(false);
 
+  const dirty = value !== (current as HomeType);
+
+  const handleOpenChange = (next: boolean) => {
+    if (!next && dirty && !saving) {
+      if (!window.confirm("Discard your Home Page selection?")) return;
+    }
+    if (next) setValue((current as HomeType) || "modules"); // reset on reopen
+    setOpen(next);
+  };
+
   const save = async () => {
     if (value === "front_page" && !hasFrontPage) {
       toast.error("You need to mark a Page as the Front Page first (Pages → ⋯ → Use as Front Page).");
@@ -38,7 +48,7 @@ export default function ChooseHomePageDialog({
     const { error } = await supabase.from("courses").update({ home_page_type: value }).eq("id", courseId);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Home page updated");
+    toast.success("Home page saved", { description: "Stored in the database." });
     onChanged(value);
     setOpen(false);
   };
