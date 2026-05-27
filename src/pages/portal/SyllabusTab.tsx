@@ -78,17 +78,8 @@ const SyllabusTab = ({ courseId, isInstructor }: { courseId: string; isInstructo
     setDraftHtml(syllabusHtml);
     setDraftShowSummary(showSummary);
     setEditing(true);
-    // Offer recovered draft
-    const recovered = guard.loadDraft();
-    if (recovered && recovered.html !== syllabusHtml) {
-      if (window.confirm("Restore your unsaved syllabus draft from last session?")) {
-        setDraftHtml(recovered.html as string);
-        setDraftShowSummary(recovered.showSummary as boolean);
-      } else {
-        guard.clearDraft();
-      }
-    }
   };
+
 
   const cancelEdit = () => {
     if (guard.confirmDiscard()) setEditing(false);
