@@ -21,6 +21,8 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
+import SaveStatus from "@/components/portal/SaveStatus";
+import DraftRestoreBanner from "@/components/portal/DraftRestoreBanner";
 
 type Page = {
   id: string; course_id: string; title: string; body_html: string;
@@ -240,19 +242,6 @@ const PageEditor = ({ page, courseId, onCancel, onSaved }: {
   const { dirty, savedAt, markSaved, confirmDiscard, loadDraft, clearDraft } =
     useUnsavedGuard(draftKey, { title, body }, initial);
 
-  // Offer to restore a draft saved earlier (e.g. after a crash / refresh).
-  useEffect(() => {
-    const draft = loadDraft();
-    if (draft && (draft.title !== initial.title || draft.body !== initial.body)) {
-      if (window.confirm("We saved a draft of this page from your last session. Restore it?")) {
-        setTitle(draft.title); setBody(draft.body);
-      } else {
-        clearDraft();
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const handleCancel = () => { if (confirmDiscard()) onCancel(); };
 
   const save = async () => {
@@ -278,16 +267,16 @@ const PageEditor = ({ page, courseId, onCancel, onSaved }: {
     onSaved();
   };
 
-  const statusLabel = saving
-    ? "Saving…"
-    : dirty
-      ? "Unsaved changes"
-      : savedAt
-        ? `Saved ${new Date(savedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
-        : "All changes saved";
-
   return (
     <div>
+      <DraftRestoreBanner
+        loadDraft={loadDraft}
+        clearDraft={clearDraft}
+        isDifferent={(d) => d.title !== initial.title || d.body !== initial.body}
+        onRestore={(d) => { setTitle(d.title); setBody(d.body); }}
+        label="We saved a draft of this page from your last session."
+      />
+
       <div className="flex items-center justify-between border-b border-border pb-3 mb-4 gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Button variant="ghost" size="sm" onClick={handleCancel}>
@@ -296,9 +285,7 @@ const PageEditor = ({ page, courseId, onCancel, onSaved }: {
           <h2 className="font-heading text-xl font-bold truncate">{page ? "Edit Page" : "New Page"}</h2>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`text-xs ${dirty ? "text-amber-600" : "text-muted-foreground"}`}>
-            {statusLabel}
-          </span>
+          <SaveStatus dirty={dirty} saving={saving} savedAt={savedAt} />
           <Button size="sm" variant="outline" onClick={() => setShowPreview(!showPreview)}>
             <Eye className="h-4 w-4" /> {showPreview ? "Edit" : "Preview"}
           </Button>
@@ -307,6 +294,7 @@ const PageEditor = ({ page, courseId, onCancel, onSaved }: {
           </Button>
         </div>
       </div>
+
 
       <Card>
         <CardContent className="pt-6 space-y-4">

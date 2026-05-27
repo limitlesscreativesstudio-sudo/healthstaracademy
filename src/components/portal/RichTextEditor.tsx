@@ -158,10 +158,33 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
 
   const insertImage = () => {
     saveSelection();
-    const url = window.prompt("Image URL", "https://");
+    const url = window.prompt("Image URL or Google Drive link", "https://");
     if (!url) return;
+    const trimmed = url.trim();
+    if (!trimmed || trimmed === "https://") return;
     focusEditorWithRange();
-    exec("insertImage", url);
+
+    // If it's a Google Drive / Docs link, prefer the embedded iframe preview
+    // (works for both images and PDFs without hotlink issues).
+    const drivePreview = toDrivePreviewUrl(trimmed);
+    if (drivePreview) {
+      const html = `
+        <div class="my-4 border border-border rounded-md overflow-hidden bg-muted/20" style="width:100%;">
+          <iframe
+            src="${drivePreview.replace(/"/g, "&quot;")}"
+            style="width:100%; height:780px; border:0; display:block;"
+            allow="autoplay"
+            allowfullscreen
+            loading="lazy"
+          ></iframe>
+        </div>
+        <p><br/></p>
+      `;
+      document.execCommand("insertHTML", false, html);
+      if (editorRef.current) onChange(editorRef.current.innerHTML);
+      return;
+    }
+    exec("insertImage", trimmed);
   };
 
   const insertEmbed = () => {

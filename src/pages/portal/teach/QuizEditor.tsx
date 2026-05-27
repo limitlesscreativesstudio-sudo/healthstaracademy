@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
+import SaveStatus from "@/components/portal/SaveStatus";
+import DraftRestoreBanner from "@/components/portal/DraftRestoreBanner";
 
 type Quiz = {
   id: string;
@@ -372,11 +375,18 @@ const toLocal = (iso: string | null) => {
 };
 
 const QuizSettingsCard = ({ quiz, onSaved }: { quiz: Quiz; onSaved: () => void }) => {
-  const [title, setTitle] = useState(quiz.title);
-  const [instructions, setInstructions] = useState(quiz.instructions ?? "");
-  const [dueAt, setDueAt] = useState(toLocal(quiz.due_at));
-  const [timeLimit, setTimeLimit] = useState<string>(quiz.time_limit_minutes ? String(quiz.time_limit_minutes) : "");
-  const [attempts, setAttempts] = useState(quiz.attempts_allowed ?? 1);
+  const initial = {
+    title: quiz.title,
+    instructions: quiz.instructions ?? "",
+    dueAt: toLocal(quiz.due_at),
+    timeLimit: quiz.time_limit_minutes ? String(quiz.time_limit_minutes) : "",
+    attempts: quiz.attempts_allowed ?? 1,
+  };
+  const [title, setTitle] = useState(initial.title);
+  const [instructions, setInstructions] = useState(initial.instructions);
+  const [dueAt, setDueAt] = useState(initial.dueAt);
+  const [timeLimit, setTimeLimit] = useState<string>(initial.timeLimit);
+  const [attempts, setAttempts] = useState(initial.attempts);
   const [busy, setBusy] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -389,20 +399,11 @@ const QuizSettingsCard = ({ quiz, onSaved }: { quiz: Quiz; onSaved: () => void }
     setAttempts(quiz.attempts_allowed ?? 1);
   }, [quiz.id, quiz.title, quiz.instructions, quiz.due_at, quiz.time_limit_minutes, quiz.attempts_allowed]);
 
-  const dirty =
-    title !== quiz.title ||
-    instructions !== (quiz.instructions ?? "") ||
-    dueAt !== toLocal(quiz.due_at) ||
-    timeLimit !== (quiz.time_limit_minutes ? String(quiz.time_limit_minutes) : "") ||
-    attempts !== (quiz.attempts_allowed ?? 1);
-
-  // Warn before leaving with unsaved changes.
-  useEffect(() => {
-    if (!dirty) return;
-    const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
-    window.addEventListener("beforeunload", h);
-    return () => window.removeEventListener("beforeunload", h);
-  }, [dirty]);
+  const guard = useUnsavedGuard(
+    `lms:quiz-settings-draft:${quiz.id}`,
+    { title, instructions, dueAt, timeLimit, attempts },
+    initial,
+  );
 
   const save = async () => {
     setBusy(true);
@@ -416,6 +417,7 @@ const QuizSettingsCard = ({ quiz, onSaved }: { quiz: Quiz; onSaved: () => void }
     setBusy(false);
     if (error) return toast({ title: "Save failed", description: error.message, variant: "destructive" });
     toast({ title: "Quiz settings saved", description: "Stored in the database." });
+    guard.markSaved({ title, instructions, dueAt, timeLimit, attempts });
     onSaved();
   };
 
@@ -425,14 +427,29 @@ const QuizSettingsCard = ({ quiz, onSaved }: { quiz: Quiz; onSaved: () => void }
         onClick={() => setExpanded(e => !e)}
         className="w-full flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30 text-left hover:bg-muted/50"
       >
-        <span className="font-semibold text-sm">
+        <span className="font-semibold text-sm flex items-center gap-2">
           Quiz settings
-          {dirty && <span className="ml-2 text-[10px] uppercase tracking-wide text-amber-600">Unsaved</span>}
+          <SaveStatus dirty={guard.dirty} saving={busy} savedAt={guard.savedAt} />
         </span>
         <span className="text-xs text-muted-foreground">{expanded ? "Hide" : "Edit"}</span>
       </button>
       {expanded && (
         <CardContent className="pt-5 space-y-3">
+          <DraftRestoreBanner
+            loadDraft={guard.loadDraft}
+            clearDraft={guard.clearDraft}
+            isDifferent={(d: any) =>
+              d.title !== initial.title || d.instructions !== initial.instructions ||
+              d.dueAt !== initial.dueAt || d.timeLimit !== initial.timeLimit ||
+              d.attempts !== initial.attempts
+            }
+            onRestore={(d: any) => {
+              setTitle(d.title ?? ""); setInstructions(d.instructions ?? "");
+              setDueAt(d.dueAt ?? ""); setTimeLimit(d.timeLimit ?? "");
+              setAttempts(d.attempts ?? 1);
+            }}
+            label="Restore your unsaved quiz settings draft?"
+          />
           <div><Label>Title</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
           <div><Label>Instructions</Label><Textarea rows={3} value={instructions} onChange={e => setInstructions(e.target.value)} /></div>
           <div className="grid grid-cols-2 gap-3">
@@ -440,7 +457,7 @@ const QuizSettingsCard = ({ quiz, onSaved }: { quiz: Quiz; onSaved: () => void }
             <div><Label>Time limit (min)</Label><Input type="number" min={0} value={timeLimit} placeholder="Optional" onChange={e => setTimeLimit(e.target.value)} /></div>
           </div>
           <div><Label>Attempts allowed</Label><Input type="number" min={1} value={attempts} onChange={e => setAttempts(Number(e.target.value))} /></div>
-          <Button onClick={save} disabled={busy || !dirty}>{busy ? "Saving…" : dirty ? "Save settings" : "Saved"}</Button>
+          <Button onClick={save} disabled={busy || !guard.dirty}>{busy ? "Saving…" : guard.dirty ? "Save settings" : "Saved"}</Button>
         </CardContent>
       )}
     </Card>

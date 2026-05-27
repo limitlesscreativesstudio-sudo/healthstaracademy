@@ -9,6 +9,8 @@ import { toast } from "@/hooks/use-toast";
 import { ClipboardList, GraduationCap, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
+import SaveStatus from "@/components/portal/SaveStatus";
+import DraftRestoreBanner from "@/components/portal/DraftRestoreBanner";
 
 type SummaryRow = {
   id: string;
@@ -76,17 +78,8 @@ const SyllabusTab = ({ courseId, isInstructor }: { courseId: string; isInstructo
     setDraftHtml(syllabusHtml);
     setDraftShowSummary(showSummary);
     setEditing(true);
-    // Offer recovered draft
-    const recovered = guard.loadDraft();
-    if (recovered && recovered.html !== syllabusHtml) {
-      if (window.confirm("Restore your unsaved syllabus draft from last session?")) {
-        setDraftHtml(recovered.html as string);
-        setDraftShowSummary(recovered.showSummary as boolean);
-      } else {
-        guard.clearDraft();
-      }
-    }
   };
+
 
   const cancelEdit = () => {
     if (guard.confirmDiscard()) setEditing(false);
@@ -127,12 +120,18 @@ const SyllabusTab = ({ courseId, isInstructor }: { courseId: string; isInstructo
 
       {editing ? (
         <Card><CardContent className="pt-6 space-y-3">
+          <DraftRestoreBanner
+            loadDraft={guard.loadDraft}
+            clearDraft={guard.clearDraft}
+            isDifferent={(d: any) => d.html !== syllabusHtml || d.showSummary !== showSummary}
+            onRestore={(d: any) => { setDraftHtml(d.html ?? ""); setDraftShowSummary(d.showSummary ?? true); }}
+            label="Restore your unsaved syllabus draft from last session?"
+          />
           <div className="flex items-center justify-between">
             <div className="text-sm font-medium">Syllabus Description</div>
-            <span className={`text-xs ${guard.dirty ? "text-amber-600" : "text-muted-foreground"}`}>
-              {saving ? "Saving…" : guard.dirty ? "Unsaved changes" : "All changes saved"}
-            </span>
+            <SaveStatus dirty={guard.dirty} saving={saving} savedAt={guard.savedAt} />
           </div>
+
           <Textarea
             rows={16}
             value={draftHtml}
