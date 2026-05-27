@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 
 type Page = {
   id: string; course_id: string; title: string; body_html: string;
