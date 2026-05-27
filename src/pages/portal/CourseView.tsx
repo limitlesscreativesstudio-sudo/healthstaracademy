@@ -105,10 +105,15 @@ const CourseView = () => {
             )}
           </nav>
         </aside>
-        <div className="flex-1 p-6 max-w-5xl min-w-0">
+        <div className="flex-1 p-6 max-w-[1400px] min-w-0">
           <Routes>
             <Route index element={<CourseHome course={course} isInstructor={effectiveInstructor} reloadCourse={loadCourse} />} />
-            <Route path="modules" element={<ModulesTabAuthor courseId={course.id} isInstructor={effectiveInstructor} />} />
+            <Route path="modules" element={
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6">
+                <div className="min-w-0"><ModulesTabAuthor courseId={course.id} isInstructor={effectiveInstructor} /></div>
+                <CourseStatusSidebar course={course} isInstructor={effectiveInstructor} />
+              </div>
+            } />
             <Route path="modules/:itemId" element={<ItemViewer courseId={course.id} />} />
             <Route path="assignments" element={<AssignmentsList courseId={course.id} />} />
             <Route path="quizzes" element={<QuizzesList courseId={course.id} />} />
