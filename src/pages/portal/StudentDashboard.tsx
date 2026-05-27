@@ -418,6 +418,29 @@ const StudentDashboard = () => {
 
           {/* Right rail */}
           <aside className="space-y-6">
+            {/* Coming Up — Canvas-style */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4 text-purple" /> Coming Up
+                </h3>
+                <Link to="/portal/calendar" className="text-xs text-purple hover:underline">View Calendar</Link>
+              </div>
+              {upcoming.length === 0 && (
+                <p className="text-xs text-muted-foreground mb-3">Nothing for the next week</p>
+              )}
+              <div className="space-y-2">
+                {isInstructor && (
+                  <Link to="/portal/teach" className="flex items-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50 bg-background">
+                    <GraduationCap className="h-4 w-4 text-muted-foreground" /> Start a New Course
+                  </Link>
+                )}
+                <Link to="/portal/grades" className="flex items-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50 bg-background">
+                  <Star className="h-4 w-4 text-muted-foreground" /> View Grades
+                </Link>
+              </div>
+            </div>
+
             {/* To-do list (upcoming assignments next 14 days) */}
             <div>
               <div className="flex items-center justify-between mb-2">
