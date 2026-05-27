@@ -69,6 +69,41 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
     if (mode === "html") setHtmlDraft(value);
   }, [value, mode]);
 
+  // Remember the last selection inside the editor so toolbar buttons /
+  // prompts that steal focus can restore a valid Range before inserting.
+  const savedRangeRef = useRef<Range | null>(null);
+
+  const saveSelection = () => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (editorRef.current?.contains(range.commonAncestorContainer)) {
+      savedRangeRef.current = range.cloneRange();
+    }
+  };
+
+  // Make sure there is a live Range inside the editor before calling
+  // document.execCommand, otherwise insertHTML / createLink no-op.
+  const focusEditorWithRange = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+    const sel = window.getSelection();
+    if (!sel) return;
+    const saved = savedRangeRef.current;
+    if (saved && editor.contains(saved.commonAncestorContainer)) {
+      sel.removeAllRanges();
+      sel.addRange(saved);
+      return;
+    }
+    // Fall back: place caret at the end of the editor.
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  };
+
   const exec = (command: string, arg?: string) => {
     document.execCommand(command, false, arg);
     if (editorRef.current) onChange(editorRef.current.innerHTML);
