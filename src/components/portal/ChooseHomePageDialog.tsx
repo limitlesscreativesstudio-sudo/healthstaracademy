@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Home as HomeIcon, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import SaveStatus from "@/components/portal/SaveStatus";
 
 type HomeType = "modules" | "front_page" | "syllabus" | "assignments" | "activity";
 
@@ -64,7 +65,10 @@ export default function ChooseHomePageDialog({
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Choose Course Home Page</DialogTitle>
+          <div className="flex items-center justify-between gap-3 pr-6">
+            <DialogTitle>Choose Course Home Page</DialogTitle>
+            <SaveStatus dirty={dirty} saving={saving} savedAt={null} />
+          </div>
         </DialogHeader>
         <div className="space-y-2 pt-2">
           {OPTIONS.map(o => {
