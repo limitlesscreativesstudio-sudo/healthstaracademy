@@ -229,10 +229,30 @@ const PagePreview = ({ page, onClose, onEdit, isInstructor }: {
 const PageEditor = ({ page, courseId, onCancel, onSaved }: {
   page: Page | null; courseId: string; onCancel: () => void; onSaved: () => void;
 }) => {
-  const [title, setTitle] = useState(page?.title ?? "");
-  const [body, setBody] = useState(page?.body_html ?? "");
+  const draftKey = `lms:page-draft:${courseId}:${page?.id ?? "new"}`;
+  const initial = { title: page?.title ?? "", body: page?.body_html ?? "" };
+  const [title, setTitle] = useState(initial.title);
+  const [body, setBody] = useState(initial.body);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+
+  const { dirty, savedAt, markSaved, confirmDiscard, loadDraft, clearDraft } =
+    useUnsavedGuard(draftKey, { title, body }, initial);
+
+  // Offer to restore a draft saved earlier (e.g. after a crash / refresh).
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft && (draft.title !== initial.title || draft.body !== initial.body)) {
+      if (window.confirm("We saved a draft of this page from your last session. Restore it?")) {
+        setTitle(draft.title); setBody(draft.body);
+      } else {
+        clearDraft();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleCancel = () => { if (confirmDiscard()) onCancel(); };
 
   const save = async () => {
     if (!title.trim()) {
@@ -244,32 +264,44 @@ const PageEditor = ({ page, courseId, onCancel, onSaved }: {
       const { error } = await supabase.from("lms_pages")
         .update({ title: title.trim(), body_html: body })
         .eq("id", page.id);
-      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); setSaving(false); return; }
-      toast({ title: "Page updated" });
+      if (error) { toast({ title: "Save failed", description: error.message, variant: "destructive" }); setSaving(false); return; }
+      toast({ title: "Page saved", description: "Your changes are stored in the database." });
     } else {
       const { error } = await supabase.from("lms_pages")
         .insert({ course_id: courseId, title: title.trim(), body_html: body });
-      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); setSaving(false); return; }
-      toast({ title: "Page created" });
+      if (error) { toast({ title: "Save failed", description: error.message, variant: "destructive" }); setSaving(false); return; }
+      toast({ title: "Page created", description: "Saved to the database." });
     }
     setSaving(false);
+    markSaved({ title, body });
     onSaved();
   };
 
+  const statusLabel = saving
+    ? "Saving…"
+    : dirty
+      ? "Unsaved changes"
+      : savedAt
+        ? `Saved ${new Date(savedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+        : "All changes saved";
+
   return (
     <div>
-      <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onCancel}>
+      <div className="flex items-center justify-between border-b border-border pb-3 mb-4 gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <Button variant="ghost" size="sm" onClick={handleCancel}>
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
-          <h2 className="font-heading text-xl font-bold">{page ? "Edit Page" : "New Page"}</h2>
+          <h2 className="font-heading text-xl font-bold truncate">{page ? "Edit Page" : "New Page"}</h2>
         </div>
         <div className="flex items-center gap-2">
+          <span className={`text-xs ${dirty ? "text-amber-600" : "text-muted-foreground"}`}>
+            {statusLabel}
+          </span>
           <Button size="sm" variant="outline" onClick={() => setShowPreview(!showPreview)}>
             <Eye className="h-4 w-4" /> {showPreview ? "Edit" : "Preview"}
           </Button>
-          <Button size="sm" onClick={save} disabled={saving}>
+          <Button size="sm" onClick={save} disabled={saving || !dirty}>
             {saving ? "Saving…" : page ? "Save Page" : "Create Page"}
           </Button>
         </div>
