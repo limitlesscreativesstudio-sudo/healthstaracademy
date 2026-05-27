@@ -407,6 +407,78 @@ const HomeSidebar = ({ course, isInstructor }: { course: Course; isInstructor: b
 
 // ModulesTab replaced by ModulesTabAuthor (src/components/portal/ModulesTabAuthor.tsx)
 
+const CourseStatusSidebar = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
+  const [published, setPublished] = useState<boolean>(true);
+  const [upcoming, setUpcoming] = useState<{ id: string; title: string; due_at: string; kind: "assignment" | "quiz" }[]>([]);
+
+  useEffect(() => {
+    supabase.from("courses").select("published").eq("id", course.id).maybeSingle()
+      .then(({ data }) => { if (data && "published" in (data as any)) setPublished(!!(data as any).published); });
+    (async () => {
+      const now = new Date().toISOString();
+      const in7 = new Date(Date.now() + 7 * 86400000).toISOString();
+      const [a, q] = await Promise.all([
+        supabase.from("assignments").select("id, title, due_at").eq("course_id", course.id).eq("published", true).not("due_at", "is", null).gte("due_at", now).lte("due_at", in7),
+        supabase.from("quizzes").select("id, title, due_at").eq("course_id", course.id).eq("published", true).not("due_at", "is", null).gte("due_at", now).lte("due_at", in7),
+      ]);
+      const merged = [
+        ...(a.data ?? []).map((x: any) => ({ ...x, kind: "assignment" as const })),
+        ...(q.data ?? []).map((x: any) => ({ ...x, kind: "quiz" as const })),
+      ].sort((x, y) => x.due_at.localeCompare(y.due_at));
+      setUpcoming(merged);
+    })();
+  }, [course.id]);
+
+  const Btn = ({ to, icon: Icon, children }: any) => (
+    <Link to={to} className="flex items-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50 bg-background">
+      <Icon className="h-4 w-4 text-muted-foreground" /> {children}
+    </Link>
+  );
+
+  return (
+    <aside className="space-y-4">
+      {isInstructor && (
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Course Status</div>
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md border text-sm font-medium ${published ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700" : "border-border bg-muted/40 text-muted-foreground"}`}>
+            <span className={`h-2 w-2 rounded-full ${published ? "bg-emerald-500" : "bg-muted-foreground"}`} />
+            {published ? "Published" : "Unpublished"}
+          </div>
+        </div>
+      )}
+      {isInstructor && (
+        <div className="space-y-2">
+          <Btn to={`/portal/teach/courses/${course.id}`} icon={SettingsIcon}>Choose Home Page</Btn>
+          <Btn to={`/portal/courses/${course.id}/announcements`} icon={Megaphone}>New Announcement</Btn>
+          <Btn to={`/portal/teach/courses/${course.id}`} icon={LineChart}>New Analytics</Btn>
+          <Btn to={`/portal/courses/${course.id}`} icon={ScrollText}>View Course Stream</Btn>
+        </div>
+      )}
+      <div className="border border-border rounded-md bg-background">
+        <div className="px-3 py-2 border-b border-border text-xs font-semibold uppercase tracking-wide text-muted-foreground">Coming Up</div>
+        <div className="p-3">
+          {upcoming.length === 0 ? (
+            <div className="text-xs text-muted-foreground">Nothing for the next week</div>
+          ) : (
+            <ul className="space-y-2">
+              {upcoming.map(u => (
+                <li key={`${u.kind}-${u.id}`} className="text-xs">
+                  <Link to={`/portal/courses/${course.id}/${u.kind === "quiz" ? "quizzes" : "assignments"}/${u.id}`}
+                    className="font-medium hover:underline flex items-start gap-2">
+                    {u.kind === "quiz" ? <GraduationCap className="h-3.5 w-3.5 mt-0.5 text-purple shrink-0" /> : <ClipboardList className="h-3.5 w-3.5 mt-0.5 text-purple shrink-0" />}
+                    <span className="flex-1">{u.title}</span>
+                  </Link>
+                  <div className="text-muted-foreground ml-5 mt-0.5">Due {new Date(u.due_at).toLocaleDateString()}</div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </aside>
+  );
+};
+
 const AssignmentsList = ({ courseId }: { courseId: string }) => {
   const [items, setItems] = useState<any[]>([]);
   useEffect(() => {
