@@ -164,6 +164,22 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
               {allCollapsed ? "Expand All" : "Collapse All"}
             </Button>
           )}
+          {isInstructor && !empty && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                if (!confirm("Publish all modules and items in this course?")) return;
+                await supabase.from("modules").update({ published: true }).eq("course_id", courseId);
+                const ids = modules.map(m => m.id);
+                if (ids.length) await supabase.from("module_items").update({ published: true }).in("module_id", ids);
+                toast({ title: "All modules and items published" });
+                load();
+              }}
+            >
+              <Eye className="h-4 w-4" /> Publish All
+            </Button>
+          )}
           {isInstructor && (
             <>
               <Button size="sm" variant="outline" onClick={() => setProgressOpen(true)}>
