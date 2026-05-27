@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { ClipboardList, GraduationCap, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 
 type SummaryRow = {
   id: string;
@@ -63,10 +64,32 @@ const SyllabusTab = ({ courseId, isInstructor }: { courseId: string; isInstructo
     })();
   }, [courseId, isInstructor]);
 
+  const draftKey = `lms:syllabus-draft:${courseId}`;
+  const initialDraft = { html: syllabusHtml, showSummary };
+  const guard = useUnsavedGuard(
+    editing ? draftKey : null,
+    { html: draftHtml, showSummary: draftShowSummary },
+    initialDraft,
+  );
+
   const openEditor = () => {
     setDraftHtml(syllabusHtml);
     setDraftShowSummary(showSummary);
     setEditing(true);
+    // Offer recovered draft
+    const recovered = guard.loadDraft();
+    if (recovered && recovered.html !== syllabusHtml) {
+      if (window.confirm("Restore your unsaved syllabus draft from last session?")) {
+        setDraftHtml(recovered.html as string);
+        setDraftShowSummary(recovered.showSummary as boolean);
+      } else {
+        guard.clearDraft();
+      }
+    }
+  };
+
+  const cancelEdit = () => {
+    if (guard.confirmDiscard()) setEditing(false);
   };
 
   const save = async () => {
@@ -77,13 +100,14 @@ const SyllabusTab = ({ courseId, isInstructor }: { courseId: string; isInstructo
       .eq("id", courseId);
     setSaving(false);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
       return;
     }
     setSyllabusHtml(draftHtml);
     setShowSummary(draftShowSummary);
+    guard.markSaved({ html: draftHtml, showSummary: draftShowSummary });
     setEditing(false);
-    toast({ title: "Syllabus updated" });
+    toast({ title: "Syllabus saved", description: "Stored in the database." });
   };
 
   if (loading) return <div className="text-sm text-muted-foreground">Loading…</div>;
@@ -103,7 +127,12 @@ const SyllabusTab = ({ courseId, isInstructor }: { courseId: string; isInstructo
 
       {editing ? (
         <Card><CardContent className="pt-6 space-y-3">
-          <div className="text-sm font-medium">Syllabus Description</div>
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium">Syllabus Description</div>
+            <span className={`text-xs ${guard.dirty ? "text-amber-600" : "text-muted-foreground"}`}>
+              {saving ? "Saving…" : guard.dirty ? "Unsaved changes" : "All changes saved"}
+            </span>
+          </div>
           <Textarea
             rows={16}
             value={draftHtml}
@@ -119,8 +148,8 @@ const SyllabusTab = ({ courseId, isInstructor }: { courseId: string; isInstructo
             Show Course Summary
           </label>
           <div className="flex gap-2 justify-end">
-            <Button variant="ghost" onClick={() => setEditing(false)} disabled={saving}>Cancel</Button>
-            <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Update Syllabus"}</Button>
+            <Button variant="ghost" onClick={cancelEdit} disabled={saving}>Cancel</Button>
+            <Button onClick={save} disabled={saving || !guard.dirty}>{saving ? "Saving…" : "Update Syllabus"}</Button>
           </div>
         </CardContent></Card>
       ) : sanitized.trim() ? (

@@ -144,14 +144,34 @@ const AssignmentDialog = ({
   const isControlled = controlledOpen !== undefined;
   const [internalOpen, setInternalOpen] = useState(false);
   const open = isControlled ? controlledOpen : internalOpen;
-  const setOpen = (o: boolean) => { isControlled ? onOpenChange?.(o) : setInternalOpen(o); };
 
-  const [title, setTitle] = useState(existing?.title ?? "");
-  const [instructions, setInstructions] = useState(existing?.instructions ?? "");
-  const [points, setPoints] = useState(existing?.points ?? 100);
-  const [dueAt, setDueAt] = useState(toLocal(existing?.due_at ?? null));
-  const [submissionType, setSubmissionType] = useState(existing?.submission_type ?? "text");
+  const initial = {
+    title: existing?.title ?? "",
+    instructions: existing?.instructions ?? "",
+    points: existing?.points ?? 100,
+    dueAt: toLocal(existing?.due_at ?? null),
+    submissionType: existing?.submission_type ?? "text",
+  };
+  const [title, setTitle] = useState(initial.title);
+  const [instructions, setInstructions] = useState(initial.instructions);
+  const [points, setPoints] = useState(initial.points);
+  const [dueAt, setDueAt] = useState(initial.dueAt);
+  const [submissionType, setSubmissionType] = useState(initial.submissionType);
   const [busy, setBusy] = useState(false);
+
+  const dirty =
+    title !== initial.title ||
+    instructions !== initial.instructions ||
+    points !== initial.points ||
+    dueAt !== initial.dueAt ||
+    submissionType !== initial.submissionType;
+
+  const setOpen = (o: boolean) => {
+    if (!o && dirty && !busy) {
+      if (!window.confirm("Discard unsaved changes to this assignment?")) return;
+    }
+    isControlled ? onOpenChange?.(o) : setInternalOpen(o);
+  };
 
   const submit = async () => {
     if (!title.trim()) return;
@@ -167,9 +187,12 @@ const AssignmentDialog = ({
       ? await supabase.from("assignments").update(payload).eq("id", existing.id)
       : await supabase.from("assignments").insert({ ...payload, course_id: courseId });
     setBusy(false);
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: existing ? "Assignment updated" : "Assignment created" });
-    setOpen(false);
+    if (error) return toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    toast({
+      title: existing ? "Assignment saved" : "Assignment created",
+      description: "Stored in the database.",
+    });
+    isControlled ? onOpenChange?.(false) : setInternalOpen(false);
     if (!existing) {
       setTitle(""); setInstructions(""); setPoints(100); setDueAt(""); setSubmissionType("text");
     }

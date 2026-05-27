@@ -380,6 +380,30 @@ const QuizSettingsCard = ({ quiz, onSaved }: { quiz: Quiz; onSaved: () => void }
   const [busy, setBusy] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
+  // Keep form state in sync if the quiz reloads (e.g. after save).
+  useEffect(() => {
+    setTitle(quiz.title);
+    setInstructions(quiz.instructions ?? "");
+    setDueAt(toLocal(quiz.due_at));
+    setTimeLimit(quiz.time_limit_minutes ? String(quiz.time_limit_minutes) : "");
+    setAttempts(quiz.attempts_allowed ?? 1);
+  }, [quiz.id, quiz.title, quiz.instructions, quiz.due_at, quiz.time_limit_minutes, quiz.attempts_allowed]);
+
+  const dirty =
+    title !== quiz.title ||
+    instructions !== (quiz.instructions ?? "") ||
+    dueAt !== toLocal(quiz.due_at) ||
+    timeLimit !== (quiz.time_limit_minutes ? String(quiz.time_limit_minutes) : "") ||
+    attempts !== (quiz.attempts_allowed ?? 1);
+
+  // Warn before leaving with unsaved changes.
+  useEffect(() => {
+    if (!dirty) return;
+    const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", h);
+    return () => window.removeEventListener("beforeunload", h);
+  }, [dirty]);
+
   const save = async () => {
     setBusy(true);
     const { error } = await supabase.from("quizzes").update({
@@ -390,8 +414,8 @@ const QuizSettingsCard = ({ quiz, onSaved }: { quiz: Quiz; onSaved: () => void }
       attempts_allowed: attempts,
     }).eq("id", quiz.id);
     setBusy(false);
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    toast({ title: "Quiz settings saved" });
+    if (error) return toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    toast({ title: "Quiz settings saved", description: "Stored in the database." });
     onSaved();
   };
 
@@ -401,7 +425,10 @@ const QuizSettingsCard = ({ quiz, onSaved }: { quiz: Quiz; onSaved: () => void }
         onClick={() => setExpanded(e => !e)}
         className="w-full flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30 text-left hover:bg-muted/50"
       >
-        <span className="font-semibold text-sm">Quiz settings</span>
+        <span className="font-semibold text-sm">
+          Quiz settings
+          {dirty && <span className="ml-2 text-[10px] uppercase tracking-wide text-amber-600">Unsaved</span>}
+        </span>
         <span className="text-xs text-muted-foreground">{expanded ? "Hide" : "Edit"}</span>
       </button>
       {expanded && (
@@ -413,7 +440,7 @@ const QuizSettingsCard = ({ quiz, onSaved }: { quiz: Quiz; onSaved: () => void }
             <div><Label>Time limit (min)</Label><Input type="number" min={0} value={timeLimit} placeholder="Optional" onChange={e => setTimeLimit(e.target.value)} /></div>
           </div>
           <div><Label>Attempts allowed</Label><Input type="number" min={1} value={attempts} onChange={e => setAttempts(Number(e.target.value))} /></div>
-          <Button onClick={save} disabled={busy}>{busy ? "Saving…" : "Save settings"}</Button>
+          <Button onClick={save} disabled={busy || !dirty}>{busy ? "Saving…" : dirty ? "Save settings" : "Saved"}</Button>
         </CardContent>
       )}
     </Card>
