@@ -727,12 +727,15 @@ export type Database = {
           created_at: string
           drive_file_id: string | null
           external_url: string | null
+          folder_id: string | null
           id: string
           mime_type: string | null
+          modified_by: string | null
           name: string
           size_bytes: number | null
           storage_path: string | null
           storage_provider: string
+          updated_at: string
           uploaded_by: string | null
         }
         Insert: {
@@ -740,12 +743,15 @@ export type Database = {
           created_at?: string
           drive_file_id?: string | null
           external_url?: string | null
+          folder_id?: string | null
           id?: string
           mime_type?: string | null
+          modified_by?: string | null
           name: string
           size_bytes?: number | null
           storage_path?: string | null
           storage_provider?: string
+          updated_at?: string
           uploaded_by?: string | null
         }
         Update: {
@@ -753,12 +759,15 @@ export type Database = {
           created_at?: string
           drive_file_id?: string | null
           external_url?: string | null
+          folder_id?: string | null
           id?: string
           mime_type?: string | null
+          modified_by?: string | null
           name?: string
           size_bytes?: number | null
           storage_path?: string | null
           storage_provider?: string
+          updated_at?: string
           uploaded_by?: string | null
         }
         Relationships: [
@@ -767,6 +776,58 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lms_files_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "lms_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lms_folders: {
+        Row: {
+          course_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lms_folders_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lms_folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "lms_folders"
             referencedColumns: ["id"]
           },
         ]
