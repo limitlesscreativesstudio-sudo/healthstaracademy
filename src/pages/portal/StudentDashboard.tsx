@@ -16,6 +16,7 @@ type Course = {
   term: string | null;
   cover_image_url: string | null;
   instructor_id: string;
+  published?: boolean | null;
 };
 
 type SubmissionStatus = "graded" | "submitted" | "missing" | "not_started";
@@ -62,6 +63,7 @@ const CARD_COLORS = [
 const StudentDashboard = () => {
   const { user, isInstructor } = usePortalAuth();
   const [courses, setCourses] = useState<Course[]>([]);
+  const [publishedCourseIds, setPublishedCourseIds] = useState<Set<string>>(new Set());
   const [upcoming, setUpcoming] = useState<UpcomingAssignment[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [progressByCourse, setProgressByCourse] = useState<Record<string, CourseProgress>>({});
@@ -78,11 +80,14 @@ const StudentDashboard = () => {
         .from("courses")
         .select("id, title, code, term, cover_image_url, instructor_id")
         .or(`instructor_id.eq.${user.id}${enrolledIds.length ? `,id.in.(${enrolledIds.join(",")})` : ""}`);
-      const myCourses = courseData ?? [];
+      const myCourses = (courseData ?? []) as Course[];
       setCourses(myCourses);
 
       const courseIds = myCourses.map(c => c.id);
       if (courseIds.length) {
+        const { data: pubMods } = await supabase
+          .from("modules").select("course_id").in("course_id", courseIds).eq("published", true);
+        setPublishedCourseIds(new Set((pubMods ?? []).map((m: any) => m.course_id as string)));
         const titleMap = Object.fromEntries(myCourses.map(c => [c.id, c.title]));
         const nowIso = new Date().toISOString();
         const in14 = new Date(Date.now() + 14 * 86400000).toISOString();
@@ -289,69 +294,94 @@ const StudentDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
           {/* Main column */}
           <div>
-            <h2 className="text-base font-semibold text-foreground mb-3">
-              Published Courses ({courses.length})
-            </h2>
-
-            {loading ? (
-              <div className="text-muted-foreground text-sm">Loading courses…</div>
-            ) : courses.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                  <h3 className="font-semibold mb-1">No courses yet</h3>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    {isInstructor
-                      ? "Create your first course to get started."
-                      : "You haven't been enrolled in any courses yet. Your instructor will add you."}
-                  </p>
-                  {isInstructor && (
-                    <Link to="/portal/teach" className="text-purple underline">Go to Teach</Link>
-                  )}
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {courses.map((c, idx) => {
-                  const gradient = CARD_COLORS[idx % CARD_COLORS.length];
-                  const linkTo = `/portal/courses/${c.id}`;
-                  return (
-                    <Link key={c.id} to={linkTo}>
-                      <Card className="overflow-hidden hover:shadow-medium transition-shadow h-full border">
-                        <div
-                          className={`h-36 bg-gradient-to-br ${gradient} flex items-start p-3 text-white relative`}
-                          style={c.cover_image_url ? { backgroundImage: `url(${c.cover_image_url})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
-                        >
-                          {!c.cover_image_url && (
-                            <div className="text-sm font-bold leading-tight line-clamp-4 drop-shadow">
-                              {c.title}
+            {(() => {
+              const publishedCourses = courses.filter(c => publishedCourseIds.has(c.id) || c.instructor_id !== user?.id);
+              const unpublishedCourses = courses.filter(c => !publishedCourseIds.has(c.id) && c.instructor_id === user?.id);
+              const renderCard = (c: Course, idx: number) => {
+                const gradient = CARD_COLORS[idx % CARD_COLORS.length];
+                const linkTo = `/portal/courses/${c.id}`;
+                return (
+                  <Link key={c.id} to={linkTo}>
+                    <Card className="overflow-hidden hover:shadow-medium transition-shadow h-full border">
+                      <div
+                        className={`h-36 bg-gradient-to-br ${gradient} flex items-start p-3 text-white relative`}
+                        style={c.cover_image_url ? { backgroundImage: `url(${c.cover_image_url})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
+                      >
+                        {!c.cover_image_url && (
+                          <div className="text-sm font-bold leading-tight line-clamp-4 drop-shadow">{c.title}</div>
+                        )}
+                      </div>
+                      <CardContent className="pt-3 pb-3">
+                        <h3 className="font-semibold text-sm text-purple line-clamp-1">{c.title}</h3>
+                        {c.code && <div className="text-xs text-muted-foreground mt-0.5">{c.code}</div>}
+                        {progressByCourse[c.id] && progressByCourse[c.id].total > 0 && (
+                          <div className="mt-2">
+                            <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+                              <span>{progressByCourse[c.id].completion}% complete</span>
+                              <span>{progressByCourse[c.id].completed}/{progressByCourse[c.id].total}</span>
                             </div>
-                          )}
-                        </div>
-                        <CardContent className="pt-3 pb-3">
-                          <h3 className="font-semibold text-sm text-purple line-clamp-1">{c.title}</h3>
-                          {c.code && <div className="text-xs text-muted-foreground mt-0.5">{c.code}</div>}
-                          {progressByCourse[c.id] && progressByCourse[c.id].total > 0 && (
-                            <div className="mt-2">
-                              <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
-                                <span>{progressByCourse[c.id].completion}% complete</span>
-                                <span>{progressByCourse[c.id].completed}/{progressByCourse[c.id].total}</span>
-                              </div>
-                              <Progress value={progressByCourse[c.id].completion} className="h-1" />
-                            </div>
-                          )}
-                          <div className="flex items-center gap-3 mt-3 text-muted-foreground">
-                            <ClipboardList className="h-4 w-4" />
-                            <MessageSquare className="h-4 w-4" />
-                            <FolderOpen className="h-4 w-4" />
+                            <Progress value={progressByCourse[c.id].completion} className="h-1" />
                           </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
+                        )}
+                        <div className="flex items-center gap-3 mt-3 text-muted-foreground">
+                          <ClipboardList className="h-4 w-4" />
+                          <MessageSquare className="h-4 w-4" />
+                          <FolderOpen className="h-4 w-4" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              };
+              return (
+                <>
+                  <h2 className="text-base font-semibold text-foreground mb-3">
+                    Published Courses ({publishedCourses.length})
+                  </h2>
+                  {loading ? (
+                    <div className="text-muted-foreground text-sm">Loading courses…</div>
+                  ) : courses.length === 0 ? (
+                    <Card>
+                      <CardContent className="py-12 text-center">
+                        <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                        <h3 className="font-semibold mb-1">No courses yet</h3>
+                        <p className="text-muted-foreground text-sm mb-4">
+                          {isInstructor
+                            ? "Create your first course to get started."
+                            : "You haven't been enrolled in any courses yet. Your instructor will add you."}
+                        </p>
+                        {isInstructor && (
+                          <Link to="/portal/teach" className="text-purple underline">Go to Teach</Link>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ) : publishedCourses.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No published courses to display.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {publishedCourses.map((c, idx) => renderCard(c, idx))}
+                    </div>
+                  )}
+
+                  {isInstructor && !loading && (
+                    <>
+                      <h2 className="text-base font-semibold text-foreground mt-8 mb-3">
+                        Unpublished Courses ({unpublishedCourses.length})
+                      </h2>
+                      {unpublishedCourses.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No courses to display</p>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                          {unpublishedCourses.map((c, idx) => renderCard(c, idx))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </>
+              );
+            })()}
+
+
 
             {/* Recent Announcements */}
             <h2 className="text-base font-semibold text-foreground mt-8 mb-3 flex items-center gap-2">
@@ -388,6 +418,29 @@ const StudentDashboard = () => {
 
           {/* Right rail */}
           <aside className="space-y-6">
+            {/* Coming Up — Canvas-style */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4 text-purple" /> Coming Up
+                </h3>
+                <Link to="/portal/calendar" className="text-xs text-purple hover:underline">View Calendar</Link>
+              </div>
+              {upcoming.length === 0 && (
+                <p className="text-xs text-muted-foreground mb-3">Nothing for the next week</p>
+              )}
+              <div className="space-y-2">
+                {isInstructor && (
+                  <Link to="/portal/teach" className="flex items-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50 bg-background">
+                    <GraduationCap className="h-4 w-4 text-muted-foreground" /> Start a New Course
+                  </Link>
+                )}
+                <Link to="/portal/grades" className="flex items-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50 bg-background">
+                  <Star className="h-4 w-4 text-muted-foreground" /> View Grades
+                </Link>
+              </div>
+            </div>
+
             {/* To-do list (upcoming assignments next 14 days) */}
             <div>
               <div className="flex items-center justify-between mb-2">
