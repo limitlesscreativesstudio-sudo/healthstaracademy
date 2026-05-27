@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
+import SaveStatus from "@/components/portal/SaveStatus";
+import DraftRestoreBanner from "@/components/portal/DraftRestoreBanner";
 
 type Quiz = {
   id: string;
