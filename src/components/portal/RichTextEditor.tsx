@@ -308,6 +308,7 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
         <Separator orientation="vertical" className="mx-1 h-6" />
 
         <ToolbarBtn title="Insert link" onClick={insertLink}><LinkIcon className="h-4 w-4" /></ToolbarBtn>
+        <ToolbarBtn title="Embed PDF or Google Drive document" onClick={insertEmbed}><FileText className="h-4 w-4" /></ToolbarBtn>
         <ToolbarBtn title="Insert image by URL" onClick={insertImage}><ImageIcon className="h-4 w-4" /></ToolbarBtn>
         <ToolbarBtn
           title={uploading ? "Uploading…" : "Upload image from your device"}
