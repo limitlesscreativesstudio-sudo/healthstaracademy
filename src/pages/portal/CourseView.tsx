@@ -15,6 +15,7 @@ import ReadinessTab from "./ReadinessTab";
 import AttendanceTab from "./AttendanceTab";
 import ModulesTabAuthor from "@/components/portal/ModulesTabAuthor";
 import PagesTab from "./PagesTab";
+import FilesTab from "./FilesTab";
 import ChooseHomePageDialog from "@/components/portal/ChooseHomePageDialog";
 
 type Course = {
@@ -122,7 +123,7 @@ const CourseView = () => {
             <Route path="discussions" element={<ComingSoon title="Discussions" />} />
             <Route path="people" element={<ComingSoon title="People" />} />
             <Route path="pages" element={<PagesTab courseId={course.id} isInstructor={effectiveInstructor} />} />
-            <Route path="files" element={<ComingSoon title="Files" />} />
+            <Route path="files" element={<FilesTab courseId={course.id} isInstructor={effectiveInstructor} />} />
             <Route path="syllabus" element={<SyllabusTab courseId={course.id} isInstructor={effectiveInstructor} />} />
             <Route path="outcomes" element={<ComingSoon title="Outcomes" />} />
             <Route path="rubrics" element={<ComingSoon title="Rubrics" />} />
