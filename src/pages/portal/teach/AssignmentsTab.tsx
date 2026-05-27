@@ -162,16 +162,18 @@ const AssignmentDialog = ({
   const [submissionType, setSubmissionType] = useState(initial.submissionType);
   const [busy, setBusy] = useState(false);
 
-  const dirty =
-    title !== initial.title ||
-    instructions !== initial.instructions ||
-    points !== initial.points ||
-    dueAt !== initial.dueAt ||
-    submissionType !== initial.submissionType;
+  const draftKey = open
+    ? `lms:assignment-draft:${courseId}:${existing?.id ?? "new"}`
+    : null;
+  const guard = useUnsavedGuard(
+    draftKey,
+    { title, instructions, points, dueAt, submissionType },
+    initial,
+  );
 
   const setOpen = (o: boolean) => {
-    if (!o && dirty && !busy) {
-      if (!window.confirm("Discard unsaved changes to this assignment?")) return;
+    if (!o && guard.dirty && !busy) {
+      if (!guard.confirmDiscard()) return;
     }
     isControlled ? onOpenChange?.(o) : setInternalOpen(o);
   };
@@ -195,6 +197,7 @@ const AssignmentDialog = ({
       title: existing ? "Assignment saved" : "Assignment created",
       description: "Stored in the database.",
     });
+    guard.markSaved({ title, instructions, points, dueAt, submissionType });
     isControlled ? onOpenChange?.(false) : setInternalOpen(false);
     if (!existing) {
       setTitle(""); setInstructions(""); setPoints(100); setDueAt(""); setSubmissionType("text");
@@ -210,7 +213,29 @@ const AssignmentDialog = ({
         </DialogTrigger>
       )}
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>{existing ? "Edit Assignment" : "New Assignment"}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <div className="flex items-center justify-between gap-3 pr-6">
+            <DialogTitle>{existing ? "Edit Assignment" : "New Assignment"}</DialogTitle>
+            <SaveStatus dirty={guard.dirty} saving={busy} savedAt={guard.savedAt} />
+          </div>
+        </DialogHeader>
+        <DraftRestoreBanner
+          loadDraft={guard.loadDraft}
+          clearDraft={guard.clearDraft}
+          isDifferent={(d: any) =>
+            d.title !== initial.title ||
+            d.instructions !== initial.instructions ||
+            d.points !== initial.points ||
+            d.dueAt !== initial.dueAt ||
+            d.submissionType !== initial.submissionType
+          }
+          onRestore={(d: any) => {
+            setTitle(d.title ?? ""); setInstructions(d.instructions ?? "");
+            setPoints(d.points ?? 100); setDueAt(d.dueAt ?? "");
+            setSubmissionType(d.submissionType ?? "text");
+          }}
+          label="Restore your unsaved assignment draft?"
+        />
         <div className="space-y-3">
           <div><Label>Title</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
           <div><Label>Instructions</Label><Textarea rows={5} value={instructions} onChange={e => setInstructions(e.target.value)} /></div>
@@ -229,7 +254,7 @@ const AssignmentDialog = ({
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={submit} disabled={busy} className="w-full">
+          <Button onClick={submit} disabled={busy || !guard.dirty} className="w-full">
             {busy ? "Saving…" : existing ? "Save changes" : "Create"}
           </Button>
         </div>
