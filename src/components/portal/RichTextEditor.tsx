@@ -157,11 +157,15 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
   };
 
   const insertImage = () => {
+    saveSelection();
     const url = window.prompt("Image URL", "https://");
-    if (url) exec("insertImage", url);
+    if (!url) return;
+    focusEditorWithRange();
+    exec("insertImage", url);
   };
 
   const insertEmbed = () => {
+    saveSelection();
     const url = window.prompt(
       "Paste a PDF link or Google Drive / Docs link to embed the full document",
       "https://",
@@ -180,7 +184,7 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
       if (!ok) return;
     }
 
-    editorRef.current?.focus();
+    focusEditorWithRange();
     const html = `
       <div class="my-4 border border-border rounded-md overflow-hidden bg-muted/20" style="width:100%;">
         <iframe
