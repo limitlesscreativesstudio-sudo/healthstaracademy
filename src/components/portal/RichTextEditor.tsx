@@ -58,8 +58,46 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
   const formatBlock = (tag: string) => exec("formatBlock", tag);
 
   const insertLink = () => {
-    const url = window.prompt("Enter URL", "https://");
-    if (url) exec("createLink", url);
+    const url = window.prompt("Paste a link (URL, Google Drive, etc.)", "https://");
+    if (!url) return;
+    const trimmed = url.trim();
+    if (!trimmed || trimmed === "https://") return;
+
+    // Make sure the editor has focus so the insert lands inside it
+    editorRef.current?.focus();
+
+    const sel = window.getSelection();
+    const hasSelection = sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed
+      && editorRef.current?.contains(sel.anchorNode);
+
+    if (hasSelection) {
+      document.execCommand("createLink", false, trimmed);
+      // Force links to open in a new tab
+      editorRef.current?.querySelectorAll(`a[href="${CSS.escape(trimmed)}"]`).forEach((a) => {
+        a.setAttribute("target", "_blank");
+        a.setAttribute("rel", "noopener noreferrer");
+      });
+    } else {
+      // No selection — ask for link text and insert a fresh anchor
+      const defaultText = (() => {
+        try {
+          const u = new URL(trimmed);
+          if (u.hostname.includes("drive.google.com") || u.hostname.includes("docs.google.com")) {
+            return "Open in Google Drive";
+          }
+          return u.hostname.replace(/^www\./, "") + (u.pathname !== "/" ? u.pathname : "");
+        } catch { return trimmed; }
+      })();
+      const text = window.prompt("Link text to display", defaultText) || defaultText;
+      const safeUrl = trimmed.replace(/"/g, "&quot;");
+      const safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      document.execCommand(
+        "insertHTML",
+        false,
+        `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeText}</a>&nbsp;`,
+      );
+    }
+    if (editorRef.current) onChange(editorRef.current.innerHTML);
   };
 
   const insertImage = () => {
