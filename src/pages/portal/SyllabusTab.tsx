@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { ClipboardList, GraduationCap, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 
 type SummaryRow = {
   id: string;
