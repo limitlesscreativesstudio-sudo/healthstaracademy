@@ -16,6 +16,7 @@ type Course = {
   term: string | null;
   cover_image_url: string | null;
   instructor_id: string;
+  published?: boolean | null;
 };
 
 type SubmissionStatus = "graded" | "submitted" | "missing" | "not_started";
