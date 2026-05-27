@@ -45,7 +45,7 @@ const ITEM_TYPES = [
   { value: "file",       label: "File",       icon: FileIcon },
   { value: "link",       label: "External URL", icon: LinkIcon },
   { value: "video",      label: "Video URL",  icon: Video },
-  { value: "header",     label: "Text Header", icon: FileText },
+  { value: "header",     label: "Text Header (non-clickable title)", icon: Type },
 ];
 
 const itemIcon = (t: string) => {
