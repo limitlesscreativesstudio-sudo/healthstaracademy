@@ -9,6 +9,8 @@ import { toast } from "@/hooks/use-toast";
 import { ClipboardList, GraduationCap, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
+import SaveStatus from "@/components/portal/SaveStatus";
+import DraftRestoreBanner from "@/components/portal/DraftRestoreBanner";
 
 type SummaryRow = {
   id: string;
