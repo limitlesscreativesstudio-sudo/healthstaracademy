@@ -151,6 +151,40 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
     ));
   };
 
+  // ----- Move item to another module -----
+  const moveItemToModule = async (item: ModuleItem, targetModuleId: string) => {
+    if (item.module_id === targetModuleId) return;
+    const targetCount = items.filter(i => i.module_id === targetModuleId).length;
+    const { error } = await supabase
+      .from("module_items")
+      .update({ module_id: targetModuleId, position: targetCount })
+      .eq("id", item.id);
+    if (error) {
+      toast({ title: "Move failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    const targetTitle = modules.find(m => m.id === targetModuleId)?.title ?? "module";
+    toast({ title: "Item moved", description: `Moved to "${targetTitle}".` });
+    load();
+  };
+
+  // ----- Move module up/down/top/bottom -----
+  const moveModule = async (m: Module, where: "up" | "down" | "top" | "bottom") => {
+    const idx = modules.findIndex(x => x.id === m.id);
+    if (idx < 0) return;
+    let newIdx = idx;
+    if (where === "up") newIdx = Math.max(0, idx - 1);
+    if (where === "down") newIdx = Math.min(modules.length - 1, idx + 1);
+    if (where === "top") newIdx = 0;
+    if (where === "bottom") newIdx = modules.length - 1;
+    if (newIdx === idx) return;
+    const next = arrayMove(modules, idx, newIdx);
+    setModules(next);
+    await Promise.all(next.map((mm, i) =>
+      supabase.from("modules").update({ position: i }).eq("id", mm.id)
+    ));
+  };
+
   if (loading) return <div className="text-sm text-muted-foreground p-4">Loading modules…</div>;
 
   const empty = modules.length === 0;
