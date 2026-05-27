@@ -255,6 +255,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
                 <SortableModule
                   key={m.id} module={m}
                   items={items.filter(i => i.module_id === m.id)}
+                  allModules={modules}
                   collapsed={collapsed.has(m.id)}
                   isInstructor={isInstructor}
                   courseId={courseId}
@@ -263,10 +264,12 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
                   onEdit={() => setModuleDlg({ open: true, module: m })}
                   onDelete={() => deleteModule(m)}
                   onAddItem={() => setItemDlg({ open: true, moduleId: m.id })}
-                  onEditItem={(it) => setItemDlg({ open: true, moduleId: m.id, item: it })}
+                  onEditItem={(it: ModuleItem) => setItemDlg({ open: true, moduleId: m.id, item: it })}
                   onDeleteItem={deleteItem}
                   onToggleItemPublish={togglePublishItem}
-                  onDragItems={(e) => onDragItems(m.id, e)}
+                  onMoveItem={moveItemToModule}
+                  onMoveModule={(where: "up" | "down" | "top" | "bottom") => moveModule(m, where)}
+                  onDragItems={(e: DragEndEvent) => onDragItems(m.id, e)}
                   sensors={sensors}
                 />
               ))}
