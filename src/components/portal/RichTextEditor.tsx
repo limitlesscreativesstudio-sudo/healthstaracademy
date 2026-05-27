@@ -69,6 +69,41 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
     if (mode === "html") setHtmlDraft(value);
   }, [value, mode]);
 
+  // Remember the last selection inside the editor so toolbar buttons /
+  // prompts that steal focus can restore a valid Range before inserting.
+  const savedRangeRef = useRef<Range | null>(null);
+
+  const saveSelection = () => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (editorRef.current?.contains(range.commonAncestorContainer)) {
+      savedRangeRef.current = range.cloneRange();
+    }
+  };
+
+  // Make sure there is a live Range inside the editor before calling
+  // document.execCommand, otherwise insertHTML / createLink no-op.
+  const focusEditorWithRange = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+    const sel = window.getSelection();
+    if (!sel) return;
+    const saved = savedRangeRef.current;
+    if (saved && editor.contains(saved.commonAncestorContainer)) {
+      sel.removeAllRanges();
+      sel.addRange(saved);
+      return;
+    }
+    // Fall back: place caret at the end of the editor.
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  };
+
   const exec = (command: string, arg?: string) => {
     document.execCommand(command, false, arg);
     if (editorRef.current) onChange(editorRef.current.innerHTML);
@@ -77,13 +112,15 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
   const formatBlock = (tag: string) => exec("formatBlock", tag);
 
   const insertLink = () => {
+    // Capture the current selection BEFORE the prompt steals focus.
+    saveSelection();
     const url = window.prompt("Paste a link (URL, Google Drive, etc.)", "https://");
     if (!url) return;
     const trimmed = url.trim();
     if (!trimmed || trimmed === "https://") return;
 
-    // Make sure the editor has focus so the insert lands inside it
-    editorRef.current?.focus();
+    // Restore (or create) a Range inside the editor so the insert lands here.
+    focusEditorWithRange();
 
     const sel = window.getSelection();
     const hasSelection = sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed
@@ -120,11 +157,15 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
   };
 
   const insertImage = () => {
+    saveSelection();
     const url = window.prompt("Image URL", "https://");
-    if (url) exec("insertImage", url);
+    if (!url) return;
+    focusEditorWithRange();
+    exec("insertImage", url);
   };
 
   const insertEmbed = () => {
+    saveSelection();
     const url = window.prompt(
       "Paste a PDF link or Google Drive / Docs link to embed the full document",
       "https://",
@@ -143,7 +184,7 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
       if (!ok) return;
     }
 
-    editorRef.current?.focus();
+    focusEditorWithRange();
     const html = `
       <div class="my-4 border border-border rounded-md overflow-hidden bg-muted/20" style="width:100%;">
         <iframe
@@ -352,8 +393,10 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
           ref={editorRef}
           contentEditable
           suppressContentEditableWarning
-          onInput={handleInput}
-          onBlur={handleInput}
+          onInput={() => { saveSelection(); handleInput(); }}
+          onBlur={() => { saveSelection(); handleInput(); }}
+          onKeyUp={saveSelection}
+          onMouseUp={saveSelection}
           onPaste={(e) => {
             const file = Array.from(e.clipboardData?.files ?? []).find(f => f.type.startsWith("image/"));
             if (file) { e.preventDefault(); uploadAndInsertImage(file); }
