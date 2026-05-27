@@ -124,6 +124,43 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
     if (url) exec("insertImage", url);
   };
 
+  const insertEmbed = () => {
+    const url = window.prompt(
+      "Paste a PDF link or Google Drive / Docs link to embed the full document",
+      "https://",
+    );
+    if (!url) return;
+    const trimmed = url.trim();
+    if (!trimmed || trimmed === "https://") return;
+
+    const drivePreview = toDrivePreviewUrl(trimmed);
+    const src = drivePreview ?? trimmed;
+    const isPdf = /\.pdf(\?|#|$)/i.test(trimmed) || !!drivePreview;
+    if (!isPdf && !drivePreview) {
+      const ok = window.confirm(
+        "This doesn't look like a PDF or Google Drive link. Embed it anyway?",
+      );
+      if (!ok) return;
+    }
+
+    editorRef.current?.focus();
+    const html = `
+      <div class="my-4 border border-border rounded-md overflow-hidden bg-muted/20" style="width:100%;">
+        <iframe
+          src="${src.replace(/"/g, "&quot;")}"
+          style="width:100%; height:780px; border:0; display:block;"
+          allow="autoplay"
+          allowfullscreen
+          loading="lazy"
+        ></iframe>
+      </div>
+      <p><br/></p>
+    `;
+    document.execCommand("insertHTML", false, html);
+    if (editorRef.current) onChange(editorRef.current.innerHTML);
+  };
+
+
   const uploadAndInsertImage = async (file: File) => {
     if (!file.type.startsWith("image/")) {
       toast({ title: "Please choose an image file", variant: "destructive" });
