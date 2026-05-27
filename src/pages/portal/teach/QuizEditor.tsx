@@ -425,7 +425,10 @@ const QuizSettingsCard = ({ quiz, onSaved }: { quiz: Quiz; onSaved: () => void }
         onClick={() => setExpanded(e => !e)}
         className="w-full flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30 text-left hover:bg-muted/50"
       >
-        <span className="font-semibold text-sm">Quiz settings</span>
+        <span className="font-semibold text-sm">
+          Quiz settings
+          {dirty && <span className="ml-2 text-[10px] uppercase tracking-wide text-amber-600">Unsaved</span>}
+        </span>
         <span className="text-xs text-muted-foreground">{expanded ? "Hide" : "Edit"}</span>
       </button>
       {expanded && (
@@ -437,7 +440,7 @@ const QuizSettingsCard = ({ quiz, onSaved }: { quiz: Quiz; onSaved: () => void }
             <div><Label>Time limit (min)</Label><Input type="number" min={0} value={timeLimit} placeholder="Optional" onChange={e => setTimeLimit(e.target.value)} /></div>
           </div>
           <div><Label>Attempts allowed</Label><Input type="number" min={1} value={attempts} onChange={e => setAttempts(Number(e.target.value))} /></div>
-          <Button onClick={save} disabled={busy}>{busy ? "Saving…" : "Save settings"}</Button>
+          <Button onClick={save} disabled={busy || !dirty}>{busy ? "Saving…" : dirty ? "Save settings" : "Saved"}</Button>
         </CardContent>
       )}
     </Card>
