@@ -77,9 +77,9 @@ const StudentDashboard = () => {
       const enrolledIds = (enrollments ?? []).map(e => e.course_id);
       const { data: courseData } = await supabase
         .from("courses")
-        .select("id, title, code, term, cover_image_url, instructor_id")
+        .select("id, title, code, term, cover_image_url, instructor_id, published")
         .or(`instructor_id.eq.${user.id}${enrolledIds.length ? `,id.in.(${enrolledIds.join(",")})` : ""}`);
-      const myCourses = courseData ?? [];
+      const myCourses = (courseData ?? []) as Course[];
       setCourses(myCourses);
 
       const courseIds = myCourses.map(c => c.id);
