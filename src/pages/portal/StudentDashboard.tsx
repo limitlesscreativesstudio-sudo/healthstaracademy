@@ -85,6 +85,9 @@ const StudentDashboard = () => {
 
       const courseIds = myCourses.map(c => c.id);
       if (courseIds.length) {
+        const { data: pubMods } = await supabase
+          .from("modules").select("course_id").in("course_id", courseIds).eq("published", true);
+        setPublishedCourseIds(new Set((pubMods ?? []).map((m: any) => m.course_id as string)));
         const titleMap = Object.fromEntries(myCourses.map(c => [c.id, c.title]));
         const nowIso = new Date().toISOString();
         const in14 = new Date(Date.now() + 14 * 86400000).toISOString();
