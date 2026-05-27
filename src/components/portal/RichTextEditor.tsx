@@ -6,8 +6,27 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3, List, ListOrdered, Quote, Code,
   Link as LinkIcon, Image as ImageIcon, Upload, Undo, Redo,
-  AlignLeft, AlignCenter, AlignRight, Eraser, Code2,
+  AlignLeft, AlignCenter, AlignRight, Eraser, Code2, FileText,
 } from "lucide-react";
+
+// Convert a Google Drive or Docs URL to its embeddable /preview form.
+// Returns null if the URL is not a recognized Drive/Docs link.
+const toDrivePreviewUrl = (raw: string): string | null => {
+  try {
+    const u = new URL(raw);
+    if (!/(drive|docs)\.google\.com$/.test(u.hostname)) return null;
+    // /file/d/<id>/...
+    const fileMatch = u.pathname.match(/\/file\/d\/([^/]+)/);
+    if (fileMatch) return `https://drive.google.com/file/d/${fileMatch[1]}/preview`;
+    // /document|spreadsheets|presentation/d/<id>/...
+    const docMatch = u.pathname.match(/\/(document|spreadsheets|presentation)\/d\/([^/]+)/);
+    if (docMatch) return `https://docs.google.com/${docMatch[1]}/d/${docMatch[2]}/preview`;
+    // open?id=<id>
+    const id = u.searchParams.get("id");
+    if (id) return `https://drive.google.com/file/d/${id}/preview`;
+    return null;
+  } catch { return null; }
+};
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -104,6 +123,43 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
     const url = window.prompt("Image URL", "https://");
     if (url) exec("insertImage", url);
   };
+
+  const insertEmbed = () => {
+    const url = window.prompt(
+      "Paste a PDF link or Google Drive / Docs link to embed the full document",
+      "https://",
+    );
+    if (!url) return;
+    const trimmed = url.trim();
+    if (!trimmed || trimmed === "https://") return;
+
+    const drivePreview = toDrivePreviewUrl(trimmed);
+    const src = drivePreview ?? trimmed;
+    const isPdf = /\.pdf(\?|#|$)/i.test(trimmed) || !!drivePreview;
+    if (!isPdf && !drivePreview) {
+      const ok = window.confirm(
+        "This doesn't look like a PDF or Google Drive link. Embed it anyway?",
+      );
+      if (!ok) return;
+    }
+
+    editorRef.current?.focus();
+    const html = `
+      <div class="my-4 border border-border rounded-md overflow-hidden bg-muted/20" style="width:100%;">
+        <iframe
+          src="${src.replace(/"/g, "&quot;")}"
+          style="width:100%; height:780px; border:0; display:block;"
+          allow="autoplay"
+          allowfullscreen
+          loading="lazy"
+        ></iframe>
+      </div>
+      <p><br/></p>
+    `;
+    document.execCommand("insertHTML", false, html);
+    if (editorRef.current) onChange(editorRef.current.innerHTML);
+  };
+
 
   const uploadAndInsertImage = async (file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -252,6 +308,7 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
         <Separator orientation="vertical" className="mx-1 h-6" />
 
         <ToolbarBtn title="Insert link" onClick={insertLink}><LinkIcon className="h-4 w-4" /></ToolbarBtn>
+        <ToolbarBtn title="Embed PDF or Google Drive document" onClick={insertEmbed}><FileText className="h-4 w-4" /></ToolbarBtn>
         <ToolbarBtn title="Insert image by URL" onClick={insertImage}><ImageIcon className="h-4 w-4" /></ToolbarBtn>
         <ToolbarBtn
           title={uploading ? "Uploading…" : "Upload image from your device"}
