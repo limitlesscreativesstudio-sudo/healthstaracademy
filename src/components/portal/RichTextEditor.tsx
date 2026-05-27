@@ -112,13 +112,15 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
   const formatBlock = (tag: string) => exec("formatBlock", tag);
 
   const insertLink = () => {
+    // Capture the current selection BEFORE the prompt steals focus.
+    saveSelection();
     const url = window.prompt("Paste a link (URL, Google Drive, etc.)", "https://");
     if (!url) return;
     const trimmed = url.trim();
     if (!trimmed || trimmed === "https://") return;
 
-    // Make sure the editor has focus so the insert lands inside it
-    editorRef.current?.focus();
+    // Restore (or create) a Range inside the editor so the insert lands here.
+    focusEditorWithRange();
 
     const sel = window.getSelection();
     const hasSelection = sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed
