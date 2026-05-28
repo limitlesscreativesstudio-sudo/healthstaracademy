@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Upload, Eye, EyeOff, ArrowLeft, Sparkles, ListPlus, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
+import { Plus, Trash2, Upload, Eye, EyeOff, ArrowLeft, Sparkles, ListPlus, ArrowUp, ArrowDown, GripVertical, Pencil, Check, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { COURSE_NAV_ITEMS, defaultNavOrder, type NavKey } from "@/lib/courseNav";
 
