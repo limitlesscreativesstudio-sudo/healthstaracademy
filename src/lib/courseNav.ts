@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 
 export type NavKey =
-  | "home" | "announcements" | "discussions" | "grades" | "people" | "pages"
+  | "home" | "announcements" | "assignments" | "discussions" | "grades" | "people" | "pages"
   | "files" | "syllabus" | "outcomes" | "rubrics" | "quizzes" | "modules"
   | "bigbluebutton" | "collaborations" | "attendance" | "analytics" | "lucid"
   | "clinical" | "readiness";
