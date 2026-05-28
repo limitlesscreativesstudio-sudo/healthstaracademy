@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Upload, Eye, EyeOff, ArrowLeft, Sparkles, ListPlus, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
+import { Plus, Trash2, Upload, Eye, EyeOff, ArrowLeft, Sparkles, ListPlus, ArrowUp, ArrowDown, GripVertical, Pencil, Check, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { COURSE_NAV_ITEMS, defaultNavOrder, type NavKey } from "@/lib/courseNav";
 
@@ -69,9 +69,21 @@ const CourseEditor = () => {
         <Link to="/portal/teach" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline mb-4">
           <ArrowLeft className="h-4 w-4" /> Back to courses
         </Link>
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h1 className="font-heading text-3xl font-bold">{course.title}</h1>
+        <div className="flex justify-between items-start mb-6 gap-4">
+          <div className="flex-1 min-w-0">
+            <EditableText
+              value={course.title}
+              onSave={async (v) => {
+                const { error } = await supabase.from("courses").update({ title: v }).eq("id", course.id);
+                if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return false; }
+                toast({ title: "Course renamed" });
+                load();
+                return true;
+              }}
+              className="font-heading text-3xl font-bold"
+              inputClassName="text-3xl font-bold h-12"
+              ariaLabel="Course title"
+            />
             <p className="text-sm text-muted-foreground">{course.code} · {course.status}</p>
           </div>
           <Link to={`/portal/courses/${courseId}`}><Button variant="outline">Preview as Student</Button></Link>
@@ -114,6 +126,64 @@ const CourseEditor = () => {
     </PortalLayout>
   );
 };
+
+const EditableText = ({
+  value, onSave, className = "", inputClassName = "", ariaLabel,
+}: {
+  value: string;
+  onSave: (v: string) => Promise<boolean> | boolean;
+  className?: string;
+  inputClassName?: string;
+  ariaLabel?: string;
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { setDraft(value); }, [value]);
+
+  const commit = async () => {
+    const v = draft.trim();
+    if (!v || v === value) { setEditing(false); setDraft(value); return; }
+    setBusy(true);
+    const ok = await onSave(v);
+    setBusy(false);
+    if (ok) setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1 flex-1 min-w-0">
+        <Input
+          autoFocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { e.preventDefault(); commit(); }
+            if (e.key === "Escape") { setEditing(false); setDraft(value); }
+          }}
+          disabled={busy}
+          aria-label={ariaLabel}
+          className={inputClassName}
+        />
+        <Button size="sm" variant="ghost" onClick={commit} disabled={busy} aria-label="Save"><Check className="h-4 w-4" /></Button>
+        <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setDraft(value); }} disabled={busy} aria-label="Cancel"><X className="h-4 w-4" /></Button>
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      className={`group inline-flex items-center gap-1.5 text-left hover:text-purple transition-colors ${className}`}
+      title="Click to rename"
+    >
+      <span className="truncate">{value}</span>
+      <Pencil className="h-3.5 w-3.5 opacity-0 group-hover:opacity-60 shrink-0" />
+    </button>
+  );
+};
+
+
 
 const ModulesEditor = ({ courseId, modules, items, reload }: any) => {
   const [newModule, setNewModule] = useState("");
@@ -184,9 +254,19 @@ const ModulesEditor = ({ courseId, modules, items, reload }: any) => {
 
       {modules.map((m: any) => (
         <Card key={m.id}>
-          <div className="px-5 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
-            <span className="font-semibold">{m.title}</span>
-            <div className="flex gap-2">
+          <div className="px-5 py-3 border-b border-border bg-muted/30 flex items-center justify-between gap-2">
+            <EditableText
+              value={m.title}
+              onSave={async (v) => {
+                const { error } = await supabase.from("modules").update({ title: v }).eq("id", m.id);
+                if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return false; }
+                reload();
+                return true;
+              }}
+              className="font-semibold flex-1"
+              ariaLabel="Module title"
+            />
+            <div className="flex gap-2 shrink-0">
               <Button size="sm" variant="ghost" onClick={() => togglePublish(m.id, m.published)}>
                 {m.published ? <><Eye className="h-4 w-4" /> Published</> : <><EyeOff className="h-4 w-4" /> Draft</>}
               </Button>
@@ -197,7 +277,17 @@ const ModulesEditor = ({ courseId, modules, items, reload }: any) => {
             {items.filter((i: any) => i.module_id === m.id).map((i: any) => (
               <div key={i.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded text-sm">
                 <span className="text-xs px-2 py-0.5 bg-background rounded">{i.item_type}</span>
-                <span className="flex-1 truncate">{i.title}</span>
+                <EditableText
+                  value={i.title}
+                  onSave={async (v) => {
+                    const { error } = await supabase.from("module_items").update({ title: v }).eq("id", i.id);
+                    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return false; }
+                    reload();
+                    return true;
+                  }}
+                  className="flex-1 truncate"
+                  ariaLabel="Item title"
+                />
                 <Button size="sm" variant="ghost" onClick={async () => {
                   await supabase.from("module_items").update({ published: !i.published }).eq("id", i.id);
                   reload();

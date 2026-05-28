@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 
 export type NavKey =
-  | "home" | "announcements" | "discussions" | "grades" | "people" | "pages"
+  | "home" | "announcements" | "assignments" | "discussions" | "grades" | "people" | "pages"
   | "files" | "syllabus" | "outcomes" | "rubrics" | "quizzes" | "modules"
   | "bigbluebutton" | "collaborations" | "attendance" | "analytics" | "lucid"
   | "clinical" | "readiness";
@@ -24,6 +24,7 @@ export type NavItem = {
 export const COURSE_NAV_ITEMS: NavItem[] = [
   { key: "home",           label: "Home",            path: "",                icon: BookOpen, required: true },
   { key: "announcements",  label: "Announcements",   path: "announcements",   icon: Megaphone },
+  { key: "assignments",    label: "Assignments",     path: "assignments",     icon: ClipboardCheck },
   { key: "discussions",    label: "Discussions",     path: "discussions",     icon: MessageSquare },
   { key: "grades",         label: "Grades",          path: "grades",          icon: BarChart3 },
   { key: "people",         label: "People",          path: "people",          icon: Users },
