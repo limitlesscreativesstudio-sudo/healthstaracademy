@@ -127,6 +127,64 @@ const CourseEditor = () => {
   );
 };
 
+const EditableText = ({
+  value, onSave, className = "", inputClassName = "", ariaLabel,
+}: {
+  value: string;
+  onSave: (v: string) => Promise<boolean> | boolean;
+  className?: string;
+  inputClassName?: string;
+  ariaLabel?: string;
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { setDraft(value); }, [value]);
+
+  const commit = async () => {
+    const v = draft.trim();
+    if (!v || v === value) { setEditing(false); setDraft(value); return; }
+    setBusy(true);
+    const ok = await onSave(v);
+    setBusy(false);
+    if (ok) setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1 flex-1 min-w-0">
+        <Input
+          autoFocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { e.preventDefault(); commit(); }
+            if (e.key === "Escape") { setEditing(false); setDraft(value); }
+          }}
+          disabled={busy}
+          aria-label={ariaLabel}
+          className={inputClassName}
+        />
+        <Button size="sm" variant="ghost" onClick={commit} disabled={busy} aria-label="Save"><Check className="h-4 w-4" /></Button>
+        <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setDraft(value); }} disabled={busy} aria-label="Cancel"><X className="h-4 w-4" /></Button>
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      className={`group inline-flex items-center gap-1.5 text-left hover:text-purple transition-colors ${className}`}
+      title="Click to rename"
+    >
+      <span className="truncate">{value}</span>
+      <Pencil className="h-3.5 w-3.5 opacity-0 group-hover:opacity-60 shrink-0" />
+    </button>
+  );
+};
+
+
+
 const ModulesEditor = ({ courseId, modules, items, reload }: any) => {
   const [newModule, setNewModule] = useState("");
 
