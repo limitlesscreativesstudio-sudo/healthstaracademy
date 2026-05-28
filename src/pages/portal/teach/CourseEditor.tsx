@@ -196,9 +196,19 @@ const ModulesEditor = ({ courseId, modules, items, reload }: any) => {
 
       {modules.map((m: any) => (
         <Card key={m.id}>
-          <div className="px-5 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
-            <span className="font-semibold">{m.title}</span>
-            <div className="flex gap-2">
+          <div className="px-5 py-3 border-b border-border bg-muted/30 flex items-center justify-between gap-2">
+            <EditableText
+              value={m.title}
+              onSave={async (v) => {
+                const { error } = await supabase.from("modules").update({ title: v }).eq("id", m.id);
+                if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return false; }
+                reload();
+                return true;
+              }}
+              className="font-semibold flex-1"
+              ariaLabel="Module title"
+            />
+            <div className="flex gap-2 shrink-0">
               <Button size="sm" variant="ghost" onClick={() => togglePublish(m.id, m.published)}>
                 {m.published ? <><Eye className="h-4 w-4" /> Published</> : <><EyeOff className="h-4 w-4" /> Draft</>}
               </Button>
@@ -209,7 +219,17 @@ const ModulesEditor = ({ courseId, modules, items, reload }: any) => {
             {items.filter((i: any) => i.module_id === m.id).map((i: any) => (
               <div key={i.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded text-sm">
                 <span className="text-xs px-2 py-0.5 bg-background rounded">{i.item_type}</span>
-                <span className="flex-1 truncate">{i.title}</span>
+                <EditableText
+                  value={i.title}
+                  onSave={async (v) => {
+                    const { error } = await supabase.from("module_items").update({ title: v }).eq("id", i.id);
+                    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return false; }
+                    reload();
+                    return true;
+                  }}
+                  className="flex-1 truncate"
+                  ariaLabel="Item title"
+                />
                 <Button size="sm" variant="ghost" onClick={async () => {
                   await supabase.from("module_items").update({ published: !i.published }).eq("id", i.id);
                   reload();
