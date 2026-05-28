@@ -69,9 +69,21 @@ const CourseEditor = () => {
         <Link to="/portal/teach" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline mb-4">
           <ArrowLeft className="h-4 w-4" /> Back to courses
         </Link>
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h1 className="font-heading text-3xl font-bold">{course.title}</h1>
+        <div className="flex justify-between items-start mb-6 gap-4">
+          <div className="flex-1 min-w-0">
+            <EditableText
+              value={course.title}
+              onSave={async (v) => {
+                const { error } = await supabase.from("courses").update({ title: v }).eq("id", course.id);
+                if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return false; }
+                toast({ title: "Course renamed" });
+                load();
+                return true;
+              }}
+              className="font-heading text-3xl font-bold"
+              inputClassName="text-3xl font-bold h-12"
+              ariaLabel="Course title"
+            />
             <p className="text-sm text-muted-foreground">{course.code} · {course.status}</p>
           </div>
           <Link to={`/portal/courses/${courseId}`}><Button variant="outline">Preview as Student</Button></Link>
