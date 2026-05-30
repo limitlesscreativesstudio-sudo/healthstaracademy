@@ -1,122 +1,101 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/hooks/use-toast";
-import { GraduationCap, Loader2 } from "lucide-react";
+import React, { useState } from 'react';
 
-const PortalLogin = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B' } as const;
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate("/portal", { replace: true });
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) navigate("/portal", { replace: true });
-    });
-    return () => sub.subscription.unsubscribe();
-  }, [navigate]);
+const JOBS = [
+  { id:1, title:'Certified Nursing Assistant', org:'Cedars-Sinai Medical Center', location:'Los Angeles, CA', type:'Full-Time', wage:'$20–$26/hr', posted:'May 27, 2026', tags:['Hospital','Benefits','Union'] },
+  { id:2, title:'CNA – Night Shift', org:'Kaiser Permanente', location:'Pasadena, CA', type:'Part-Time', wage:'$19–$24/hr', posted:'May 25, 2026', tags:['Hospital','Nights','Premium Pay'] },
+  { id:3, title:'Home Health Aide / CNA', org:'BrightSpring Health Services', location:'Various – LA County', type:'Per Diem', wage:'$18–$22/hr', posted:'May 22, 2026', tags:['Home Health','Flexible Hours'] },
+  { id:4, title:'CNA – Memory Care Unit', org:'Sunrise Senior Living', location:'Torrance, CA', type:'Full-Time', wage:'$21–$25/hr', posted:'May 20, 2026', tags:['SNF','Dementia Care','Benefits'] },
+  { id:5, title:'Restorative CNA', org:'Beverly Hills Rehabilitation Centre', location:'Beverly Hills, CA', type:'Full-Time', wage:'$23–$28/hr', posted:'May 18, 2026', tags:['Rehab','Restorative','Benefits'] },
+];
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) toast({ title: "Sign in failed", description: error.message, variant: "destructive" });
-  };
+const RESOURCES = [
+  { icon:'📋', title:'Resume Builder', desc:'Build a CNA-specific resume using our guided template.', action:'Open Builder' },
+  { icon:'🎓', title:'CDPH License Lookup', desc:'Verify your CNA certification status on the CDPH registry.', action:'Open CDPH Site' },
+  { icon:'💼', title:'Interview Prep', desc:'Common CNA interview questions with sample answers.', action:'View Guide' },
+  { icon:'📚', title:'Continuing Education', desc:'Find CEU courses to maintain and advance your certification.', action:'Browse CEUs' },
+  { icon:'💰', title:'Salary Comparison', desc:'Compare CNA wages by facility type and region in California.', action:'View Data' },
+];
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/portal`,
-        data: { full_name: fullName },
-      },
-    });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Account created", description: "Check your email to confirm, then sign in." });
-    }
-  };
+const CareerPortal: React.FC = () => {
+  const [tab, setTab] = useState<'jobs'|'resources'>('jobs');
+  const [filter, setFilter] = useState('All');
 
-  const handleGoogle = async () => {
-    setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/portal`,
-    });
-    if (result.error) {
-      setLoading(false);
-      toast({ title: "Google sign-in failed", description: result.error.message, variant: "destructive" });
-    }
-  };
+  const types = ['All','Full-Time','Part-Time','Per Diem'];
+  const filtered = JOBS.filter(j => filter === 'All' || j.type === filter);
 
   return (
-    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center bg-muted p-6">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-purple/10 flex items-center justify-center mb-2">
-            <GraduationCap className="h-6 w-6 text-purple" />
+    <div style={{ padding:24 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Career Portal</h2>
+        <span style={{ fontSize:13, color:C.muted, fontFamily:'sans-serif' }}>Help your students land their first CNA role</span>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display:'flex', gap:0, border:`1px solid ${C.border}`, borderRadius:6, overflow:'hidden', marginBottom:20, width:'fit-content' }}>
+        {([['jobs','💼 Job Board'],['resources','📚 Resources']] as const).map(([k,l]) => (
+          <button key={k} onClick={() => setTab(k)}
+            style={{ padding:'9px 22px', border:'none', cursor:'pointer', background:tab === k ? C.primary : C.white, color:tab === k ? 'white' : C.text, fontSize:13, fontFamily:'sans-serif', fontWeight:tab === k ? 600 : 400 }}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'jobs' && (
+        <>
+          <div style={{ display:'flex', gap:6, marginBottom:16 }}>
+            {types.map(t => (
+              <button key={t} onClick={() => setFilter(t)}
+                style={{ padding:'5px 14px', border:`1px solid ${filter === t ? C.primary : C.border}`, borderRadius:20, background:filter === t ? C.primary : C.white, color:filter === t ? 'white' : C.text, fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>
+                {t}
+              </button>
+            ))}
           </div>
-          <CardTitle>Health Star Academy LMS Portal</CardTitle>
-          <CardDescription>Sign in or create your account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="signin">
-            <TabsList className="grid grid-cols-2 w-full mb-4">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Create Account</TabsTrigger>
-            </TabsList>
-            <TabsContent value="signin">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div><Label>Email</Label><Input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
-                <div><Label>Password</Label><Input type="password" required value={password} onChange={e => setPassword(e.target.value)} /></div>
-                <Button type="submit" disabled={loading} className="w-full">
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
-                </Button>
-              </form>
-            </TabsContent>
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div><Label>Full Name</Label><Input required value={fullName} onChange={e => setFullName(e.target.value)} /></div>
-                <div><Label>Email</Label><Input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
-                <div><Label>Password</Label><Input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} /><p className="text-xs text-muted-foreground mt-1">At least 6 characters.</p></div>
-                <Button type="submit" disabled={loading} className="w-full">
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or</span>
+          <div style={{ display:'grid', gap:14 }}>
+            {filtered.map(job => (
+              <div key={job.id} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, padding:20, boxShadow:'0 1px 3px rgba(0,0,0,0.06)' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 14px rgba(61,27,110,0.13)'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+                  <div style={{ flex:1 }}>
+                    <h3 style={{ margin:'0 0 4px', fontSize:15, fontWeight:700, color:C.primary, fontFamily:'sans-serif' }}>{job.title}</h3>
+                    <div style={{ fontSize:13, color:C.text, fontFamily:'sans-serif', marginBottom:6 }}>{job.org} • {job.location}</div>
+                    <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                      {job.tags.map(t => (
+                        <span key={t} style={{ fontSize:11, padding:'2px 8px', borderRadius:20, background:'#EDE8F7', color:C.primary, fontFamily:'sans-serif', fontWeight:600 }}>{t}</span>
+                      ))}
+                      <span style={{ fontSize:11, padding:'2px 8px', borderRadius:20, background:'#e8f5e9', color:C.success, fontFamily:'sans-serif', fontWeight:600 }}>{job.type}</span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign:'right', flexShrink:0, marginLeft:16 }}>
+                    <div style={{ fontSize:16, fontWeight:700, color:C.success, fontFamily:'sans-serif', marginBottom:4 }}>{job.wage}</div>
+                    <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif', marginBottom:10 }}>Posted {job.posted}</div>
+                    <button style={{ padding:'7px 18px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>Share with Students</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {tab === 'resources' && (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16 }}>
+          {RESOURCES.map(r => (
+            <div key={r.title} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, padding:22 }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 14px rgba(61,27,110,0.13)'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = 'none'}>
+              <div style={{ fontSize:30, marginBottom:12 }}>{r.icon}</div>
+              <h3 style={{ margin:'0 0 8px', fontSize:15, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>{r.title}</h3>
+              <p style={{ margin:'0 0 16px', fontSize:13, color:C.muted, fontFamily:'sans-serif', lineHeight:1.6 }}>{r.desc}</p>
+              <button style={{ padding:'7px 16px', border:`1px solid ${C.primary}`, borderRadius:5, background:C.white, color:C.primary, fontSize:12, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>{r.action} →</button>
             </div>
-          </div>
-          <Button variant="outline" onClick={handleGoogle} disabled={loading} className="w-full">
-            Continue with Google
-          </Button>
-          <p className="text-xs text-center text-muted-foreground mt-6">
-            Instructor accounts are auto-granted based on invitation list.
-          </p>
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
-export default PortalLogin;
+export default CareerPortal;
