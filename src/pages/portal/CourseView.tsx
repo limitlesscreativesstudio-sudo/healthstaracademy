@@ -1,615 +1,333 @@
-import { useEffect, useState } from "react";
-import DOMPurify from "dompurify";
-import { Link, useParams, NavLink, Routes, Route, Navigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import PortalLayout from "@/components/portal/PortalLayout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Megaphone, BookOpen, FileText, ChevronRight, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap, BarChart3, MessageSquare, Users as UsersIcon, FolderOpen, ScrollText, Target, Grid3x3, Settings as SettingsIcon, ClipboardCheck, LineChart, PenSquare, Handshake } from "lucide-react";
-import { usePortalAuth } from "@/hooks/usePortalAuth";
-import { COURSE_NAV_ITEMS, orderedNavKeys, isNavVisibleToStudent, type NavKey } from "@/lib/courseNav";
+import React, { useState } from 'react';
+import AttendanceTab    from './AttendanceTab';
+import CareerPortal     from './CareerPortal';
+import ClinicalSkillsTab from './ClinicalSkillsTab';
+import FilesTab         from './FilesTab';
+import PagesTab         from './PagesTab';
+import QuizView         from './QuizView';
+import ReadinessTab     from './ReadinessTab';
+import RequiredWork     from './RequiredWork';
+import StudentDashboard from './StudentDashboard';
+import StudentGrades    from './StudentGrades';
+import SyllabusTab      from './SyllabusTab';
+import AssignmentView   from './AssignmentView';
 
-import StudentGrades from "./StudentGrades";
-import SyllabusTab from "./SyllabusTab";
-import ClinicalSkillsTab from "./ClinicalSkillsTab";
-import ReadinessTab from "./ReadinessTab";
-import AttendanceTab from "./AttendanceTab";
-import ModulesTabAuthor from "@/components/portal/ModulesTabAuthor";
-import PagesTab from "./PagesTab";
-import FilesTab from "./FilesTab";
-import ChooseHomePageDialog from "@/components/portal/ChooseHomePageDialog";
+const C = { nav:'#3D1B6E', primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
-type Course = {
-  id: string; title: string; code: string | null; description: string | null; instructor_id: string;
-  nav_order: NavKey[] | null; nav_visibility: Record<string, boolean> | null; default_view: string | null;
-  home_page_type: string | null; front_page_html: string | null;
-};
-type Module = { id: string; title: string; position: number; published: boolean };
-type ModuleItem = { id: string; module_id: string; title: string; item_type: string; content_ref: string | null; url: string | null; position: number; published: boolean };
-type Announcement = { id: string; title: string; body: string; posted_at: string };
+interface Course { id:number; name:string; code:string; color:string; term:string; students:number; published:boolean; }
 
-const itemIcon = (t: string) => {
-  const map: Record<string, any> = { page: FileText, file: FileIcon, link: LinkIcon, video: Video, assignment: ClipboardList, quiz: GraduationCap };
-  const I = map[t] ?? FileText;
-  return <I className="h-4 w-4" />;
-};
+const COURSES: Course[] = [
+  { id:1, name:'Health Star Academy Hybrid Day NATP (2026-1)', code:'HSA-NATP-2026-1', color:'#7B4DB5', term:'1/26/2026–3/9/2026',  students:12, published:true  },
+  { id:2, name:'Health Star Academy Hybrid Day NATP (2026-2)', code:'HSA-NATP-2026-2', color:'#5BC8E8', term:'3/16/2026–4/7/2026', students:10, published:true  },
+  { id:3, name:'Health Star Academy Hybrid Day NATP (2025-4)', code:'HSA-NATP-2025-4', color:'#9B6DD0', term:'10/13/2025–11/25/2025',students:11,published:false },
+];
 
-const CourseView = () => {
-  const { courseId } = useParams();
-  const { user } = usePortalAuth();
-  const [course, setCourse] = useState<Course | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [previewAsStudent, setPreviewAsStudent] = useState(false);
+interface ModuleItem { id:number; type:string; name:string; pts?:number; published:boolean; indent:number; }
+interface Module     { id:number; name:string; published:boolean; expanded:boolean; items:ModuleItem[]; }
 
-  const loadCourse = () => {
-    if (!courseId) return;
-    supabase.from("courses").select("id, title, code, description, instructor_id, nav_order, nav_visibility, default_view, home_page_type, front_page_html").eq("id", courseId).maybeSingle()
-      .then(({ data }) => {
-        setCourse(data as Course | null);
-        setLoading(false);
-        if (data) {
-          try { localStorage.setItem("hsa:lastCourse", JSON.stringify({ courseId, title: data.title })); } catch { /* ignore */ }
-        }
-      });
-  };
+const MODULES: Module[] = [
+  { id:1, name:'Day 1 [Orientation 6AM–7AM, Theory 7AM–3PM; Module 1 [2 hrs], Module 2 [3 hrs], Module 3 [2 hrs]]', published:true, expanded:true, items:[
+    { id:1,  type:'page',       name:'How to Join Live Lecture via Zoom',         published:true,  indent:0 },
+    { id:2,  type:'page',       name:'Student Handbook Policies and Acknowledgement', published:true,  indent:0 },
+    { id:3,  type:'file',       name:'State Exam Student Handbook',               published:true,  indent:0 },
+    { id:4,  type:'quiz',       name:'Day 1 Quiz', pts:10,                        published:true,  indent:1 },
+  ]},
+  { id:2, name:'Video Conference Info', published:true, expanded:true, items:[
+    { id:5,  type:'page',       name:'Video Conference Info',                      published:true,  indent:0 },
+  ]},
+  { id:3, name:'Learning Resources, Curriculum, and Learning Objectives', published:true, expanded:true, items:[
+    { id:6,  type:'file',       name:'California Module 1.pdf',                   published:true,  indent:0 },
+    { id:7,  type:'file',       name:'Module01_PowerPoint.pptx',                  published:true,  indent:0 },
+    { id:8,  type:'file',       name:'California Module 2.pdf',                   published:true,  indent:0 },
+    { id:9,  type:'file',       name:'Module02_PowerPoint.pptx',                  published:true,  indent:0 },
+    { id:10, type:'file',       name:'California Module 3.pdf',                   published:true,  indent:0 },
+    { id:11, type:'file',       name:'Module03_PowerPoint.pptx',                  published:true,  indent:0 },
+  ]},
+  { id:4, name:'Case Study', published:true, expanded:true, items:[
+    { id:12, type:'page',       name:'1. Case Study',                             published:true,  indent:0 },
+    { id:13, type:'assignment', name:'2. Case Study w/ Questions', pts:3,         published:true,  indent:1 },
+    { id:14, type:'assignment', name:'3. Case Study (Part 2)', pts:3,             published:true,  indent:1 },
+  ]},
+  { id:5, name:'Module Quizzes', published:true, expanded:false, items:[
+    { id:15, type:'quiz',       name:'Module01 Quiz', pts:10,                     published:true,  indent:0 },
+    { id:16, type:'quiz',       name:'Module02 Quiz', pts:10,                     published:true,  indent:0 },
+    { id:17, type:'quiz',       name:'Module03 Quiz', pts:10,                     published:true,  indent:0 },
+  ]},
+];
 
-  useEffect(() => { loadCourse(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [courseId]);
+const itemIcon = (t:string) => ({ assignment:'📝', quiz:'❓', page:'📄', file:'📎', video:'🎥', discussion:'💬', external_url:'🔗' }[t] ?? '📄');
 
-  if (loading) return <PortalLayout><div className="p-6">Loading…</div></PortalLayout>;
-  if (!course) return <PortalLayout><div className="p-6">Course not found.</div></PortalLayout>;
+const ModulesHome: React.FC = () => {
+  const [mods, setMods]       = useState<Module[]>(MODULES);
+  const [addMod, setAddMod]   = useState(false);
+  const [newName, setNewName] = useState('');
+  const [addItem, setAddItem] = useState<number|null>(null);
+  const [ni, setNi]           = useState({ title:'', type:'page', pts:'' });
 
-  const isInstructor = user?.id === course.instructor_id;
-  const viewAsStudent = isInstructor && previewAsStudent;
-  const effectiveInstructor = isInstructor && !viewAsStudent;
+  const toggle     = (id:number) => setMods(p => p.map(m => m.id===id?{...m,expanded:!m.expanded}:m));
+  const togglePub  = (id:number) => setMods(p => p.map(m => m.id===id?{...m,published:!m.published}:m));
+  const toggleIPub = (mid:number,iid:number) => setMods(p => p.map(m => m.id===mid?{...m,items:m.items.map(it=>it.id===iid?{...it,published:!it.published}:it)}:m));
+  const saveMod    = () => { if(!newName.trim())return; setMods(p=>[...p,{id:Date.now(),name:newName,published:false,expanded:true,items:[]}]); setNewName('');setAddMod(false); };
+  const saveItem   = () => { if(!ni.title.trim())return; setMods(p=>p.map(m=>m.id===addItem?{...m,items:[...m.items,{id:Date.now(),type:ni.type,name:ni.title,pts:ni.pts?parseInt(ni.pts):undefined,published:false,indent:0}]}:m)); setNi({title:'',type:'page',pts:''});setAddItem(null); };
 
   return (
-    <PortalLayout>
-      <div className="flex min-h-[calc(100vh)]">
-        {/* Course sidebar - Canvas style */}
-        <aside className="w-56 bg-background border-r border-border py-4 shrink-0">
-          <div className="px-4 mb-3">
-            <Link to="/portal" className="text-xs text-muted-foreground hover:underline">← All Courses</Link>
-            <h2 className="font-heading font-bold text-base mt-2 line-clamp-2">{course.title}</h2>
-            {course.code && <div className="text-xs text-muted-foreground font-mono mt-1">{course.code}</div>}
-          </div>
-          {isInstructor && (
-            <div className="px-4 mb-3">
-              <button
-                onClick={() => setPreviewAsStudent(v => !v)}
-                className={`w-full text-[11px] font-semibold uppercase tracking-wide px-2 py-1.5 rounded border transition ${
-                  previewAsStudent
-                    ? "bg-purple text-white border-purple"
-                    : "bg-muted/40 text-muted-foreground border-border hover:bg-muted"
-                }`}
-                title="Toggle student preview of this sidebar"
-              >
-                {previewAsStudent ? "👁 Previewing as Student — click to exit" : "Preview sidebar as Student"}
-              </button>
-            </div>
-          )}
-          <nav className="text-sm">
-            {orderedNavKeys(course.nav_order).map(key => {
-              const item = COURSE_NAV_ITEMS.find(i => i.key === key)!;
-              const visibleToStudent = isNavVisibleToStudent(key, course.nav_visibility);
-              if (!effectiveInstructor && !visibleToStudent) return null;
-              const to = item.path ? `/portal/courses/${courseId}/${item.path}` : `/portal/courses/${courseId}`;
-              return (
-                <CourseNav key={key} to={to} end={!item.path} icon={item.icon}>
-                  <span className="flex-1">{item.label}</span>
-                  {effectiveInstructor && !visibleToStudent && (
-                    <span className="text-[9px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1 py-0.5 ml-1">Hidden</span>
-                  )}
-                </CourseNav>
-              );
-            })}
-            {effectiveInstructor && (
-              <CourseNav to={`/portal/teach/courses/${courseId}`} icon={SettingsIcon}>Settings</CourseNav>
-            )}
-          </nav>
-        </aside>
-        <div className="flex-1 p-6 max-w-[1400px] min-w-0">
-          <Routes>
-            <Route index element={<CourseHome course={course} isInstructor={effectiveInstructor} reloadCourse={loadCourse} />} />
-            <Route path="modules" element={
-              <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6">
-                <div className="min-w-0"><ModulesTabAuthor courseId={course.id} isInstructor={effectiveInstructor} /></div>
-                <CourseStatusSidebar course={course} isInstructor={effectiveInstructor} />
-              </div>
-            } />
-            <Route path="modules/:itemId" element={<ItemViewer courseId={course.id} />} />
-            <Route path="assignments" element={<AssignmentsList courseId={course.id} />} />
-            <Route path="quizzes" element={<QuizzesList courseId={course.id} />} />
-            <Route path="grades" element={<StudentGrades courseId={course.id} />} />
-            <Route path="announcements" element={<AnnouncementsTab courseId={course.id} />} />
-            <Route path="discussions" element={<ComingSoon title="Discussions" />} />
-            <Route path="people" element={<ComingSoon title="People" />} />
-            <Route path="pages" element={<PagesTab courseId={course.id} isInstructor={effectiveInstructor} />} />
-            <Route path="files" element={<FilesTab courseId={course.id} isInstructor={effectiveInstructor} />} />
-            <Route path="syllabus" element={<SyllabusTab courseId={course.id} isInstructor={effectiveInstructor} />} />
-            <Route path="outcomes" element={<ComingSoon title="Outcomes" />} />
-            <Route path="rubrics" element={<ComingSoon title="Rubrics" />} />
-            <Route path="bigbluebutton" element={<ComingSoon title="BigBlueButton" />} />
-            <Route path="collaborations" element={<ComingSoon title="Collaborations" />} />
-            <Route path="attendance" element={<AttendanceTab courseId={course.id} isInstructor={effectiveInstructor} />} />
-            <Route path="clinical" element={<ClinicalSkillsTab courseId={course.id} isInstructor={effectiveInstructor} />} />
-            <Route path="readiness" element={<ReadinessTab courseId={course.id} isInstructor={effectiveInstructor} />} />
-            <Route path="analytics" element={<ComingSoon title="New Analytics" />} />
-            <Route path="lucid" element={<ComingSoon title="Lucid (Whiteboard)" />} />
-            <Route path="*" element={<Navigate to="." replace />} />
-          </Routes>
+    <div style={{ padding:24 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Modules</h2>
+        <div style={{ display:'flex', gap:8 }}>
+          <button onClick={()=>setMods(p=>p.map(m=>({...m,expanded:false})))} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Collapse All</button>
+          <button onClick={()=>setMods(p=>p.map(m=>({...m,expanded:true})))} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Expand All</button>
+          <button onClick={()=>setAddMod(true)} style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>+ Module</button>
         </div>
       </div>
-    </PortalLayout>
+
+      {addMod && (
+        <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:5, padding:16, marginBottom:14 }}>
+          <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:5 }}>Module Name *</label>
+          <input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="e.g. Day 11 [...]"
+            style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', marginBottom:10, outline:'none' }}/>
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={saveMod} style={{ padding:'6px 16px', border:'none', borderRadius:4, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Add Module</button>
+            <button onClick={()=>setAddMod(false)} style={{ padding:'6px 12px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {mods.map(m => (
+        <div key={m.id} style={{ border:`1px solid ${C.border}`, borderRadius:5, marginBottom:10, overflow:'hidden', background:C.white }}>
+          <div style={{ padding:'11px 14px', background:'#F0EDF7', display:'flex', alignItems:'center', gap:10, borderBottom:m.expanded?`1px solid ${C.border}`:'none' }}>
+            <button onClick={()=>toggle(m.id)} style={{ background:'none', border:'none', cursor:'pointer', padding:0, color:C.text, fontSize:14, flexShrink:0 }}>{m.expanded?'▼':'▶'}</button>
+            <span style={{ flex:1, fontWeight:700, fontSize:13, fontFamily:'sans-serif', color:C.text, lineHeight:1.4 }}>{m.name}</span>
+            {!m.published && <span style={{ fontSize:10, padding:'2px 8px', borderRadius:20, background:C.bg, color:C.muted, fontFamily:'sans-serif' }}>Unpublished</span>}
+            <div onClick={()=>togglePub(m.id)} title={m.published?'Published':'Unpublished'}
+              style={{ width:18, height:18, borderRadius:'50%', background:m.published?C.success:C.border, cursor:'pointer', flexShrink:0 }}/>
+            <button onClick={()=>setAddItem(m.id)} style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:12, fontFamily:'sans-serif', padding:'2px 6px' }}>+ Item</button>
+            <button onClick={()=>setMods(p=>p.filter(x=>x.id!==m.id))} style={{ background:'none', border:'none', cursor:'pointer', color:C.error, padding:3, fontSize:14 }}>✕</button>
+          </div>
+          {m.expanded && <>
+            {m.items.map((it, i) => (
+              <div key={it.id} style={{ padding:'9px 14px', paddingLeft:14+(it.indent*20), display:'flex', alignItems:'center', gap:10, borderBottom:i<m.items.length-1?`1px solid ${C.border}`:'none', cursor:'pointer' }}
+                onMouseEnter={e=>(e.currentTarget as HTMLElement).style.background='#faf9fc'}
+                onMouseLeave={e=>(e.currentTarget as HTMLElement).style.background=C.white}>
+                <span style={{ fontSize:13 }}>{itemIcon(it.type)}</span>
+                <span style={{ flex:1, fontSize:13, color:C.primary, fontFamily:'sans-serif', fontWeight:500 }}>{it.name}</span>
+                {it.pts && <span style={{ fontSize:12, color:C.muted }}>{it.pts} pts</span>}
+                <div onClick={()=>toggleIPub(m.id,it.id)} title={it.published?'Published':'Unpublished'}
+                  style={{ width:16, height:16, borderRadius:'50%', background:it.published?C.success:C.border, cursor:'pointer', flexShrink:0 }}/>
+              </div>
+            ))}
+            {addItem===m.id?(
+              <div style={{ padding:'12px 14px', borderTop:`1px solid ${C.border}`, background:'#faf9fc' }}>
+                <div style={{ display:'flex', gap:8, marginBottom:8 }}>
+                  <select value={ni.type} onChange={e=>setNi(p=>({...p,type:e.target.value}))}
+                    style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 8px', fontSize:12, fontFamily:'sans-serif', color:C.text }}>
+                    {['page','assignment','quiz','file','video','discussion'].map(t=><option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</option>)}
+                  </select>
+                  <input value={ni.title} onChange={e=>setNi(p=>({...p,title:e.target.value}))} placeholder="Item title"
+                    style={{ flex:1, border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 9px', fontSize:13, fontFamily:'sans-serif', color:C.text, outline:'none' }}/>
+                  <input value={ni.pts} onChange={e=>setNi(p=>({...p,pts:e.target.value}))} placeholder="pts" style={{ width:52, border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 7px', fontSize:13, fontFamily:'sans-serif', color:C.text, outline:'none' }}/>
+                </div>
+                <div style={{ display:'flex', gap:6 }}>
+                  <button onClick={saveItem} style={{ padding:'5px 14px', border:'none', borderRadius:4, background:C.primary, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>Add</button>
+                  <button onClick={()=>setAddItem(null)} style={{ padding:'5px 11px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
+                </div>
+              </div>
+            ):(
+              <div onClick={()=>setAddItem(m.id)} style={{ padding:'8px 14px', borderTop:`1px dashed ${C.border}`, cursor:'pointer', color:C.primary, fontSize:12, fontFamily:'sans-serif', display:'flex', alignItems:'center', gap:5 }}
+                onMouseEnter={e=>(e.currentTarget as HTMLElement).style.background='#f4f1fc'}
+                onMouseLeave={e=>(e.currentTarget as HTMLElement).style.background=C.white}>
+                + Add Item
+              </div>
+            )}
+          </>}
+        </div>
+      ))}
+    </div>
   );
 };
 
-const ComingSoon = ({ title }: { title: string }) => (
-  <div>
-    <h2 className="font-heading text-2xl font-bold mb-2">{title}</h2>
-    <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">Nothing here yet.</CardContent></Card>
+const AnnouncementsPanel: React.FC = () => {
+  const [anns, setAnns] = useState([
+    { id:1, title:'Week 3 Clinical Prep Reminder', body:'Please review the hand washing technique video before your clinical visit this Friday. Bring your signed skills checklist.', date:'May 26, 2026', replies:3 },
+    { id:2, title:'Vital Signs Lab Rescheduled', body:'Due to facility maintenance, the Vital Signs Lab has been moved to June 22. Please update your calendars.', date:'May 24, 2026', replies:7 },
+    { id:3, title:'Welcome to the 2026-1 Cohort!', body:'Welcome! Please read through the syllabus and complete the Student Handbook acknowledgement before Day 2.', date:'Jan 26, 2026', replies:12 },
+  ]);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ title:'', body:'' });
+  const post = () => { if(!form.title||!form.body)return; setAnns(p=>[{id:Date.now(),title:form.title,body:form.body,date:'Today',replies:0},...p]); setForm({title:'',body:''});setOpen(false); };
+  return (
+    <div style={{ padding:24 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Announcements</h2>
+        <button onClick={()=>setOpen(!open)} style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>+ Announcement</button>
+      </div>
+      {open && (
+        <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:6, padding:20, marginBottom:16 }}>
+          <div style={{ marginBottom:12 }}>
+            <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Title *</label>
+            <input value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))} style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', outline:'none' }}/>
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Message *</label>
+            <textarea value={form.body} onChange={e=>setForm(p=>({...p,body:e.target.value}))} rows={4} style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', resize:'vertical', boxSizing:'border-box', outline:'none' }}/>
+          </div>
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={post} style={{ padding:'7px 18px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Post</button>
+            <button onClick={()=>setOpen(false)} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
+          </div>
+        </div>
+      )}
+      {anns.map(a => (
+        <div key={a.id} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:18, marginBottom:10 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+            <h3 style={{ margin:0, fontSize:15, fontWeight:700, color:C.primary, fontFamily:'sans-serif' }}>{a.title}</h3>
+            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <span style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>{a.date}</span>
+              <button onClick={()=>setAnns(p=>p.filter(x=>x.id!==a.id))} style={{ background:'none', border:'none', cursor:'pointer', color:C.error, fontSize:14 }}>✕</button>
+            </div>
+          </div>
+          <p style={{ margin:'0 0 8px', fontSize:13, color:C.text, fontFamily:'sans-serif', lineHeight:1.65 }}>{a.body}</p>
+          <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>{a.replies} replies</div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const Placeholder: React.FC<{ title:string }> = ({ title }) => (
+  <div style={{ padding:48, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>
+    <div style={{ fontSize:38, marginBottom:14 }}>🚧</div>
+    <div style={{ fontSize:16, fontWeight:600, color:C.text, marginBottom:6 }}>{title}</div>
+    <div style={{ fontSize:13 }}>This section is ready to connect to Supabase.</div>
   </div>
 );
 
-const CourseNav = ({ to, end, icon: Icon, children }: any) => (
-  <NavLink to={to} end={end} className={({ isActive }) =>
-    `flex items-center gap-2 px-4 py-2 border-l-2 ${isActive ? "border-purple bg-purple/5 text-purple font-medium" : "border-transparent hover:bg-muted text-foreground"}`}>
-    <Icon className="h-4 w-4" /> {children}
-  </NavLink>
-);
+const NAV_ITEMS = [
+  { id:'home',          label:'Home',            icon:'🏠' },
+  { id:'announcements', label:'Announcements',   icon:'📢' },
+  { id:'assignments',   label:'Assignments',     icon:'✅' },
+  { id:'discussions',   label:'Discussions',     icon:'💬' },
+  { id:'grades',        label:'Grades',          icon:'📊' },
+  { id:'people',        label:'People',          icon:'👥' },
+  { id:'pages',         label:'Pages',           icon:'📄' },
+  { id:'files',         label:'Files',           icon:'📁' },
+  { id:'syllabus',      label:'Syllabus',        icon:'📋' },
+  { id:'outcomes',      label:'Outcomes',        icon:'🎯' },
+  { id:'rubrics',       label:'Rubrics',         icon:'📏' },
+  { id:'quizzes',       label:'Quizzes',         icon:'❓' },
+  { id:'modules',       label:'Modules',         icon:'📦' },
+  { id:'attendance',    label:'Attendance',      icon:'✔️' },
+  { id:'clinical',      label:'Clinical Skills', icon:'🩺' },
+  { id:'readiness',     label:'Exam Readiness',  icon:'🏆' },
+  { id:'required',      label:'Required Work',   icon:'📌' },
+  { id:'career',        label:'Career Portal',   icon:'💼' },
+  { id:'analytics',     label:'Course Analytics',icon:'📈' },
+  { id:'settings',      label:'Settings',        icon:'⚙️' },
+];
 
-const CourseHome = ({ course, isInstructor, reloadCourse }: { course: Course; isInstructor: boolean; reloadCourse?: () => void }) => {
-  const [homeType, setHomeType] = useState<string>(course.home_page_type ?? "modules");
-  const [hasFrontPage, setHasFrontPage] = useState<boolean>(!!course.front_page_html);
-  useEffect(() => { setHomeType(course.home_page_type ?? "modules"); }, [course.home_page_type]);
-  useEffect(() => { setHasFrontPage(!!course.front_page_html); }, [course.front_page_html]);
-  useEffect(() => {
-    if (!isInstructor) return;
-    supabase.from("courses").select("front_page_html").eq("id", course.id).maybeSingle()
-      .then(({ data }) => setHasFrontPage(!!data?.front_page_html));
-  }, [course.id, isInstructor]);
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
-      <div className="min-w-0 space-y-6">
-        <RecentAnnouncements courseId={course.id} />
-        <div className="border-b border-border pb-3 flex items-start justify-between gap-3">
-          <div>
-            <h1 className="font-heading text-2xl font-bold">{course.title}</h1>
-            {course.code && <div className="text-xs text-muted-foreground font-mono mt-1">{course.code}</div>}
-          </div>
-          {isInstructor && (
-            <ChooseHomePageDialog
-              courseId={course.id}
-              current={homeType}
-              hasFrontPage={hasFrontPage}
-              onChanged={(v) => { setHomeType(v); reloadCourse?.(); }}
-            />
-          )}
-        </div>
-        {homeType === "front_page" ? (
-          <FrontPageView courseId={course.id} isInstructor={isInstructor} />
-        ) : homeType === "syllabus" ? (
-          <SyllabusTab courseId={course.id} isInstructor={isInstructor} />
-        ) : homeType === "assignments" ? (
-          <AssignmentsList courseId={course.id} />
-        ) : homeType === "activity" ? (
-          <ActivityStream courseId={course.id} />
-        ) : (
-          <ModulesHomeList courseId={course.id} isInstructor={isInstructor} />
-        )}
-      </div>
-      <HomeSidebar course={course} isInstructor={isInstructor} />
-    </div>
-  );
+const SECTIONS: Record<string, React.ReactNode> = {
+  home:          <ModulesHome/>,
+  modules:       <ModulesHome/>,
+  announcements: <AnnouncementsPanel/>,
+  assignments:   <AssignmentView/>,
+  quizzes:       <QuizView/>,
+  grades:        <StudentGrades/>,
+  people:        <StudentDashboard/>,
+  pages:         <PagesTab/>,
+  files:         <FilesTab/>,
+  syllabus:      <SyllabusTab/>,
+  attendance:    <AttendanceTab/>,
+  clinical:      <ClinicalSkillsTab/>,
+  readiness:     <ReadinessTab/>,
+  required:      <RequiredWork/>,
+  career:        <CareerPortal/>,
+  discussions:   <Placeholder title="Discussions"/>,
+  outcomes:      <Placeholder title="Outcomes"/>,
+  rubrics:       <Placeholder title="Rubrics"/>,
+  analytics:     <Placeholder title="Course Analytics"/>,
+  settings:      <Placeholder title="Settings"/>,
 };
 
-const ActivityStream = ({ courseId }: { courseId: string }) => {
-  const [items, setItems] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    supabase.from("lms_announcements")
-      .select("*").eq("course_id", courseId)
-      .order("posted_at", { ascending: false }).limit(20)
-      .then(({ data }) => { setItems(data ?? []); setLoading(false); });
-  }, [courseId]);
+interface CourseViewProps { user?: { name:string; email:string; role:string }; onLogout?: ()=>void; }
 
-  if (loading) {
-    return <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Loading recent activity…</CardContent></Card>;
-  }
-  if (items.length === 0) {
-    return <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">
-      No recent activity yet. Post an announcement to populate the stream.
-    </CardContent></Card>;
-  }
+const CourseView: React.FC<CourseViewProps> = ({ user, onLogout }) => {
+  const [activeCourse, setActiveCourse] = useState<Course>(COURSES[0]);
+  const [activeTab, setActiveTab]       = useState('home');
+  const [showCourses, setShowCourses]   = useState(false);
+
   return (
-    <div className="border border-border rounded-md bg-background divide-y divide-border">
-      <div className="px-4 py-2 bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
-        <Megaphone className="h-3.5 w-3.5" /> Recent Activity
-      </div>
-      {items.map(a => (
-        <Link key={a.id} to={`/portal/courses/${courseId}/announcements`} className="block px-4 py-3 hover:bg-muted/30">
-          <div className="flex items-start justify-between gap-3 mb-1">
-            <div className="flex items-center gap-2">
-              <Megaphone className="h-4 w-4 text-purple shrink-0" />
-              <span className="font-semibold text-sm">{a.title}</span>
-            </div>
-            <span className="text-[11px] text-muted-foreground whitespace-nowrap">{new Date(a.posted_at).toLocaleString()}</span>
-          </div>
-          <p className="text-xs text-foreground/70 line-clamp-2 whitespace-pre-wrap ml-6">{a.body}</p>
-        </Link>
-      ))}
-    </div>
-  );
-};
-
-const FrontPageView = ({ courseId, isInstructor }: { courseId: string; isInstructor: boolean }) => {
-  const [html, setHtml] = useState<string | null>(null);
-  useEffect(() => {
-    supabase.from("courses").select("front_page_html").eq("id", courseId).maybeSingle()
-      .then(({ data }) => setHtml(data?.front_page_html ?? ""));
-  }, [courseId]);
-  if (html === null) {
-    return <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">Loading…</CardContent></Card>;
-  }
-  if (!html) {
-    return (
-      <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">
-        {isInstructor ? "No front page content yet. Go to Pages → ⋯ → Use as Front Page on the page you want shown here." : "Welcome! Your instructor hasn't added a front page yet."}
-      </CardContent></Card>
-    );
-  }
-  const sanitized = DOMPurify.sanitize(html);
-  return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: sanitized }} />;
-};
-
-const ModulesHomeList = ({ courseId, isInstructor }: { courseId: string; isInstructor: boolean }) => {
-  const [modules, setModules] = useState<Module[]>([]);
-  const [items, setItems] = useState<ModuleItem[]>([]);
-  const [open, setOpen] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    (async () => {
-      let modQuery = supabase.from("modules").select("*").eq("course_id", courseId).order("position");
-      if (!isInstructor) modQuery = modQuery.eq("published", true);
-      const { data: mods } = await modQuery;
-      const list = mods ?? [];
-      setModules(list);
-      setOpen(Object.fromEntries(list.map(m => [m.id, true])));
-      const ids = list.map(m => m.id);
-      if (ids.length) {
-        let itQuery = supabase.from("module_items").select("*").in("module_id", ids).order("position");
-        if (!isInstructor) itQuery = itQuery.eq("published", true);
-        const { data: its } = await itQuery;
-        setItems(its ?? []);
-      }
-    })();
-  }, [courseId, isInstructor]);
-
-  if (modules.length === 0) {
-    return <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No content published yet.</CardContent></Card>;
-  }
-  return (
-    <div className="border border-border rounded-md overflow-hidden bg-background">
-      {modules.map(m => {
-        const isOpen = open[m.id] ?? true;
-        const modItems = items.filter(i => i.module_id === m.id);
-        return (
-          <div key={m.id} className="border-b border-border last:border-0">
-            <button onClick={() => setOpen(o => ({ ...o, [m.id]: !isOpen }))}
-              className="w-full flex items-center gap-2 px-4 py-3 bg-muted/40 hover:bg-muted/60 text-left">
-              <ChevronRight className={`h-4 w-4 transition-transform ${isOpen ? "rotate-90" : ""}`} />
-              <span className="font-semibold text-sm">{m.title}</span>
-            </button>
-            {isOpen && (
-              <div>
-                {modItems.length === 0 ? (
-                  <div className="px-12 py-3 text-xs text-muted-foreground">No items.</div>
-                ) : modItems.map(i => (
-                  <Link key={i.id} to={`/portal/courses/${courseId}/modules/${i.id}`}
-                    className={`flex items-center gap-3 pl-12 pr-4 py-2.5 border-t border-border/50 hover:bg-muted/30 text-sm ${!i.published ? "opacity-60" : ""}`}>
-                    <span className="text-emerald-600">{itemIcon(i.item_type)}</span>
-                    <span className="flex-1 font-medium">{i.title}</span>
-                    {isInstructor && !i.published && (
-                      <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1.5 py-0.5">Hidden</span>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-const RecentAnnouncements = ({ courseId }: { courseId: string }) => {
-  const [items, setItems] = useState<Announcement[]>([]);
-  useEffect(() => {
-    supabase.from("lms_announcements").select("*").eq("course_id", courseId).order("posted_at", { ascending: false }).limit(3)
-      .then(({ data }) => setItems(data ?? []));
-  }, [courseId]);
-  if (items.length === 0) return null;
-  return (
-    <div className="border border-border rounded-md bg-muted/20">
-      <div className="px-4 py-2 border-b border-border text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
-        <Megaphone className="h-3.5 w-3.5" /> Recent Announcements
-      </div>
-      <div className="divide-y divide-border">
-        {items.map(a => (
-          <div key={a.id} className="px-4 py-3">
-            <div className="flex items-start justify-between gap-3 mb-1">
-              <Link to={`/portal/courses/${courseId}/announcements`} className="font-semibold text-sm hover:underline">{a.title}</Link>
-              <span className="text-[11px] text-muted-foreground whitespace-nowrap">{new Date(a.posted_at).toLocaleDateString()}</span>
-            </div>
-            <p className="text-xs text-foreground/70 line-clamp-2 whitespace-pre-wrap">{a.body}</p>
-          </div>
+    <div style={{ display:'flex', minHeight:'100vh', background:C.bg }}>
+      {/* Global left rail */}
+      <div style={{ width:52, background:C.nav, minHeight:'100vh', position:'fixed', left:0, top:0, zIndex:100, display:'flex', flexDirection:'column', alignItems:'center', paddingTop:10 }}>
+        <div style={{ width:38, height:38, borderRadius:'50%', background:'linear-gradient(135deg,#9B6DD0,#5BC8E8)', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:900, fontSize:13, fontFamily:'Georgia,serif', marginBottom:16, cursor:'pointer' }}>H★</div>
+        {['🏠','📚','📅','✉️','⏱️'].map((icon,i) => (
+          <div key={i} style={{ width:52, height:48, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:17, borderLeft:'3px solid transparent' }}
+            onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color='white';(e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.08)';}}
+            onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.6)';(e.currentTarget as HTMLElement).style.background='transparent';}}>{icon}</div>
         ))}
-      </div>
-    </div>
-  );
-};
-
-const HomeSidebar = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
-  const [upcoming, setUpcoming] = useState<{ id: string; title: string; due_at: string; kind: "assignment" | "quiz" }[]>([]);
-  useEffect(() => {
-    (async () => {
-      const now = new Date().toISOString();
-      const in7 = new Date(Date.now() + 7 * 86400000).toISOString();
-      const [a, q] = await Promise.all([
-        supabase.from("assignments").select("id, title, due_at").eq("course_id", course.id).eq("published", true).not("due_at", "is", null).gte("due_at", now).lte("due_at", in7),
-        supabase.from("quizzes").select("id, title, due_at").eq("course_id", course.id).eq("published", true).not("due_at", "is", null).gte("due_at", now).lte("due_at", in7),
-      ]);
-      const merged = [
-        ...(a.data ?? []).map((x: any) => ({ ...x, kind: "assignment" as const })),
-        ...(q.data ?? []).map((x: any) => ({ ...x, kind: "quiz" as const })),
-      ].sort((x, y) => x.due_at.localeCompare(y.due_at));
-      setUpcoming(merged);
-    })();
-  }, [course.id]);
-
-  const SidebarBtn = ({ to, icon: Icon, children }: any) => (
-    <Link to={to} className="flex items-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50">
-      <Icon className="h-4 w-4 text-muted-foreground" /> {children}
-    </Link>
-  );
-
-  return (
-    <aside className="space-y-4">
-      {isInstructor && (
-        <div className="space-y-2">
-          <SidebarBtn to={`/portal/teach/courses/${course.id}`} icon={SettingsIcon}>Choose Home Page</SidebarBtn>
-          <SidebarBtn to={`/portal/courses/${course.id}/announcements`} icon={Megaphone}>New Announcement</SidebarBtn>
-          <SidebarBtn to={`/portal/teach/courses/${course.id}`} icon={LineChart}>Course Analytics</SidebarBtn>
-        </div>
-      )}
-      <div className="border border-border rounded-md">
-        <div className="px-3 py-2 border-b border-border text-xs font-semibold uppercase tracking-wide text-muted-foreground">Coming Up</div>
-        <div className="p-3">
-          {upcoming.length === 0 ? (
-            <div className="text-xs text-muted-foreground">Nothing for the next week</div>
-          ) : (
-            <ul className="space-y-2">
-              {upcoming.map(u => (
-                <li key={`${u.kind}-${u.id}`} className="text-xs">
-                  <Link to={`/portal/courses/${course.id}/${u.kind === "quiz" ? "quizzes" : "assignments"}/${u.id}`}
-                    className="font-medium hover:underline flex items-start gap-2">
-                    {u.kind === "quiz" ? <GraduationCap className="h-3.5 w-3.5 mt-0.5 text-purple shrink-0" /> : <ClipboardList className="h-3.5 w-3.5 mt-0.5 text-purple shrink-0" />}
-                    <span className="flex-1">{u.title}</span>
-                  </Link>
-                  <div className="text-muted-foreground ml-5 mt-0.5">Due {new Date(u.due_at).toLocaleDateString()}</div>
-                </li>
-              ))}
-            </ul>
-          )}
+        <div style={{ marginTop:'auto', marginBottom:10 }}>
+          <button onClick={onLogout} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.55)', fontSize:16, width:52, height:40 }}>↩</button>
         </div>
       </div>
-    </aside>
-  );
-};
 
-// ModulesTab replaced by ModulesTabAuthor (src/components/portal/ModulesTabAuthor.tsx)
-
-const CourseStatusSidebar = ({ course, isInstructor }: { course: Course; isInstructor: boolean }) => {
-  const [published, setPublished] = useState<boolean>(true);
-  const [upcoming, setUpcoming] = useState<{ id: string; title: string; due_at: string; kind: "assignment" | "quiz" }[]>([]);
-
-  useEffect(() => {
-    supabase.from("courses").select("published").eq("id", course.id).maybeSingle()
-      .then(({ data }) => { if (data && "published" in (data as any)) setPublished(!!(data as any).published); });
-    (async () => {
-      const now = new Date().toISOString();
-      const in7 = new Date(Date.now() + 7 * 86400000).toISOString();
-      const [a, q] = await Promise.all([
-        supabase.from("assignments").select("id, title, due_at").eq("course_id", course.id).eq("published", true).not("due_at", "is", null).gte("due_at", now).lte("due_at", in7),
-        supabase.from("quizzes").select("id, title, due_at").eq("course_id", course.id).eq("published", true).not("due_at", "is", null).gte("due_at", now).lte("due_at", in7),
-      ]);
-      const merged = [
-        ...(a.data ?? []).map((x: any) => ({ ...x, kind: "assignment" as const })),
-        ...(q.data ?? []).map((x: any) => ({ ...x, kind: "quiz" as const })),
-      ].sort((x, y) => x.due_at.localeCompare(y.due_at));
-      setUpcoming(merged);
-    })();
-  }, [course.id]);
-
-  const Btn = ({ to, icon: Icon, children }: any) => (
-    <Link to={to} className="flex items-center gap-2 px-3 py-2 border border-border rounded-md text-sm hover:bg-muted/50 bg-background">
-      <Icon className="h-4 w-4 text-muted-foreground" /> {children}
-    </Link>
-  );
-
-  return (
-    <aside className="space-y-4">
-      {isInstructor && (
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Course Status</div>
-          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md border text-sm font-medium ${published ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700" : "border-border bg-muted/40 text-muted-foreground"}`}>
-            <span className={`h-2 w-2 rounded-full ${published ? "bg-emerald-500" : "bg-muted-foreground"}`} />
-            {published ? "Published" : "Unpublished"}
+      <div style={{ marginLeft:52, flex:1, display:'flex', flexDirection:'column' }}>
+        {/* Course header */}
+        <div style={{ background:activeCourse.color, borderBottom:`1px solid ${C.border}`, padding:'14px 20px 0', position:'sticky', top:0, zIndex:50 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
+            {/* Course selector */}
+            <div style={{ position:'relative' }}>
+              <button onClick={()=>setShowCourses(!showCourses)}
+                style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:5, padding:'5px 12px', cursor:'pointer', color:'white', fontFamily:'sans-serif', fontSize:13, fontWeight:600, backdropFilter:'blur(4px)' }}>
+                <span style={{ maxWidth:320, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{activeCourse.name}</span>
+                <span style={{ fontSize:10 }}>▼</span>
+              </button>
+              {showCourses && (
+                <div style={{ position:'absolute', top:'110%', left:0, background:C.white, border:`1px solid ${C.border}`, borderRadius:6, boxShadow:'0 8px 28px rgba(0,0,0,0.18)', zIndex:200, minWidth:380 }}>
+                  <div style={{ padding:'8px 14px', fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', borderBottom:`1px solid ${C.border}` }}>Switch Course</div>
+                  {COURSES.map(c => (
+                    <div key={c.id} onClick={()=>{setActiveCourse(c);setShowCourses(false);setActiveTab('home');}}
+                      style={{ padding:'11px 14px', display:'flex', alignItems:'center', gap:12, cursor:'pointer', background:c.id===activeCourse.id?'#EDE8F7':C.white, borderBottom:`1px solid ${C.border}` }}
+                      onMouseEnter={e=>(e.currentTarget as HTMLElement).style.background='#f4f2fa'}
+                      onMouseLeave={e=>(e.currentTarget as HTMLElement).style.background=c.id===activeCourse.id?'#EDE8F7':C.white}>
+                      <div style={{ width:6, height:38, background:c.color, borderRadius:3, flexShrink:0 }}/>
+                      <div>
+                        <div style={{ fontSize:13, fontWeight:600, color:C.primary, fontFamily:'sans-serif' }}>{c.name}</div>
+                        <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>{c.term} • {c.students} students{!c.published?' • Unpublished':''}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
+              <button style={{ padding:'5px 14px', background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>View as Student</button>
+              <button style={{ padding:'5px 14px', background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.4)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>+ Module</button>
+            </div>
           </div>
         </div>
-      )}
-      {isInstructor && (
-        <div className="space-y-2">
-          <Btn to={`/portal/teach/courses/${course.id}`} icon={SettingsIcon}>Choose Home Page</Btn>
-          <Btn to={`/portal/courses/${course.id}/announcements`} icon={Megaphone}>New Announcement</Btn>
-          <Btn to={`/portal/teach/courses/${course.id}`} icon={LineChart}>New Analytics</Btn>
-          <Btn to={`/portal/courses/${course.id}`} icon={ScrollText}>View Course Stream</Btn>
-        </div>
-      )}
-      <div className="border border-border rounded-md bg-background">
-        <div className="px-3 py-2 border-b border-border text-xs font-semibold uppercase tracking-wide text-muted-foreground">Coming Up</div>
-        <div className="p-3">
-          {upcoming.length === 0 ? (
-            <div className="text-xs text-muted-foreground">Nothing for the next week</div>
-          ) : (
-            <ul className="space-y-2">
-              {upcoming.map(u => (
-                <li key={`${u.kind}-${u.id}`} className="text-xs">
-                  <Link to={`/portal/courses/${course.id}/${u.kind === "quiz" ? "quizzes" : "assignments"}/${u.id}`}
-                    className="font-medium hover:underline flex items-start gap-2">
-                    {u.kind === "quiz" ? <GraduationCap className="h-3.5 w-3.5 mt-0.5 text-purple shrink-0" /> : <ClipboardList className="h-3.5 w-3.5 mt-0.5 text-purple shrink-0" />}
-                    <span className="flex-1">{u.title}</span>
-                  </Link>
-                  <div className="text-muted-foreground ml-5 mt-0.5">Due {new Date(u.due_at).toLocaleDateString()}</div>
-                </li>
-              ))}
-            </ul>
-          )}
+
+        <div style={{ display:'flex', flex:1 }}>
+          {/* Course sidebar */}
+          <div style={{ width:200, background:C.white, borderRight:`1px solid ${C.border}`, flexShrink:0, minHeight:'calc(100vh - 76px)', overflowY:'auto' }}>
+            {NAV_ITEMS.map(item => {
+              const on = activeTab === item.id || (item.id==='modules'&&activeTab==='home');
+              return (
+                <div key={item.id} onClick={()=>setActiveTab(item.id)}
+                  style={{ padding:'9px 14px', display:'flex', alignItems:'center', gap:9, cursor:'pointer', borderLeft:on?`3px solid ${C.primary}`:'3px solid transparent', background:on?'#EDE8F7':'transparent', color:on?C.primary:C.text, fontFamily:'sans-serif', fontSize:13, fontWeight:on?600:400 }}
+                  onMouseEnter={e=>{if(!on)(e.currentTarget as HTMLElement).style.background='#f5f3fa';}}
+                  onMouseLeave={e=>{if(!on)(e.currentTarget as HTMLElement).style.background='transparent';}}>
+                  <span style={{ fontSize:13 }}>{item.icon}</span>{item.label}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Content */}
+          <div style={{ flex:1, background:C.bg, overflowY:'auto' }}>
+            {SECTIONS[activeTab] ?? <Placeholder title={activeTab}/>}
+          </div>
         </div>
       </div>
-    </aside>
-  );
-};
-
-const AssignmentsList = ({ courseId }: { courseId: string }) => {
-  const [items, setItems] = useState<any[]>([]);
-  useEffect(() => {
-    supabase.from("assignments").select("id, title, points, due_at, published").eq("course_id", courseId).eq("published", true).order("due_at", { ascending: true, nullsFirst: false })
-      .then(({ data }) => setItems(data ?? []));
-  }, [courseId]);
-  return (
-    <div className="space-y-3">
-      <h2 className="font-heading text-2xl font-bold">Assignments</h2>
-      {items.length === 0 ? (
-        <Card><CardContent className="py-8 text-center text-muted-foreground">No assignments yet.</CardContent></Card>
-      ) : items.map(a => (
-        <Link key={a.id} to={`/portal/courses/${courseId}/assignments/${a.id}`}>
-          <Card className="hover:bg-muted/30 transition">
-            <CardContent className="pt-5 flex justify-between items-center">
-              <div>
-                <div className="font-semibold">{a.title}</div>
-                <div className="text-xs text-muted-foreground">{a.points} pts{a.due_at && ` · Due ${new Date(a.due_at).toLocaleDateString()}`}</div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </CardContent>
-          </Card>
-        </Link>
-      ))}
-    </div>
-  );
-};
-
-const QuizzesList = ({ courseId }: { courseId: string }) => {
-  const [items, setItems] = useState<any[]>([]);
-  useEffect(() => {
-    supabase.from("quizzes").select("id, title, total_points, due_at, published").eq("course_id", courseId).eq("published", true).order("due_at", { ascending: true, nullsFirst: false })
-      .then(({ data }) => setItems(data ?? []));
-  }, [courseId]);
-  return (
-    <div className="space-y-3">
-      <h2 className="font-heading text-2xl font-bold">Quizzes</h2>
-      {items.length === 0 ? (
-        <Card><CardContent className="py-8 text-center text-muted-foreground">No quizzes yet.</CardContent></Card>
-      ) : items.map(q => (
-        <Link key={q.id} to={`/portal/courses/${courseId}/quizzes/${q.id}`}>
-          <Card className="hover:bg-muted/30 transition">
-            <CardContent className="pt-5 flex justify-between items-center">
-              <div>
-                <div className="font-semibold">{q.title}</div>
-                <div className="text-xs text-muted-foreground">{q.total_points} pts{q.due_at && ` · Due ${new Date(q.due_at).toLocaleDateString()}`}</div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </CardContent>
-          </Card>
-        </Link>
-      ))}
-    </div>
-  );
-};
-
-const ItemViewer = ({ courseId }: { courseId: string }) => {
-  const { itemId } = useParams();
-  const [item, setItem] = useState<ModuleItem | null>(null);
-  const [body, setBody] = useState<string | null>(null);
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!itemId) return;
-    (async () => {
-      const { data: it } = await supabase.from("module_items").select("*").eq("id", itemId).maybeSingle();
-      setItem(it);
-      if (it?.item_type === "page" && it.content_ref) {
-        const { data: p } = await supabase.from("lms_pages").select("body_html").eq("id", it.content_ref).maybeSingle();
-        setBody(p?.body_html ?? "");
-      } else if (it?.item_type === "file" && it.content_ref) {
-        const { data: f } = await supabase.from("lms_files").select("*").eq("id", it.content_ref).maybeSingle();
-        if (f) {
-          let url = f.external_url;
-          if (f.storage_provider === "cloud" && f.storage_path) {
-            const { data } = await supabase.storage.from("course-assets").createSignedUrl(f.storage_path, 3600);
-            url = data?.signedUrl ?? null;
-          } else if (f.storage_provider === "drive" && f.drive_file_id) {
-            url = `https://drive.google.com/file/d/${f.drive_file_id}/preview`;
-          }
-          setFileUrl(url ?? null);
-          setBody("");
-        }
-      }
-    })();
-  }, [itemId]);
-
-  if (!item) return <div>Loading…</div>;
-
-  // Only allow http(s) URLs in the iframe — block javascript:, data:, etc.
-  const safeFileUrl = fileUrl && /^https?:\/\//i.test(fileUrl) ? fileUrl : null;
-  const sanitizedBody = body ? DOMPurify.sanitize(body) : "";
-
-  return (
-    <div>
-      <Link to={`/portal/courses/${courseId}/modules`} className="text-sm text-muted-foreground hover:underline">← Back to Modules</Link>
-      <h1 className="font-heading text-2xl font-bold mt-2 mb-4">{item.title}</h1>
-      {(item.item_type === "link" || item.item_type === "video") && item.url && (
-        <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-purple underline">{item.url}</a>
-      )}
-      {safeFileUrl && (
-        <iframe src={safeFileUrl} className="w-full h-[80vh] border rounded" allow="autoplay" />
-      )}
-      {!safeFileUrl && body && (
-        <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: sanitizedBody }} />
-      )}
-    </div>
-  );
-};
-
-const AnnouncementsTab = ({ courseId }: { courseId: string }) => {
-  const [items, setItems] = useState<Announcement[]>([]);
-  useEffect(() => {
-    supabase.from("lms_announcements").select("*").eq("course_id", courseId).order("posted_at", { ascending: false })
-      .then(({ data }) => setItems(data ?? []));
-  }, [courseId]);
-  return (
-    <div className="space-y-4">
-      <h2 className="font-heading text-2xl font-bold">Announcements</h2>
-      {items.length === 0 ? (
-        <Card><CardContent className="py-8 text-center text-muted-foreground">No announcements yet.</CardContent></Card>
-      ) : items.map(a => (
-        <Card key={a.id}><CardContent className="pt-6">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-semibold">{a.title}</h3>
-            <span className="text-xs text-muted-foreground">{new Date(a.posted_at).toLocaleDateString()}</span>
-          </div>
-          <p className="text-sm text-foreground/80 whitespace-pre-wrap">{a.body}</p>
-        </CardContent></Card>
-      ))}
     </div>
   );
 };
