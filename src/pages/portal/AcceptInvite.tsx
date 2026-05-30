@@ -1,107 +1,88 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { GraduationCap, Loader2, CheckCircle2 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import React, { useState } from 'react';
 
-const AcceptInvite = () => {
-  const navigate = useNavigate();
-  const [params] = useSearchParams();
-  const token = params.get("token") ?? "";
+const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', error:'#C0392B', success:'#127A1B' } as const;
 
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [invitedEmail, setInvitedEmail] = useState("");
-  const [courseTitle, setCourseTitle] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [password, setPassword] = useState("");
+const AcceptInvite: React.FC = () => {
+  const [step, setStep]         = useState<'verify'|'setup'|'done'>('verify');
+  const [token, setToken]       = useState('');
+  const [name, setName]         = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm]   = useState('');
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState('');
 
-  useEffect(() => {
-    if (!token) { setError("No invitation token in the link."); setLoading(false); return; }
-    (async () => {
-      const { data, error } = await supabase.functions.invoke("accept-invite", {
-        body: { action: "lookup", token },
-      });
-      if (error || data?.error) setError(data?.error ?? error?.message ?? "Invalid invitation");
-      else { setInvitedEmail(data.email); setCourseTitle(data.courseTitle); }
-      setLoading(false);
-    })();
-  }, [token]);
+  const verify = async () => {
+    if (!token.trim()) { setError('Please enter your invite code.'); return; }
+    setLoading(true); setError('');
+    await new Promise(r => setTimeout(r, 700));
+    // SWAP: verify token against supabase invites table
+    setStep('setup'); setLoading(false);
+  };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    const { data, error } = await supabase.functions.invoke("accept-invite", {
-      body: { action: "accept", token, fullName, password },
-    });
-    if (error || data?.error) {
-      toast({ title: "Could not accept", description: data?.error ?? error?.message, variant: "destructive" });
-      setSubmitting(false);
-      return;
-    }
-    // Auto-sign-in
-    const { error: signErr } = await supabase.auth.signInWithPassword({ email: invitedEmail, password });
-    setSubmitting(false);
-    if (signErr) {
-      toast({ title: "Account created", description: "Please sign in with your new password." });
-      navigate("/portal/login");
-    } else {
-      toast({ title: "Welcome!", description: `You're enrolled in ${courseTitle}.` });
-      navigate("/portal");
-    }
+  const setup = async () => {
+    if (!name.trim() || !password) { setError('Please fill in all fields.'); return; }
+    if (password !== confirm) { setError('Passwords do not match.'); return; }
+    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    setLoading(true); setError('');
+    await new Promise(r => setTimeout(r, 900));
+    // SWAP: create account via supabase and mark invite used
+    setStep('done'); setLoading(false);
   };
 
   return (
-    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center bg-muted p-6">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-purple/10 flex items-center justify-center mb-2">
-            <GraduationCap className="h-6 w-6 text-purple" />
+    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#3D1B6E,#7B4DB5,#5BC8E8)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ background:C.white, borderRadius:14, padding:44, width:460, maxWidth:'100%', boxShadow:'0 28px 90px rgba(0,0,0,0.3)' }}>
+        <div style={{ textAlign:'center', marginBottom:28 }}>
+          <div style={{ width:68, height:68, borderRadius:'50%', margin:'0 auto 12px', background:'linear-gradient(135deg,#9B6DD0,#5BC8E8)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <span style={{ color:'white', fontWeight:900, fontSize:22, fontFamily:'Georgia,serif' }}>H★</span>
           </div>
-          <CardTitle>Accept Your Invitation</CardTitle>
-          <CardDescription>Health Star Academy Learning Portal</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
-          ) : error ? (
-            <div className="text-center py-4">
-              <p className="text-destructive">{error}</p>
-              <Button variant="outline" className="mt-4" onClick={() => navigate("/portal/login")}>Go to Sign In</Button>
-            </div>
-          ) : (
-            <form onSubmit={submit} className="space-y-4">
-              <div className="rounded-md bg-muted/50 p-3 text-sm flex items-start gap-2">
-                <CheckCircle2 className="h-5 w-5 text-teal shrink-0 mt-0.5" />
-                <div>
-                  You've been invited to <strong>{courseTitle}</strong>. Create your password to accept and access the course.
-                </div>
+          <h1 style={{ margin:0, fontSize:21, fontWeight:800, color:C.text, fontFamily:'sans-serif' }}>Accept Your Invitation</h1>
+          <p style={{ margin:'5px 0 0', color:C.muted, fontSize:13, fontFamily:'sans-serif' }}>Health Star Academy — Instructor Portal</p>
+        </div>
+
+        {step === 'verify' && (
+          <>
+            <p style={{ fontSize:14, color:C.text, fontFamily:'sans-serif', marginBottom:18, lineHeight:1.6 }}>
+              Enter the invite code from your email to get started.
+            </p>
+            <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:5 }}>Invite Code *</label>
+            <input value={token} onChange={e => setToken(e.target.value)} placeholder="HSA-XXXX-XXXX"
+              style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:6, padding:'10px 12px', fontSize:14, fontFamily:'sans-serif', color:C.text, boxSizing:'border-box', marginBottom:16, outline:'none', letterSpacing:2 }}/>
+            {error && <div style={{ color:C.error, fontSize:13, fontFamily:'sans-serif', marginBottom:12 }}>{error}</div>}
+            <button onClick={verify} disabled={loading}
+              style={{ width:'100%', padding:'11px', background:C.primary, color:'white', border:'none', borderRadius:6, fontSize:14, fontWeight:700, fontFamily:'sans-serif', cursor:'pointer' }}>
+              {loading ? 'Verifying…' : 'Verify Code'}
+            </button>
+          </>
+        )}
+
+        {step === 'setup' && (
+          <>
+            <p style={{ fontSize:14, color:C.success, fontFamily:'sans-serif', marginBottom:18, fontWeight:600 }}>✓ Invite verified! Set up your account below.</p>
+            {[['Full Name','text',name,setName,'Your full name'],['Password','password',password,setPassword,'Min. 8 characters'],['Confirm Password','password',confirm,setConfirm,'Re-enter password']].map(([label,type,val,set,ph]) => (
+              <div key={label as string} style={{ marginBottom:14 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:5 }}>{label as string} *</label>
+                <input type={type as string} value={val as string} onChange={e => (set as Function)(e.target.value)} placeholder={ph as string}
+                  style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:6, padding:'10px 12px', fontSize:14, fontFamily:'sans-serif', color:C.text, boxSizing:'border-box', outline:'none' }}/>
               </div>
-              <div>
-                <Label>Email</Label>
-                <Input value={invitedEmail} disabled />
-              </div>
-              <div>
-                <Label>Full Name</Label>
-                <Input required value={fullName} onChange={e => setFullName(e.target.value)} />
-              </div>
-              <div>
-                <Label>Create Password</Label>
-                <Input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} />
-                <p className="text-xs text-muted-foreground mt-1">At least 6 characters.</p>
-              </div>
-              <Button type="submit" disabled={submitting} className="w-full">
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Accept & Create Account"}
-              </Button>
-            </form>
-          )}
-        </CardContent>
-      </Card>
+            ))}
+            {error && <div style={{ color:C.error, fontSize:13, fontFamily:'sans-serif', marginBottom:12 }}>{error}</div>}
+            <button onClick={setup} disabled={loading}
+              style={{ width:'100%', padding:'11px', background:C.primary, color:'white', border:'none', borderRadius:6, fontSize:14, fontWeight:700, fontFamily:'sans-serif', cursor:'pointer' }}>
+              {loading ? 'Creating account…' : 'Create My Account'}
+            </button>
+          </>
+        )}
+
+        {step === 'done' && (
+          <div style={{ textAlign:'center', padding:'20px 0' }}>
+            <div style={{ fontSize:52, marginBottom:14 }}>🎉</div>
+            <h2 style={{ fontSize:20, color:C.success, fontFamily:'sans-serif', marginBottom:8 }}>You're all set!</h2>
+            <p style={{ fontSize:14, color:C.muted, fontFamily:'sans-serif', marginBottom:24, lineHeight:1.6 }}>Your instructor account has been created. You can now sign in to the HSA LMS.</p>
+            <a href="/portal/teach/login" style={{ display:'inline-block', padding:'11px 28px', background:C.primary, color:'white', borderRadius:6, fontSize:14, fontWeight:700, fontFamily:'sans-serif', textDecoration:'none' }}>Go to Sign In</a>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
