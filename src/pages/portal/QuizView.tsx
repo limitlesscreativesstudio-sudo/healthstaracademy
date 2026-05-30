@@ -1,189 +1,204 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import PortalLayout from "@/components/portal/PortalLayout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ArrowLeft } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { usePortalAuth } from "@/hooks/usePortalAuth";
+import React, { useState } from 'react';
 
-type Quiz = {
-  id: string;
-  course_id: string;
-  title: string;
-  instructions: string;
-  total_points: number;
-  attempts_allowed: number;
-  due_at: string | null;
-};
-type Question = {
-  id: string;
-  position: number;
-  question_type: string;
-  prompt: string;
-  options: any;
-  points: number;
-};
+const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B' } as const;
 
-const QuizView = () => {
-  const { courseId, quizId } = useParams();
-  const { user } = usePortalAuth();
-  const [quiz, setQuiz] = useState<Quiz | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [attempts, setAttempts] = useState<any[]>([]);
-  const [active, setActive] = useState<any>(null);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
-  const [busy, setBusy] = useState(false);
+interface Answer   { id:number; text:string; correct:boolean; }
+interface Question { id:number; question:string; type:'mc'|'tf'|'short'|'essay'; pts:number; answers:Answer[]; }
+interface Quiz     { id:number; name:string; due:string; pts:number; published:boolean; questions:Question[]; }
 
-  const load = async () => {
-    const { data: q } = await supabase.from("quizzes").select("*").eq("id", quizId!).maybeSingle();
-    setQuiz(q as any);
-    // Server-side function returns questions WITHOUT correct_answer
-    const { data: qs } = await supabase.rpc("get_quiz_questions_for_student", { _quiz_id: quizId! });
-    setQuestions((qs ?? []) as any);
-    if (user) {
-      const { data: at } = await supabase
-        .from("quiz_attempts")
-        .select("*")
-        .eq("quiz_id", quizId!)
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      setAttempts(at ?? []);
-    }
-  };
-  useEffect(() => { load(); }, [quizId, user?.id]);
+const mkQuiz = (name:string, due:string): Quiz => ({
+  id:Date.now()+Math.random(), name, due, pts:10, published:true,
+  questions:[
+    { id:1, question:'What does CNA stand for?', type:'mc', pts:2, answers:[
+      { id:1,text:'Certified Nursing Assistant',correct:true},{id:2,text:'Clinical Nursing Associate',correct:false},
+      { id:3,text:'Certified Nursing Aide',correct:false},{id:4,text:'Care Nursing Attendant',correct:false}]},
+    { id:2, question:'A CNA works under the direct supervision of a Registered Nurse.', type:'tf', pts:2, answers:[
+      {id:5,text:'True',correct:true},{id:6,text:'False',correct:false}]},
+    { id:3, question:'Describe the importance of hand hygiene in infection control.', type:'essay', pts:6, answers:[] },
+  ],
+});
 
-  const startAttempt = async () => {
-    if (!user) return;
-    const { data, error } = await supabase
-      .from("quiz_attempts")
-      .insert({ quiz_id: quizId!, user_id: user.id, answers: {} })
-      .select()
-      .single();
-    if (error) return toast({ title: "Error", description: error.message, variant: "destructive" });
-    setActive(data); setAnswers({});
+const INIT_QUIZZES: Quiz[] = [
+  mkQuiz('Day 1 Quiz','Day 1'),
+  mkQuiz('Module 01 Quiz','Day 2'),
+  mkQuiz('Module 02 Quiz','Day 3'),
+  mkQuiz('Module 03 Quiz','Day 4'),
+];
+INIT_QUIZZES.forEach((q,i) => { q.id=i+1; q.pts=10; });
+
+const QuizView: React.FC = () => {
+  const [quizzes, setQuizzes]     = useState<Quiz[]>(INIT_QUIZZES);
+  const [editing, setEditing]     = useState<Quiz|null>(null);
+  const [newQText, setNewQText]   = useState('');
+  const [newQType, setNewQType]   = useState<'mc'|'tf'|'short'|'essay'>('mc');
+  const [newQPts, setNewQPts]     = useState(2);
+  const [newAnswers, setNewAnswers] = useState(['','','','']);
+  const [correctIdx, setCorrectIdx] = useState(0);
+  const [showAddQ, setShowAddQ]   = useState(false);
+  const [createForm, setCreateForm] = useState({ name:'', due:'', pts:10 });
+  const [showCreate, setShowCreate] = useState(false);
+
+  const createQuiz = () => {
+    if (!createForm.name.trim()) return;
+    const q = mkQuiz(createForm.name, createForm.due || 'TBD');
+    q.id = Date.now(); q.pts = createForm.pts; q.questions = [];
+    setQuizzes(prev => [...prev, q]); setShowCreate(false);
+    setCreateForm({ name:'', due:'', pts:10 });
   };
 
-  const submitAttempt = async () => {
-    if (!active || !quiz) return;
-    setBusy(true);
-    // Scoring happens server-side; correct answers never leave the database
-    const { data, error } = await supabase.functions.invoke("submit-quiz-attempt", {
-      body: { attempt_id: active.id, answers },
-    });
-    if (error || (data as any)?.error) {
-      setBusy(false);
-      return toast({ title: "Error", description: (data as any)?.error ?? error?.message, variant: "destructive" });
-    }
-    const { score, max_score } = data as { score: number; max_score: number };
-    setBusy(false);
-    toast({ title: `Submitted — ${score}/${max_score}` });
-    setActive(null); setAnswers({});
-    load();
+  const addQuestion = () => {
+    if (!editing || !newQText.trim()) return;
+    const answers: Answer[] = newQType === 'mc' ? newAnswers.filter(a => a.trim()).map((t,i) => ({ id:Date.now()+i, text:t, correct:i===correctIdx }))
+      : newQType === 'tf' ? [{id:1,text:'True',correct:true},{id:2,text:'False',correct:false}] : [];
+    const q: Question = { id:Date.now(), question:newQText, type:newQType, pts:newQPts, answers };
+    setEditing(prev => prev ? { ...prev, questions:[...prev.questions, q], pts:prev.pts+newQPts } : null);
+    setNewQText(''); setNewAnswers(['','','','']); setCorrectIdx(0); setShowAddQ(false);
   };
 
-  if (!quiz) return <PortalLayout><div className="p-6">Loading…</div></PortalLayout>;
+  const deleteQ = (qid:number) => setEditing(prev => prev ? { ...prev, questions:prev.questions.filter(q => q.id!==qid) } : null);
 
-  const completed = attempts.filter(a => a.submitted_at);
-  const canAttempt = completed.length < quiz.attempts_allowed;
+  const saveQuiz = () => {
+    if (!editing) return;
+    setQuizzes(prev => prev.map(q => q.id===editing.id ? editing : q)); setEditing(null);
+  };
 
-  if (active) {
+  const togglePub = (id:number) => setQuizzes(prev => prev.map(q => q.id===id ? { ...q, published:!q.published } : q));
+  const deleteQuiz = (id:number) => setQuizzes(prev => prev.filter(q => q.id!==id));
+
+  if (editing) {
     return (
-      <PortalLayout>
-        <div className="p-6 max-w-3xl mx-auto">
-          <h1 className="font-heading text-2xl font-bold mb-1">{quiz.title}</h1>
-          <p className="text-sm text-muted-foreground mb-6">Answer all questions, then submit.</p>
-          <div className="space-y-4">
-            {questions.map((q, i) => (
-              <Card key={q.id}>
-                <CardContent className="pt-5 space-y-3">
-                  <div className="text-xs text-muted-foreground">Q{i + 1} · {q.points} pt{q.points === 1 ? "" : "s"}</div>
-                  <div className="font-medium whitespace-pre-wrap">{q.prompt}</div>
-                  {q.question_type === "multiple_choice" && Array.isArray(q.options) && (
-                    <div className="space-y-1">
-                      {q.options.map((opt: string, idx: number) => (
-                        <label key={idx} className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-muted/40">
-                          <input
-                            type="radio"
-                            name={q.id}
-                            checked={Number(answers[q.id]) === idx}
-                            onChange={() => setAnswers({ ...answers, [q.id]: idx })}
-                          />
-                          <span>{opt}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                  {q.question_type === "true_false" && (
-                    <div className="space-y-1">
-                      {[true, false].map(val => (
-                        <label key={String(val)} className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-muted/40">
-                          <input
-                            type="radio"
-                            name={q.id}
-                            checked={answers[q.id] === val}
-                            onChange={() => setAnswers({ ...answers, [q.id]: val })}
-                          />
-                          <span>{val ? "True" : "False"}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                  {q.question_type === "short_answer" && (
-                    <Input value={answers[q.id] ?? ""} onChange={e => setAnswers({ ...answers, [q.id]: e.target.value })} />
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-            <Button onClick={submitAttempt} disabled={busy} className="w-full">
-              {busy ? "Submitting…" : "Submit Quiz"}
-            </Button>
+      <div style={{ padding:24 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+          <h2 style={{ margin:0, fontSize:18, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>{editing.name}</h2>
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={() => setEditing(null)} style={{ padding:'7px 16px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
+            <button onClick={saveQuiz} style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Save Quiz</button>
           </div>
         </div>
-      </PortalLayout>
+
+        {editing.questions.map((q,qi) => (
+          <div key={q.id} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:18, marginBottom:12 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+              <div style={{ flex:1 }}>
+                <div style={{ display:'flex', gap:8, marginBottom:6 }}>
+                  <span style={{ fontSize:12, fontWeight:700, color:C.muted, fontFamily:'sans-serif' }}>Q{qi+1}</span>
+                  <span style={{ fontSize:11, padding:'2px 8px', borderRadius:20, background:'#EDE8F7', color:C.primary, fontFamily:'sans-serif' }}>
+                    {q.type==='mc'?'Multiple Choice':q.type==='tf'?'True/False':q.type==='essay'?'Essay':'Short Answer'} • {q.pts} pts
+                  </span>
+                </div>
+                <p style={{ margin:'0 0 10px', fontSize:14, color:C.text, fontFamily:'sans-serif' }}>{q.question}</p>
+                {q.answers.map(a => (
+                  <div key={a.id} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+                    <div style={{ width:16, height:16, borderRadius:'50%', border:`2px solid ${a.correct?C.success:C.border}`, background:a.correct?C.success:'transparent', flexShrink:0 }}/>
+                    <span style={{ fontSize:13, color:a.correct?C.success:C.text, fontFamily:'sans-serif', fontWeight:a.correct?600:400 }}>{a.text}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => deleteQ(q.id)} style={{ background:'none', border:'none', cursor:'pointer', color:C.error, fontSize:16, padding:4 }}>✕</button>
+            </div>
+          </div>
+        ))}
+
+        {showAddQ ? (
+          <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:6, padding:20 }}>
+            <h3 style={{ margin:'0 0 14px', fontSize:14, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Add Question</h3>
+            <div style={{ display:'flex', gap:12, marginBottom:12 }}>
+              <div style={{ flex:1 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Type</label>
+                <select value={newQType} onChange={e => setNewQType(e.target.value as any)}
+                  style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:4, padding:'7px 8px', fontSize:13, fontFamily:'sans-serif' }}>
+                  <option value="mc">Multiple Choice</option><option value="tf">True / False</option>
+                  <option value="short">Short Answer</option><option value="essay">Essay</option>
+                </select>
+              </div>
+              <div style={{ width:80 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Points</label>
+                <input type="number" value={newQPts} onChange={e => setNewQPts(parseInt(e.target.value)||1)}
+                  style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:4, padding:'7px 8px', fontSize:13, fontFamily:'sans-serif', outline:'none' }}/>
+              </div>
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Question *</label>
+              <textarea value={newQText} onChange={e => setNewQText(e.target.value)} rows={2}
+                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', resize:'vertical', boxSizing:'border-box', outline:'none' }}/>
+            </div>
+            {newQType === 'mc' && (
+              <div style={{ marginBottom:14 }}>
+                <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:6 }}>Choices <span style={{ color:C.muted, fontWeight:400 }}>(select correct)</span></label>
+                {newAnswers.map((a,i) => (
+                  <div key={i} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+                    <input type="radio" name="correct" checked={correctIdx===i} onChange={() => setCorrectIdx(i)} style={{ accentColor:C.primary }}/>
+                    <input value={a} onChange={e => setNewAnswers(p => p.map((x,j) => j===i ? e.target.value : x))} placeholder={`Choice ${i+1}`}
+                      style={{ flex:1, border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 9px', fontSize:13, fontFamily:'sans-serif', outline:'none' }}/>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={addQuestion} style={{ padding:'7px 18px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Add Question</button>
+              <button onClick={() => setShowAddQ(false)} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <button onClick={() => setShowAddQ(true)}
+            style={{ width:'100%', padding:'11px', border:`2px dashed ${C.border}`, borderRadius:6, background:'transparent', color:C.primary, fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
+            + Add Question
+          </button>
+        )}
+      </div>
     );
   }
 
   return (
-    <PortalLayout>
-      <div className="p-6 max-w-3xl mx-auto">
-        <Link to={`/portal/courses/${courseId}/modules`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline mb-4">
-          <ArrowLeft className="h-4 w-4" /> Back to course
-        </Link>
-        <h1 className="font-heading text-3xl font-bold mb-1">{quiz.title}</h1>
-        <div className="text-sm text-muted-foreground mb-4">
-          {quiz.total_points} pts · {questions.length} questions · {completed.length}/{quiz.attempts_allowed} attempts used
-        </div>
-
-        {quiz.instructions && (
-          <Card className="mb-4"><CardContent className="pt-5 whitespace-pre-wrap text-sm">{quiz.instructions}</CardContent></Card>
-        )}
-
-        {completed.length > 0 && (
-          <Card className="mb-4">
-            <CardContent className="pt-5">
-              <h3 className="font-semibold mb-2">Previous attempts</h3>
-              {completed.map(a => (
-                <div key={a.id} className="flex justify-between py-2 border-b border-border last:border-0 text-sm">
-                  <span>{new Date(a.submitted_at).toLocaleString()}</span>
-                  <span className="font-medium">{a.score}/{a.max_score}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {canAttempt ? (
-          <Button onClick={startAttempt} disabled={questions.length === 0}>
-            {completed.length === 0 ? "Start Quiz" : "Start New Attempt"}
-          </Button>
-        ) : (
-          <p className="text-sm text-muted-foreground">No attempts remaining.</p>
-        )}
+    <div style={{ padding:24 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Quizzes</h2>
+        <button onClick={() => setShowCreate(!showCreate)} style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>+ New Quiz</button>
       </div>
-    </PortalLayout>
+      {showCreate && (
+        <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:6, padding:20, marginBottom:16 }}>
+          <h3 style={{ margin:'0 0 14px', fontSize:14, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>New Quiz</h3>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 100px', gap:12 }}>
+            <div>
+              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Quiz Name *</label>
+              <input value={createForm.name} onChange={e => setCreateForm(p => ({ ...p, name:e.target.value }))}
+                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 9px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', outline:'none' }}/>
+            </div>
+            <div>
+              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Due</label>
+              <input value={createForm.due} onChange={e => setCreateForm(p => ({ ...p, due:e.target.value }))} placeholder="e.g. Day 5"
+                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 9px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', outline:'none' }}/>
+            </div>
+            <div>
+              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Points</label>
+              <input type="number" value={createForm.pts} onChange={e => setCreateForm(p => ({ ...p, pts:parseInt(e.target.value)||10 })}
+                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 9px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', outline:'none' }}/>
+            </div>
+          </div>
+          <div style={{ display:'flex', gap:8, marginTop:12 }}>
+            <button onClick={createQuiz} style={{ padding:'7px 18px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Create</button>
+            <button onClick={() => setShowCreate(false)} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
+          </div>
+        </div>
+      )}
+      <div style={{ display:'grid', gap:12 }}>
+        {quizzes.map(q => (
+          <div key={q.id} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:'14px 18px', display:'flex', alignItems:'center', gap:14 }}>
+            <span style={{ fontSize:22 }}>❓</span>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:14, fontWeight:600, color:C.primary, fontFamily:'sans-serif', marginBottom:3 }}>{q.name}</div>
+              <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>Due: {q.due} • {q.questions.length} questions • {q.pts} pts</div>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <span style={{ fontSize:11, padding:'2px 10px', borderRadius:20, background:q.published?'#e8f5e9':'#f5f3fa', color:q.published?C.success:C.muted, fontFamily:'sans-serif', cursor:'pointer' }}
+                onClick={() => togglePub(q.id)}>{q.published?'● Published':'○ Unpublished'}</span>
+              <button onClick={() => setEditing(q)} style={{ padding:'5px 12px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>Edit</button>
+              <button onClick={() => deleteQuiz(q.id)} style={{ padding:'5px 10px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer', color:C.error }}>✕</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
