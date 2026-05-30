@@ -1,169 +1,101 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { usePortalAuth } from "@/hooks/usePortalAuth";
-import PortalLayout from "@/components/portal/PortalLayout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Briefcase, Award, Calendar, Building2, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import React, { useState } from 'react';
 
-type JobRow = {
-  id: string; stage: string; state_exam_date: string | null;
-  state_exam_location: string | null; state_exam_result: string | null;
-  certification_number: string | null; certification_date: string | null;
-  certification_expires: string | null; job_search_status: string | null;
-  employer_name: string | null; employer_city: string | null;
-  hire_date: string | null; hourly_wage: number | null;
-  shift_type: string | null; job_title: string | null;
-};
+const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B' } as const;
 
-const STAGES: { key: string; label: string }[] = [
-  { key: "scheduled_exam", label: "Exam Scheduled" },
-  { key: "passed_exam", label: "Passed Exam" },
-  { key: "certified", label: "CDPH Certified" },
-  { key: "applying", label: "Applying" },
-  { key: "interviewing", label: "Interviewing" },
-  { key: "offer", label: "Job Offer" },
-  { key: "hired", label: "Hired" },
+const JOBS = [
+  { id:1, title:'Certified Nursing Assistant', org:'Cedars-Sinai Medical Center', location:'Los Angeles, CA', type:'Full-Time', wage:'$20–$26/hr', posted:'May 27, 2026', tags:['Hospital','Benefits','Union'] },
+  { id:2, title:'CNA – Night Shift', org:'Kaiser Permanente', location:'Pasadena, CA', type:'Part-Time', wage:'$19–$24/hr', posted:'May 25, 2026', tags:['Hospital','Nights','Premium Pay'] },
+  { id:3, title:'Home Health Aide / CNA', org:'BrightSpring Health Services', location:'Various – LA County', type:'Per Diem', wage:'$18–$22/hr', posted:'May 22, 2026', tags:['Home Health','Flexible Hours'] },
+  { id:4, title:'CNA – Memory Care Unit', org:'Sunrise Senior Living', location:'Torrance, CA', type:'Full-Time', wage:'$21–$25/hr', posted:'May 20, 2026', tags:['SNF','Dementia Care','Benefits'] },
+  { id:5, title:'Restorative CNA', org:'Beverly Hills Rehabilitation Centre', location:'Beverly Hills, CA', type:'Full-Time', wage:'$23–$28/hr', posted:'May 18, 2026', tags:['Rehab','Restorative','Benefits'] },
 ];
 
-const CareerPortal = () => {
-  const { user, loading: authLoading } = usePortalAuth();
-  const [row, setRow] = useState<JobRow | null>(null);
-  const [loading, setLoading] = useState(true);
+const RESOURCES = [
+  { icon:'📋', title:'Resume Builder', desc:'Build a CNA-specific resume using our guided template.', action:'Open Builder' },
+  { icon:'🎓', title:'CDPH License Lookup', desc:'Verify your CNA certification status on the CDPH registry.', action:'Open CDPH Site' },
+  { icon:'💼', title:'Interview Prep', desc:'Common CNA interview questions with sample answers.', action:'View Guide' },
+  { icon:'📚', title:'Continuing Education', desc:'Find CEU courses to maintain and advance your certification.', action:'Browse CEUs' },
+  { icon:'💰', title:'Salary Comparison', desc:'Compare CNA wages by facility type and region in California.', action:'View Data' },
+];
 
-  useEffect(() => {
-    if (!user) return;
-    supabase.from("job_pipeline").select("*").eq("portal_user_id", user.id)
-      .order("updated_at", { ascending: false }).limit(1).maybeSingle()
-      .then(({ data }) => { setRow(data as JobRow | null); setLoading(false); });
-  }, [user]);
+const CareerPortal: React.FC = () => {
+  const [tab, setTab] = useState<'jobs'|'resources'>('jobs');
+  const [filter, setFilter] = useState('All');
 
-  if (authLoading || loading) {
-    return <PortalLayout><div className="p-6">Loading…</div></PortalLayout>;
-  }
-
-  const stageIdx = row ? STAGES.findIndex(s => s.key === row.stage) : -1;
-  const certExp = row?.certification_expires ? new Date(row.certification_expires) : null;
-  const daysToExp = certExp ? Math.ceil((certExp.getTime() - Date.now()) / 86400000) : null;
-  const expWarn = daysToExp !== null && daysToExp <= 90 && daysToExp >= 0;
-  const expired = daysToExp !== null && daysToExp < 0;
+  const types = ['All','Full-Time','Part-Time','Per Diem'];
+  const filtered = JOBS.filter(j => filter === 'All' || j.type === filter);
 
   return (
-    <PortalLayout>
-      <div className="px-6 py-6 max-w-4xl mx-auto">
-        <div className="flex items-center gap-2 mb-2">
-          <Briefcase className="h-6 w-6 text-purple" />
-          <h1 className="font-heading text-3xl font-bold">Career Portal</h1>
-        </div>
-        <p className="text-sm text-muted-foreground mb-6">
-          Track your state exam, CDPH certification, and job placement progress.
-        </p>
-
-        {!row ? (
-          <Card><CardContent className="py-10 text-center text-muted-foreground text-sm">
-            Your career record will appear here after you complete the program and your instructor schedules your state exam.
-          </CardContent></Card>
-        ) : (
-          <div className="space-y-6">
-            {/* Pipeline visualization */}
-            <Card><CardContent className="pt-6">
-              <div className="text-xs uppercase tracking-wide text-muted-foreground font-semibold mb-3">Your Pipeline</div>
-              <div className="flex items-center justify-between gap-1 overflow-x-auto pb-2">
-                {STAGES.map((s, i) => {
-                  const done = stageIdx >= 0 && i <= stageIdx;
-                  const current = i === stageIdx;
-                  return (
-                    <div key={s.key} className="flex-1 min-w-[80px] flex flex-col items-center text-center">
-                      <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                        done ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground"
-                      } ${current ? "ring-2 ring-purple ring-offset-2" : ""}`}>
-                        {done ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
-                      </div>
-                      <div className={`text-[10px] mt-1 ${current ? "font-bold text-purple" : "text-muted-foreground"}`}>
-                        {s.label}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent></Card>
-
-            {/* Exam */}
-            <Card><CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Calendar className="h-5 w-5 text-purple" />
-                <h3 className="font-semibold">State Exam</h3>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                <Stat label="Date" value={row.state_exam_date ? new Date(row.state_exam_date).toLocaleDateString() : "—"} />
-                <Stat label="Location" value={row.state_exam_location || "—"} />
-                <Stat label="Result" value={row.state_exam_result || "Pending"} />
-              </div>
-            </CardContent></Card>
-
-            {/* Certification */}
-            <Card><CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Award className="h-5 w-5 text-purple" />
-                <h3 className="font-semibold">CDPH Certification</h3>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                <Stat label="Cert #" value={row.certification_number || "—"} />
-                <Stat label="Issued" value={row.certification_date ? new Date(row.certification_date).toLocaleDateString() : "—"} />
-                <Stat label="Expires" value={certExp ? certExp.toLocaleDateString() : "—"} />
-              </div>
-              {expired && (
-                <div className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-md flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
-                  <div className="text-sm text-rose-900">
-                    <strong>Certification expired.</strong> Renewal is required to continue working as a CNA.
-                  </div>
-                </div>
-              )}
-              {expWarn && (
-                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-2">
-                  <Clock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                  <div className="text-sm text-amber-900">
-                    <strong>Renewal coming up.</strong> Your certification expires in {daysToExp} days. Submit renewal paperwork to CDPH.
-                  </div>
-                </div>
-              )}
-            </CardContent></Card>
-
-            {/* Employment */}
-            <Card><CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Building2 className="h-5 w-5 text-purple" />
-                <h3 className="font-semibold">Employment</h3>
-              </div>
-              {row.employer_name ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  <Stat label="Employer" value={row.employer_name} />
-                  <Stat label="City" value={row.employer_city || "—"} />
-                  <Stat label="Title" value={row.job_title || "CNA"} />
-                  <Stat label="Shift" value={row.shift_type || "—"} />
-                  <Stat label="Hired" value={row.hire_date ? new Date(row.hire_date).toLocaleDateString() : "—"} />
-                  <Stat label="Wage" value={row.hourly_wage ? `$${row.hourly_wage}/hr` : "—"} />
-                </div>
-              ) : (
-                <div className="text-sm text-muted-foreground">
-                  Status: <Badge variant="secondary">{row.job_search_status?.replace(/_/g, " ") || "not started"}</Badge>
-                  <p className="mt-2">Once you land a position, your employer info will appear here.</p>
-                </div>
-              )}
-            </CardContent></Card>
-          </div>
-        )}
+    <div style={{ padding:24 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Career Portal</h2>
+        <span style={{ fontSize:13, color:C.muted, fontFamily:'sans-serif' }}>Help your students land their first CNA role</span>
       </div>
-    </PortalLayout>
+
+      {/* Tabs */}
+      <div style={{ display:'flex', gap:0, border:`1px solid ${C.border}`, borderRadius:6, overflow:'hidden', marginBottom:20, width:'fit-content' }}>
+        {([['jobs','💼 Job Board'],['resources','📚 Resources']] as const).map(([k,l]) => (
+          <button key={k} onClick={() => setTab(k)}
+            style={{ padding:'9px 22px', border:'none', cursor:'pointer', background:tab === k ? C.primary : C.white, color:tab === k ? 'white' : C.text, fontSize:13, fontFamily:'sans-serif', fontWeight:tab === k ? 600 : 400 }}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'jobs' && (
+        <>
+          <div style={{ display:'flex', gap:6, marginBottom:16 }}>
+            {types.map(t => (
+              <button key={t} onClick={() => setFilter(t)}
+                style={{ padding:'5px 14px', border:`1px solid ${filter === t ? C.primary : C.border}`, borderRadius:20, background:filter === t ? C.primary : C.white, color:filter === t ? 'white' : C.text, fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>
+                {t}
+              </button>
+            ))}
+          </div>
+          <div style={{ display:'grid', gap:14 }}>
+            {filtered.map(job => (
+              <div key={job.id} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, padding:20, boxShadow:'0 1px 3px rgba(0,0,0,0.06)' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 14px rgba(61,27,110,0.13)'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+                  <div style={{ flex:1 }}>
+                    <h3 style={{ margin:'0 0 4px', fontSize:15, fontWeight:700, color:C.primary, fontFamily:'sans-serif' }}>{job.title}</h3>
+                    <div style={{ fontSize:13, color:C.text, fontFamily:'sans-serif', marginBottom:6 }}>{job.org} • {job.location}</div>
+                    <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                      {job.tags.map(t => (
+                        <span key={t} style={{ fontSize:11, padding:'2px 8px', borderRadius:20, background:'#EDE8F7', color:C.primary, fontFamily:'sans-serif', fontWeight:600 }}>{t}</span>
+                      ))}
+                      <span style={{ fontSize:11, padding:'2px 8px', borderRadius:20, background:'#e8f5e9', color:C.success, fontFamily:'sans-serif', fontWeight:600 }}>{job.type}</span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign:'right', flexShrink:0, marginLeft:16 }}>
+                    <div style={{ fontSize:16, fontWeight:700, color:C.success, fontFamily:'sans-serif', marginBottom:4 }}>{job.wage}</div>
+                    <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif', marginBottom:10 }}>Posted {job.posted}</div>
+                    <button style={{ padding:'7px 18px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>Share with Students</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {tab === 'resources' && (
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16 }}>
+          {RESOURCES.map(r => (
+            <div key={r.title} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, padding:22 }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 14px rgba(61,27,110,0.13)'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = 'none'}>
+              <div style={{ fontSize:30, marginBottom:12 }}>{r.icon}</div>
+              <h3 style={{ margin:'0 0 8px', fontSize:15, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>{r.title}</h3>
+              <p style={{ margin:'0 0 16px', fontSize:13, color:C.muted, fontFamily:'sans-serif', lineHeight:1.6 }}>{r.desc}</p>
+              <button style={{ padding:'7px 16px', border:`1px solid ${C.primary}`, borderRadius:5, background:C.white, color:C.primary, fontSize:12, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>{r.action} →</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
-
-const Stat = ({ label, value }: { label: string; value: string }) => (
-  <div>
-    <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">{label}</div>
-    <div className="text-sm font-medium mt-0.5">{value}</div>
-  </div>
-);
 
 export default CareerPortal;
