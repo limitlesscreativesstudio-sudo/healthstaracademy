@@ -1,229 +1,200 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { usePortalAuth } from "@/hooks/usePortalAuth";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/hooks/use-toast";
-import { ClipboardCheck, MapPin, LogIn, LogOut } from "lucide-react";
+import React, { useState } from 'react';
 
-type Att = {
-  id: string; student_user_id: string; course_id: string; clinical_site: string;
-  shift_date: string; clock_in_at: string | null; clock_out_at: string | null;
-  hours_worked: number | null; verified: boolean;
-  clock_in_lat: number | null; clock_in_lng: number | null;
+const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
+
+const STUDENTS = [
+  'Aaliyah Johnson','Carlos Martinez','Destiny Williams','Emmanuel Okafor',
+  'Fatima Hassan','Gloria Chen','Henry Brown','Isabella Reyes',
+  'James Nakamura','Keisha Thompson','Luis Hernandez','Maria Santos',
+];
+
+const COHORTS = [
+  'Health Star Academy Hybrid Day NATP (2026-1) 1/26/2026–3/9/2026',
+  'Health Star Academy Hybrid Day NATP (2026-2) 3/16/2026–4/7/2026',
+  'Health Star Academy Hybrid Day NATP (2025-4) 10/13/2025–11/25/2025',
+];
+
+const DAYS_OF_WEEK = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+// Build a list of the course session days (Mon–Fri)
+const buildDates = () => {
+  const dates: Date[] = [];
+  const start = new Date(2026, 0, 26); // Jan 26 2026
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    if (d.getDay() !== 0 && d.getDay() !== 6) dates.push(d);
+    if (dates.length >= 10) break;
+  }
+  return dates;
 };
+const SESSION_DATES = buildDates();
 
-const SITES = ["Stockton", "Lodi", "Hayward"];
+const fmt = (d: Date) => `${DAYS_OF_WEEK[d.getDay()]} ${d.toLocaleString('default',{month:'short'}).toUpperCase()} ${String(d.getDate()).padStart(2,'0')}`;
+const fmtLong = (d: Date) => d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
 
-const getCoords = (): Promise<{ lat: number; lng: number } | null> =>
-  new Promise((resolve) => {
-    if (!navigator.geolocation) return resolve(null);
-    navigator.geolocation.getCurrentPosition(
-      (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
-      () => resolve(null),
-      { timeout: 5000 }
-    );
+type ViewMode = 'list' | 'class';
+
+const AttendanceTab: React.FC = () => {
+  const [cohort, setCohort]     = useState(COHORTS[0]);
+  const [dateIdx, setDateIdx]   = useState(0);
+  const [mode, setMode]         = useState<ViewMode>('list');
+  const [present, setPresent]   = useState<Record<string, Record<number, boolean>>>(() => {
+    const p: Record<string, Record<number, boolean>> = {};
+    STUDENTS.forEach(s => { p[s] = {}; SESSION_DATES.forEach((_, i) => { p[s][i] = Math.random() > 0.12; }); });
+    return p;
   });
+  const [showCal, setShowCal]   = useState(false);
 
-const AttendanceTab = ({ courseId, isInstructor }: { courseId: string; isInstructor: boolean }) => {
-  const { user } = usePortalAuth();
+  const currentDate = SESSION_DATES[dateIdx];
+  const markAllPresent = () => setPresent(p => ({ ...p, ...Object.fromEntries(STUDENTS.map(s => [s, { ...p[s], [dateIdx]: true }])) }));
+  const unmarkAll      = () => setPresent(p => ({ ...p, ...Object.fromEntries(STUDENTS.map(s => [s, { ...p[s], [dateIdx]: false }])) }));
+  const toggleStudent  = (s: string) => setPresent(p => ({ ...p, [s]: { ...p[s], [dateIdx]: !p[s][dateIdx] } }));
+
+  const presentCount = STUDENTS.filter(s => present[s]?.[dateIdx]).length;
+  const absentCount  = STUDENTS.length - presentCount;
+  const overallRate  = (s: string) => {
+    const total = SESSION_DATES.length;
+    const done  = SESSION_DATES.reduce((n, _, i) => n + (present[s]?.[i] ? 1 : 0), 0);
+    return Math.round((done / total) * 100);
+  };
+
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-4">
-        <ClipboardCheck className="h-6 w-6 text-purple" />
-        <h2 className="font-heading text-2xl font-bold">Attendance</h2>
+    <div style={{ padding:0 }}>
+      {/* Roll Call header bar */}
+      <div style={{ background:'#4a4a4a', color:'white', padding:'10px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <h2 style={{ margin:0, fontSize:18, fontWeight:700, fontFamily:'sans-serif' }}>Roll Call</h2>
+        <div style={{ display:'flex', gap:4 }}>
+          {(['list','class'] as ViewMode[]).map(m => (
+            <button key={m} onClick={() => setMode(m)}
+              style={{ padding:'5px 16px', border:'none', cursor:'pointer', fontFamily:'sans-serif', fontSize:12, fontWeight:600, background:mode===m?'#6c6c6c':'transparent', color:'white', borderRadius:4, textTransform:'uppercase' }}>
+              {m === 'list' ? '☰ LIST' : '⊞ CLASS'}
+            </button>
+          ))}
+        </div>
       </div>
-      {isInstructor
-        ? <InstructorAttendance courseId={courseId} />
-        : <StudentAttendance courseId={courseId} userId={user?.id ?? ""} />}
-    </div>
-  );
-};
 
-const StudentAttendance = ({ courseId, userId }: { courseId: string; userId: string }) => {
-  const [records, setRecords] = useState<Att[]>([]);
-  const [site, setSite] = useState(SITES[0]);
-  const [busy, setBusy] = useState(false);
+      <div style={{ padding:'16px 20px' }}>
+        {/* Cohort selector */}
+        <select value={cohort} onChange={e => setCohort(e.target.value)}
+          style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 12px', fontSize:13, fontFamily:'sans-serif', marginBottom:14, color:C.text, background:C.white, cursor:'pointer' }}>
+          {COHORTS.map(c => <option key={c}>{c}</option>)}
+        </select>
 
-  const reload = async () => {
-    const { data } = await supabase.from("clinical_attendance")
-      .select("*").eq("student_user_id", userId).eq("course_id", courseId)
-      .order("shift_date", { ascending: false }).limit(50);
-    setRecords((data ?? []) as Att[]);
-  };
-  useEffect(() => { if (userId) reload(); }, [userId, courseId]);
-
-  const open = records.find(r => r.clock_in_at && !r.clock_out_at);
-  const totalHours = records.reduce((a, r) => a + Number(r.hours_worked ?? 0), 0);
-
-  const clockIn = async () => {
-    setBusy(true);
-    const coords = await getCoords();
-    const { error } = await supabase.from("clinical_attendance").insert({
-      student_user_id: userId, course_id: courseId, clinical_site: site,
-      clock_in_at: new Date().toISOString(),
-      clock_in_lat: coords?.lat ?? null, clock_in_lng: coords?.lng ?? null,
-    });
-    setBusy(false);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Clocked in", description: site }); reload(); }
-  };
-
-  const clockOut = async () => {
-    if (!open) return;
-    setBusy(true);
-    const coords = await getCoords();
-    const out = new Date();
-    const hrs = open.clock_in_at
-      ? Math.max(0, (out.getTime() - new Date(open.clock_in_at).getTime()) / 3600000)
-      : 0;
-    const { error } = await supabase.from("clinical_attendance").update({
-      clock_out_at: out.toISOString(),
-      clock_out_lat: coords?.lat ?? null, clock_out_lng: coords?.lng ?? null,
-      hours_worked: Number(hrs.toFixed(2)),
-    }).eq("id", open.id);
-    setBusy(false);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Clocked out", description: `${hrs.toFixed(2)} hrs` }); reload(); }
-  };
-
-  return (
-    <div className="space-y-6">
-      <Card><CardContent className="pt-6 space-y-4">
-        <div className="text-sm font-semibold">Clock In / Out</div>
-        {open ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm">
-              <Badge variant="secondary" className="bg-emerald-100 text-emerald-900">On shift</Badge>
-              <span>{open.clinical_site} · Since {new Date(open.clock_in_at!).toLocaleTimeString()}</span>
-            </div>
-            <Button onClick={clockOut} disabled={busy} variant="destructive">
-              <LogOut className="h-4 w-4" /> Clock Out
-            </Button>
+        {/* Date navigation */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <button onClick={markAllPresent}
+              style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', border:'1px solid #aaa', borderRadius:4, background:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
+              <span style={{ color:C.success, fontSize:14 }}>✓</span> MARK ALL PRESENT
+            </button>
+            <button onClick={unmarkAll}
+              style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', border:'1px solid #aaa', borderRadius:4, background:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
+              <span style={{ color:C.muted, fontSize:14 }}>↩</span> UNMARK ALL
+            </button>
           </div>
-        ) : (
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
-            <div className="flex-1">
-              <Select value={site} onValueChange={setSite}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{SITES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-              </Select>
+
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <button onClick={() => setDateIdx(i => Math.max(0, i-1))} disabled={dateIdx === 0}
+              style={{ padding:'5px 10px', border:'1px solid #ccc', borderRadius:4, background:'white', cursor:'pointer', fontSize:16, opacity:dateIdx===0?0.4:1 }}>‹</button>
+            <div style={{ fontSize:14, fontWeight:700, fontFamily:'sans-serif', color:C.text, minWidth:180, textAlign:'center' }}>
+              {currentDate ? fmt(currentDate) : '—'}
             </div>
-            <Button onClick={clockIn} disabled={busy}>
-              <LogIn className="h-4 w-4" /> Clock In
-            </Button>
+            <button onClick={() => setDateIdx(i => Math.min(SESSION_DATES.length - 1, i+1))} disabled={dateIdx === SESSION_DATES.length - 1}
+              style={{ padding:'5px 10px', border:'1px solid #ccc', borderRadius:4, background:'white', cursor:'pointer', fontSize:16, opacity:dateIdx===SESSION_DATES.length-1?0.4:1 }}>›</button>
+            <button onClick={() => setShowCal(!showCal)} title="Jump to date"
+              style={{ padding:'5px 10px', border:'1px solid #ccc', borderRadius:4, background:'white', cursor:'pointer', fontSize:16 }}>📅</button>
+          </div>
+        </div>
+
+        {/* Calendar jump popup */}
+        {showCal && (
+          <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:12, marginBottom:14, display:'flex', gap:8, flexWrap:'wrap' }}>
+            {SESSION_DATES.map((d, i) => (
+              <button key={i} onClick={() => { setDateIdx(i); setShowCal(false); }}
+                style={{ padding:'5px 10px', border:`1px solid ${i===dateIdx?C.primary:C.border}`, borderRadius:4, background:i===dateIdx?C.primary:'white', color:i===dateIdx?'white':C.text, fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>
+                {fmt(d)}
+              </button>
+            ))}
           </div>
         )}
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <MapPin className="h-3 w-3" /> Location is captured for verification.
-        </p>
-      </CardContent></Card>
 
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold text-sm">Recent Shifts</h3>
-          <span className="text-xs text-muted-foreground">Total: {totalHours.toFixed(2)} hrs</span>
+        {/* Stats bar */}
+        <div style={{ display:'flex', gap:14, marginBottom:16 }}>
+          <div style={{ background:'#e8f5e9', border:'1px solid #c8e6c9', borderRadius:6, padding:'8px 16px', display:'flex', alignItems:'center', gap:8 }}>
+            <span style={{ fontSize:18, color:C.success }}>✓</span>
+            <div>
+              <div style={{ fontSize:18, fontWeight:700, color:C.success, fontFamily:'sans-serif' }}>{presentCount}</div>
+              <div style={{ fontSize:11, color:C.success, fontFamily:'sans-serif' }}>Present</div>
+            </div>
+          </div>
+          <div style={{ background:'#fdecea', border:'1px solid #f5c6c2', borderRadius:6, padding:'8px 16px', display:'flex', alignItems:'center', gap:8 }}>
+            <span style={{ fontSize:18, color:C.error }}>✗</span>
+            <div>
+              <div style={{ fontSize:18, fontWeight:700, color:C.error, fontFamily:'sans-serif' }}>{absentCount}</div>
+              <div style={{ fontSize:11, color:C.error, fontFamily:'sans-serif' }}>Absent</div>
+            </div>
+          </div>
+          <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:6, padding:'8px 16px' }}>
+            <div style={{ fontSize:13, color:C.muted, fontFamily:'sans-serif' }}>
+              {currentDate ? fmtLong(currentDate) : ''} &nbsp;•&nbsp; {presentCount} of {STUDENTS.length} present
+            </div>
+          </div>
         </div>
-        <Card><CardContent className="p-0">
-          {records.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground text-sm">No shifts yet.</div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
-                <tr><th className="text-left px-4 py-2">Date</th><th className="text-left px-4 py-2">Site</th>
-                  <th className="text-left px-4 py-2">In</th><th className="text-left px-4 py-2">Out</th>
-                  <th className="text-left px-4 py-2">Hours</th><th className="text-left px-4 py-2">Status</th></tr>
-              </thead>
-              <tbody>
-                {records.map(r => (
-                  <tr key={r.id} className="border-t border-border">
-                    <td className="px-4 py-2">{new Date(r.shift_date).toLocaleDateString()}</td>
-                    <td className="px-4 py-2">{r.clinical_site}</td>
-                    <td className="px-4 py-2">{r.clock_in_at ? new Date(r.clock_in_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</td>
-                    <td className="px-4 py-2">{r.clock_out_at ? new Date(r.clock_out_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</td>
-                    <td className="px-4 py-2">{r.hours_worked ? Number(r.hours_worked).toFixed(2) : "—"}</td>
-                    <td className="px-4 py-2">
-                      {r.verified
-                        ? <Badge variant="secondary" className="bg-emerald-100 text-emerald-900">Verified</Badge>
-                        : <Badge variant="secondary" className="bg-amber-100 text-amber-900">Pending</Badge>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </CardContent></Card>
+
+        {mode === 'list' && (
+          <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, overflow:'hidden' }}>
+            {STUDENTS.map((s, i) => {
+              const isP = present[s]?.[dateIdx];
+              const rate = overallRate(s);
+              return (
+                <div key={s} style={{ padding:'12px 16px', borderBottom:i<STUDENTS.length-1?`1px solid ${C.border}`:'none', display:'flex', alignItems:'center', gap:14 }}>
+                  {/* Toggle checkbox */}
+                  <button onClick={() => toggleStudent(s)}
+                    style={{ width:28, height:28, borderRadius:4, border:`2px solid ${isP?C.success:C.border}`, background:isP?C.success:'transparent', cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', transition:'all .15s' }}>
+                    {isP && <span style={{ color:'white', fontSize:16, fontWeight:700 }}>✓</span>}
+                  </button>
+                  {/* Avatar */}
+                  <div style={{ width:36, height:36, borderRadius:'50%', background: isP ? C.success : '#ccc', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, flexShrink:0 }}>
+                    {s.split(' ').map(w=>w[0]).join('')}
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:14, fontWeight:600, color:C.text, fontFamily:'sans-serif' }}>{s}</div>
+                    <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif', marginTop:2 }}>
+                      Overall attendance: <span style={{ color: rate>=90?C.success:rate>=75?C.warn:C.error, fontWeight:600 }}>{rate}%</span>
+                      {rate < 90 && <span style={{ color:C.error, marginLeft:8 }}>⚠ Below CDPH 90% requirement</span>}
+                    </div>
+                  </div>
+                  <div style={{ textAlign:'right' }}>
+                    <span style={{ fontSize:13, padding:'4px 14px', borderRadius:20, background:isP?'#e8f5e9':'#fdecea', color:isP?C.success:C.error, fontFamily:'sans-serif', fontWeight:700 }}>
+                      {isP ? 'Present' : 'Absent'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {mode === 'class' && (
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))', gap:12 }}>
+            {STUDENTS.map(s => {
+              const isP = present[s]?.[dateIdx];
+              return (
+                <div key={s} onClick={() => toggleStudent(s)}
+                  style={{ background:isP?'#e8f5e9':C.white, border:`2px solid ${isP?C.success:C.border}`, borderRadius:8, padding:'14px 12px', textAlign:'center', cursor:'pointer', transition:'all .2s' }}>
+                  <div style={{ width:48, height:48, borderRadius:'50%', background:isP?C.success:'#ccc', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, fontWeight:700, margin:'0 auto 8px' }}>
+                    {s.split(' ').map(w=>w[0]).join('')}
+                  </div>
+                  <div style={{ fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', lineHeight:1.3, marginBottom:4 }}>{s}</div>
+                  <div style={{ fontSize:11, color:isP?C.success:C.error, fontFamily:'sans-serif', fontWeight:700 }}>{isP?'Present':'Absent'}</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
-  );
-};
-
-const InstructorAttendance = ({ courseId }: { courseId: string }) => {
-  const [records, setRecords] = useState<(Att & { full_name?: string })[]>([]);
-  const reload = async () => {
-    const { data: att } = await supabase.from("clinical_attendance")
-      .select("*").eq("course_id", courseId).order("shift_date", { ascending: false }).limit(200);
-    const list = (att ?? []) as Att[];
-    const ids = Array.from(new Set(list.map(a => a.student_user_id)));
-    const { data: profs } = ids.length
-      ? await supabase.from("profiles").select("user_id, full_name").in("user_id", ids)
-      : { data: [] };
-    const nameMap = Object.fromEntries((profs ?? []).map((p: any) => [p.user_id, p.full_name ?? "(no name)"]));
-    setRecords(list.map(r => ({ ...r, full_name: nameMap[r.student_user_id] })));
-  };
-  useEffect(() => { reload(); }, [courseId]);
-
-  const toggleVerify = async (id: string, verified: boolean) => {
-    const { error } = await supabase.from("clinical_attendance").update({
-      verified, verified_at: verified ? new Date().toISOString() : null,
-    }).eq("id", id);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else reload();
-  };
-
-  if (records.length === 0) {
-    return <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No attendance recorded yet.</CardContent></Card>;
-  }
-  return (
-    <Card><CardContent className="p-0">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
-          <tr><th className="text-left px-4 py-2">Student</th><th className="text-left px-4 py-2">Site</th>
-            <th className="text-left px-4 py-2">Date</th><th className="text-left px-4 py-2">In/Out</th>
-            <th className="text-left px-4 py-2">Hours</th><th className="text-left px-4 py-2">GPS</th>
-            <th className="px-4 py-2"></th></tr>
-        </thead>
-        <tbody>
-          {records.map(r => (
-            <tr key={r.id} className="border-t border-border">
-              <td className="px-4 py-2 font-medium">{r.full_name}</td>
-              <td className="px-4 py-2">{r.clinical_site}</td>
-              <td className="px-4 py-2">{new Date(r.shift_date).toLocaleDateString()}</td>
-              <td className="px-4 py-2 text-xs">
-                {r.clock_in_at ? new Date(r.clock_in_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"} →{" "}
-                {r.clock_out_at ? new Date(r.clock_out_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
-              </td>
-              <td className="px-4 py-2">{r.hours_worked ? Number(r.hours_worked).toFixed(2) : "—"}</td>
-              <td className="px-4 py-2 text-xs">
-                {r.clock_in_lat ? (
-                  <a className="text-purple hover:underline" target="_blank" rel="noreferrer"
-                    href={`https://maps.google.com/?q=${r.clock_in_lat},${r.clock_in_lng}`}>
-                    <MapPin className="inline h-3 w-3" /> view
-                  </a>
-                ) : "—"}
-              </td>
-              <td className="px-4 py-2 text-right">
-                <Button size="sm" variant={r.verified ? "outline" : "default"} onClick={() => toggleVerify(r.id, !r.verified)}>
-                  {r.verified ? "Unverify" : "Verify"}
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </CardContent></Card>
   );
 };
 
