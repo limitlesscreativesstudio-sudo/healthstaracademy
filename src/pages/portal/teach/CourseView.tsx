@@ -221,7 +221,8 @@ const NAV_ITEMS = [
   { id:'readiness',     label:'Exam Readiness',  icon:'🏆' },
   { id:'required',      label:'Required Work',   icon:'📌' },
   { id:'career',        label:'Career Portal',   icon:'💼' },
-  { id:'analytics',     label:'Course Analytics',icon:'📈' },
+  { id:'analytics',     label:'New Analytics',   icon:'📈' },
+  { id:'lucid',         label:'Lucid (Whiteboard)',icon:'✏️' },
   { id:'settings',      label:'Settings',        icon:'⚙️' },
 ];
 
@@ -244,7 +245,8 @@ const SECTIONS: Record<string, React.ReactNode> = {
   discussions:   <Placeholder title="Discussions"/>,
   outcomes:      <Placeholder title="Outcomes"/>,
   rubrics:       <Placeholder title="Rubrics"/>,
-  analytics:     <Placeholder title="Course Analytics"/>,
+  analytics:     <Placeholder title="New Analytics"/>,
+  lucid:         <Placeholder title="Lucid (Whiteboard)"/>,
   settings:      <Placeholder title="Settings"/>,
 };
 
