@@ -11,6 +11,7 @@ import StudentDashboard from './StudentDashboard';
 import StudentGrades    from './StudentGrades';
 import SyllabusTab      from './SyllabusTab';
 import AssignmentView   from './AssignmentView';
+import { useAuth }       from './AuthContext';
 
 const C = { nav:'#3D1B6E', primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -250,12 +251,93 @@ const SECTIONS: Record<string, React.ReactNode> = {
   settings:      <Placeholder title="Settings"/>,
 };
 
+const C_LOAD = { primary:'#7B4DB5', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', error:'#C0392B' } as const;
+
+// ── Skeleton loader ────────────────────────────────────────────────────────────
+const Skeleton: React.FC<{ w?:string|number; h?:number; radius?:number; mb?:number }> = ({ w='100%', h=14, radius=4, mb=0 }) => (
+  <div style={{ width:w, height:h, borderRadius:radius, background:'linear-gradient(90deg,#e8e4f0 25%,#f0edf8 50%,#e8e4f0 75%)', backgroundSize:'200% 100%', animation:'hsa-shimmer 1.4s ease infinite', marginBottom:mb }}/>
+);
+
+const CourseViewSkeleton: React.FC = () => (
+  <div style={{ display:'flex', minHeight:'100vh', background:C_LOAD.bg }}>
+    {/* Left rail skeleton */}
+    <div style={{ width:52, background:'#3D1B6E', minHeight:'100vh' }}/>
+    {/* Sidebar skeleton */}
+    <div style={{ width:200, background:C_LOAD.white, borderRight:`1px solid ${C_LOAD.border}`, padding:'16px 12px' }}>
+      {Array.from({length:12}).map((_,i) => <Skeleton key={i} w="85%" h={12} mb={14} radius={3}/>)}
+    </div>
+    {/* Main content skeleton */}
+    <div style={{ flex:1, padding:28 }}>
+      <Skeleton w={320} h={24} mb={20} radius={6}/>
+      {Array.from({length:4}).map((_,i) => (
+        <div key={i} style={{ marginBottom:16, border:`1px solid ${C_LOAD.border}`, borderRadius:6, padding:16 }}>
+          <Skeleton w="60%" h={14} mb={10}/>
+          <Skeleton w="90%" h={11} mb={6}/>
+          <Skeleton w="75%" h={11} mb={0}/>
+        </div>
+      ))}
+    </div>
+    <style>{`@keyframes hsa-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
+  </div>
+);
+
+// ── Error screen ───────────────────────────────────────────────────────────────
+const CourseViewError: React.FC<{ message:string; onRetry:()=>void }> = ({ message, onRetry }) => (
+  <div style={{ minHeight:'100vh', background:C_LOAD.bg, display:'flex', alignItems:'center', justifyContent:'center' }}>
+    <div style={{ background:C_LOAD.white, borderRadius:12, padding:44, textAlign:'center', maxWidth:440, boxShadow:'0 8px 32px rgba(0,0,0,0.1)' }}>
+      <div style={{ fontSize:48, marginBottom:16 }}>⚠️</div>
+      <h2 style={{ fontSize:20, fontWeight:700, color:C_LOAD.text, fontFamily:'sans-serif', margin:'0 0 10px' }}>Something went wrong</h2>
+      <p style={{ fontSize:14, color:C_LOAD.muted, fontFamily:'sans-serif', lineHeight:1.7, margin:'0 0 24px' }}>{message}</p>
+      <div style={{ display:'flex', gap:10, justifyContent:'center' }}>
+        <button onClick={onRetry}
+          style={{ padding:'10px 24px', border:'none', borderRadius:6, background:C_LOAD.primary, color:'white', fontSize:14, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer' }}>
+          Try Again
+        </button>
+        <a href="/portal/teach/login"
+          style={{ padding:'10px 24px', border:`1px solid ${C_LOAD.border}`, borderRadius:6, background:C_LOAD.white, color:C_LOAD.text, fontSize:14, fontFamily:'sans-serif', cursor:'pointer', textDecoration:'none', display:'inline-block' }}>
+          Sign In Again
+        </a>
+      </div>
+    </div>
+  </div>
+);
+
 interface CourseViewProps { user?: { name:string; email:string; role:string }; onLogout?: ()=>void; }
 
-const CourseView: React.FC<CourseViewProps> = ({ user, onLogout }) => {
+const CourseView: React.FC<CourseViewProps> = ({ onLogout }) => {
+  const { user: authUser, logout } = useAuth();
   const [activeCourse, setActiveCourse] = useState<Course>(COURSES[0]);
   const [activeTab, setActiveTab]       = useState('home');
   const [showCourses, setShowCourses]   = useState(false);
+  const [pageLoading, setPageLoading]   = useState(true);
+  const [pageError, setPageError]       = useState('');
+
+  // Simulate initial data load (SWAP: fetch courses from Supabase here)
+  React.useEffect(() => {
+    const load = async () => {
+      try {
+        setPageLoading(true);
+        // SWAP: const { data: courses, error } = await supabase
+        //   .from('courses').select('*').eq('instructor_id', authUser?.id);
+        // SWAP: if (error) throw error;
+        // SWAP: setCourses(courses);
+        await new Promise(r => setTimeout(r, 800)); // remove when Supabase is live
+        setPageLoading(false);
+      } catch (err: any) {
+        setPageError(err?.message ?? 'Failed to load course data. Please try again.');
+        setPageLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    window.location.replace('/portal/teach/login');
+  };
+
+  if (pageLoading) return <CourseViewSkeleton />;
+  if (pageError)   return <CourseViewError message={pageError} onRetry={() => { setPageError(''); setPageLoading(true); setTimeout(() => setPageLoading(false), 800); }} />;
 
   return (
     <div style={{ display:'flex', minHeight:'100vh', background:C.bg }}>
@@ -268,7 +350,7 @@ const CourseView: React.FC<CourseViewProps> = ({ user, onLogout }) => {
             onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.6)';(e.currentTarget as HTMLElement).style.background='transparent';}}>{icon}</div>
         ))}
         <div style={{ marginTop:'auto', marginBottom:10 }}>
-          <button onClick={onLogout} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.55)', fontSize:16, width:52, height:40 }}>↩</button>
+          <button onClick={onLogout} onClick={handleLogout} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.55)', fontSize:16, width:52, height:40 }}>↩</button>
         </div>
       </div>
 
@@ -276,6 +358,7 @@ const CourseView: React.FC<CourseViewProps> = ({ user, onLogout }) => {
         {/* Course header */}
         <div style={{ background:activeCourse.color, borderBottom:`1px solid ${C.border}`, padding:'14px 20px 0', position:'sticky', top:0, zIndex:50 }}>
           <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
+            {authUser && <span style={{ fontSize:12, color:'rgba(255,255,255,0.8)', fontFamily:'sans-serif', marginRight:4 }}>👋 {authUser.name}</span>}
             {/* Course selector */}
             <div style={{ position:'relative' }}>
               <button onClick={()=>setShowCourses(!showCourses)}
