@@ -101,7 +101,7 @@ const ModulesHome: React.FC<{ canEdit?: boolean }> = ({ canEdit = false }) => {
             <span style={{ flex:1, fontWeight:700, fontSize:13, fontFamily:'sans-serif', color:C.text, lineHeight:1.4 }}>{m.name}</span>
             {!m.published && <span style={{ fontSize:10, padding:'2px 8px', borderRadius:20, background:C.bg, color:C.muted, fontFamily:'sans-serif' }}>Unpublished</span>}
             {canEdit && <div onClick={()=>togglePub(m.id)} title={m.published?'Published':'Unpublished'}
-              style={{ width:18, height:18, borderRadius:'50%', background:m.published?C.success:C.border, cursor:'pointer', flexShrink:0 }}/>
+              style={{ width:18, height:18, borderRadius:'50%', background:m.published?C.success:C.border, cursor:'pointer', flexShrink:0 }}/>}
             <button onClick={()=>setAddItem(m.id)} style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:12, fontFamily:'sans-serif', padding:'2px 6px' }}>+ Item</button>
             <button onClick={()=>setMods(p=>p.filter(x=>x.id!==m.id))} style={{ background:'none', border:'none', cursor:'pointer', color:C.error, padding:3, fontSize:14 }}>✕</button>
           </div>
