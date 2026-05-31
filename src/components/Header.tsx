@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import logo from "@/assets/healthstar-logo.png";
 
 const ENROLLMENT_LINK = "/pre-qualification";
-const PORTAL_LOGIN_LINK = "/portal/login";
+const PORTAL_LOGIN_LINK = "/portal/teach/login";
 
 const navLinks = [
   { name: "Home", path: "/" },
