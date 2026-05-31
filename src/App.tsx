@@ -110,16 +110,15 @@ const AppShell = () => {
           <Route path="/portal/required" element={<RequiredWork />} />
           <Route path="/portal/courses" element={<StudentDashboard />} />
           <Route path="/portal/courses/:courseId/*" element={<CourseView />} />
-          <Route path="/portal/teach" element={<InstructorDashboard />} />
           <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<AssignmentView />} />
           <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<QuizView />} />
           <Route path="/portal/teach/courses/:courseId" element={<CourseEditor />} />
           <Route path="/portal/teach/courses/:courseId/quizzes/:quizId" element={<QuizEditor />} />
           <Route path="/portal/teach/courses/:courseId/assignments/:assignmentId" element={<SubmissionsInbox />} />
-          <Route path="*" element={<NotFound />} />
-          <Route path="/portal/teach/login"  element={<PortalLogin />} />
+          <Route path="/portal/teach/login" element={<PortalLogin onLogin={() => window.location.href='/portal/teach'} />} />
           <Route path="/portal/teach/invite" element={<AcceptInvite />} />
-          <Route path="/portal/teach"        element={<CourseView   />} />
+          <Route path="/portal/teach" element={<CourseView />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
       {!isApp && <Footer />}
