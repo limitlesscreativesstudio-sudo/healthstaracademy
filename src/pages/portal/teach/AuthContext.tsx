@@ -14,12 +14,16 @@ export interface AuthUser {
   canViewOnly: boolean;    // student read-only mode
 }
 
+export interface UpdateProfileResult { error?: string; }
+
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string, chosenRole?: UserRole) => Promise<LoginResult>;
   logout: () => void;
   isAuthenticated: boolean;
+  updateProfile: (name: string) => Promise<UpdateProfileResult>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<UpdateProfileResult>;
 }
 
 export interface LoginResult {
@@ -70,9 +74,15 @@ const MOCK_ACCOUNTS: MockAccount[] = [
   },
   {
     email: 'healthstaracademy01@gmail.com',
-    passwordHash: 'HSAteach2026!',   // ← instructor password (change this)
+    passwordHash: 'HSAteach2026!',   // ← instructor 1 password (change this)
     role: 'instructor',
-    name: 'Health Star Academy',
+    name: 'HSA Instructor 1',
+  },
+  {
+    email: 'healthstaracademy01@gmail.com',
+    passwordHash: 'HSAteach2026b!',  // ← instructor 2 password (change this)
+    role: 'instructor',
+    name: 'HSA Instructor 2',
   },
 ];
 
@@ -95,7 +105,23 @@ const buildUser = (account: MockAccount): AuthUser => {
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 const AuthContext = createContext<AuthContextValue | null>(null);
-const STORAGE_KEY = 'hsa_teach_auth';
+const STORAGE_KEY     = 'hsa_teach_auth';
+const PWD_STORAGE_KEY = 'hsa_pwd_overrides'; // { [email_role]: newPassword }
+
+// ── Password override helpers (for mock — removed when Supabase is live) ──────
+const getPwdOverride = (email: string, role: string): string | null => {
+  try {
+    const map = JSON.parse(localStorage.getItem(PWD_STORAGE_KEY) ?? '{}');
+    return map[`${email}_${role}`] ?? null;
+  } catch { return null; }
+};
+const setPwdOverride = (email: string, role: string, newPwd: string) => {
+  try {
+    const map = JSON.parse(localStorage.getItem(PWD_STORAGE_KEY) ?? '{}');
+    map[`${email}_${role}`] = newPwd;
+    localStorage.setItem(PWD_STORAGE_KEY, JSON.stringify(map));
+  } catch {}
+};
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -136,9 +162,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // ── Mock login ──────────────────────────────────────────────────────
     // Find all accounts matching this email + password
-    const matches = MOCK_ACCOUNTS.filter(
-      a => a.email === trimEmail && a.passwordHash === trimPass
-    );
+    // Check localStorage password overrides first (set when user changes their password)
+    const matches = MOCK_ACCOUNTS.filter(a => {
+      if (a.email !== trimEmail) return false;
+      const override = getPwdOverride(a.email, a.role);
+      return (override ?? a.passwordHash) === trimPass;
+    });
 
     if (matches.length === 0) {
       // Check if email exists at all (to give a better error)
@@ -170,6 +199,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // ── End mock ────────────────────────────────────────────────────────
   };
 
+  const updateProfile = async (name: string): Promise<UpdateProfileResult> => {
+    if (!user) return { error: 'Not logged in.' };
+    if (!name.trim()) return { error: 'Name cannot be empty.' };
+    // SWAP: await supabase.from('profiles').update({ full_name: name }).eq('id', user.id);
+    const updated: AuthUser = {
+      ...user,
+      name: name.trim(),
+      avatarInitials: name.trim().split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase(),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    setUser(updated);
+    return {};
+  };
+
+  const updatePassword = async (currentPassword: string, newPassword: string): Promise<UpdateProfileResult> => {
+    if (!user) return { error: 'Not logged in.' };
+    if (!currentPassword) return { error: 'Please enter your current password.' };
+    if (newPassword.length < 8) return { error: 'New password must be at least 8 characters.' };
+    // SWAP: const { error } = await supabase.auth.updateUser({ password: newPassword });
+    // SWAP: if (error) return { error: error.message };
+    // SWAP: return {};
+
+    // ── Mock: verify current password ──────────────────────────────────────
+    const override = getPwdOverride(user.email, user.role);
+    const account  = MOCK_ACCOUNTS.find(a => a.email === user.email && a.role === user.role);
+    const activePassword = override ?? account?.passwordHash ?? '';
+    if (currentPassword !== activePassword) {
+      return { error: 'Current password is incorrect. Please try again.' };
+    }
+    setPwdOverride(user.email, user.role, newPassword);
+    return {};
+    // ── End mock ────────────────────────────────────────────────────────────
+  };
+
   const logout = () => {
     // SWAP: await supabase.auth.signOut();
     localStorage.removeItem(STORAGE_KEY);
@@ -177,7 +240,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user, updateProfile, updatePassword }}>
       {children}
     </AuthContext.Provider>
   );
