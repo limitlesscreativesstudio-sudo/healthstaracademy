@@ -117,7 +117,7 @@ const AppShell = () => {
           <Route path="/portal/teach/courses/:courseId/quizzes/:quizId" element={<QuizEditor />} />
           <Route path="/portal/teach/courses/:courseId/assignments/:assignmentId" element={<SubmissionsInbox />} />
           <Route path="*" element={<NotFound />} />
-          <Route path="/portal/teach/login"  element={<PortalLogin  onLogin={() => window.location.href='/portal/teach'} />} />
+          <Route path="/portal/teach/login"  element={<PortalLogin />} />
           <Route path="/portal/teach/invite" element={<AcceptInvite />} />
           <Route path="/portal/teach"        element={<CourseView   />} />
         </Routes>
