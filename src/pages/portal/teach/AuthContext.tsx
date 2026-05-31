@@ -1,4 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+// ─── Supabase client ──────────────────────────────────────────────────────────
+// Uses Lovable's env vars (VITE_SUPABASE_PUBLISHABLE_KEY = anon key)
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+);
+
+export { supabase };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type UserRole = 'admin' | 'instructor' | 'student';
@@ -9,12 +19,18 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   avatarInitials: string;
-  canEdit: boolean;        // can edit modules, assignments, dashboard
-  canManageUsers: boolean; // can add/remove students and staff
-  canViewOnly: boolean;    // student read-only mode
+  canEdit: boolean;
+  canManageUsers: boolean;
+  canViewOnly: boolean;
 }
 
 export interface UpdateProfileResult { error?: string; }
+
+export interface LoginResult {
+  error?: string;
+  needsRoleSelect?: boolean;
+  availableRoles?: UserRole[];
+}
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -26,125 +42,70 @@ interface AuthContextValue {
   updatePassword: (currentPassword: string, newPassword: string) => Promise<UpdateProfileResult>;
 }
 
-export interface LoginResult {
-  error?: string;
-  needsRoleSelect?: boolean;   // true when one email has both admin + instructor
-  availableRoles?: UserRole[];
-}
-
-// ─── Permission rules ─────────────────────────────────────────────────────────
-// Only these emails can edit modules and the dashboard
-const EDITOR_EMAILS = [
-  'healthstaracademy01@gmail.com',
-  'limitlesscreativesstudio@gmail.com',
-];
-const ADMIN_EMAILS = [
-  'limitlesscreativesstudio@gmail.com',
-];
-
-// Emails that have BOTH admin and instructor roles (two passwords, role selector shown)
-const DUAL_ROLE_EMAILS = [
-  'limitlesscreativesstudio@gmail.com',
-];
-
-// ─── Mock account store ───────────────────────────────────────────────────────
-// SWAP: remove this entire block and replace login() with supabase.auth.signInWithPassword
-// SWAP: fetch role + permissions from your `profiles` table
-interface MockAccount {
-  email: string;
-  passwordHash: string; // plain text for mock — swap with bcrypt/supabase
-  role: UserRole;
-  name: string;
-}
-
-const MOCK_ACCOUNTS: MockAccount[] = [
-  // limitlesscreativesstudio@gmail.com has TWO entries — one per role
-  // Each role gets its own password
-  {
-    email: 'limitlesscreativesstudio@gmail.com',
-    passwordHash: 'HSAadmin2026!',   // ← admin password (change this)
-    role: 'admin',
-    name: 'HSA Administrator',
-  },
-  {
-    email: 'limitlesscreativesstudio@gmail.com',
-    passwordHash: 'HSAteach2026!',   // ← instructor password (change this)
-    role: 'instructor',
-    name: 'HSA Instructor',
-  },
-  {
-    email: 'healthstaracademy01@gmail.com',
-    passwordHash: 'HSAteach2026!',   // ← instructor 1 password (change this)
-    role: 'instructor',
-    name: 'HSA Instructor 1',
-  },
-  {
-    email: 'healthstaracademy01@gmail.com',
-    passwordHash: 'HSAteach2026b!',  // ← instructor 2 password (change this)
-    role: 'instructor',
-    name: 'HSA Instructor 2',
-  },
-];
-
-// ─── Build AuthUser from account ─────────────────────────────────────────────
-const buildUser = (account: MockAccount): AuthUser => {
-  const initials = account.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
-  const isEditor = EDITOR_EMAILS.includes(account.email);
-  const isAdmin  = ADMIN_EMAILS.includes(account.email) && account.role === 'admin';
+// ─── Permission helpers ───────────────────────────────────────────────────────
+const buildUser = (id: string, email: string, name: string, role: UserRole): AuthUser => {
+  const initials = name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   return {
-    id:              `${account.email}-${account.role}`,
-    name:            account.name,
-    email:           account.email,
-    role:            account.role,
-    avatarInitials:  initials,
-    canEdit:         isEditor || isAdmin,
-    canManageUsers:  isAdmin,
-    canViewOnly:     account.role === 'student',
+    id,
+    name: name.trim(),
+    email: email.trim().toLowerCase(),
+    role,
+    avatarInitials: initials,
+    canEdit:        role === 'admin' || role === 'instructor',
+    canManageUsers: role === 'admin',
+    canViewOnly:    role === 'student',
   };
 };
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 const AuthContext = createContext<AuthContextValue | null>(null);
-const STORAGE_KEY     = 'hsa_teach_auth';
-const PWD_STORAGE_KEY = 'hsa_pwd_overrides'; // { [email_role]: newPassword }
 
-// ── Password override helpers (for mock — removed when Supabase is live) ──────
-const getPwdOverride = (email: string, role: string): string | null => {
-  try {
-    const map = JSON.parse(localStorage.getItem(PWD_STORAGE_KEY) ?? '{}');
-    return map[`${email}_${role}`] ?? null;
-  } catch { return null; }
-};
-const setPwdOverride = (email: string, role: string, newPwd: string) => {
-  try {
-    const map = JSON.parse(localStorage.getItem(PWD_STORAGE_KEY) ?? '{}');
-    map[`${email}_${role}`] = newPwd;
-    localStorage.setItem(PWD_STORAGE_KEY, JSON.stringify(map));
-  } catch {}
-};
-
-// ─── Provider ─────────────────────────────────────────────────────────────────
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser]       = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Restore session on mount
-  // SWAP: supabase.auth.getSession() + onAuthStateChange
+  // ── Restore session on page load ─────────────────────────────────────────
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setUser(JSON.parse(stored) as AuthUser);
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-    } finally {
+    // Get current session from Supabase
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        await hydrateUser(session.user.id, session.user.email ?? '');
+      }
       setLoading(false);
-    }
+    });
+
+    // Listen for auth state changes (login / logout / token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session?.user) {
+          await hydrateUser(session.user.id, session.user.email ?? '');
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
+  // Fetch profile from DB and set user state
+  const hydrateUser = async (id: string, email: string) => {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, role')
+      .eq('id', id)
+      .single();
+
+    if (profile) {
+      setUser(buildUser(id, email, profile.full_name, profile.role as UserRole));
+    }
+  };
+
+  // ── Login ─────────────────────────────────────────────────────────────────
   const login = async (
     email: string,
     password: string,
-    chosenRole?: UserRole,
+    _chosenRole?: UserRole,
   ): Promise<LoginResult> => {
     const trimEmail = email.trim().toLowerCase();
     const trimPass  = password.trim();
@@ -152,95 +113,95 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!trimEmail) return { error: 'Please enter your email address.' };
     if (!trimPass)  return { error: 'Please enter your password.' };
 
-    // SWAP: const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    // SWAP: if (error) return { error: 'Incorrect email or password. Please try again.' };
-    // SWAP: const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
-    // SWAP: if (!profile) return { error: 'Account not found. Contact your administrator.' };
-    // SWAP: if (profile.role === 'student') return { error: 'Students access the portal via the student login page.' };
-    // SWAP: const authUser = buildUser({ email, passwordHash: '', role: profile.role, name: profile.full_name });
-    // SWAP: localStorage.setItem(STORAGE_KEY, JSON.stringify(authUser)); setUser(authUser); return {};
-
-    // ── Mock login ──────────────────────────────────────────────────────
-    // Find all accounts matching this email + password
-    // Check localStorage password overrides first (set when user changes their password)
-    const matches = MOCK_ACCOUNTS.filter(a => {
-      if (a.email !== trimEmail) return false;
-      const override = getPwdOverride(a.email, a.role);
-      return (override ?? a.passwordHash) === trimPass;
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email:    trimEmail,
+      password: trimPass,
     });
 
-    if (matches.length === 0) {
-      // Check if email exists at all (to give a better error)
-      const emailExists = MOCK_ACCOUNTS.some(a => a.email === trimEmail);
-      return {
-        error: emailExists
-          ? 'Incorrect password. Please try again.'
-          : 'No account found for that email. Check your email or contact your administrator.',
-      };
+    if (error) {
+      // Friendly messages
+      if (error.message.includes('Invalid login')) {
+        return { error: 'Incorrect email or password. Please try again.' };
+      }
+      if (error.message.includes('Email not confirmed')) {
+        return { error: 'Please check your email and confirm your account before signing in.' };
+      }
+      return { error: error.message };
     }
 
-    // Dual-role email with multiple password matches — ask which role
-    if (matches.length > 1 && !chosenRole) {
-      return {
-        needsRoleSelect: true,
-        availableRoles: matches.map(m => m.role),
-      };
+    if (!data.user) return { error: 'Login failed. Please try again.' };
+
+    // Check profile exists and role is not student (students use separate portal)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, role')
+      .eq('id', data.user.id)
+      .single();
+
+    if (!profile) {
+      await supabase.auth.signOut();
+      return { error: 'Account not found. Contact your administrator.' };
     }
 
-    // Single match OR role already chosen
-    const account = chosenRole
-      ? matches.find(m => m.role === chosenRole) ?? matches[0]
-      : matches[0];
+    if (profile.role === 'student') {
+      await supabase.auth.signOut();
+      return { error: 'Students access the portal via the student login page.' };
+    }
 
-    const authUser = buildUser(account);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(authUser));
-    setUser(authUser);
+    // hydrateUser will be called automatically via onAuthStateChange
     return {};
-    // ── End mock ────────────────────────────────────────────────────────
   };
 
+  // ── Update profile name ───────────────────────────────────────────────────
   const updateProfile = async (name: string): Promise<UpdateProfileResult> => {
     if (!user) return { error: 'Not logged in.' };
     if (!name.trim()) return { error: 'Name cannot be empty.' };
-    // SWAP: await supabase.from('profiles').update({ full_name: name }).eq('id', user.id);
-    const updated: AuthUser = {
-      ...user,
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ full_name: name.trim() })
+      .eq('id', user.id);
+
+    if (error) return { error: error.message };
+
+    setUser(prev => prev ? {
+      ...prev,
       name: name.trim(),
-      avatarInitials: name.trim().split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase(),
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    setUser(updated);
+      avatarInitials: name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+    } : null);
+
     return {};
   };
 
-  const updatePassword = async (currentPassword: string, newPassword: string): Promise<UpdateProfileResult> => {
+  // ── Update password ───────────────────────────────────────────────────────
+  const updatePassword = async (
+    _currentPassword: string,
+    newPassword: string,
+  ): Promise<UpdateProfileResult> => {
     if (!user) return { error: 'Not logged in.' };
-    if (!currentPassword) return { error: 'Please enter your current password.' };
     if (newPassword.length < 8) return { error: 'New password must be at least 8 characters.' };
-    // SWAP: const { error } = await supabase.auth.updateUser({ password: newPassword });
-    // SWAP: if (error) return { error: error.message };
-    // SWAP: return {};
 
-    // ── Mock: verify current password ──────────────────────────────────────
-    const override = getPwdOverride(user.email, user.role);
-    const account  = MOCK_ACCOUNTS.find(a => a.email === user.email && a.role === user.role);
-    const activePassword = override ?? account?.passwordHash ?? '';
-    if (currentPassword !== activePassword) {
-      return { error: 'Current password is incorrect. Please try again.' };
-    }
-    setPwdOverride(user.email, user.role, newPassword);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) return { error: error.message };
     return {};
-    // ── End mock ────────────────────────────────────────────────────────────
   };
 
-  const logout = () => {
-    // SWAP: await supabase.auth.signOut();
-    localStorage.removeItem(STORAGE_KEY);
+  // ── Logout ────────────────────────────────────────────────────────────────
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user, updateProfile, updatePassword }}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      login,
+      logout,
+      isAuthenticated: !!user,
+      updateProfile,
+      updatePassword,
+    }}>
       {children}
     </AuthContext.Provider>
   );
