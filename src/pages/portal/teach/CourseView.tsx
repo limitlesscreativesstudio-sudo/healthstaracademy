@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AttendanceTab     from './AttendanceTab';
 import CareerPortal      from './CareerPortal';
 import ClinicalSkillsTab from './ClinicalSkillsTab';
@@ -14,7 +14,7 @@ import AssignmentView    from './AssignmentView';
 import Dashboard         from './Dashboard';
 import SettingsTab       from './SettingsTab';
 import CalendarTab       from './CalendarTab';
-import { useAuth }       from './AuthContext';
+import { useAuth, supabase } from './AuthContext';
 
 const C = {
   nav:'#3D1B6E', primary:'#7B4DB5', accent:'#5BC8E8',
@@ -25,16 +25,17 @@ const C = {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Course {
-  id: number; name: string; code: string;
+  id: number; uuid?: string; name: string; code: string;
   color: string; term: string; students: number; published: boolean;
 }
 interface ModuleItem {
-  id: number; type: string; name: string;
+  id: string; type: string; name: string;
   pts?: number; published: boolean; indent: number;
 }
 interface Module {
-  id: number; name: string; published: boolean;
+  id: string; name: string; published: boolean;
   expanded: boolean; items: ModuleItem[];
+  position: number;
 }
 
 // ── Seed data ─────────────────────────────────────────────────────────────────
@@ -42,36 +43,6 @@ const COURSES: Course[] = [
   { id:1, name:'Health Star Academy Hybrid Day NATP (2026-1)', code:'HSA-NATP-2026-1', color:'#7B4DB5', term:'1/26/2026–3/9/2026',    students:12, published:true  },
   { id:2, name:'Health Star Academy Hybrid Day NATP (2026-2)', code:'HSA-NATP-2026-2', color:'#5BC8E8', term:'3/16/2026–4/7/2026',   students:10, published:true  },
   { id:3, name:'Health Star Academy Hybrid Day NATP (2025-4)', code:'HSA-NATP-2025-4', color:'#9B6DD0', term:'10/13/2025–11/25/2025', students:11, published:false },
-];
-
-const INIT_MODULES: Module[] = [
-  { id:1, name:'Day 1 [Orientation 6AM–7AM, Theory 7AM–3PM; Module 1 [2 hrs], Module 2 [3 hrs], Module 3 [2 hrs]]', published:true, expanded:true, items:[
-    { id:1,  type:'page',       name:'How to Join Live Lecture via Zoom',              published:true,  indent:0 },
-    { id:2,  type:'page',       name:'Student Handbook Policies and Acknowledgement',  published:true,  indent:0 },
-    { id:3,  type:'file',       name:'State Exam Student Handbook',                    published:true,  indent:0 },
-    { id:4,  type:'quiz',       name:'Day 1 Quiz',          pts:10,                    published:true,  indent:1 },
-  ]},
-  { id:2, name:'Video Conference Info', published:true, expanded:true, items:[
-    { id:5,  type:'page',       name:'Video Conference Info',                          published:true,  indent:0 },
-  ]},
-  { id:3, name:'Learning Resources, Curriculum, and Learning Objectives', published:true, expanded:true, items:[
-    { id:6,  type:'file',       name:'California Module 1.pdf',                        published:true,  indent:0 },
-    { id:7,  type:'file',       name:'Module01_PowerPoint.pptx',                       published:true,  indent:0 },
-    { id:8,  type:'file',       name:'California Module 2.pdf',                        published:true,  indent:0 },
-    { id:9,  type:'file',       name:'Module02_PowerPoint.pptx',                       published:true,  indent:0 },
-    { id:10, type:'file',       name:'California Module 3.pdf',                        published:true,  indent:0 },
-    { id:11, type:'file',       name:'Module03_PowerPoint.pptx',                       published:true,  indent:0 },
-  ]},
-  { id:4, name:'Case Study', published:true, expanded:true, items:[
-    { id:12, type:'page',       name:'1. Case Study',                                  published:true,  indent:0 },
-    { id:13, type:'assignment', name:'2. Case Study w/ Questions', pts:3,              published:true,  indent:1 },
-    { id:14, type:'assignment', name:'3. Case Study (Part 2)',     pts:3,              published:true,  indent:1 },
-  ]},
-  { id:5, name:'Module Quizzes', published:true, expanded:false, items:[
-    { id:15, type:'quiz', name:'Module01 Quiz', pts:10, published:true,  indent:0 },
-    { id:16, type:'quiz', name:'Module02 Quiz', pts:10, published:true,  indent:0 },
-    { id:17, type:'quiz', name:'Module03 Quiz', pts:10, published:true,  indent:0 },
-  ]},
 ];
 
 const itemIcon = (t: string) =>
@@ -193,37 +164,98 @@ const AnnouncementsPanel: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
 };
 
 // ── Modules home ──────────────────────────────────────────────────────────────
-const ModulesHome: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
-  const [mods, setMods]       = useState<Module[]>(INIT_MODULES);
+const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canEdit, courseUuid }) => {
+  const [mods, setMods]       = useState<Module[]>([]);
+  const [dbLoading, setDbLoading] = useState(true);
   const [addMod, setAddMod]   = useState(false);
   const [newName, setNewName] = useState('');
-  const [addItem, setAddItem] = useState<number | null>(null);
+  const [addItem, setAddItem] = useState<string | null>(null);
   const [ni, setNi]           = useState({ title:'', type:'page', pts:'' });
 
-  const toggle    = (id: number) => setMods(p => p.map(m => m.id === id ? { ...m, expanded:!m.expanded } : m));
-  const togglePub = (id: number) => setMods(p => p.map(m => m.id === id ? { ...m, published:!m.published } : m));
-  const toggleIPub = (mid: number, iid: number) =>
-    setMods(p => p.map(m => m.id === mid ? { ...m, items:m.items.map(it => it.id === iid ? { ...it, published:!it.published } : it) } : m));
+  // Load from Supabase on mount
+  useEffect(() => {
+    if (!courseUuid) { setDbLoading(false); return; }
+    const load = async () => {
+      setDbLoading(true);
+      const { data: modRows } = await supabase
+        .from('modules').select('id,name,published,position')
+        .eq('course_id', courseUuid).order('position');
+      const { data: itemRows } = await supabase
+        .from('module_items').select('id,module_id,type,title,points,published,indent,position')
+        .eq('course_id', courseUuid).order('position');
+      if (modRows) {
+        setMods(modRows.map(m => ({
+          id: m.id, name: m.name, published: m.published,
+          expanded: true, position: m.position,
+          items: (itemRows ?? []).filter(it => it.module_id === m.id).map(it => ({
+            id: it.id, type: it.type, name: it.title,
+            pts: it.points ?? undefined, published: it.published, indent: it.indent,
+          })),
+        })));
+      }
+      setDbLoading(false);
+    };
+    load();
+  }, [courseUuid]);
 
-  const saveMod = () => {
+  const toggle = (id: string) =>
+    setMods(p => p.map(m => m.id === id ? { ...m, expanded: !m.expanded } : m));
+
+  const togglePub = async (id: string, current: boolean) => {
+    setMods(p => p.map(m => m.id === id ? { ...m, published: !current } : m));
+    if (courseUuid) await supabase.from('modules').update({ published: !current }).eq('id', id);
+  };
+
+  const toggleIPub = async (iid: string, current: boolean) => {
+    setMods(p => p.map(m => ({ ...m, items: m.items.map(it => it.id === iid ? { ...it, published: !current } : it) })));
+    if (courseUuid) await supabase.from('module_items').update({ published: !current }).eq('id', iid);
+  };
+
+  const saveMod = async () => {
     if (!newName.trim()) return;
-    setMods(p => [...p, { id:Date.now(), name:newName, published:false, expanded:true, items:[] }]);
-    setNewName('');
-    setAddMod(false);
+    if (courseUuid) {
+      const { data, error } = await supabase.from('modules')
+        .insert({ course_id: courseUuid, name: newName.trim(), published: false, position: mods.length })
+        .select().single();
+      if (!error && data) {
+        setMods(p => [...p, { id: data.id, name: data.name, published: false, expanded: true, position: mods.length, items: [] }]);
+      }
+    }
+    setNewName(''); setAddMod(false);
   };
 
-  const saveItem = () => {
-    if (!ni.title.trim()) return;
-    setMods(p => p.map(m => m.id === addItem ? {
-      ...m, items:[...m.items, { id:Date.now(), type:ni.type, name:ni.title, pts:ni.pts ? parseInt(ni.pts) : undefined, published:false, indent:0 }]
-    } : m));
-    setNi({ title:'', type:'page', pts:'' });
-    setAddItem(null);
+  const saveItem = async () => {
+    if (!ni.title.trim() || !addItem) return;
+    const mod = mods.find(m => m.id === addItem);
+    if (courseUuid) {
+      const { data, error } = await supabase.from('module_items')
+        .insert({ module_id: addItem, course_id: courseUuid, type: ni.type, title: ni.title.trim(),
+          points: ni.pts ? parseInt(ni.pts) : null, published: false, indent: 0, position: mod?.items.length ?? 0 })
+        .select().single();
+      if (!error && data) {
+        setMods(p => p.map(m => m.id === addItem ? {
+          ...m, items: [...m.items, { id: data.id, type: data.type, name: data.title, pts: data.points ?? undefined, published: false, indent: 0 }]
+        } : m));
+      }
+    }
+    setNi({ title:'', type:'page', pts:'' }); setAddItem(null);
   };
+
+  const deleteMod = async (id: string) => {
+    setMods(p => p.filter(m => m.id !== id));
+    if (courseUuid) await supabase.from('modules').delete().eq('id', id);
+  };
+
+  if (dbLoading) return <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Loading modules...</div>;
 
   return (
     <div style={{ display:'flex' }}>
     <div style={{ flex:1, padding:24 }}>
+      {!courseUuid && (
+        <div style={{ marginBottom:16, padding:'10px 14px', background:'#FFF8E1', border:'1px solid #FFE082', borderRadius:6, fontSize:13, color:'#7B4DB5', fontFamily:'sans-serif' }}>
+          💡 This course hasn't been saved to the database yet. Modules you add here will be saved once the course is created in Supabase.
+        </div>
+      )}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Modules</h2>
         <div style={{ display:'flex', gap:8 }}>
@@ -260,7 +292,7 @@ const ModulesHome: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
         <div key={m.id} style={{ border:`1px solid ${C.border}`, borderRadius:5, marginBottom:10, overflow:'hidden', background:C.white }}>
           {/* Module header row */}
           <div style={{ padding:'11px 14px', background:'#F0EDF7', display:'flex', alignItems:'center', gap:10, borderBottom:m.expanded ? `1px solid ${C.border}` : 'none' }}>
-            <button onClick={() => toggle(m.id)}
+            <button onClick={() => toggle(m.id as string)}
               style={{ background:'none', border:'none', cursor:'pointer', padding:0, color:C.text, fontSize:14, flexShrink:0 }}>
               {m.expanded ? '▼' : '▶'}
             </button>
@@ -270,19 +302,19 @@ const ModulesHome: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
             )}
             {canEdit && (
               <div
-                onClick={() => togglePub(m.id)}
+                onClick={() => togglePub(m.id as string, m.published)}
                 title={m.published ? 'Published' : 'Unpublished'}
                 style={{ width:18, height:18, borderRadius:'50%', background:m.published ? C.success : C.border, cursor:'pointer', flexShrink:0 }}
               />
             )}
             {canEdit && (
-              <button onClick={() => setAddItem(m.id)}
+              <button onClick={() => setAddItem(m.id as string)}
                 style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:12, fontFamily:'sans-serif', padding:'2px 6px' }}>
                 + Item
               </button>
             )}
             {canEdit && (
-              <button onClick={() => setMods(p => p.filter(x => x.id !== m.id))}
+              <button onClick={() => deleteMod(m.id as string)}
                 style={{ background:'none', border:'none', cursor:'pointer', color:C.error, padding:3, fontSize:14 }}>
                 ✕
               </button>
@@ -301,7 +333,7 @@ const ModulesHome: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
                   <span style={{ flex:1, fontSize:13, color:C.primary, fontFamily:'sans-serif', fontWeight:500 }}>{it.name}</span>
                   {it.pts && <span style={{ fontSize:12, color:C.muted }}>{it.pts} pts</span>}
                   <div
-                    onClick={() => toggleIPub(m.id, it.id)}
+                    onClick={() => toggleIPub(it.id as string, it.published)}
                     title={it.published ? 'Published' : 'Unpublished'}
                     style={{ width:16, height:16, borderRadius:'50%', background:it.published ? C.success : C.border, cursor:'pointer', flexShrink:0 }}
                   />
@@ -330,7 +362,7 @@ const ModulesHome: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
                 </div>
               ) : (
                 canEdit && (
-                  <div onClick={() => setAddItem(m.id)}
+                  <div onClick={() => setAddItem(m.id as string)}
                     style={{ padding:'8px 14px', borderTop:`1px dashed ${C.border}`, cursor:'pointer', color:C.primary, fontSize:12, fontFamily:'sans-serif', display:'flex', alignItems:'center', gap:5 }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f4f1fc'}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
@@ -470,8 +502,8 @@ const CourseView: React.FC = () => {
 
   // Build sections map inside component so canEdit is available
   const SECTIONS: Record<string, React.ReactNode> = {
-    home:          <ModulesHome canEdit={canEdit} />,
-    modules:       <ModulesHome canEdit={canEdit} />,
+    home:          <ModulesHome canEdit={canEdit} courseUuid={activeCourse?.uuid} />,
+    modules:       <ModulesHome canEdit={canEdit} courseUuid={activeCourse?.uuid} />,
     announcements: <AnnouncementsPanel canEdit={canEdit} />,
     assignments:   <AssignmentView />,
     quizzes:       <QuizView />,
