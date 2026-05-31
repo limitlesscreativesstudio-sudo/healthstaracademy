@@ -58,7 +58,7 @@ const MODULES: Module[] = [
 
 const itemIcon = (t:string) => ({ assignment:'📝', quiz:'❓', page:'📄', file:'📎', video:'🎥', discussion:'💬', external_url:'🔗' }[t] ?? '📄');
 
-const ModulesHome: React.FC = () => {
+const ModulesHome: React.FC<{ canEdit?: boolean }> = ({ canEdit = false }) => {
   const [mods, setMods]       = useState<Module[]>(MODULES);
   const [addMod, setAddMod]   = useState(false);
   const [newName, setNewName] = useState('');
@@ -78,7 +78,7 @@ const ModulesHome: React.FC = () => {
         <div style={{ display:'flex', gap:8 }}>
           <button onClick={()=>setMods(p=>p.map(m=>({...m,expanded:false})))} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Collapse All</button>
           <button onClick={()=>setMods(p=>p.map(m=>({...m,expanded:true})))} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Expand All</button>
-          <button onClick={()=>setAddMod(true)} style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>+ Module</button>
+          {canEdit && <button onClick={()=>setAddMod(true)} style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>+ Module</button>}
         </div>
       </div>
 
@@ -100,7 +100,7 @@ const ModulesHome: React.FC = () => {
             <button onClick={()=>toggle(m.id)} style={{ background:'none', border:'none', cursor:'pointer', padding:0, color:C.text, fontSize:14, flexShrink:0 }}>{m.expanded?'▼':'▶'}</button>
             <span style={{ flex:1, fontWeight:700, fontSize:13, fontFamily:'sans-serif', color:C.text, lineHeight:1.4 }}>{m.name}</span>
             {!m.published && <span style={{ fontSize:10, padding:'2px 8px', borderRadius:20, background:C.bg, color:C.muted, fontFamily:'sans-serif' }}>Unpublished</span>}
-            <div onClick={()=>togglePub(m.id)} title={m.published?'Published':'Unpublished'}
+            {canEdit && <div onClick={()=>togglePub(m.id)} title={m.published?'Published':'Unpublished'}
               style={{ width:18, height:18, borderRadius:'50%', background:m.published?C.success:C.border, cursor:'pointer', flexShrink:0 }}/>
             <button onClick={()=>setAddItem(m.id)} style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:12, fontFamily:'sans-serif', padding:'2px 6px' }}>+ Item</button>
             <button onClick={()=>setMods(p=>p.filter(x=>x.id!==m.id))} style={{ background:'none', border:'none', cursor:'pointer', color:C.error, padding:3, fontSize:14 }}>✕</button>
@@ -228,8 +228,8 @@ const NAV_ITEMS = [
 ];
 
 const SECTIONS: Record<string, React.ReactNode> = {
-  home:          <ModulesHome/>,
-  modules:       <ModulesHome/>,
+  home:          <ModulesHome canEdit={canEdit}/>,
+  modules:       <ModulesHome canEdit={canEdit}/>,
   announcements: <AnnouncementsPanel/>,
   assignments:   <AssignmentView/>,
   quizzes:       <QuizView/>,
@@ -306,6 +306,8 @@ interface CourseViewProps { user?: { name:string; email:string; role:string }; o
 
 const CourseView: React.FC<CourseViewProps> = ({ onLogout }) => {
   const { user: authUser, logout } = useAuth();
+  const canEdit        = authUser?.canEdit        ?? false;
+  const canManageUsers = authUser?.canManageUsers  ?? false;
   const [activeCourse, setActiveCourse] = useState<Course>(COURSES[0]);
   const [activeTab, setActiveTab]       = useState('home');
   const [showCourses, setShowCourses]   = useState(false);
@@ -358,7 +360,12 @@ const CourseView: React.FC<CourseViewProps> = ({ onLogout }) => {
         {/* Course header */}
         <div style={{ background:activeCourse.color, borderBottom:`1px solid ${C.border}`, padding:'14px 20px 0', position:'sticky', top:0, zIndex:50 }}>
           <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
-            {authUser && <span style={{ fontSize:12, color:'rgba(255,255,255,0.8)', fontFamily:'sans-serif', marginRight:4 }}>👋 {authUser.name}</span>}
+            {authUser && (
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <span style={{ fontSize:12, color:'rgba(255,255,255,0.85)', fontFamily:'sans-serif' }}>👋 {authUser.name}</span>
+                  <span style={{ fontSize:10, padding:'2px 8px', borderRadius:20, background:'rgba(255,255,255,0.2)', color:'white', fontFamily:'sans-serif', fontWeight:600, textTransform:'capitalize' }}>{authUser.role}</span>
+                </div>
+              )}
             {/* Course selector */}
             <div style={{ position:'relative' }}>
               <button onClick={()=>setShowCourses(!showCourses)}
@@ -386,7 +393,7 @@ const CourseView: React.FC<CourseViewProps> = ({ onLogout }) => {
             </div>
             <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
               <button style={{ padding:'5px 14px', background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>View as Student</button>
-              <button style={{ padding:'5px 14px', background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.4)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>+ Module</button>
+              {canEdit && <button style={{ padding:'5px 14px', background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.4)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>+ Module</button>}
             </div>
           </div>
         </div>
