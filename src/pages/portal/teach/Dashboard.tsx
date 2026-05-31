@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth, supabase } from './AuthContext';
+import { useEffect } from 'react';
 
 const C = {
   primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF',
@@ -87,6 +88,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onEnterCourse }) => {
   const canEdit = user?.canEdit ?? false;
 
   const [dismissed, setDismissed] = useState<number[]>([]);
+  const [dbCourses, setDbCourses] = useState<any[]>([]);
+
+  // Load real courses from Supabase
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from('courses')
+        .select('id,name,code,color,published,term,teacher_id,created_at')
+        .order('created_at', { ascending: false });
+      if (data && data.length > 0) setDbCourses(data);
+    };
+    load();
+  }, []);
   const [showCreate, setShowCreate] = useState(false);
   const [newCourse, setNewCourse] = useState({ name:'', startDate:'', endDate:'' });
 
