@@ -171,7 +171,7 @@ const QuizView: React.FC = () => {
             </div>
             <div>
               <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Points</label>
-              <input type="number" value={createForm.pts} onChange={e => setCreateForm(p => ({ ...p, pts:parseInt(e.target.value)||10 })}
+              <input type="number" value={createForm.pts} onChange={e => setCreateForm(p => ({ ...p, pts:parseInt(e.target.value)||10 }))}
                 style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 9px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', outline:'none' }}/>
             </div>
           </div>
