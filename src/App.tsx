@@ -105,7 +105,7 @@ const AppShell = () => {
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/portal/login" element={<PortalLogin />} />
+          <Route path="/portal/login" element={<Navigate to="/portal/teach/login" replace />} />                  
           <Route path="/portal/accept-invite" element={<AcceptInvite />} />
           <Route path="/portal" element={<StudentDashboard />} />
           <Route path="/portal/account" element={<Account />} />
