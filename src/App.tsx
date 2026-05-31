@@ -53,10 +53,10 @@ import QuizView from "./pages/portal/teach/QuizView";
 import Account from "./pages/portal/teach/Account";
 import CareerPortal from "./pages/portal/teach/CareerPortal";
 import RequiredWork from "./pages/portal/teach/RequiredWork";
-import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
-import TermsOfServicePage from "./pages/TermsOfServicePage";
-import RefundPolicyPage from "./pages/RefundPolicyPage";
-import NotFound from "./pages/NotFound";
+import PrivacyPolicyPage from "./pages/portal/PrivacyPolicyPage";
+import TermsOfServicePage from "./pages/portal/TermsOfServicePage";
+import RefundPolicyPage from "./pages/portal/RefundPolicyPage";
+import NotFound from "./pages/portal/NotFound";
 
 const queryClient = new QueryClient();
 
