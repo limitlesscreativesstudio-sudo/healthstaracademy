@@ -1,6 +1,9 @@
-import CreateAccount from './pages/portal/teach/CreateAccount';
-import { AuthProvider }  from './pages/portal/teach/AuthContext';
-import ProtectedRoute    from './pages/portal/teach/ProtectedRoute';
+import PortalLogin  from './pages/portal/teach/PortalLogin';
+import AcceptInvite from './pages/portal/teach/AcceptInvite';
+import CourseView   from './pages/portal/teach/CourseView';
+import { AuthProvider } from './pages/portal/teach/AuthContext';
+import ProtectedRoute   from './pages/portal/teach/ProtectedRoute';
+import CreateAccount    from './pages/portal/teach/CreateAccount';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -118,10 +121,10 @@ const AppShell = () => {
           <Route path="/portal/teach/courses/:courseId" element={<CourseEditor />} />
           <Route path="/portal/teach/courses/:courseId/quizzes/:quizId" element={<QuizEditor />} />
           <Route path="/portal/teach/courses/:courseId/assignments/:assignmentId" element={<SubmissionsInbox />} />
+          <Route path="/portal/teach/login"          element={<AuthProvider><PortalLogin /></AuthProvider>} />
+          <Route path="/portal/teach/invite"         element={<AuthProvider><AcceptInvite /></AuthProvider>} />
           <Route path="/portal/teach/create-account" element={<AuthProvider><CreateAccount /></AuthProvider>} />
-          <Route path="/portal/teach/login"  element={<AuthProvider><PortalLogin /></AuthProvider>} />
-          <Route path="/portal/teach/invite" element={<AuthProvider><AcceptInvite /></AuthProvider>} />
-          <Route path="/portal/teach"        element={<AuthProvider><ProtectedRoute><CourseView /></ProtectedRoute></AuthProvider>} />
+          <Route path="/portal/teach"                element={<AuthProvider><ProtectedRoute><CourseView /></ProtectedRoute></AuthProvider>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
