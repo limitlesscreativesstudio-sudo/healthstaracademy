@@ -12,10 +12,10 @@ import StickyMobileCTA from "./components/StickyMobileCTA";
 import ScrollToTop from "./components/ScrollToTop";
 import HomePage from "./pages/portal/HomePage";
 import AboutPage from "./pages/portal/AboutPage";
-import ProgramsPage from "./pages/ProgramsPage";
-import LocationsPage from "./pages/LocationsPage";
+import ProgramsPage from "./pages/portal/ProgramsPage";
+import LocationsPage from "./pages/portal/LocationsPage";
 import AdmissionsPage from "./pages/portal/AdmissionsPage";
-import PreQualificationPage from "./pages/PreQualificationPage";
+import PreQualificationPage from "./pages/portal/PreQualificationPage";
 import CohortsPage from "./pages/portal/CohortsPage";
 import GalleryPage from "./pages/portal/GalleryPage";
 import ContactPage from "./pages/portal/ContactPage";
@@ -53,10 +53,10 @@ import QuizView from "./pages/portal/teach/QuizView";
 import Account from "./pages/portal/teach/Account";
 import CareerPortal from "./pages/portal/teach/CareerPortal";
 import RequiredWork from "./pages/portal/teach/RequiredWork";
-import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
-import TermsOfServicePage from "./pages/TermsOfServicePage";
-import RefundPolicyPage from "./pages/RefundPolicyPage";
-import NotFound from "./pages/NotFound";
+import PrivacyPolicyPage from "./pages/portal/PrivacyPolicyPage";
+import TermsOfServicePage from "./pages/portal/TermsOfServicePage";
+import RefundPolicyPage from "./pages/portal/RefundPolicyPage";
+import NotFound from "./pages/portal/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -110,16 +110,15 @@ const AppShell = () => {
           <Route path="/portal/required" element={<RequiredWork />} />
           <Route path="/portal/courses" element={<StudentDashboard />} />
           <Route path="/portal/courses/:courseId/*" element={<CourseView />} />
-          <Route path="/portal/teach" element={<InstructorDashboard />} />
           <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<AssignmentView />} />
           <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<QuizView />} />
           <Route path="/portal/teach/courses/:courseId" element={<CourseEditor />} />
           <Route path="/portal/teach/courses/:courseId/quizzes/:quizId" element={<QuizEditor />} />
           <Route path="/portal/teach/courses/:courseId/assignments/:assignmentId" element={<SubmissionsInbox />} />
-          <Route path="*" element={<NotFound />} />
-          <Route path="/portal/teach/login"  element={<PortalLogin />} />
+          <Route path="/portal/teach/login" element={<PortalLogin onLogin={() => window.location.href='/portal/teach'} />} />
           <Route path="/portal/teach/invite" element={<AcceptInvite />} />
-          <Route path="/portal/teach"        element={<CourseView   />} />
+          <Route path="/portal/teach" element={<CourseView />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
       {!isApp && <Footer />}
