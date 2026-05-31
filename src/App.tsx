@@ -1,3 +1,5 @@
+import { AuthProvider }  from './pages/portal/teach/AuthContext';
+import ProtectedRoute    from './pages/portal/teach/ProtectedRoute';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
