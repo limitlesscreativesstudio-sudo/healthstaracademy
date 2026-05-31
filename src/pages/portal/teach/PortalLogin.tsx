@@ -18,7 +18,7 @@ const RESOURCES = [
   { icon:'💰', title:'Salary Comparison', desc:'Compare CNA wages by facility type and region in California.', action:'View Data' },
 ];
 
-const CareerPortal: React.FC = () => {
+const CareerPortal: React.FC<{ onLogin?: () => void }> = () => {
   const [tab, setTab] = useState<'jobs'|'resources'>('jobs');
   const [filter, setFilter] = useState('All');
 
