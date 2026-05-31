@@ -11,6 +11,9 @@ import StudentDashboard  from './StudentDashboard';
 import StudentGrades     from './StudentGrades';
 import SyllabusTab       from './SyllabusTab';
 import AssignmentView    from './AssignmentView';
+import Dashboard         from './Dashboard';
+import SettingsTab       from './SettingsTab';
+import CalendarTab       from './CalendarTab';
 import { useAuth }       from './AuthContext';
 
 const C = {
@@ -219,7 +222,8 @@ const ModulesHome: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
   };
 
   return (
-    <div style={{ padding:24 }}>
+    <div style={{ display:'flex' }}>
+    <div style={{ flex:1, padding:24 }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Modules</h2>
         <div style={{ display:'flex', gap:8 }}>
@@ -339,6 +343,41 @@ const ModulesHome: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
         </div>
       ))}
     </div>
+    {/* Right sidebar — Course Status */}
+    <div style={{ width:200, flexShrink:0, padding:'24px 12px', borderLeft:`1px solid ${C.border}` }}>
+      <div style={{ marginBottom:16 }}>
+        <h3 style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 10px', textTransform:'uppercase', letterSpacing:0.5 }}>Course Status</h3>
+        <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:10 }}>
+          <div style={{ width:10, height:10, borderRadius:'50%', background:C.success }}/>
+          <span style={{ fontSize:13, fontFamily:'sans-serif', color:C.text, fontWeight:600 }}>Published</span>
+          <span style={{ fontSize:11, color:C.muted }}>▾</span>
+        </div>
+      </div>
+      <div style={{ marginBottom:16 }}>
+        <h3 style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 10px', textTransform:'uppercase', letterSpacing:0.5 }}>Course Actions</h3>
+        {[
+          ['📥','Import Existing Content'],
+          ['🔄','Import from Commons'],
+          ['🏠','Choose Home Page'],
+          ['📊','View Course Stream'],
+          ['📢','New Announcement'],
+          ['📈','New Analytics'],
+          ['🔔','View Notifications'],
+        ].map(([icon, label]) => (
+          <div key={label as string} style={{ display:'flex', alignItems:'center', gap:7, padding:'6px 0', borderBottom:`1px solid ${C.border}`, cursor:'pointer', fontSize:12, fontFamily:'sans-serif', color:C.primary }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = C.text}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = C.primary}>
+            <span>{icon as string}</span>{label as string}
+          </div>
+        ))}
+      </div>
+      <div>
+        <h3 style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 8px', textTransform:'uppercase', letterSpacing:0.5 }}>Coming Up</h3>
+        <p style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', margin:0 }}>Nothing for the next week</p>
+        <a href="#" style={{ fontSize:11, color:C.primary, fontFamily:'sans-serif', textDecoration:'none', display:'block', marginTop:6 }}>View Calendar →</a>
+      </div>
+    </div>
+    </div>
   );
 };
 
@@ -373,6 +412,7 @@ const NAV_ITEMS = [
   { id:'career',        label:'Career Portal',      icon:'💼' },
   { id:'analytics',     label:'New Analytics',      icon:'📈' },
   { id:'lucid',         label:'Lucid (Whiteboard)', icon:'✏️' },
+  { id:'calendar',      label:'Calendar',           icon:'📅' },
   { id:'settings',      label:'Settings',           icon:'⚙️' },
 ];
 
@@ -386,6 +426,8 @@ const CourseView: React.FC = () => {
   const [activeCourse, setActiveCourse] = useState<Course>(COURSES[0]);
   const [activeTab, setActiveTab]       = useState('home');
   const [showCourses, setShowCourses]   = useState(false);
+  const [showProfile, setShowProfile]   = useState(false);
+  const [showDashboard, setShowDashboard] = useState(true);
   const [pageLoading, setPageLoading]   = useState(true);
   const [pageError, setPageError]       = useState('');
 
@@ -411,6 +453,14 @@ const CourseView: React.FC = () => {
   };
 
   if (pageLoading) return <CourseViewSkeleton />;
+  if (showDashboard) return (
+    <Dashboard onEnterCourse={(id) => {
+      const c = COURSES.find(x => x.id === id);
+      if (c) setActiveCourse(c);
+      setShowDashboard(false);
+      setActiveTab('home');
+    }}/>
+  );
   if (pageError)   return (
     <CourseViewError
       message={pageError}
@@ -440,7 +490,8 @@ const CourseView: React.FC = () => {
     rubrics:       <Placeholder title="Rubrics" />,
     analytics:     <Placeholder title="New Analytics" />,
     lucid:         <Placeholder title="Lucid (Whiteboard)" />,
-    settings:      <Placeholder title="Settings" />,
+    settings:      <SettingsTab />,
+    calendar:      <CalendarTab />,
   };
 
   return (
@@ -448,7 +499,8 @@ const CourseView: React.FC = () => {
 
       {/* Fixed purple left rail */}
       <div style={{ width:52, background:C.nav, minHeight:'100vh', position:'fixed', left:0, top:0, zIndex:100, display:'flex', flexDirection:'column', alignItems:'center', paddingTop:10 }}>
-        <img src="/hsa-logo.png" alt="HSA"
+        <img src="/hsa-logo.png" alt="HSA" onClick={() => setShowDashboard(true)}
+          title="Go to Dashboard"
           style={{ width:38, height:38, borderRadius:'50%', marginBottom:16, cursor:'pointer', objectFit:'cover', border:'2px solid rgba(255,255,255,0.3)', display:'block' }}/>
         {['🏠','📚','📅','✉️','⏱️'].map((icon, i) => (
           <div key={i}
@@ -458,11 +510,50 @@ const CourseView: React.FC = () => {
             {icon}
           </div>
         ))}
-        <div style={{ marginTop:'auto', marginBottom:10 }}>
-          <button onClick={handleLogout}
-            style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.55)', fontSize:16, width:52, height:40 }}>
-            ↩
+        <div style={{ marginTop:'auto', marginBottom:10, position:'relative' }}>
+          <button onClick={() => setShowProfile(!showProfile)}
+            style={{ width:36, height:36, borderRadius:'50%', background:'linear-gradient(135deg,#9B6DD0,#5BC8E8)', border:'2px solid rgba(255,255,255,0.4)', cursor:'pointer', color:'white', fontSize:12, fontWeight:700, fontFamily:'sans-serif', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            {authUser?.avatarInitials ?? '?'}
           </button>
+          {showProfile && (
+            <div style={{ position:'absolute', bottom:'110%', left:58, background:'white', border:'1px solid #D4C8E8', borderRadius:8, boxShadow:'0 8px 28px rgba(0,0,0,0.2)', zIndex:200, width:220, overflow:'hidden' }}>
+              {/* Profile header */}
+              <div style={{ padding:'14px 16px', borderBottom:'1px solid #D4C8E8', display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ width:38, height:38, borderRadius:'50%', background:'linear-gradient(135deg,#9B6DD0,#5BC8E8)', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:13, fontWeight:700, flexShrink:0 }}>
+                  {authUser?.avatarInitials ?? '?'}
+                </div>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#2D1B4E', fontFamily:'sans-serif' }}>{authUser?.name}</div>
+                  <div style={{ fontSize:11, color:'#8878A8', fontFamily:'sans-serif', textTransform:'capitalize' }}>{authUser?.role}</div>
+                </div>
+              </div>
+              {/* Accessibility */}
+              <div style={{ padding:'10px 16px', borderBottom:'1px solid #D4C8E8' }}>
+                <div style={{ fontSize:11, fontWeight:700, color:'#8878A8', textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', marginBottom:8 }}>Accessibility</div>
+                {[['Use High Contrast UI'],['Use a Dyslexia Friendly Font']].map(([label]) => (
+                  <label key={label} style={{ display:'flex', alignItems:'center', gap:8, fontSize:12, fontFamily:'sans-serif', color:'#2D1B4E', marginBottom:6, cursor:'pointer' }}>
+                    <input type="checkbox" style={{ accentColor:'#7B4DB5' }}/>{label}
+                  </label>
+                ))}
+              </div>
+              {/* Menu items */}
+              {[['🔔','Notifications'],['👤','Profile'],['📁','Files'],['⚙️','Settings']].map(([icon, label]) => (
+                <div key={label}
+                  onClick={() => { if(label==='Settings') setActiveTab('settings'); if(label==='Profile') setActiveTab('settings'); setShowProfile(false); setShowDashboard(false); }}
+                  style={{ padding:'9px 16px', display:'flex', alignItems:'center', gap:10, cursor:'pointer', fontSize:13, fontFamily:'sans-serif', color:'#2D1B4E', borderBottom:'1px solid #f0edf7' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f5f3fa'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'white'}>
+                  <span>{icon}</span>{label}
+                </div>
+              ))}
+              <div onClick={() => { handleLogout(); setShowProfile(false); }}
+                style={{ padding:'9px 16px', display:'flex', alignItems:'center', gap:10, cursor:'pointer', fontSize:13, fontFamily:'sans-serif', color:'#C0392B' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#fdecea'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'white'}>
+                <span>↩</span> Logout
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
