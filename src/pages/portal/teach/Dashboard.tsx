@@ -1,234 +1,688 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import AttendanceTab     from './AttendanceTab';
+import CareerPortal      from './CareerPortal';
+import ClinicalSkillsTab from './ClinicalSkillsTab';
+import FilesTab          from './FilesTab';
+import PagesTab          from './PagesTab';
+import QuizView          from './QuizView';
+import ReadinessTab      from './ReadinessTab';
+import RequiredWork      from './RequiredWork';
+import StudentDashboard  from './StudentDashboard';
+import StudentGrades     from './StudentGrades';
+import SyllabusTab       from './SyllabusTab';
+import AssignmentView    from './AssignmentView';
+import Dashboard         from './Dashboard';
+import SettingsTab       from './SettingsTab';
+import CalendarTab       from './CalendarTab';
 import { useAuth, supabase } from './AuthContext';
-import { useEffect } from 'react';
 
 const C = {
-  primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF',
-  border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8',
-  success:'#127A1B', error:'#C0392B', warn:'#E67E22',
-  nav:'#3D1B6E',
+  nav:'#3D1B6E', primary:'#7B4DB5', accent:'#5BC8E8',
+  bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8',
+  text:'#2D1B4E', muted:'#8878A8', success:'#127A1B',
+  error:'#C0392B', warn:'#E67E22',
 } as const;
 
-interface CourseCard {
-  id: number; name: string; subtitle: string; code: string;
-  color: string; published: boolean; startDate: string; endDate: string;
-  students: number; teachers: number;
+// ── Types ─────────────────────────────────────────────────────────────────────
+interface Course {
+  id: number; uuid?: string; name: string; code: string;
+  color: string; term: string; students: number; published: boolean;
+}
+interface ModuleItem {
+  id: string; type: string; name: string;
+  pts?: number; published: boolean; indent: number;
+}
+interface Module {
+  id: string; name: string; published: boolean;
+  expanded: boolean; items: ModuleItem[];
+  position: number;
 }
 
-const COURSES: CourseCard[] = [
-  { id:1,  name:'Health Star Academy Hybrid Day NATP (2026-1)', subtitle:'Online & Hybrid CNA Training...', code:'HSA-NATP-2026-1', color:'#7B4DB5', published:true,  startDate:'1/26/2026', endDate:'3/9/2026',    students:12, teachers:2 },
-  { id:2,  name:'Health Star Academy Hybrid Day NATP (2026-2)', subtitle:'Online & Hybrid CNA Training...', code:'HSA-NATP-2026-2', color:'#5BC8E8', published:true,  startDate:'3/16/2026', endDate:'4/7/2026',   students:10, teachers:2 },
-  { id:3,  name:'Health Star Academy Hybrid Day NATP (2025-4)', subtitle:'Online & Hybrid CNA Training...', code:'HSA-NATP-2025-4', color:'#9B6DD0', published:true,  startDate:'10/13/2025',endDate:'11/25/2025', students:11, teachers:2 },
-  { id:4,  name:'Health Star Academy Hybrid Day NATP (2025-3)', subtitle:'Online & Hybrid CNA Training...', code:'HSA-NATP-2025-3', color:'#E8963C', published:true,  startDate:'8/25/2025', endDate:'10/6/2025',  students:9,  teachers:2 },
-  { id:5,  name:'Health Star Academy Hybrid Day NATP (2025-2)', subtitle:'CNA Class Group: 2025-2 (Daytime)', code:'HSA-NATP-2025-2', color:'#CC4499', published:true,  startDate:'7/7/2025',  endDate:'8/18/2025',  students:8,  teachers:2 },
-  { id:6,  name:'Health Star Academy Hybrid Day NATP (2025-1)', subtitle:'CNA Class Group: 2025-1 (Daytime)', code:'HSA-NATP-2025-1', color:'#E8963C', published:true,  startDate:'5/19/2025', endDate:'6/30/2025',  students:10, teachers:2 },
-  { id:7,  name:'Health Star Academy Hybrid Day NATP (2026-3)', subtitle:'Online & Hybrid CNA Training...', code:'HSA-NATP-2026-3', color:'#3A7BD5', published:false, startDate:'5/4/2026',  endDate:'6/15/2026',  students:0,  teachers:1 },
-  { id:8,  name:'Health Star Academy Hybrid Day NATP (2026-4)', subtitle:'Online & Hybrid CNA Training...', code:'HSA-NATP-2026-4', color:'#3A7BD5', published:false, startDate:'7/6/2026',  endDate:'8/17/2026',  students:0,  teachers:1 },
-  { id:9,  name:'Health Star Academy Hybrid Weekend NATP',      subtitle:'Hybrid Weekend NATP',             code:'HSA-NATP-WE',     color:'#2C3E6B', published:false, startDate:'TBD',       endDate:'TBD',        students:0,  teachers:1 },
+// ── Seed data ─────────────────────────────────────────────────────────────────
+const COURSES: Course[] = [
+  { id:1, name:'Health Star Academy Hybrid Day NATP (2026-1)', code:'HSA-NATP-2026-1', color:'#7B4DB5', term:'1/26/2026–3/9/2026',    students:12, published:true  },
+  { id:2, name:'Health Star Academy Hybrid Day NATP (2026-2)', code:'HSA-NATP-2026-2', color:'#5BC8E8', term:'3/16/2026–4/7/2026',   students:10, published:true  },
+  { id:3, name:'Health Star Academy Hybrid Day NATP (2025-4)', code:'HSA-NATP-2025-4', color:'#9B6DD0', term:'10/13/2025–11/25/2025', students:11, published:false },
 ];
 
-const TODO_ITEMS = [
-  { id:1, text:'Grade 8. Case Study w/ Questions', course:'Hybrid Day NATP (2026-1)', pts:'3 pts', due:'No Due Date', color:C.primary },
-  { id:2, text:'Grade 8. Case Study w/ Questions', course:'Hybrid Day NATP (2026-1)', pts:'3 pts', due:'No Due Date', color:C.primary },
-  { id:3, text:'Grade 8. Case Study w/ Questions', course:'Hybrid Day NATP (2026-2)', pts:'3 pts', due:'No Due Date', color:'#5BC8E8' },
-  { id:4, text:'Grade Roll Call Attendance',        course:'Hybrid Day NATP (2026-2)', pts:'100 pts', due:'No Due Date', color:'#5BC8E8' },
-  { id:5, text:'Grade 8. Case Study w/ Questions', course:'Hybrid Day NATP (2025-2)', pts:'3 pts', due:'Jul 15, 2025 at 4am', color:'#CC4499' },
-];
+const itemIcon = (t: string) =>
+  ({ assignment:'📝', quiz:'❓', page:'📄', file:'📎', video:'🎥', discussion:'💬', external_url:'🔗' }[t] ?? '📄');
 
-const CourseCardComp: React.FC<{ course: CourseCard; onEnter: (id:number) => void; canEdit: boolean }> = ({ course, onEnter, canEdit }) => (
-  <div style={{ border:`1px solid ${C.border}`, borderRadius:8, overflow:'hidden', background:C.white, cursor:'pointer', transition:'box-shadow .2s', flexShrink:0, width:220 }}
-    onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(61,27,110,0.18)'}
-    onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = 'none'}>
-    {/* Card image / color band */}
-    <div onClick={() => onEnter(course.id)}
-      style={{ height:140, background:course.color, display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
-      <img src="/hsa-logo.png" alt="HSA" style={{ width:80, height:80, borderRadius:'50%', objectFit:'cover', border:'3px solid rgba(255,255,255,0.4)', opacity:0.9 }}/>
-      {!course.published && (
-        <div style={{ position:'absolute', top:8, left:8 }}>
-          <button style={{ padding:'3px 10px', background:'rgba(0,0,0,0.5)', border:'none', borderRadius:4, color:'white', fontSize:11, cursor:'pointer', fontFamily:'sans-serif', fontWeight:600 }}>
-            Publish
-          </button>
-        </div>
-      )}
-      <div style={{ position:'absolute', top:8, right:8 }}>
-        <button style={{ background:'rgba(0,0,0,0.3)', border:'none', borderRadius:4, color:'white', fontSize:16, cursor:'pointer', width:28, height:28 }}>⋯</button>
-      </div>
+// ── Skeleton loader ───────────────────────────────────────────────────────────
+const Skeleton: React.FC<{ w?: string | number; h?: number; radius?: number; mb?: number }> =
+  ({ w = '100%', h = 14, radius = 4, mb = 0 }) => (
+  <div style={{
+    width: w, height: h, borderRadius: radius, marginBottom: mb,
+    background: 'linear-gradient(90deg,#e8e4f0 25%,#f0edf8 50%,#e8e4f0 75%)',
+    backgroundSize: '200% 100%',
+    animation: 'hsa-shimmer 1.4s ease infinite',
+  }}/>
+);
+
+const CourseViewSkeleton: React.FC = () => (
+  <div style={{ display:'flex', minHeight:'100vh', background:C.bg }}>
+    <div style={{ width:52, background:'#3D1B6E', minHeight:'100vh' }}/>
+    <div style={{ width:200, background:C.white, borderRight:`1px solid ${C.border}`, padding:'16px 12px' }}>
+      {Array.from({ length:12 }).map((_,i) => <Skeleton key={i} w="85%" h={12} mb={14} radius={3}/>)}
     </div>
-    {/* Card body */}
-    <div style={{ padding:'12px 12px 8px' }}>
-      <div onClick={() => onEnter(course.id)} style={{ fontSize:13, fontWeight:600, color:C.primary, fontFamily:'sans-serif', lineHeight:1.35, marginBottom:4 }}>
-        {course.name.replace('Health Star Academy ','').replace('Hybrid Day NATP','Hybrid Day ...')}
-      </div>
-      <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif', marginBottom:6 }}>{course.subtitle}</div>
-      {(course.startDate !== 'TBD') && (
-        <div style={{ fontSize:10, color:C.muted, fontFamily:'sans-serif' }}>
-          {course.startDate} – {course.endDate}
+    <div style={{ flex:1, padding:28 }}>
+      <Skeleton w={320} h={24} mb={20} radius={6}/>
+      {Array.from({ length:4 }).map((_,i) => (
+        <div key={i} style={{ marginBottom:16, border:`1px solid ${C.border}`, borderRadius:6, padding:16 }}>
+          <Skeleton w="60%" h={14} mb={10}/>
+          <Skeleton w="90%" h={11} mb={6}/>
+          <Skeleton w="75%" h={11} mb={0}/>
         </div>
-      )}
-    </div>
-    {/* Card footer icons */}
-    <div style={{ padding:'8px 12px', borderTop:`1px solid ${C.border}`, display:'flex', gap:10 }}>
-      {['📝','💬','👥','📁'].map((icon,i) => (
-        <span key={i} style={{ fontSize:15, cursor:'pointer', opacity:0.6 }}
-          onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '1'}
-          onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '0.6'}>
-          {icon}
-        </span>
       ))}
+    </div>
+    <style>{`@keyframes hsa-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
+  </div>
+);
+
+// ── Error screen ──────────────────────────────────────────────────────────────
+const CourseViewError: React.FC<{ message: string; onRetry: () => void }> = ({ message, onRetry }) => (
+  <div style={{ minHeight:'100vh', background:C.bg, display:'flex', alignItems:'center', justifyContent:'center' }}>
+    <div style={{ background:C.white, borderRadius:12, padding:44, textAlign:'center', maxWidth:440, boxShadow:'0 8px 32px rgba(0,0,0,0.1)' }}>
+      <div style={{ fontSize:48, marginBottom:16 }}>⚠️</div>
+      <h2 style={{ fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 10px' }}>Something went wrong</h2>
+      <p style={{ fontSize:14, color:C.muted, fontFamily:'sans-serif', lineHeight:1.7, margin:'0 0 24px' }}>{message}</p>
+      <div style={{ display:'flex', gap:10, justifyContent:'center' }}>
+        <button onClick={onRetry} style={{ padding:'10px 24px', border:'none', borderRadius:6, background:C.primary, color:'white', fontSize:14, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer' }}>
+          Try Again
+        </button>
+        <a href="/portal/teach/login" style={{ padding:'10px 24px', border:`1px solid ${C.border}`, borderRadius:6, background:C.white, color:C.text, fontSize:14, fontFamily:'sans-serif', textDecoration:'none', display:'inline-block' }}>
+          Sign In Again
+        </a>
+      </div>
     </div>
   </div>
 );
 
-interface DashboardProps {
-  onEnterCourse: (courseId: number) => void;
-}
+// ── Announcements panel ───────────────────────────────────────────────────────
+const AnnouncementsPanel: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
+  const [anns, setAnns] = useState([
+    { id:1, title:'Week 3 Clinical Prep Reminder',     body:'Please review the hand washing technique video before your clinical visit this Friday. Bring your signed skills checklist.', date:'May 26, 2026', replies:3 },
+    { id:2, title:'Vital Signs Lab Rescheduled',       body:'Due to facility maintenance, the Vital Signs Lab has been moved to June 22. Please update your calendars.',                   date:'May 24, 2026', replies:7 },
+    { id:3, title:'Welcome to the 2026-1 Cohort!',     body:'Welcome! Please read through the syllabus and complete the Student Handbook acknowledgement before Day 2.',                   date:'Jan 26, 2026', replies:12 },
+  ]);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ title:'', body:'' });
 
-const Dashboard: React.FC<DashboardProps> = ({ onEnterCourse }) => {
-  const { user } = useAuth();
-  const canEdit = user?.canEdit ?? false;
-
-  const [dismissed, setDismissed] = useState<number[]>([]);
-  const [dbCourses, setDbCourses] = useState<any[]>([]);
-
-  // Load real courses from Supabase
-  useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase
-        .from('courses')
-        .select('id,name,code,color,published,term,teacher_id,created_at')
-        .order('created_at', { ascending: false });
-      if (data && data.length > 0) setDbCourses(data);
-    };
-    load();
-  }, []);
-  const [showCreate, setShowCreate] = useState(false);
-  const [newCourse, setNewCourse] = useState({ name:'', startDate:'', endDate:'' });
-
-  const published   = COURSES.filter(c => c.published);
-  const unpublished = COURSES.filter(c => !c.published);
-  const visible     = TODO_ITEMS.filter(t => !dismissed.includes(t.id));
+  const post = () => {
+    if (!form.title || !form.body) return;
+    setAnns(p => [{ id:Date.now(), title:form.title, body:form.body, date:'Today', replies:0 }, ...p]);
+    setForm({ title:'', body:'' });
+    setOpen(false);
+  };
 
   return (
-    <div style={{ display:'flex', minHeight:'100vh', background:C.bg }}>
-      {/* Main area */}
-      <div style={{ flex:1, padding:'28px 28px 40px', overflowY:'auto', maxWidth:'calc(100% - 280px)' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
-          <h1 style={{ margin:0, fontSize:24, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Dashboard</h1>
-          <button style={{ background:'none', border:'none', cursor:'pointer', fontSize:20, color:C.muted }}>⋯</button>
-        </div>
-
-        {/* Published courses */}
-        <div style={{ marginBottom:32 }}>
-          <h2 style={{ fontSize:16, fontWeight:600, color:C.text, fontFamily:'sans-serif', margin:'0 0 16px' }}>
-            Published Courses ({published.length})
-          </h2>
-          <div style={{ display:'flex', flexWrap:'wrap', gap:16 }}>
-            {published.map(c => (
-              <CourseCardComp key={c.id} course={c} onEnter={onEnterCourse} canEdit={canEdit}/>
-            ))}
-          </div>
-        </div>
-
-        {/* Unpublished courses */}
-        {unpublished.length > 0 && (
-          <div>
-            <h2 style={{ fontSize:16, fontWeight:600, color:C.text, fontFamily:'sans-serif', margin:'0 0 16px' }}>
-              Unpublished Courses ({unpublished.length})
-            </h2>
-            <div style={{ display:'flex', flexWrap:'wrap', gap:16 }}>
-              {unpublished.map(c => (
-                <CourseCardComp key={c.id} course={c} onEnter={onEnterCourse} canEdit={canEdit}/>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Right sidebar */}
-      <div style={{ width:280, borderLeft:`1px solid ${C.border}`, background:C.white, padding:'24px 16px', overflowY:'auto', flexShrink:0 }}>
-
-        {/* To Do */}
-        <div style={{ marginBottom:24 }}>
-          <h3 style={{ fontSize:14, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 12px' }}>To Do</h3>
-          {visible.length === 0 ? (
-            <p style={{ fontSize:13, color:C.muted, fontFamily:'sans-serif' }}>Nothing to do — you're all caught up! 🎉</p>
-          ) : (
-            visible.slice(0,7).map(item => (
-              <div key={item.id} style={{ padding:'10px 0', borderBottom:`1px solid ${C.border}`, display:'flex', gap:8 }}>
-                <div style={{ width:4, borderRadius:2, background:item.color, flexShrink:0, alignSelf:'stretch' }}/>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontSize:13, fontWeight:600, color:C.primary, fontFamily:'sans-serif', lineHeight:1.3, marginBottom:2 }}>{item.text}</div>
-                  <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>{item.course}</div>
-                  <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>{item.pts} • {item.due}</div>
-                </div>
-                <button onClick={() => setDismissed(p => [...p, item.id])}
-                  style={{ background:'none', border:'none', cursor:'pointer', color:C.muted, fontSize:14, padding:2, alignSelf:'flex-start' }}>×</button>
-              </div>
-            ))
-          )}
-          {visible.length > 7 && (
-            <button style={{ fontSize:12, color:C.primary, fontFamily:'sans-serif', background:'none', border:'none', cursor:'pointer', padding:'8px 0' }}>
-              {visible.length - 7} more...
-            </button>
-          )}
-        </div>
-
-        {/* Coming Up */}
-        <div style={{ marginBottom:24 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-            <h3 style={{ fontSize:14, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:0 }}>Coming Up</h3>
-            <a href="#" style={{ fontSize:11, color:C.primary, fontFamily:'sans-serif', textDecoration:'none' }}>View Calendar</a>
-          </div>
-          <p style={{ fontSize:13, color:C.muted, fontFamily:'sans-serif', margin:0 }}>Nothing for the next week</p>
-        </div>
-
-        {/* Recent Feedback */}
-        <div style={{ marginBottom:24 }}>
-          <h3 style={{ fontSize:14, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 8px' }}>Recent Feedback</h3>
-          <p style={{ fontSize:13, color:C.muted, fontFamily:'sans-serif', margin:0 }}>Nothing for now</p>
-        </div>
-
-        {/* Actions */}
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-          {canEdit && (
-            <button onClick={() => setShowCreate(true)}
-              style={{ padding:'9px 14px', border:`1px solid ${C.border}`, borderRadius:6, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer', textAlign:'left', color:C.text, display:'flex', alignItems:'center', gap:8 }}>
-              <span>➕</span> Start a New Course
-            </button>
-          )}
-          <button onClick={() => onEnterCourse(1)}
-            style={{ padding:'9px 14px', border:`1px solid ${C.border}`, borderRadius:6, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer', textAlign:'left', color:C.text, display:'flex', alignItems:'center', gap:8 }}>
-            <span>📊</span> View Grades
+    <div style={{ padding:24 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Announcements</h2>
+        {canEdit && (
+          <button onClick={() => setOpen(!open)} style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
+            + Announcement
           </button>
-        </div>
-
-        {/* Create course modal */}
-        {showCreate && canEdit && (
-          <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
-            <div style={{ background:C.white, borderRadius:10, padding:32, width:440, maxWidth:'95vw', boxShadow:'0 20px 60px rgba(0,0,0,0.3)' }}>
-              <h2 style={{ margin:'0 0 20px', fontSize:18, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Start a New Course</h2>
-              {[['Course Name','name','e.g. Health Star Academy Hybrid Day NATP (2026-5)'],
-                ['Start Date','startDate','e.g. 5/4/2026'],
-                ['End Date','endDate','e.g. 6/15/2026']].map(([label, key, ph]) => (
-                <div key={key} style={{ marginBottom:14 }}>
-                  <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:5 }}>{label}</label>
-                  <input value={(newCourse as any)[key]} onChange={e => setNewCourse(p => ({ ...p, [key]:e.target.value }))}
-                    placeholder={ph}
-                    style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', outline:'none' }}/>
-                </div>
-              ))}
-              <div style={{ display:'flex', justifyContent:'flex-end', gap:10, marginTop:20 }}>
-                <button onClick={() => setShowCreate(false)}
-                  style={{ padding:'8px 20px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer' }}>Cancel</button>
-                <button onClick={() => setShowCreate(false)}
-                  style={{ padding:'8px 20px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontWeight:600, cursor:'pointer' }}>Create Course</button>
-              </div>
-            </div>
-          </div>
         )}
       </div>
+      {open && (
+        <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:6, padding:20, marginBottom:16 }}>
+          <div style={{ marginBottom:12 }}>
+            <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Title *</label>
+            <input value={form.title} onChange={e => setForm(p => ({ ...p, title:e.target.value }))}
+              style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', outline:'none' }}/>
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Message *</label>
+            <textarea value={form.body} onChange={e => setForm(p => ({ ...p, body:e.target.value }))} rows={4}
+              style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', resize:'vertical', boxSizing:'border-box', outline:'none' }}/>
+          </div>
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={post} style={{ padding:'7px 18px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Post</button>
+            <button onClick={() => setOpen(false)} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
+          </div>
+        </div>
+      )}
+      {anns.map(a => (
+        <div key={a.id} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:18, marginBottom:10 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+            <h3 style={{ margin:0, fontSize:15, fontWeight:700, color:C.primary, fontFamily:'sans-serif' }}>{a.title}</h3>
+            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <span style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>{a.date}</span>
+              {canEdit && (
+                <button onClick={() => setAnns(p => p.filter(x => x.id !== a.id))}
+                  style={{ background:'none', border:'none', cursor:'pointer', color:C.error, fontSize:14 }}>✕</button>
+              )}
+            </div>
+          </div>
+          <p style={{ margin:'0 0 8px', fontSize:13, color:C.text, fontFamily:'sans-serif', lineHeight:1.65 }}>{a.body}</p>
+          <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>{a.replies} replies</div>
+        </div>
+      ))}
     </div>
   );
 };
 
-export default Dashboard;
+// ── Modules home ──────────────────────────────────────────────────────────────
+const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canEdit, courseUuid }) => {
+  const [mods, setMods]       = useState<Module[]>([]);
+  const [dbLoading, setDbLoading] = useState(true);
+  const [addMod, setAddMod]   = useState(false);
+  const [newName, setNewName] = useState('');
+  const [addItem, setAddItem] = useState<string | null>(null);
+  const [ni, setNi]           = useState({ title:'', type:'page', pts:'' });
+
+  // Load from Supabase on mount
+  useEffect(() => {
+    if (!courseUuid) { setDbLoading(false); return; }
+    const load = async () => {
+      setDbLoading(true);
+      const { data: modRows } = await supabase
+        .from('modules').select('id,name,published,position')
+        .eq('course_id', courseUuid).order('position');
+      const { data: itemRows } = await supabase
+        .from('module_items').select('id,module_id,type,title,points,published,indent,position')
+        .eq('course_id', courseUuid).order('position');
+      if (modRows) {
+        setMods(modRows.map(m => ({
+          id: m.id, name: m.name, published: m.published,
+          expanded: true, position: m.position,
+          items: (itemRows ?? []).filter(it => it.module_id === m.id).map(it => ({
+            id: it.id, type: it.type, name: it.title,
+            pts: it.points ?? undefined, published: it.published, indent: it.indent,
+          })),
+        })));
+      }
+      setDbLoading(false);
+    };
+    load();
+  }, [courseUuid]);
+
+  const toggle = (id: string) =>
+    setMods(p => p.map(m => m.id === id ? { ...m, expanded: !m.expanded } : m));
+
+  const togglePub = async (id: string, current: boolean) => {
+    setMods(p => p.map(m => m.id === id ? { ...m, published: !current } : m));
+    if (courseUuid) await supabase.from('modules').update({ published: !current }).eq('id', id);
+  };
+
+  const toggleIPub = async (iid: string, current: boolean) => {
+    setMods(p => p.map(m => ({ ...m, items: m.items.map(it => it.id === iid ? { ...it, published: !current } : it) })));
+    if (courseUuid) await supabase.from('module_items').update({ published: !current }).eq('id', iid);
+  };
+
+  const saveMod = async () => {
+    if (!newName.trim()) return;
+    if (courseUuid) {
+      const { data, error } = await supabase.from('modules')
+        .insert({ course_id: courseUuid, name: newName.trim(), published: false, position: mods.length })
+        .select().single();
+      if (!error && data) {
+        setMods(p => [...p, { id: data.id, name: data.name, published: false, expanded: true, position: mods.length, items: [] }]);
+      }
+    }
+    setNewName(''); setAddMod(false);
+  };
+
+  const saveItem = async () => {
+    if (!ni.title.trim() || !addItem) return;
+    const mod = mods.find(m => m.id === addItem);
+    if (courseUuid) {
+      const { data, error } = await supabase.from('module_items')
+        .insert({ module_id: addItem, course_id: courseUuid, type: ni.type, title: ni.title.trim(),
+          points: ni.pts ? parseInt(ni.pts) : null, published: false, indent: 0, position: mod?.items.length ?? 0 })
+        .select().single();
+      if (!error && data) {
+        setMods(p => p.map(m => m.id === addItem ? {
+          ...m, items: [...m.items, { id: data.id, type: data.type, name: data.title, pts: data.points ?? undefined, published: false, indent: 0 }]
+        } : m));
+      }
+    }
+    setNi({ title:'', type:'page', pts:'' }); setAddItem(null);
+  };
+
+  const deleteMod = async (id: string) => {
+    setMods(p => p.filter(m => m.id !== id));
+    if (courseUuid) await supabase.from('modules').delete().eq('id', id);
+  };
+
+  if (dbLoading) return <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Loading modules...</div>;
+
+  return (
+    <div style={{ display:'flex' }}>
+    <div style={{ flex:1, padding:24 }}>
+      {!courseUuid && (
+        <div style={{ marginBottom:16, padding:'10px 14px', background:'#FFF8E1', border:'1px solid #FFE082', borderRadius:6, fontSize:13, color:'#7B4DB5', fontFamily:'sans-serif' }}>
+          💡 This course hasn't been saved to the database yet. Modules you add here will be saved once the course is created in Supabase.
+        </div>
+      )}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Modules</h2>
+        <div style={{ display:'flex', gap:8 }}>
+          <button onClick={() => setMods(p => p.map(m => ({ ...m, expanded:false })))}
+            style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
+            Collapse All
+          </button>
+          <button onClick={() => setMods(p => p.map(m => ({ ...m, expanded:true })))}
+            style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
+            Expand All
+          </button>
+          {canEdit && (
+            <button onClick={() => setAddMod(true)}
+              style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
+              + Module
+            </button>
+          )}
+        </div>
+      </div>
+
+      {addMod && canEdit && (
+        <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:5, padding:16, marginBottom:14 }}>
+          <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:5 }}>Module Name *</label>
+          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Day 11 [...]"
+            style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', marginBottom:10, outline:'none' }}/>
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={saveMod} style={{ padding:'6px 16px', border:'none', borderRadius:4, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Add Module</button>
+            <button onClick={() => setAddMod(false)} style={{ padding:'6px 12px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {mods.map(m => (
+        <div key={m.id} style={{ border:`1px solid ${C.border}`, borderRadius:5, marginBottom:10, overflow:'hidden', background:C.white }}>
+          {/* Module header row */}
+          <div style={{ padding:'11px 14px', background:'#F0EDF7', display:'flex', alignItems:'center', gap:10, borderBottom:m.expanded ? `1px solid ${C.border}` : 'none' }}>
+            <button onClick={() => toggle(m.id as string)}
+              style={{ background:'none', border:'none', cursor:'pointer', padding:0, color:C.text, fontSize:14, flexShrink:0 }}>
+              {m.expanded ? '▼' : '▶'}
+            </button>
+            <span style={{ flex:1, fontWeight:700, fontSize:13, fontFamily:'sans-serif', color:C.text, lineHeight:1.4 }}>{m.name}</span>
+            {!m.published && (
+              <span style={{ fontSize:10, padding:'2px 8px', borderRadius:20, background:C.bg, color:C.muted, fontFamily:'sans-serif' }}>Unpublished</span>
+            )}
+            {canEdit && (
+              <div
+                onClick={() => togglePub(m.id as string, m.published)}
+                title={m.published ? 'Published' : 'Unpublished'}
+                style={{ width:18, height:18, borderRadius:'50%', background:m.published ? C.success : C.border, cursor:'pointer', flexShrink:0 }}
+              />
+            )}
+            {canEdit && (
+              <button onClick={() => setAddItem(m.id as string)}
+                style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:12, fontFamily:'sans-serif', padding:'2px 6px' }}>
+                + Item
+              </button>
+            )}
+            {canEdit && (
+              <button onClick={() => deleteMod(m.id as string)}
+                style={{ background:'none', border:'none', cursor:'pointer', color:C.error, padding:3, fontSize:14 }}>
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Module items */}
+          {m.expanded && (
+            <>
+              {m.items.map((it, i) => (
+                <div key={it.id}
+                  style={{ padding:'9px 14px', paddingLeft:14 + (it.indent * 20), display:'flex', alignItems:'center', gap:10, borderBottom:i < m.items.length - 1 ? `1px solid ${C.border}` : 'none', cursor:'pointer' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#faf9fc'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
+                  <span style={{ fontSize:13 }}>{itemIcon(it.type)}</span>
+                  <span style={{ flex:1, fontSize:13, color:C.primary, fontFamily:'sans-serif', fontWeight:500 }}>{it.name}</span>
+                  {it.pts && <span style={{ fontSize:12, color:C.muted }}>{it.pts} pts</span>}
+                  <div
+                    onClick={() => toggleIPub(it.id as string, it.published)}
+                    title={it.published ? 'Published' : 'Unpublished'}
+                    style={{ width:16, height:16, borderRadius:'50%', background:it.published ? C.success : C.border, cursor:'pointer', flexShrink:0 }}
+                  />
+                </div>
+              ))}
+
+              {/* Add item form */}
+              {addItem === m.id && canEdit ? (
+                <div style={{ padding:'12px 14px', borderTop:`1px solid ${C.border}`, background:'#faf9fc' }}>
+                  <div style={{ display:'flex', gap:8, marginBottom:8 }}>
+                    <select value={ni.type} onChange={e => setNi(p => ({ ...p, type:e.target.value }))}
+                      style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 8px', fontSize:12, fontFamily:'sans-serif', color:C.text }}>
+                      {['page','assignment','quiz','file','video','discussion'].map(t => (
+                        <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                      ))}
+                    </select>
+                    <input value={ni.title} onChange={e => setNi(p => ({ ...p, title:e.target.value }))} placeholder="Item title"
+                      style={{ flex:1, border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 9px', fontSize:13, fontFamily:'sans-serif', color:C.text, outline:'none' }}/>
+                    <input value={ni.pts} onChange={e => setNi(p => ({ ...p, pts:e.target.value }))} placeholder="pts"
+                      style={{ width:52, border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 7px', fontSize:13, fontFamily:'sans-serif', color:C.text, outline:'none' }}/>
+                  </div>
+                  <div style={{ display:'flex', gap:6 }}>
+                    <button onClick={saveItem} style={{ padding:'5px 14px', border:'none', borderRadius:4, background:C.primary, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>Add</button>
+                    <button onClick={() => setAddItem(null)} style={{ padding:'5px 11px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                canEdit && (
+                  <div onClick={() => setAddItem(m.id as string)}
+                    style={{ padding:'8px 14px', borderTop:`1px dashed ${C.border}`, cursor:'pointer', color:C.primary, fontSize:12, fontFamily:'sans-serif', display:'flex', alignItems:'center', gap:5 }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f4f1fc'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
+                    + Add Item
+                  </div>
+                )
+              )}
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+    {/* Right sidebar — Course Status */}
+    <div style={{ width:200, flexShrink:0, padding:'24px 12px', borderLeft:`1px solid ${C.border}` }}>
+      <div style={{ marginBottom:16 }}>
+        <h3 style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 10px', textTransform:'uppercase', letterSpacing:0.5 }}>Course Status</h3>
+        <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:10 }}>
+          <div style={{ width:10, height:10, borderRadius:'50%', background:C.success }}/>
+          <span style={{ fontSize:13, fontFamily:'sans-serif', color:C.text, fontWeight:600 }}>Published</span>
+          <span style={{ fontSize:11, color:C.muted }}>▾</span>
+        </div>
+      </div>
+      <div style={{ marginBottom:16 }}>
+        <h3 style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 10px', textTransform:'uppercase', letterSpacing:0.5 }}>Course Actions</h3>
+        {[
+          ['📥','Import Existing Content'],
+          ['🔄','Import from Commons'],
+          ['🏠','Choose Home Page'],
+          ['📊','View Course Stream'],
+          ['📢','New Announcement'],
+          ['📈','New Analytics'],
+          ['🔔','View Notifications'],
+        ].map(([icon, label]) => (
+          <div key={label as string} style={{ display:'flex', alignItems:'center', gap:7, padding:'6px 0', borderBottom:`1px solid ${C.border}`, cursor:'pointer', fontSize:12, fontFamily:'sans-serif', color:C.primary }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = C.text}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = C.primary}>
+            <span>{icon as string}</span>{label as string}
+          </div>
+        ))}
+      </div>
+      <div>
+        <h3 style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 8px', textTransform:'uppercase', letterSpacing:0.5 }}>Coming Up</h3>
+        <p style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', margin:0 }}>Nothing for the next week</p>
+        <a href="#" style={{ fontSize:11, color:C.primary, fontFamily:'sans-serif', textDecoration:'none', display:'block', marginTop:6 }}>View Calendar →</a>
+      </div>
+    </div>
+    </div>
+  );
+};
+
+// ── Placeholder ───────────────────────────────────────────────────────────────
+const Placeholder: React.FC<{ title: string }> = ({ title }) => (
+  <div style={{ padding:48, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>
+    <div style={{ fontSize:38, marginBottom:14 }}>🚧</div>
+    <div style={{ fontSize:16, fontWeight:600, color:C.text, marginBottom:6 }}>{title}</div>
+    <div style={{ fontSize:13 }}>This section is ready to connect to Supabase.</div>
+  </div>
+);
+
+// ── Nav items ─────────────────────────────────────────────────────────────────
+const NAV_ITEMS = [
+  { id:'home',          label:'Home',               icon:'🏠' },
+  { id:'announcements', label:'Announcements',      icon:'📢' },
+  { id:'assignments',   label:'Assignments',        icon:'✅' },
+  { id:'discussions',   label:'Discussions',        icon:'💬' },
+  { id:'grades',        label:'Grades',             icon:'📊' },
+  { id:'people',        label:'People',             icon:'👥' },
+  { id:'pages',         label:'Pages',              icon:'📄' },
+  { id:'files',         label:'Files',              icon:'📁' },
+  { id:'syllabus',      label:'Syllabus',           icon:'📋' },
+  { id:'outcomes',      label:'Outcomes',           icon:'🎯' },
+  { id:'rubrics',       label:'Rubrics',            icon:'📏' },
+  { id:'quizzes',       label:'Quizzes',            icon:'❓' },
+  { id:'modules',       label:'Modules',            icon:'📦' },
+  { id:'attendance',    label:'Attendance',         icon:'✔️' },
+  { id:'clinical',      label:'Clinical Skills',    icon:'🩺' },
+  { id:'readiness',     label:'Exam Readiness',     icon:'🏆' },
+  { id:'required',      label:'Required Work',      icon:'📌' },
+  { id:'career',        label:'Career Portal',      icon:'💼' },
+  { id:'analytics',     label:'New Analytics',      icon:'📈' },
+  { id:'lucid',         label:'Lucid (Whiteboard)', icon:'✏️' },
+  { id:'calendar',      label:'Calendar',           icon:'📅' },
+  { id:'settings',      label:'Settings',           icon:'⚙️' },
+];
+
+// ── Main CourseView ───────────────────────────────────────────────────────────
+const CourseView: React.FC = () => {
+  const { user: authUser, logout } = useAuth();
+
+  const canEdit        = authUser?.canEdit        ?? false;
+  const canManageUsers = authUser?.canManageUsers  ?? false;
+
+  const [activeCourse, setActiveCourse] = useState<Course>(COURSES[0]);
+  const [activeTab, setActiveTab]       = useState('home');
+  const [showCourses, setShowCourses]   = useState(false);
+  const [showProfile, setShowProfile]   = useState(false);
+  const [showDashboard, setShowDashboard] = useState(true);
+  const [pageLoading, setPageLoading]   = useState(true);
+  const [pageError, setPageError]       = useState('');
+
+  // Simulate initial data load
+  // SWAP: fetch courses from Supabase here
+  React.useEffect(() => {
+    const load = async () => {
+      try {
+        setPageLoading(true);
+        await new Promise(r => setTimeout(r, 700));
+        setPageLoading(false);
+      } catch (err: any) {
+        setPageError(err?.message ?? 'Failed to load course data. Please try again.');
+        setPageLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    window.location.replace('/portal/teach/login');
+  };
+
+  if (pageLoading) return <CourseViewSkeleton />;
+  if (showDashboard) return (
+    <Dashboard onEnterCourse={(course) => {
+      setActiveCourse({ id: 1, uuid: course.id, name: course.name, code: course.code,
+        color: course.color, term: course.term, students: 0, published: course.published });
+      setShowDashboard(false);
+      setActiveTab('home');
+    }}/>
+  );
+  if (pageError)   return (
+    <CourseViewError
+      message={pageError}
+      onRetry={() => { setPageError(''); setPageLoading(true); setTimeout(() => setPageLoading(false), 700); }}
+    />
+  );
+
+  // Build sections map inside component so canEdit is available
+  const SECTIONS: Record<string, React.ReactNode> = {
+    home:          <ModulesHome canEdit={canEdit} courseUuid={activeCourse?.uuid} />,
+    modules:       <ModulesHome canEdit={canEdit} courseUuid={activeCourse?.uuid} />,
+    announcements: <AnnouncementsPanel canEdit={canEdit} />,
+    assignments:   <AssignmentView />,
+    quizzes:       <QuizView />,
+    grades:        <StudentGrades />,
+    people:        <StudentDashboard />,
+    pages:         <PagesTab />,
+    files:         <FilesTab />,
+    syllabus:      <SyllabusTab />,
+    attendance:    <AttendanceTab />,
+    clinical:      <ClinicalSkillsTab />,
+    readiness:     <ReadinessTab />,
+    required:      <RequiredWork />,
+    career:        <CareerPortal />,
+    discussions:   <Placeholder title="Discussions" />,
+    outcomes:      <Placeholder title="Outcomes" />,
+    rubrics:       <Placeholder title="Rubrics" />,
+    analytics:     <Placeholder title="New Analytics" />,
+    lucid:         <Placeholder title="Lucid (Whiteboard)" />,
+    settings:      <SettingsTab />,
+    calendar:      <CalendarTab />,
+  };
+
+  return (
+    <div style={{ display:'flex', minHeight:'100vh', background:C.bg }}>
+
+      {/* Fixed purple left rail */}
+      <div style={{ width:52, background:C.nav, minHeight:'100vh', position:'fixed', left:0, top:0, zIndex:100, display:'flex', flexDirection:'column', alignItems:'center', paddingTop:10 }}>
+        <img src="/hsa-logo.png" alt="HSA" onClick={() => setShowDashboard(true)}
+          title="Go to Dashboard"
+          style={{ width:38, height:38, borderRadius:'50%', marginBottom:16, cursor:'pointer', objectFit:'cover', border:'2px solid rgba(255,255,255,0.3)', display:'block' }}/>
+        {['🏠','📚','📅','✉️','⏱️'].map((icon, i) => (
+          <div key={i}
+            style={{ width:52, height:48, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:17, borderLeft:'3px solid transparent' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'white'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.6)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+            {icon}
+          </div>
+        ))}
+        <div style={{ marginTop:'auto', marginBottom:10, position:'relative' }}>
+          <button onClick={() => setShowProfile(!showProfile)}
+            style={{ width:36, height:36, borderRadius:'50%', background:'linear-gradient(135deg,#9B6DD0,#5BC8E8)', border:'2px solid rgba(255,255,255,0.4)', cursor:'pointer', color:'white', fontSize:12, fontWeight:700, fontFamily:'sans-serif', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            {authUser?.avatarInitials ?? '?'}
+          </button>
+          {showProfile && (
+            <div style={{ position:'absolute', bottom:'110%', left:58, background:'white', border:'1px solid #D4C8E8', borderRadius:8, boxShadow:'0 8px 28px rgba(0,0,0,0.2)', zIndex:200, width:220, overflow:'hidden' }}>
+              {/* Profile header */}
+              <div style={{ padding:'14px 16px', borderBottom:'1px solid #D4C8E8', display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ width:38, height:38, borderRadius:'50%', background:'linear-gradient(135deg,#9B6DD0,#5BC8E8)', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:13, fontWeight:700, flexShrink:0 }}>
+                  {authUser?.avatarInitials ?? '?'}
+                </div>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#2D1B4E', fontFamily:'sans-serif' }}>{authUser?.name}</div>
+                  <div style={{ fontSize:11, color:'#8878A8', fontFamily:'sans-serif', textTransform:'capitalize' }}>{authUser?.role}</div>
+                </div>
+              </div>
+              {/* Accessibility */}
+              <div style={{ padding:'10px 16px', borderBottom:'1px solid #D4C8E8' }}>
+                <div style={{ fontSize:11, fontWeight:700, color:'#8878A8', textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', marginBottom:8 }}>Accessibility</div>
+                {[['Use High Contrast UI'],['Use a Dyslexia Friendly Font']].map(([label]) => (
+                  <label key={label} style={{ display:'flex', alignItems:'center', gap:8, fontSize:12, fontFamily:'sans-serif', color:'#2D1B4E', marginBottom:6, cursor:'pointer' }}>
+                    <input type="checkbox" style={{ accentColor:'#7B4DB5' }}/>{label}
+                  </label>
+                ))}
+              </div>
+              {/* Menu items */}
+              {[['🔔','Notifications'],['👤','Profile'],['📁','Files'],['⚙️','Settings']].map(([icon, label]) => (
+                <div key={label}
+                  onClick={() => { if(label==='Settings') setActiveTab('settings'); if(label==='Profile') setActiveTab('settings'); setShowProfile(false); setShowDashboard(false); }}
+                  style={{ padding:'9px 16px', display:'flex', alignItems:'center', gap:10, cursor:'pointer', fontSize:13, fontFamily:'sans-serif', color:'#2D1B4E', borderBottom:'1px solid #f0edf7' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f5f3fa'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'white'}>
+                  <span>{icon}</span>{label}
+                </div>
+              ))}
+              <div onClick={() => { handleLogout(); setShowProfile(false); }}
+                style={{ padding:'9px 16px', display:'flex', alignItems:'center', gap:10, cursor:'pointer', fontSize:13, fontFamily:'sans-serif', color:'#C0392B' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#fdecea'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'white'}>
+                <span>↩</span> Logout
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main content area */}
+      <div style={{ marginLeft:52, flex:1, display:'flex', flexDirection:'column' }}>
+
+        {/* Course header bar */}
+        <div style={{ background:activeCourse.color, borderBottom:`1px solid ${C.border}`, padding:'14px 20px 0', position:'sticky', top:0, zIndex:50 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
+
+            {/* User greeting + role badge */}
+            {authUser && (
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <span style={{ fontSize:12, color:'rgba(255,255,255,0.85)', fontFamily:'sans-serif' }}>
+                  👋 {authUser.name}
+                </span>
+                <span style={{ fontSize:10, padding:'2px 8px', borderRadius:20, background:'rgba(255,255,255,0.2)', color:'white', fontFamily:'sans-serif', fontWeight:600, textTransform:'capitalize' }}>
+                  {authUser.role}
+                </span>
+              </div>
+            )}
+
+            {/* Course selector dropdown */}
+            <div style={{ position:'relative', marginLeft: authUser ? 8 : 0 }}>
+              <button onClick={() => setShowCourses(!showCourses)}
+                style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:5, padding:'5px 12px', cursor:'pointer', color:'white', fontFamily:'sans-serif', fontSize:13, fontWeight:600 }}>
+                <span style={{ maxWidth:280, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                  {activeCourse.name}
+                </span>
+                <span style={{ fontSize:10 }}>▼</span>
+              </button>
+              {showCourses && (
+                <div style={{ position:'absolute', top:'110%', left:0, background:C.white, border:`1px solid ${C.border}`, borderRadius:6, boxShadow:'0 8px 28px rgba(0,0,0,0.18)', zIndex:200, minWidth:380 }}>
+                  <div style={{ padding:'8px 14px', fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', borderBottom:`1px solid ${C.border}` }}>
+                    Switch Course
+                  </div>
+                  {COURSES.map(course => (
+                    <div key={course.id}
+                      onClick={() => { setActiveCourse(course); setShowCourses(false); setActiveTab('home'); }}
+                      style={{ padding:'11px 14px', display:'flex', alignItems:'center', gap:12, cursor:'pointer', background:course.id === activeCourse.id ? '#EDE8F7' : C.white, borderBottom:`1px solid ${C.border}` }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f4f2fa'}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = course.id === activeCourse.id ? '#EDE8F7' : C.white}>
+                      <div style={{ width:6, height:38, background:course.color, borderRadius:3, flexShrink:0 }}/>
+                      <div>
+                        <div style={{ fontSize:13, fontWeight:600, color:C.primary, fontFamily:'sans-serif' }}>{course.name}</div>
+                        <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>
+                          {course.term} • {course.students} students{!course.published ? ' • Unpublished' : ''}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
+              <button style={{ padding:'5px 14px', background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>
+                View as Student
+              </button>
+              {canEdit && (
+                <button style={{ padding:'5px 14px', background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.4)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
+                  + Module
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar + content */}
+        <div style={{ display:'flex', flex:1 }}>
+
+          {/* Course sidebar nav */}
+          <div style={{ width:200, background:C.white, borderRight:`1px solid ${C.border}`, flexShrink:0, minHeight:'calc(100vh - 76px)', overflowY:'auto' }}>
+            {NAV_ITEMS.map(item => {
+              const active = activeTab === item.id || (item.id === 'modules' && activeTab === 'home');
+              return (
+                <div key={item.id} onClick={() => setActiveTab(item.id)}
+                  style={{ padding:'9px 14px', display:'flex', alignItems:'center', gap:9, cursor:'pointer', borderLeft:active ? `3px solid ${C.primary}` : '3px solid transparent', background:active ? '#EDE8F7' : 'transparent', color:active ? C.primary : C.text, fontFamily:'sans-serif', fontSize:13, fontWeight:active ? 600 : 400 }}
+                  onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = '#f5f3fa'; }}
+                  onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                  <span style={{ fontSize:13 }}>{item.icon}</span>
+                  {item.label}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Tab content */}
+          <div style={{ flex:1, background:C.bg, overflowY:'auto' }}>
+            {SECTIONS[activeTab] ?? <Placeholder title={activeTab} />}
+          </div>
+        </div>
+      </div>
+
+      <style>{`@keyframes hsa-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
+    </div>
+  );
+};
+
+export default CourseView;
