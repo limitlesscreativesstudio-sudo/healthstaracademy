@@ -1,6 +1,3 @@
-import PortalLogin  from './pages/portal/teach/PortalLogin';
-import AcceptInvite from './pages/portal/teach/AcceptInvite';
-import CourseView   from './pages/portal/teach/CourseView';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
