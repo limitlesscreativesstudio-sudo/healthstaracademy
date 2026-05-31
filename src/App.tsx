@@ -45,10 +45,7 @@ import CareersPage from "./pages/portal/CareersPage";
 import CommunityResourcesPage from "./pages/portal/CommunityResourcesPage";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import PortalLogin from "./pages/portal/teach/PortalLogin";
-import AcceptInvite from "./pages/portal/teach/AcceptInvite";
 import StudentDashboard from "./pages/portal/teach/StudentDashboard";
-import CourseView from "./pages/portal/teach/CourseView";
 // Instructor screens were moved/removed in an earlier refactor; using StudentDashboard as placeholder
 const InstructorDashboard = StudentDashboard;
 const CourseEditor = StudentDashboard;
