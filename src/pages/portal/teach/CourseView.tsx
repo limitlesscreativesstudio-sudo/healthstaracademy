@@ -261,7 +261,7 @@ const CourseView: React.FC<CourseViewProps> = ({ user, onLogout }) => {
     <div style={{ display:'flex', minHeight:'100vh', background:C.bg }}>
       {/* Global left rail */}
       <div style={{ width:52, background:C.nav, minHeight:'100vh', position:'fixed', left:0, top:0, zIndex:100, display:'flex', flexDirection:'column', alignItems:'center', paddingTop:10 }}>
-        <div style={{ width:38, height:38, borderRadius:'50%', background:'linear-gradient(135deg,#9B6DD0,#5BC8E8)', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:900, fontSize:13, fontFamily:'Georgia,serif', marginBottom:16, cursor:'pointer' }}>H★</div>
+        <img src="/hsa-logo.png" alt="HSA" style={{ width:38, height:38, borderRadius:'50%', marginBottom:16, cursor:'pointer', objectFit:'cover', border:'2px solid rgba(255,255,255,0.3)', display:'block' }}/>
         {['🏠','📚','📅','✉️','⏱️'].map((icon,i) => (
           <div key={i} style={{ width:52, height:48, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:17, borderLeft:'3px solid transparent' }}
             onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.color='white';(e.currentTarget as HTMLElement).style.background='rgba(255,255,255,0.08)';}}
