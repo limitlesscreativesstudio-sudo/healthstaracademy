@@ -1,186 +1,204 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { supabase } from './AuthContext';
 
-const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', error:'#C0392B' } as const;
+const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
-interface FileItem { id:number; name:string; ext:string; size:string; folder:string; created:string; modified:string; published:boolean; }
-
-// Folder names from the real Canvas Files view
 const FOLDERS = ['CA NATP ALS Power Point Presentations','CA State Curriculum Learning Resources','CDPH & School contact information','Uploaded Media','Uploaded Media 2'];
+const fileIcon = (t: string) => ({ pdf:'📄', pptx:'📊', ppt:'📊', docx:'📝', doc:'📝', mp4:'🎥', mov:'🎥', jpg:'🖼️', png:'🖼️', xlsx:'📈' }[t.toLowerCase()] ?? '📎');
+const fmtSize  = (b: number) => b > 1048576 ? `${(b/1048576).toFixed(1)} MB` : `${(b/1024).toFixed(0)} KB`;
 
-const INIT_FILES: FileItem[] = [
-  { id:1,  name:'Module01_PowerPoint',      ext:'pptx', size:'5.8 MB', folder:'CA NATP ALS Power Point Presentations', created:'Dec 23, 2024', modified:'Jan 15',    published:true  },
-  { id:2,  name:'Module02_PowerPoint',      ext:'pptx', size:'4.6 MB', folder:'CA NATP ALS Power Point Presentations', created:'Dec 23, 2024', modified:'Jan 22',    published:true  },
-  { id:3,  name:'Module03_PowerPoint',      ext:'pptx', size:'6.1 MB', folder:'CA NATP ALS Power Point Presentations', created:'Dec 23, 2024', modified:'Feb 1',     published:true  },
-  { id:4,  name:'Module04_PowerPoint',      ext:'pptx', size:'5.2 MB', folder:'CA NATP ALS Power Point Presentations', created:'Dec 23, 2024', modified:'Feb 8',     published:true  },
-  { id:5,  name:'Module05_PowerPoint',      ext:'pptx', size:'4.9 MB', folder:'CA NATP ALS Power Point Presentations', created:'Dec 23, 2024', modified:'Feb 15',    published:true  },
-  { id:6,  name:'California Module 1',      ext:'pdf',  size:'3.2 MB', folder:'CA State Curriculum Learning Resources',created:'Dec 23, 2024', modified:'Jan 15',    published:true  },
-  { id:7,  name:'California Module 2',      ext:'pdf',  size:'2.9 MB', folder:'CA State Curriculum Learning Resources',created:'Dec 23, 2024', modified:'Jan 22',    published:true  },
-  { id:8,  name:'California Module 3',      ext:'pdf',  size:'3.4 MB', folder:'CA State Curriculum Learning Resources',created:'Dec 23, 2024', modified:'Feb 1',     published:true  },
-  { id:9,  name:'California Module 4',      ext:'pdf',  size:'3.1 MB', folder:'CA State Curriculum Learning Resources',created:'Dec 23, 2024', modified:'Feb 8',     published:true  },
-  { id:10, name:'State Exam Student Handbook',ext:'pdf',size:'890 KB', folder:'CDPH & School contact information',    created:'Dec 23, 2024', modified:'Jan 10',    published:true  },
-  { id:11, name:'CDPH School Contact Sheet', ext:'pdf', size:'210 KB', folder:'CDPH & School contact information',    created:'Mar 19, 2025', modified:'Mar 19',    published:true  },
-  { id:12, name:'Student Handbook',          ext:'pdf', size:'1.2 MB', folder:'CDPH & School contact information',    created:'Dec 23, 2024', modified:'Jan 10',    published:true  },
-  { id:13, name:'Lecture Recording Day 1',   ext:'mp4', size:'820 MB', folder:'Uploaded Media',                      created:'Dec 23, 2024', modified:'Feb 20',    published:false },
-  { id:14, name:'Lecture Recording Day 2',   ext:'mp4', size:'750 MB', folder:'Uploaded Media 2',                    created:'Dec 31, 2024', modified:'Feb 27',    published:false },
-];
+interface CourseFile { id: string; file_name: string; file_url: string; file_type: string; file_size: number; folder: string; created_at: string; }
+interface Props { courseId?: string; canEdit?: boolean; }
 
-const extIcon = (e:string) => ({ pdf:'📄', pptx:'📊', docx:'📝', mp4:'🎥', xlsx:'📋', zip:'🗜️' }[e] ?? '📁');
-const extColor = (e:string) => ({ pdf:'#c0392b', pptx:'#d35400', docx:'#2980b9', mp4:'#8e44ad' }[e] ?? C.muted);
-
-const FilesTab: React.FC = () => {
-  const [files, setFiles]       = useState<FileItem[]>(INIT_FILES);
-  const [selFolder, setSelFolder] = useState<string>('all');
-  const [search, setSearch]     = useState('');
-  const [dragging, setDragging] = useState(false);
-  const [view, setView]         = useState<'list'|'grid'>('list');
-  const [sel, setSel]           = useState<number[]>([]);
+const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
+  const [files,      setFiles]      = useState<CourseFile[]>([]);
+  const [loading,    setLoading]    = useState(true);
+  const [folder,     setFolder]     = useState('All');
+  const [dragging,   setDragging]   = useState(false);
+  const [uploading,  setUploading]  = useState(false);
+  const [uploadPct,  setUploadPct]  = useState(0);
+  const [selFolder,  setSelFolder]  = useState(FOLDERS[0]);
+  const [error,      setError]      = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const visibleFolders = ['all', ...FOLDERS];
-  const visible = files.filter(f =>
-    (selFolder === 'all' || f.folder === selFolder) &&
-    f.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault(); setDragging(false);
-    const dropped = Array.from(e.dataTransfer.files);
-    const newFiles = dropped.map((f, i) => ({
-      id:Date.now()+i, name:f.name.replace(/\.[^.]+$/,''),
-      ext:f.name.split('.').pop()??'file',
-      size:`${(f.size/1024).toFixed(0)} KB`,
-      folder:selFolder==='all'?'CA State Curriculum Learning Resources':selFolder,
-      created:'Today', modified:'Today', published:false,
-    }));
-    setFiles(p => [...p, ...newFiles]);
+  const load = async () => {
+    if (!courseId) { setLoading(false); return; }
+    setLoading(true);
+    const { data } = await supabase.from('course_files')
+      .select('*').eq('course_id', courseId).order('created_at', { ascending:false });
+    if (data) setFiles(data);
+    setLoading(false);
   };
 
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const picked = Array.from(e.target.files);
-    const newFiles = picked.map((f,i) => ({
-      id:Date.now()+i, name:f.name.replace(/\.[^.]+$/,''),
-      ext:f.name.split('.').pop()??'file',
-      size:`${(f.size/1024).toFixed(0)} KB`,
-      folder:selFolder==='all'?'CA State Curriculum Learning Resources':selFolder,
-      created:'Today', modified:'Today', published:false,
-    }));
-    setFiles(p => [...p, ...newFiles]);
+  useEffect(() => { load(); }, [courseId]);
+
+  const uploadFiles = async (fileList: FileList | null) => {
+    if (!fileList || !courseId) return;
+    setUploading(true); setError('');
+    const newFiles: CourseFile[] = [];
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i];
+      setUploadPct(Math.round(((i) / fileList.length) * 100));
+      const ext  = file.name.split('.').pop() ?? '';
+      const path = `${courseId}/${Date.now()}_${file.name}`;
+      const { error: upErr } = await supabase.storage.from('course-files').upload(path, file);
+      if (upErr) { setError(`Failed to upload ${file.name}: ${upErr.message}`); continue; }
+      const { data: { publicUrl } } = supabase.storage.from('course-files').getPublicUrl(path);
+      const { data: row } = await supabase.from('course_files').insert({
+        course_id: courseId, file_name: file.name, file_url: publicUrl,
+        file_type: ext, file_size: file.size, folder: selFolder,
+      }).select().single();
+      if (row) newFiles.push(row);
+    }
+    setFiles(p => [...newFiles, ...p]);
+    setUploading(false); setUploadPct(0);
   };
 
-  const usedMB = 21; // 4% of 500MB
-  const usedPct = (usedMB / 500) * 100;
+  const deleteFile = async (id: string, fileUrl: string) => {
+    if (!confirm('Delete this file? This cannot be undone.')) return;
+    setFiles(p => p.filter(f => f.id !== id));
+    await supabase.from('course_files').delete().eq('id', id);
+    // Also remove from storage
+    const path = fileUrl.split('/course-files/')[1];
+    if (path) await supabase.storage.from('course-files').remove([decodeURIComponent(path)]);
+  };
+
+  const visible = folder === 'All' ? files : files.filter(f => f.folder === folder);
+  const allFolders = ['All', ...FOLDERS];
+  const usedMB = files.reduce((s, f) => s + (f.file_size ?? 0), 0) / 1048576;
 
   return (
     <div style={{ display:'flex', height:'100%' }}>
-      {/* Left folder tree */}
-      <div style={{ width:240, background:C.white, borderRight:`1px solid ${C.border}`, flexShrink:0, overflowY:'auto' }}>
-        <div style={{ padding:'10px 14px', borderBottom:`1px solid ${C.border}` }}>
-          <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', marginBottom:6 }}>Course Files</div>
+      {/* Sidebar */}
+      <div style={{ width:220, borderRight:`1px solid ${C.border}`, padding:16, flexShrink:0, background:C.white }}>
+        <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', marginBottom:10 }}>
+          {courseId ? 'Course Files' : 'Select a course'}
         </div>
-        {FOLDERS.map(f => (
-          <div key={f} onClick={() => setSelFolder(f)}
-            style={{ padding:'8px 14px', display:'flex', alignItems:'center', gap:8, cursor:'pointer', background:selFolder===f?'#EDE8F7':'transparent', borderLeft:selFolder===f?`3px solid ${C.primary}`:'3px solid transparent', fontSize:13, fontFamily:'sans-serif', color:selFolder===f?C.primary:C.text }}>
-            <span style={{ fontSize:14 }}>📁</span>
-            <span style={{ fontSize:12, lineHeight:1.35 }}>{f}</span>
+        {allFolders.map(f => (
+          <div key={f} onClick={() => setFolder(f)}
+            style={{ padding:'7px 10px', borderRadius:5, cursor:'pointer', fontSize:12, fontFamily:'sans-serif',
+              background: folder === f ? '#EDE8F7' : 'transparent',
+              color: folder === f ? C.primary : C.text, fontWeight: folder === f ? 600 : 400,
+              marginBottom:2, display:'flex', alignItems:'center', gap:6 }}>
+            <span>{f === 'All' ? '📁' : '📂'}</span>
+            <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f}</span>
           </div>
         ))}
-        {/* Storage bar */}
-        <div style={{ padding:'14px', borderTop:`1px solid ${C.border}`, marginTop:8 }}>
-          <div style={{ height:4, borderRadius:2, background:C.border, marginBottom:5, overflow:'hidden' }}>
-            <div style={{ height:'100%', width:`${usedPct}%`, background:C.primary }}/>
+        <div style={{ marginTop:16, paddingTop:12, borderTop:`1px solid ${C.border}` }}>
+          <div style={{ height:6, background:C.border, borderRadius:3, overflow:'hidden', marginBottom:4 }}>
+            <div style={{ height:'100%', width:`${Math.min((usedMB / 500) * 100, 100)}%`, background:C.primary, borderRadius:3 }}/>
           </div>
-          <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>{usedPct.toFixed(0)}% of 500 MB used</div>
+          <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>
+            {usedMB.toFixed(1)} MB of 500 MB used
+          </div>
         </div>
       </div>
 
-      {/* Right content */}
+      {/* Main */}
       <div style={{ flex:1, padding:20, overflowY:'auto' }}>
-        {/* Toolbar */}
-        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8, background:C.white, border:`1px solid ${C.border}`, borderRadius:5, padding:'7px 12px', flex:1, maxWidth:340 }}>
-            <span>🔍</span>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search for files"
-              style={{ border:'none', outline:'none', flex:1, fontSize:13, fontFamily:'sans-serif', color:C.text }}/>
-          </div>
-          <span style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>{sel.length > 0 ? `${sel.length} selected` : `${visible.length} items`}</span>
-          <div style={{ display:'flex', gap:4 }}>
-            <button onClick={() => fileRef.current?.click()}
-              style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
-              ↑ Upload
-            </button>
-            <button style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>+ Folder</button>
-          </div>
-          <input ref={fileRef} type="file" multiple onChange={handleInput} style={{ display:'none' }}/>
-        </div>
-
-        {/* Drop zone */}
-        <div onDragOver={e=>{e.preventDefault();setDragging(true);}} onDragLeave={()=>setDragging(false)} onDrop={handleDrop}
-          onClick={() => fileRef.current?.click()}
-          style={{ border:`2px dashed ${dragging?C.primary:C.border}`, borderRadius:6, padding:'16px 20px', textAlign:'center', marginBottom:14, background:dragging?'#EDE8F7':C.bg, transition:'all .2s', cursor:'pointer' }}>
-          <div style={{ fontSize:20, marginBottom:4 }}>☁️</div>
-          <div style={{ fontSize:12, color:dragging?C.primary:C.muted, fontFamily:'sans-serif' }}>
-            {dragging ? 'Drop to upload' : 'Drag & drop to upload, or click'}
-          </div>
-        </div>
-
-        {/* File table */}
-        <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, overflow:'hidden' }}>
-          <table style={{ width:'100%', borderCollapse:'collapse', fontFamily:'sans-serif' }}>
-            <thead>
-              <tr style={{ background:'#F0EDF7', borderBottom:`1px solid ${C.border}` }}>
-                <th style={{ padding:'8px 12px', width:30 }}>
-                  <input type="checkbox" onChange={e => setSel(e.target.checked ? visible.map(f=>f.id) : [])}
-                    checked={sel.length === visible.length && visible.length > 0} style={{ accentColor:C.primary }}/>
-                </th>
-                {['Name','Date Created','Date Modified','Size',''].map(h => (
-                  <th key={h} style={{ padding:'8px 12px', textAlign:'left', fontSize:11, fontWeight:700, color:C.text }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((f, i) => (
-                <tr key={f.id} style={{ borderBottom:`1px solid ${C.border}` }}
-                  onMouseEnter={e=>(e.currentTarget as HTMLElement).style.background='#faf9fc'}
-                  onMouseLeave={e=>(e.currentTarget as HTMLElement).style.background=C.white}>
-                  <td style={{ padding:'9px 12px' }}>
-                    <input type="checkbox" checked={sel.includes(f.id)} onChange={e=>setSel(p=>e.target.checked?[...p,f.id]:p.filter(x=>x!==f.id))} style={{ accentColor:C.primary }}/>
-                  </td>
-                  <td style={{ padding:'9px 12px' }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:9 }}>
-                      <span style={{ fontSize:18 }}>{extIcon(f.ext)}</span>
-                      <div>
-                        <div style={{ fontSize:13, color:C.primary, fontWeight:500 }}>{f.name}.{f.ext}</div>
-                        <div style={{ fontSize:10, color:C.muted }}>{f.folder}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding:'9px 12px', fontSize:12, color:C.muted }}>{f.created}</td>
-                  <td style={{ padding:'9px 12px', fontSize:12, color:C.muted }}>{f.modified}</td>
-                  <td style={{ padding:'9px 12px', fontSize:12, color:C.muted }}>{f.size}</td>
-                  <td style={{ padding:'9px 12px' }}>
-                    <div style={{ display:'flex', gap:6 }}>
-                      <button style={{ padding:'3px 10px', border:`1px solid ${C.border}`, borderRadius:3, background:C.white, fontSize:11, cursor:'pointer' }}>↓</button>
-                      <button onClick={()=>setFiles(p=>p.filter(x=>x.id!==f.id))}
-                        style={{ padding:'3px 10px', border:`1px solid ${C.error}33`, borderRadius:3, background:C.white, fontSize:11, cursor:'pointer', color:C.error }}>✕</button>
-                      <span style={{ fontSize:16, cursor:'pointer' }} title={f.published?'Published':'Unpublished'}>
-                        {f.published?'🟢':'🔘'}
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {visible.length === 0 && (
-            <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif', fontSize:13 }}>No files found in this folder.</div>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+          <h2 style={{ margin:0, fontSize:18, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>
+            Files {folder !== 'All' && `— ${folder}`}
+          </h2>
+          {canEdit && (
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              <select value={selFolder} onChange={e => setSelFolder(e.target.value)}
+                style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'6px 8px', fontSize:12, fontFamily:'sans-serif', maxWidth:200 }}>
+                {FOLDERS.map(f => <option key={f}>{f}</option>)}
+              </select>
+              <button onClick={() => fileRef.current?.click()}
+                style={{ padding:'7px 14px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
+                📤 Upload
+              </button>
+              <input ref={fileRef} type="file" multiple style={{ display:'none' }}
+                onChange={e => uploadFiles(e.target.files)}/>
+            </div>
           )}
         </div>
-        {sel.length > 0 && (
-          <div style={{ marginTop:10, padding:'10px 14px', background:C.white, border:`1px solid ${C.border}`, borderRadius:5, display:'flex', gap:10, alignItems:'center' }}>
-            <span style={{ fontSize:12, color:C.text, fontFamily:'sans-serif' }}>{sel.length} items selected</span>
-            <button onClick={()=>setSel([])} style={{ padding:'4px 12px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Deselect</button>
-            <button onClick={()=>{setFiles(p=>p.filter(f=>!sel.includes(f.id)));setSel([]);}} style={{ padding:'4px 12px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer', color:C.error }}>Delete Selected</button>
+
+        {error && (
+          <div style={{ background:'#fdecea', border:'1px solid #f5c6c6', borderRadius:6, padding:'10px 14px', marginBottom:14, fontSize:12, color:C.error, fontFamily:'sans-serif' }}>{error}</div>
+        )}
+
+        {/* Drop zone */}
+        {canEdit && (
+          <div onDragOver={e => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={e => { e.preventDefault(); setDragging(false); uploadFiles(e.dataTransfer.files); }}
+            onClick={() => fileRef.current?.click()}
+            style={{ border:`2px dashed ${dragging ? C.primary : C.border}`, borderRadius:8,
+              padding:'20px', textAlign:'center', marginBottom:16, cursor:'pointer',
+              background: dragging ? '#EDE8F7' : C.bg, transition:'all .2s' }}>
+            {uploading ? (
+              <div>
+                <div style={{ fontSize:13, color:C.primary, fontFamily:'sans-serif', marginBottom:6 }}>Uploading… {uploadPct}%</div>
+                <div style={{ height:4, background:C.border, borderRadius:2, overflow:'hidden' }}>
+                  <div style={{ height:'100%', width:`${uploadPct}%`, background:C.primary, transition:'width .3s' }}/>
+                </div>
+              </div>
+            ) : (
+              <div style={{ fontSize:13, color: dragging ? C.primary : C.muted, fontFamily:'sans-serif' }}>
+                📁 {dragging ? 'Drop to upload!' : 'Drag & drop files here, or click to select'}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Files table */}
+        {loading ? (
+          <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Loading files…</div>
+        ) : visible.length === 0 ? (
+          <div style={{ padding:40, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>
+            <div style={{ fontSize:36, marginBottom:10 }}>📭</div>
+            <div style={{ fontSize:14 }}>No files in {folder === 'All' ? 'this course' : folder} yet.</div>
+          </div>
+        ) : (
+          <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, overflow:'hidden' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse', fontFamily:'sans-serif' }}>
+              <thead>
+                <tr style={{ background:'#F0EDF7', borderBottom:`1px solid ${C.border}` }}>
+                  {['Name','Folder','Size','Date',''].map(h => (
+                    <th key={h} style={{ padding:'9px 14px', textAlign:'left', fontSize:11, fontWeight:700, color:C.text }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((f, i) => (
+                  <tr key={f.id} style={{ borderBottom: i < visible.length-1 ? `1px solid ${C.border}` : 'none' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#faf9fc'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
+                    <td style={{ padding:'10px 14px' }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+                        <span style={{ fontSize:18 }}>{fileIcon(f.file_type)}</span>
+                        <a href={f.file_url} target="_blank" rel="noreferrer"
+                          style={{ fontSize:13, color:C.primary, fontWeight:500, textDecoration:'none' }}
+                          onMouseEnter={e => (e.currentTarget as HTMLElement).style.textDecoration = 'underline'}
+                          onMouseLeave={e => (e.currentTarget as HTMLElement).style.textDecoration = 'none'}>
+                          {f.file_name}
+                        </a>
+                      </div>
+                    </td>
+                    <td style={{ padding:'10px 14px', fontSize:11, color:C.muted, maxWidth:160 }}>
+                      <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', display:'block' }}>{f.folder}</span>
+                    </td>
+                    <td style={{ padding:'10px 14px', fontSize:12, color:C.muted }}>{fmtSize(f.file_size ?? 0)}</td>
+                    <td style={{ padding:'10px 14px', fontSize:12, color:C.muted }}>{new Date(f.created_at).toLocaleDateString()}</td>
+                    <td style={{ padding:'10px 14px' }}>
+                      <div style={{ display:'flex', gap:6 }}>
+                        <a href={f.file_url} download target="_blank" rel="noreferrer"
+                          style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:11, cursor:'pointer', color:C.text, textDecoration:'none' }}>
+                          ⬇ Download
+                        </a>
+                        {canEdit && (
+                          <button onClick={() => deleteFile(f.id, f.file_url)}
+                            style={{ padding:'4px 8px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:11, cursor:'pointer', color:C.error }}>✕</button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
