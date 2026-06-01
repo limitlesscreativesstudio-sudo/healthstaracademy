@@ -501,18 +501,19 @@ const CourseView: React.FC = () => {
   );
 
   // Build sections map inside component so canEdit is available
+  const cid = activeCourse?.uuid;
   const SECTIONS: Record<string, React.ReactNode> = {
-    home:          <ModulesHome canEdit={canEdit} courseUuid={activeCourse?.uuid} />,
-    modules:       <ModulesHome canEdit={canEdit} courseUuid={activeCourse?.uuid} />,
-    announcements: <AnnouncementsPanel canEdit={canEdit} />,
-    assignments:   <AssignmentView />,
-    quizzes:       <QuizView />,
-    grades:        <StudentGrades />,
-    people:        <StudentDashboard />,
-    pages:         <PagesTab />,
-    files:         <FilesTab />,
+    home:          <ModulesHome    canEdit={canEdit} courseUuid={cid} />,
+    modules:       <ModulesHome    canEdit={canEdit} courseUuid={cid} />,
+    announcements: <AnnouncementsPanel canEdit={canEdit} courseId={cid} />,
+    assignments:   <AssignmentView courseId={cid} canEdit={canEdit} />,
+    quizzes:       <QuizView       courseId={cid} canEdit={canEdit} />,
+    grades:        <StudentGrades  courseId={cid} canEdit={canEdit} />,
+    people:        <StudentDashboard courseId={cid} canEdit={canEdit} />,
+    pages:         <PagesTab       courseId={cid} canEdit={canEdit} />,
+    files:         <FilesTab       courseId={cid} canEdit={canEdit} />,
     syllabus:      <SyllabusTab />,
-    attendance:    <AttendanceTab />,
+    attendance:    <AttendanceTab  courseId={cid} canEdit={canEdit} />,
     clinical:      <ClinicalSkillsTab />,
     readiness:     <ReadinessTab />,
     required:      <RequiredWork />,
