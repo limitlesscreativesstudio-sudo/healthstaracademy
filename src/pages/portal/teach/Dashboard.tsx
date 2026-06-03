@@ -126,7 +126,7 @@ const CreateCourseModal: React.FC<{
   const [term,      setTerm]      = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate,   setEndDate]   = useState('');
-  const [color,     setColor]     = useState(C.primary);
+  const [color,     setColor]     = useState<string>(C.primary);
   const [desc,      setDesc]      = useState('Online & Hybrid CNA Training');
   const [saving,    setSaving]    = useState(false);
   const [err,       setErr]       = useState('');
