@@ -505,9 +505,9 @@ const CourseView: React.FC = () => {
   const SECTIONS: Record<string, React.ReactNode> = {
     home:          <ModulesHome    canEdit={canEdit} courseUuid={cid} />,
     modules:       <ModulesHome    canEdit={canEdit} courseUuid={cid} />,
-    announcements: <AnnouncementsPanel canEdit={canEdit} courseId={cid} />,
+    announcements: <AnnouncementsPanel canEdit={canEdit} />,
     assignments:   <AssignmentView courseId={cid} canEdit={canEdit} />,
-    quizzes:       <QuizView       courseId={cid} canEdit={canEdit} />,
+    quizzes:       <QuizView />,
     grades:        <StudentGrades  courseId={cid} canEdit={canEdit} />,
     people:        <StudentDashboard courseId={cid} canEdit={canEdit} />,
     pages:         <PagesTab       courseId={cid} canEdit={canEdit} />,
