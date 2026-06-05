@@ -1,71 +1,28 @@
-# Lock down hidden content server-side
+## What's broken
 
-## Why this matters
+On `/pre-qualification` Step 3, picking **Daytime** shows no start dates, so the form can't be submitted. Weekend works because it reads from the static `cohortSchedule.ts` file, while Daytime relies on a live database query that — for any number of reasons (slow load, transient network/CORS, an empty filter result, a TanStack Query failure that silently sets `data = []`) — is returning nothing for the user.
 
-The instructor's eye/publish toggle currently only filters the UI. The database RLS is mostly correct, but **three gaps** let a determined student (or anyone with a URL) bypass those toggles:
+I verified the DB itself is fine: there are 14 open daytime cohorts (next start June 22, 2026) and the anon API returns them when called directly.
 
-| Surface | Current behavior | Risk |
-|---|---|---|
-| `modules` / `module_items` / `quizzes` / `assignments` | Already gated by `published AND is_enrolled_in(...)` | OK |
-| `lms_pages` | Any enrolled student can SELECT every page in the course, even if its module_item is unpublished | Hidden page content is readable via the API |
-| `lms_files` | Any enrolled student can SELECT every file row (storage_path, drive_file_id, external_url) | Hidden file metadata leaks |
-| `course-assets` storage bucket | Marked **public** — anyone with the path can download | Even non-students can read uploaded PDFs/videos if they guess/share the URL |
+## The fix
 
-## What the plan changes
+Make the Daytime radio list render from the same resilient source the Weekend list uses, with the live DB query as an enhancement (not a hard dependency):
 
-### 1. Tighten `lms_pages` SELECT policy
+1. Use the static `getCohortsByType("daytime")` list (`daytimeCohortDates`, already imported but currently unused) as the source of truth for the radio options — same pattern as weekend.
+2. Apply the existing "deadline hasn't passed" filter (`startISO − 14 days ≥ today`) so expired cohorts don't show.
+3. Use `startISO` as the radio value (same convention as weekend) so the submit payload stays consistent.
+4. Keep the live `cohorts` DB query, but use it only to:
+   - Hide a static date if its matching DB row is `status = "closed"`.
+   - Look up `id` / payment links if needed downstream.
+   If the DB query is empty or errors, the static list still renders — the form is never blocked.
+5. Update the post-submit `cohortDateLabel` builder so it works whether the selected value came from the static list or the DB row (it currently only handles the DB case for daytime).
 
-Students can only read a page if it's referenced by at least one **published** `module_item` inside a **published** `modules` row in a course they're enrolled in. Instructors and admins keep full access.
+## Files touched
 
-### 2. Tighten `lms_files` SELECT policy
+- `src/pages/portal/PreQualificationPage.tsx` — only the Daytime branch of the radio group (lines ~776–814) and the small label-builder block in `handleSubmit` (lines ~202–215). No backend, schema, or styling changes.
 
-Same gate as pages: file is reachable only via a published module_item in a published module. (Files not yet attached to any item remain instructor-only.)
+## Why this is safe
 
-### 3. Make `course-assets` bucket private + signed URLs
-
-- Flip the `course-assets` bucket from public to private.
-- Add storage RLS policies that mirror the `lms_files` gate (only enrolled students whose course owns the file, plus that file is exposed through a published item).
-- Update `ItemViewer` in `src/pages/portal/CourseView.tsx` to fetch a **signed URL** (`supabase.storage.from('course-assets').createSignedUrl(path, 3600)`) instead of `getPublicUrl`.
-
-### 4. Verify
-
-- Run `supabase--linter` to confirm no new warnings.
-- Manually test: log in as a student, attempt to query `lms_pages` and `lms_files` for IDs that belong to an unpublished item — should return 0 rows.
-- Confirm an instructor still sees everything in `CourseEditor`.
-
-## Technical details
-
-```text
-lms_pages SELECT policy (replace existing):
-  is_admin()
-  OR is_instructor_of(course_id)
-  OR EXISTS (
-    SELECT 1 FROM module_items mi
-    JOIN modules m ON m.id = mi.module_id
-    WHERE mi.content_ref = lms_pages.id
-      AND mi.published
-      AND m.published
-      AND is_enrolled_in(m.course_id)
-  )
-
-lms_files SELECT policy: same pattern, joined on mi.content_ref = lms_files.id
-
-storage.objects (bucket course-assets) SELECT policy:
-  bucket_id = 'course-assets'
-  AND EXISTS (
-    SELECT 1 FROM lms_files f
-    JOIN module_items mi ON mi.content_ref = f.id
-    JOIN modules m ON m.id = mi.module_id
-    WHERE f.storage_path = storage.objects.name
-      AND mi.published AND m.published
-      AND (is_admin() OR is_instructor_of(m.course_id) OR is_enrolled_in(m.course_id))
-  )
-  -- plus a separate policy granting instructors/admins full SELECT on their course's files
-```
-
-Frontend change is small: in `ItemViewer`, swap `getPublicUrl` for `createSignedUrl` and store the returned URL in state (it's already async, just one line different).
-
-## Out of scope (ask separately if wanted)
-
-- Bulk-publish controls, drag reorder, Canvas-style indent — that's the "polish Modules editor" track.
-- Auditing what files were uploaded before this change (none need to be moved; flipping the bucket private + signed URLs handles it).
+- Weekend already works this way, so we're matching a proven pattern.
+- The static `cohortSchedule.ts` is the canonical schedule per project memory ("Cohort Schedule Management" / "Program Schedule") and is kept in sync with the DB.
+- Admins keep full control: closing a cohort in the Admin Cohort Manager will still hide it from the form via the DB cross-check.
