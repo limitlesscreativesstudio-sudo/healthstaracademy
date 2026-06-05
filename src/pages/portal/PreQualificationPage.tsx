@@ -774,45 +774,40 @@ const PreQualificationPage = () => {
                     <Label className="mb-3 block">Select Your Preferred Start Date *</Label>
                     <RadioGroup value={selectedCohort} onValueChange={setSelectedCohort} className="space-y-3">
                       {programTrack === "daytime" ? (
-                        cohorts
-                          .filter((c) => {
-                            const start = new Date(c.start_date + "T00:00:00");
-                            const deadline = new Date(start);
-                            deadline.setDate(deadline.getDate() - 14);
-                            deadline.setHours(23, 59, 59);
-                            return deadline >= new Date();
+                        daytimeCohortDates
+                          .filter((d) => {
+                            // Hide cohorts whose 14-day enrollment deadline has passed
+                            const deadline = new Date(d.deadlineISO + "T23:59:59");
+                            if (deadline < new Date()) return false;
+                            // Hide if the matching DB row is explicitly closed
+                            const dbRow = cohorts.find(c => c.start_date === d.startISO);
+                            if (dbRow && dbRow.status === "closed") return false;
+                            return true;
                           })
-                          .map((c) => {
-                            const startDate = new Date(c.start_date + "T00:00:00");
-                            const deadlineDate = new Date(startDate);
-                            deadlineDate.setDate(deadlineDate.getDate() - 14);
-                            const deadlineLabel = deadlineDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-                            return (
-                              <label
-                                key={c.id}
-                                htmlFor={`cohort-${c.id}`}
-                                className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all ${
-                                  selectedCohort === c.start_date
-                                    ? "border-purple bg-purple/5"
-                                    : "border-border bg-background hover:border-purple/40"
-                                }`}
-                              >
-                                <RadioGroupItem value={c.start_date} id={`cohort-${c.id}`} />
-                                <div>
-                                  <p className="font-semibold text-charcoal">
-                                    {formatShortDate(c.start_date)} — {formatCohortDate(c.start_date)}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    Ends {getEndDate(c.start_date)} · 6 weeks · Mon–Thu
-                                  </p>
-                                  <p className="text-xs text-purple font-medium mt-1">
-                                    ⏰ Apply by: {deadlineLabel}
-                                  </p>
-                                </div>
-                              </label>
-                            );
-                          })
-
+                          .map((d) => (
+                            <label
+                              key={d.startISO}
+                              htmlFor={`cohort-${d.startISO}`}
+                              className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                                selectedCohort === d.startISO
+                                  ? "border-purple bg-purple/5"
+                                  : "border-border bg-background hover:border-purple/40"
+                              }`}
+                            >
+                              <RadioGroupItem value={d.startISO} id={`cohort-${d.startISO}`} />
+                              <div>
+                                <p className="font-semibold text-charcoal">
+                                  {formatShortDate(d.startISO)} — {formatCohortDate(d.startISO)}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  Ends {getEndDate(d.startISO)} · 6 weeks · Mon–Thu
+                                </p>
+                                <p className="text-xs text-purple font-medium mt-1">
+                                  ⏰ Apply by: {d.deadline}
+                                </p>
+                              </div>
+                            </label>
+                          ))
                       ) : (
                         weekendCohortDates
                           .filter((w) => new Date(w.deadlineISO + "T23:59:59") >= new Date())
