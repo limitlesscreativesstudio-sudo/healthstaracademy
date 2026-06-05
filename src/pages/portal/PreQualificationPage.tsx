@@ -201,16 +201,21 @@ const PreQualificationPage = () => {
       setQualificationNotes(data.qualification_notes || "");
       // Build cohort date label
       const cohort = cohorts.find(c => c.start_date === selectedCohort);
-      if (cohort) {
+      const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+      if (programTrack === "daytime" && selectedCohort) {
+        // Daytime: 6 weeks (42 days)
+        const startDate = new Date(selectedCohort + "T00:00:00");
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 42);
+        setCohortDateLabel(`${fmt(startDate)} – ${fmt(endDate)}`);
+      } else if (cohort) {
         const startDate = new Date(cohort.start_date + "T00:00:00");
         const endDate = new Date(startDate);
         endDate.setDate(endDate.getDate() + 42);
-        const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
         setCohortDateLabel(`${fmt(startDate)} – ${fmt(endDate)}`);
       } else if (selectedCohort) {
         // Weekend cohort - build from schedule data
         const startDate = new Date(selectedCohort + "T00:00:00");
-        const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
         setCohortDateLabel(fmt(startDate));
       }
       setSubmitResult(data.qualification_status === "qualified" ? "qualified" : "disqualified");
