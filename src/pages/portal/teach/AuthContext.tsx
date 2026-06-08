@@ -57,6 +57,13 @@ const buildUser = (id: string, email: string, name: string, role: UserRole): Aut
   };
 };
 
+const pickPrimaryRole = (roles: UserRole[]): UserRole | null => {
+  if (roles.includes('admin')) return 'admin';
+  if (roles.includes('instructor')) return 'instructor';
+  if (roles.includes('student')) return 'student';
+  return null;
+};
+
 // ─── Context ──────────────────────────────────────────────────────────────────
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -90,15 +97,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Fetch profile from DB and set user state
   const hydrateUser = async (id: string, email: string) => {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name, role')
-      .eq('id', id)
-      .single();
+    const [{ data: profile, error: profileError }, { data: roleRows, error: rolesError }] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', id)
+        .maybeSingle(),
+      supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', id),
+    ]);
 
-    if (profile) {
-      setUser(buildUser(id, email, profile.full_name, profile.role as UserRole));
+    if (profileError || rolesError) {
+      console.error('Unable to load portal account', profileError || rolesError);
+      setUser(null);
+      return;
     }
+
+    const role = pickPrimaryRole((roleRows ?? []).map(r => r.role as UserRole));
+    if (!role) {
+      setUser(null);
+      return;
+    }
+
+    setUser(buildUser(id, email, profile?.full_name || email, role));
   };
 
   // ── Login ─────────────────────────────────────────────────────────────────
@@ -132,18 +155,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!data.user) return { error: 'Login failed. Please try again.' };
 
     // Check profile exists and role is not student (students use separate portal)
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name, role')
-      .eq('id', data.user.id)
-      .single();
+    const [{ data: profile }, { data: roleRows, error: rolesError }] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', data.user.id)
+        .maybeSingle(),
+      supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id),
+    ]);
 
-    if (!profile) {
+    if (!profile || rolesError) {
       await supabase.auth.signOut();
       return { error: 'Account not found. Contact your administrator.' };
     }
 
-    if (profile.role === 'student') {
+    const role = pickPrimaryRole((roleRows ?? []).map(r => r.role as UserRole));
+    if (role === 'student' || !role) {
       await supabase.auth.signOut();
       return { error: 'Students access the portal via the student login page.' };
     }
@@ -160,7 +190,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const { error } = await supabase
       .from('profiles')
       .update({ full_name: name.trim() })
-      .eq('id', user.id);
+      .eq('user_id', user.id);
 
     if (error) return { error: error.message };
 
