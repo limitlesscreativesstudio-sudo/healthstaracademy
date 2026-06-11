@@ -1,28 +1,73 @@
-## What's broken
+# LMS Completion Plan
 
-On `/pre-qualification` Step 3, picking **Daytime** shows no start dates, so the form can't be submitted. Weekend works because it reads from the static `cohortSchedule.ts` file, while Daytime relies on a live database query that — for any number of reasons (slow load, transient network/CORS, an empty filter result, a TanStack Query failure that silently sets `data = []`) — is returning nothing for the user.
+Audit results: the LMS is roughly **70% done**. Most student-facing screens work, but the instructor portal is stubbed, several buttons are dead, and the cohort manager has no "Create" UI. We'll finish in the order you asked — LMS first, cohort creation last — and design cohort creation around your **template-and-duplicate** workflow.
 
-I verified the DB itself is fine: there are 14 open daytime cohorts (next start June 22, 2026) and the anon API returns them when called directly.
+---
 
-## The fix
+## Phase 1 — Instructor Portal (blocks teaching)
 
-Make the Daytime radio list render from the same resilient source the Weekend list uses, with the live DB query as an enhancement (not a hard dependency):
+1. **Wire real instructor screens in `src/App.tsx`**
+   - Replace the 4 placeholders (`InstructorDashboard`, `CourseEditor`, `QuizEditor`, `SubmissionsInbox`) currently aliased to `StudentDashboard`.
+   - Promote the orphaned `src/pages/portal/teach/Dashboard.tsx` to the real `/portal/teach` landing page (instructor dashboard with course list, recent submissions, announcements).
+   - Add new routes:
+     - `/portal/teach` → InstructorDashboard
+     - `/portal/teach/courses/:courseId` → CourseEditor (reuses CourseView in author mode)
+     - `/portal/teach/courses/:courseId/quizzes/:quizId/edit` → QuizEditor
+     - `/portal/teach/submissions` → SubmissionsInbox (lists ungraded submissions across all instructor's courses)
 
-1. Use the static `getCohortsByType("daytime")` list (`daytimeCohortDates`, already imported but currently unused) as the source of truth for the radio options — same pattern as weekend.
-2. Apply the existing "deadline hasn't passed" filter (`startISO − 14 days ≥ today`) so expired cohorts don't show.
-3. Use `startISO` as the radio value (same convention as weekend) so the submit payload stays consistent.
-4. Keep the live `cohorts` DB query, but use it only to:
-   - Hide a static date if its matching DB row is `status = "closed"`.
-   - Look up `id` / payment links if needed downstream.
-   If the DB query is empty or errors, the static list still renders — the form is never blocked.
-5. Update the post-submit `cohortDateLabel` builder so it works whether the selected value came from the static list or the DB row (it currently only handles the DB case for daytime).
+2. **Role gating**
+   - Fix `SettingsTab.tsx` — replace fake `user?.canEdit` with a real check using `usePortalAuth().isInstructor`.
+   - Same check enables author UI inside CourseView tabs (Modules, Pages, Files, Syllabus).
 
-## Files touched
+3. **Forgot-password route**
+   - Add `/portal/teach/reset` page that calls `supabase.auth.resetPasswordForEmail` and a `/portal/teach/update-password` page for the recovery callback. Kills the dead link on PortalLogin.
 
-- `src/pages/portal/PreQualificationPage.tsx` — only the Daytime branch of the radio group (lines ~776–814) and the small label-builder block in `handleSubmit` (lines ~202–215). No backend, schema, or styling changes.
+---
 
-## Why this is safe
+## Phase 2 — Fix Broken Buttons & Hardcoded Data
 
-- Weekend already works this way, so we're matching a proven pattern.
-- The static `cohortSchedule.ts` is the canonical schedule per project memory ("Cohort Schedule Management" / "Program Schedule") and is kept in sync with the DB.
-- Admins keep full control: closing a cohort in the Admin Cohort Manager will still hide it from the form via the DB cross-check.
+4. **`CareerPortal.tsx`** — wire all 5 resource buttons to real URLs (resume builder, CDPH, CEU site, etc.) and connect "Apply Now" to `job_pipeline` table or external job URL field. Move hardcoded job list into the existing `job_pipeline` table query.
+
+5. **`RequiredWork.tsx`** — replace mock `STUDENTS` / `WORK` arrays with live queries against `students`, `assignments`, `submissions`, `clinical_hours`. Implement the "Export Report" button as a CSV download.
+
+6. **`CohortOpsHub.tsx` roster** — add inline editing of `enrollment_status` and `payment_status` per student so you can manage students from the hub.
+
+7. **`CalendarTab.tsx`** — implement week view (or hide the toggle until later — you choose).
+
+8. **`SyllabusTab.tsx`** — remove the dead `<a href="#">` anchor.
+
+---
+
+## Phase 3 — Cohort Creation with Templates (last)
+
+Designed for your workflow: create one daytime template and one weekend template, then **duplicate** them for each new group of students (each duplicate is a fresh record so rosters stay separate).
+
+9. **DB migration** — add `cohorts.is_template boolean default false` and `cohorts.template_source_id uuid` (nullable, points to the template it was duplicated from). No data loss.
+
+10. **CohortManager UI additions**
+    - **Templates section** at the top showing the 2 master templates (Daytime, Weekend) — edit name, capacity, payment links, clinical site, deadlines, notes.
+    - **"+ New Cohort from Template"** button → modal asking: which template + start date + (auto-fills name like "Daytime — Jan 12, 2026"). On submit, inserts a new cohort copying every field except `id`, `start_date`, `name`, `created_at`, and sets `template_source_id`.
+    - **"+ New Cohort"** button for ad-hoc cohorts (full form: name, start_date, capacity, program_type, links).
+    - Edit `program_type` (daytime ↔ weekend) on existing cohorts.
+    - Delete cohort button (only when 0 enrolled students, with confirm).
+
+11. **Visual cleanup** — group cohorts in the manager as: Templates → Upcoming → Active → Past.
+
+---
+
+## Out of scope (call out, do later)
+
+- Real-time chat / messaging between instructor and students
+- Bulk email from the instructor portal (separate enrollment-email function already covers this)
+- Mobile-specific instructor views
+
+---
+
+## Technical notes
+
+- All new tables/columns go through `supabase--migration` with GRANTs and RLS.
+- Instructor screens reuse existing `usePortalAuth` for role checks — no new auth code.
+- Cohort duplication is a single client-side `INSERT ... SELECT` style copy via Supabase JS — no edge function needed.
+- Estimated edits: ~12 files touched in Phase 1, ~6 files in Phase 2, ~3 files + 1 migration in Phase 3.
+
+Approve and I'll start with Phase 1.
