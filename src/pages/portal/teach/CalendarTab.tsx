@@ -174,11 +174,47 @@ const CalendarTab: React.FC = () => {
           </div>
         )}
 
-        {view === 'week' && (
-          <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:20, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>
-            Week view coming soon — use Month or Agenda view.
-          </div>
-        )}
+        {view === 'week' && (() => {
+          const start = new Date(year, month, viewDate.getDate());
+          start.setDate(start.getDate() - start.getDay());
+          const weekDays = Array.from({ length: 7 }).map((_, i) => {
+            const d = new Date(start);
+            d.setDate(start.getDate() + i);
+            return d;
+          });
+          const keyFor = (d: Date) =>
+            `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+          return (
+            <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, overflow:'hidden' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', borderBottom:`1px solid ${C.border}`, background:'#F0EDF7' }}>
+                {weekDays.map(d => (
+                  <div key={d.toISOString()} style={{ padding:'10px 8px', textAlign:'center', borderRight:`1px solid ${C.border}` }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:C.muted, fontFamily:'sans-serif' }}>{DAYS[d.getDay()]}</div>
+                    <div style={{ fontSize:16, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>{d.getDate()}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', minHeight:380 }}>
+                {weekDays.map(d => {
+                  const evs = EVENTS.filter(e => e.date === keyFor(d) && selCohorts.includes(e.cohort));
+                  return (
+                    <div key={d.toISOString()} style={{ borderRight:`1px solid ${C.border}`, padding:6, display:'flex', flexDirection:'column', gap:4 }}>
+                      {evs.length === 0 ? (
+                        <div style={{ fontSize:10, color:C.border, fontFamily:'sans-serif', textAlign:'center', marginTop:12 }}>—</div>
+                      ) : evs.map(ev => (
+                        <div key={ev.id} onClick={() => setSelEvent(ev)}
+                          style={{ fontSize:11, padding:'5px 7px', borderRadius:4, background:COHORT_COLORS[ev.cohort]+'22', color:COHORT_COLORS[ev.cohort], fontFamily:'sans-serif', cursor:'pointer', borderLeft:`3px solid ${COHORT_COLORS[ev.cohort]}`, lineHeight:1.3 }}>
+                          {ev.time && <div style={{ fontWeight:700, fontSize:10 }}>{ev.time}</div>}
+                          <div>{ev.title}</div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Right sidebar — calendars */}
@@ -221,7 +257,7 @@ const CalendarTab: React.FC = () => {
               <input type="checkbox" defaultChecked style={{ accentColor:C.muted }}/>
               Undated
             </label>
-            <a href="#" style={{ fontSize:11, color:C.primary, fontFamily:'sans-serif', textDecoration:'none' }}>📅 Calendar Feed</a>
+            <span style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>📅 Calendar feed coming soon</span>
           </div>
         </div>
       </div>

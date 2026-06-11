@@ -43,11 +43,37 @@ const RequiredWork: React.FC = () => {
     return true;
   });
 
+  const exportCSV = () => {
+    const headers = ['Student', 'Done', 'Missing', 'Progress %', 'Points Earned',
+      ...WORK.map(w => `${w.name} (${w.due})`)];
+    const rows = STUDENTS.map(s => {
+      const done = doneCount(s);
+      const pct = Math.round((done / WORK.length) * 100);
+      return [s, done, WORK.length - done, pct, totalPts(s),
+        ...WORK.map(w => completion[s]?.[w.id] ? '✓' : '')];
+    });
+    const csv = [headers, ...rows].map(r =>
+      r.map(cell => {
+        const v = String(cell ?? '');
+        return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+      }).join(',')
+    ).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `required-work-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div style={{ padding:24 }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Required Work</h2>
-        <button style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Export Report</button>
+        <button onClick={exportCSV} style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Export Report</button>
       </div>
 
       {/* Overview grid */}
