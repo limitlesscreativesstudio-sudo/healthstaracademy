@@ -4,6 +4,8 @@ import CourseView   from './pages/portal/teach/CourseView';
 import { AuthProvider } from './pages/portal/teach/AuthContext';
 import ProtectedRoute   from './pages/portal/teach/ProtectedRoute';
 import CreateAccount    from './pages/portal/teach/CreateAccount';
+import ForgotPassword   from './pages/portal/teach/ForgotPassword';
+import UpdatePassword   from './pages/portal/teach/UpdatePassword';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -116,6 +118,8 @@ const AppShell = () => {
           <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<AssignmentView />} />
           <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<QuizView />} />
           <Route path="/portal/teach/login"          element={<AuthProvider><PortalLogin /></AuthProvider>} />
+          <Route path="/portal/teach/reset"          element={<AuthProvider><ForgotPassword /></AuthProvider>} />
+          <Route path="/portal/teach/update-password" element={<AuthProvider><UpdatePassword /></AuthProvider>} />
           <Route path="/portal/teach/invite"         element={<AuthProvider><AcceptInvite /></AuthProvider>} />
           <Route path="/portal/teach/create-account" element={<AuthProvider><CreateAccount /></AuthProvider>} />
           <Route path="/portal/teach"                element={<AuthProvider><ProtectedRoute><CourseView /></ProtectedRoute></AuthProvider>} />
