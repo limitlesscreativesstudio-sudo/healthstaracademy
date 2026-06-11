@@ -213,6 +213,7 @@ export type Database = {
           created_at: string
           enrollment_deadline: string | null
           id: string
+          is_template: boolean
           min_to_run: number | null
           name: string
           notes: string | null
@@ -221,6 +222,7 @@ export type Database = {
           program_type: string | null
           start_date: string
           status: string
+          template_source_id: string | null
           updated_at: string
         }
         Insert: {
@@ -229,6 +231,7 @@ export type Database = {
           created_at?: string
           enrollment_deadline?: string | null
           id?: string
+          is_template?: boolean
           min_to_run?: number | null
           name?: string
           notes?: string | null
@@ -237,6 +240,7 @@ export type Database = {
           program_type?: string | null
           start_date: string
           status?: string
+          template_source_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -245,6 +249,7 @@ export type Database = {
           created_at?: string
           enrollment_deadline?: string | null
           id?: string
+          is_template?: boolean
           min_to_run?: number | null
           name?: string
           notes?: string | null
@@ -253,9 +258,18 @@ export type Database = {
           program_type?: string | null
           start_date?: string
           status?: string
+          template_source_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cohorts_template_source_id_fkey"
+            columns: ["template_source_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       course_invites: {
         Row: {
