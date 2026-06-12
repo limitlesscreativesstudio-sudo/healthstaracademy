@@ -1,5 +1,6 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { toast } from "sonner";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 
 type Require = "auth" | "instructor" | "admin";
@@ -42,12 +43,23 @@ const RoleGuard = ({ children, require = "auth", fallback = "/portal" }: Props) 
     (require === "admin" && isAdmin);
 
   if (!allowed) {
-    // Send students hitting /portal/teach back to their dashboard; send
-    // anyone hitting an admin-only screen back to the portal home.
-    return <Navigate to={fallback} replace state={{ from: location.pathname, denied: true }} />;
+    return <DeniedRedirect to={fallback} require={require} from={location.pathname} />;
   }
 
   return <>{children}</>;
+};
+
+const DeniedRedirect = ({ to, require, from }: { to: string; require: Require; from: string }) => {
+  useEffect(() => {
+    const msg =
+      require === "admin"
+        ? "Admin access required."
+        : require === "instructor"
+          ? "Instructor access required."
+          : "You do not have access to that page.";
+    toast.error(msg);
+  }, [require]);
+  return <Navigate to={to} replace state={{ from, denied: true }} />;
 };
 
 export default RoleGuard;
