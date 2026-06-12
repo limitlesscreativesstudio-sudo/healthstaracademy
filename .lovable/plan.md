@@ -1,73 +1,96 @@
-# LMS Completion Plan
+# LMS Build Audit
 
-Audit results: the LMS is roughly **70% done**. Most student-facing screens work, but the instructor portal is stubbed, several buttons are dead, and the cohort manager has no "Create" UI. We'll finish in the order you asked — LMS first, cohort creation last — and design cohort creation around your **template-and-duplicate** workflow.
-
----
-
-## Phase 1 — Instructor Portal (blocks teaching)
-
-1. **Wire real instructor screens in `src/App.tsx`**
-   - Replace the 4 placeholders (`InstructorDashboard`, `CourseEditor`, `QuizEditor`, `SubmissionsInbox`) currently aliased to `StudentDashboard`.
-   - Promote the orphaned `src/pages/portal/teach/Dashboard.tsx` to the real `/portal/teach` landing page (instructor dashboard with course list, recent submissions, announcements).
-   - Add new routes:
-     - `/portal/teach` → InstructorDashboard
-     - `/portal/teach/courses/:courseId` → CourseEditor (reuses CourseView in author mode)
-     - `/portal/teach/courses/:courseId/quizzes/:quizId/edit` → QuizEditor
-     - `/portal/teach/submissions` → SubmissionsInbox (lists ungraded submissions across all instructor's courses)
-
-2. **Role gating**
-   - Fix `SettingsTab.tsx` — replace fake `user?.canEdit` with a real check using `usePortalAuth().isInstructor`.
-   - Same check enables author UI inside CourseView tabs (Modules, Pages, Files, Syllabus).
-
-3. **Forgot-password route**
-   - Add `/portal/teach/reset` page that calls `supabase.auth.resetPasswordForEmail` and a `/portal/teach/update-password` page for the recovery callback. Kills the dead link on PortalLogin.
+Audit of the instructor/student portal and admin tools so you know exactly what to fix before pouring content in. Grouped by severity.
 
 ---
 
-## Phase 2 — Fix Broken Buttons & Hardcoded Data
+## 🔴 Blockers (must fix before adding content)
 
-4. **`CareerPortal.tsx`** — wire all 5 resource buttons to real URLs (resume builder, CDPH, CEU site, etc.) and connect "Apply Now" to `job_pipeline` table or external job URL field. Move hardcoded job list into the existing `job_pipeline` table query.
+### 1. Instructor routes are still stubs
+`src/App.tsx` lines 53-57:
+```ts
+const InstructorDashboard = StudentDashboard;
+const CourseEditor = StudentDashboard;
+const QuizEditor = StudentDashboard;
+const SubmissionsInbox = StudentDashboard;
+```
+And `/portal/teach` is wired to `CourseView` instead of an instructor landing page. There is no instructor home, no submissions inbox, no dedicated course editor route. The real `src/pages/portal/teach/Dashboard.tsx` (486 lines, lists courses from DB) is never mounted.
 
-5. **`RequiredWork.tsx`** — replace mock `STUDENTS` / `WORK` arrays with live queries against `students`, `assignments`, `submissions`, `clinical_hours`. Implement the "Export Report" button as a CSV download.
+### 2. `/portal` shows the wrong screen to students
+`/portal` and `/portal/courses` both render `StudentDashboard`, but that file is actually the **course People/Roster panel** (queries `enrollments` by `courseId`). With no `courseId`, students land on an empty roster, not a dashboard of their courses. Need a real student home (course cards + upcoming work + announcements).
 
-6. **`CohortOpsHub.tsx` roster** — add inline editing of `enrollment_status` and `payment_status` per student so you can manage students from the hub.
+### 3. Two parallel auth systems
+- `src/pages/portal/teach/AuthContext.tsx` (creates its own Supabase client, `useAuth`)
+- `src/hooks/usePortalAuth.ts` (uses shared client, used by `RoleGuard`)
 
-7. **`CalendarTab.tsx`** — implement week view (or hide the toggle until later — you choose).
+They duplicate session listeners, can disagree on roles, and `AuthContext` is only mounted on a subset of routes — so `useAuth().user.canEdit` is undefined for components rendered outside an `AuthProvider`. Pick one (recommend `usePortalAuth` + a thin profile loader) and delete the other.
 
-8. **`SyllabusTab.tsx`** — remove the dead `<a href="#">` anchor.
+### 4. `RequiredWork.tsx` is 100% mock data
+Hardcoded `STUDENTS` array and `WORK` list with `Math.random()` completion. Export CSV works, but the data is fake. Must be wired to `students`, `assignments`, `submissions`, `clinical_hours`.
 
----
-
-## Phase 3 — Cohort Creation with Templates (last)
-
-Designed for your workflow: create one daytime template and one weekend template, then **duplicate** them for each new group of students (each duplicate is a fresh record so rosters stay separate).
-
-9. **DB migration** — add `cohorts.is_template boolean default false` and `cohorts.template_source_id uuid` (nullable, points to the template it was duplicated from). No data loss.
-
-10. **CohortManager UI additions**
-    - **Templates section** at the top showing the 2 master templates (Daytime, Weekend) — edit name, capacity, payment links, clinical site, deadlines, notes.
-    - **"+ New Cohort from Template"** button → modal asking: which template + start date + (auto-fills name like "Daytime — Jan 12, 2026"). On submit, inserts a new cohort copying every field except `id`, `start_date`, `name`, `created_at`, and sets `template_source_id`.
-    - **"+ New Cohort"** button for ad-hoc cohorts (full form: name, start_date, capacity, program_type, links).
-    - Edit `program_type` (daytime ↔ weekend) on existing cohorts.
-    - Delete cohort button (only when 0 enrolled students, with confirm).
-
-11. **Visual cleanup** — group cohorts in the manager as: Templates → Upcoming → Active → Past.
+### 5. `CalendarTab.tsx` is hardcoded
+`EVENTS` is a literal array of May 2026 entries. Needs to read from `assignments.due_date`, `quizzes.due_date`, `clinical_attendance`.
 
 ---
 
-## Out of scope (call out, do later)
+## 🟠 High priority (functionality gaps)
 
-- Real-time chat / messaging between instructor and students
-- Bulk email from the instructor portal (separate enrollment-email function already covers this)
-- Mobile-specific instructor views
+### 6. Course editor uses seeded mock courses
+`CourseView.tsx` line 42 — `COURSES` is a hardcoded 3-item array. The view should hydrate the course from `courses` table by `:courseId`.
+
+### 7. `SettingsTab.tsx` saves nothing
+"Save" just flashes "✅ updated" with a `setTimeout` — no Supabase write. Same pattern likely on Sections/Navigation tabs.
+
+### 8. `CareerPortal.tsx` jobs list is hardcoded
+5 fake LA-area jobs in a literal array. The `job_pipeline` table exists — switch to a live query, or repurpose this view for grad placement tracking and link out for live job boards.
+
+### 9. Dead "View Calendar →" link
+`CourseView.tsx:409` and `Dashboard.tsx:443` — `<a href="#">` anchors that go nowhere.
+
+### 10. "📅 Calendar feed coming soon"
+`CalendarTab.tsx:260` — visible to users. Either implement iCal feed or hide.
+
+### 11. `CohortOpsHub` roster read-only
+You can view enrolled students per cohort but can't change `enrollment_status` / `payment_status` from there.
+
+### 12. Forgot/Update password flows
+Toasts and audit logging are wired (recent work) but no end-to-end test of recovery email → update-password handoff. Need to verify the `redirectTo` matches `/portal/teach/update-password`.
 
 ---
 
-## Technical notes
+## 🟡 Medium (polish before launch)
 
-- All new tables/columns go through `supabase--migration` with GRANTs and RLS.
-- Instructor screens reuse existing `usePortalAuth` for role checks — no new auth code.
-- Cohort duplication is a single client-side `INSERT ... SELECT` style copy via Supabase JS — no edge function needed.
-- Estimated edits: ~12 files touched in Phase 1, ~6 files in Phase 2, ~3 files + 1 migration in Phase 3.
+13. **`AuthContext` student-portal block** — `login()` in `AuthContext.tsx:170` signs out anyone whose role is `student`, but `/portal/teach/login` is the only login form on the site. Students currently have no way in.
+14. **Instructor invite acceptance** — `AcceptInvite.tsx` exists but flow not verified end-to-end against `course_invites`/`instructor_invites` tables.
+15. **`StudentGrades.tsx`** — verify it pulls from `grades` and matches the gradebook columns instructors will use.
+16. **Notifications** — `notifications` table + `NotificationBell` component exist; need to confirm the bell shows announcements + submission events triggered by your DB triggers.
+17. **`ModulesTabAuthor.tsx`** — 600+ lines; verify add-module, add-item, reorder, delete all persist.
+18. **`FilesTab` / `PagesTab`** — confirm upload to `course-assets` / `page-images` buckets actually works and respects RLS.
 
-Approve and I'll start with Phase 1.
+---
+
+## 🟢 Working (verified during audit)
+
+- Supabase auth + role tables (`user_roles`, `has_role`, `is_admin`, `is_instructor_of`).
+- `RoleGuard` + `AuthAuditLog` + password-strength helpers.
+- Cohort templates + duplication UI in `CohortManager`.
+- `JobPipelineTracker` and `StudentPipeline` (admin tools) use live data.
+- Edge functions deployed: `accept-invite`, `enrollment-webhook`, `provision-student`, `send-enrollment-email`, `student-lookup`, `submit-quiz-attempt`, `course-roster`.
+- Quiz scoring trigger (`prevent_quiz_attempt_score_tamper`) and announcement fan-out trigger.
+
+---
+
+## Recommended fix order
+
+1. **Auth consolidation** (#3) — everything else depends on knowing who the user is.
+2. **Student `/portal` home** (#2) — so students can log in and see something real.
+3. **Instructor routes + Dashboard mount** (#1) — unblocks course authoring.
+4. **CourseView hydration** (#6) + **SettingsTab persistence** (#7) — so editing actually saves.
+5. **RequiredWork** (#4) and **CalendarTab** (#5) — replace mocks with live queries.
+6. **Polish pass** (#9-18).
+
+Estimated scope: ~15 files touched, no new tables needed (schema is already in place).
+
+---
+
+Approve and I'll start with Step 1 (auth consolidation). If you want a different order — e.g. ship the student home first so you can demo it — say so and I'll re-sequence.
