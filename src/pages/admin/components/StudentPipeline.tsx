@@ -52,8 +52,20 @@ const ENROLLMENT_STATUSES = [
   "welcome_sent", "enrolled", "disqualified",
 ];
 
+interface CohortLite {
+  id: string;
+  name: string;
+  start_date: string;
+  capacity: number;
+  status: string;
+  program_type: string;
+  is_template: boolean;
+}
+
 const StudentPipeline = () => {
   const [students, setStudents] = useState<Student[]>([]);
+  const [cohorts, setCohorts] = useState<CohortLite[]>([]);
+  const [enrolledCounts, setEnrolledCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -66,16 +78,50 @@ const StudentPipeline = () => {
     if (filterStatus !== "all") {
       query = query.eq("enrollment_status", filterStatus);
     }
-    const { data, error } = await query;
+    const [{ data, error }, { data: cohortRows }] = await Promise.all([
+      query,
+      supabase.from("cohorts").select("id,name,start_date,capacity,status,program_type,is_template").order("start_date"),
+    ]);
     if (error) {
       toast({ title: "Error loading students", description: error.message, variant: "destructive" });
     } else {
-      setStudents((data as Student[]) || []);
+      const list = (data as Student[]) || [];
+      setStudents(list);
+      const counts: Record<string, number> = {};
+      list.forEach(s => {
+        if (s.cohort_id && s.enrollment_status !== "disqualified") {
+          counts[s.cohort_id] = (counts[s.cohort_id] || 0) + 1;
+        }
+      });
+      setEnrolledCounts(counts);
     }
+    setCohorts(((cohortRows as CohortLite[]) || []).filter(c => !c.is_template));
     setLoading(false);
   };
 
   useEffect(() => { fetchStudents(); }, [filterStatus]);
+
+  const assignCohort = async (studentId: string, cohortId: string) => {
+    const target = cohortId === "none" ? null : cohortId;
+    if (target) {
+      const cohort = cohorts.find(c => c.id === target);
+      const count = enrolledCounts[target] || 0;
+      if (cohort && count >= cohort.capacity) {
+        if (!confirm(`${cohort.name} is at capacity (${count}/${cohort.capacity}). Assign anyway?`)) return;
+      }
+    }
+    const { error } = await supabase
+      .from("students")
+      .update({ cohort_id: target })
+      .eq("id", studentId);
+    if (error) {
+      toast({ title: "Assignment failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: target ? "Cohort assigned" : "Cohort cleared" });
+    fetchStudents();
+  };
+
 
   const provisionPortal = async (studentId: string) => {
     setProvisioning(studentId);
@@ -253,6 +299,27 @@ const StudentPipeline = () => {
                       {ENROLLMENT_STATUSES.map(s => (
                         <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="md:col-span-3">
+                  <p className="text-sm text-muted-foreground mb-1">Cohort Assignment</p>
+                  <Select value={student.cohort_id ?? "none"} onValueChange={v => assignCohort(student.id, v)}>
+                    <SelectTrigger className="w-full sm:w-[360px]">
+                      <SelectValue placeholder="Not assigned to a cohort" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— Not assigned —</SelectItem>
+                      {cohorts.map(c => {
+                        const count = enrolledCounts[c.id] || 0;
+                        const full = count >= c.capacity;
+                        const d = new Date(c.start_date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+                        return (
+                          <SelectItem key={c.id} value={c.id}>
+                            {d} · {c.program_type === "weekend" ? "Weekend" : "Daytime"} ({count}/{c.capacity}){full ? " · FULL" : ""}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
