@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { supabase } from './AuthContext';
 
 const C = {
@@ -15,14 +16,23 @@ const ForgotPassword: React.FC = () => {
 
   const submit = async () => {
     setError('');
-    if (!email.trim()) { setError('Please enter your email address.'); return; }
+    if (!email.trim()) {
+      setError('Please enter your email address.');
+      toast.error('Please enter your email address.');
+      return;
+    }
     setLoading(true);
     const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
       redirectTo: `${window.location.origin}/portal/teach/update-password`,
     });
     setLoading(false);
-    if (err) { setError(err.message); return; }
+    if (err) {
+      setError(err.message);
+      toast.error(`Could not send reset email: ${err.message}`);
+      return;
+    }
     setSent(true);
+    toast.success('Reset link sent — check your inbox.');
   };
 
   return (
