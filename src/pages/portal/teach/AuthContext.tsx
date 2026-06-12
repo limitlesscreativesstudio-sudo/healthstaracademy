@@ -178,6 +178,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return { error: 'Students access the portal via the student login page.' };
     }
 
+    // Fire-and-forget audit log of successful role-based login
+    import('@/lib/authFeedback').then(({ logAuthEvent }) =>
+      logAuthEvent({
+        eventType: 'login_success',
+        userId: data.user!.id,
+        email: data.user!.email ?? trimEmail,
+        userRole: role,
+      })
+    ).catch(() => {});
+
     // hydrateUser will be called automatically via onAuthStateChange
     return {};
   };
