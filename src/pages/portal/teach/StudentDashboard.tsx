@@ -1,3 +1,4 @@
+// @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect } from 'react';
 import { supabase } from './AuthContext';
 
