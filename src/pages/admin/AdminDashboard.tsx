@@ -64,6 +64,8 @@ const AdminDashboard = () => {
     { id: "emails" as Tab, label: "Email Log", icon: Mail },
     { id: "webhooks" as Tab, label: "Zapier Setup", icon: Activity },
     { id: "audit" as Tab, label: "Audit Log", icon: ShieldCheck },
+  ];
+
 
   return (
     <div className="min-h-screen bg-muted">
