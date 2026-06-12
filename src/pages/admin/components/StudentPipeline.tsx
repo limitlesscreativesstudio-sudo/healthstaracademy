@@ -302,6 +302,27 @@ const StudentPipeline = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="md:col-span-3">
+                  <p className="text-sm text-muted-foreground mb-1">Cohort Assignment</p>
+                  <Select value={student.cohort_id ?? "none"} onValueChange={v => assignCohort(student.id, v)}>
+                    <SelectTrigger className="w-full sm:w-[360px]">
+                      <SelectValue placeholder="Not assigned to a cohort" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— Not assigned —</SelectItem>
+                      {cohorts.map(c => {
+                        const count = enrolledCounts[c.id] || 0;
+                        const full = count >= c.capacity;
+                        const d = new Date(c.start_date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+                        return (
+                          <SelectItem key={c.id} value={c.id}>
+                            {d} · {c.program_type === "weekend" ? "Weekend" : "Daytime"} ({count}/{c.capacity}){full ? " · FULL" : ""}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="md:col-span-3 border-t border-border/60 pt-3 mt-2">
                   <p className="text-sm text-muted-foreground mb-2">LMS Portal Access</p>
                   {student.provisioned_at ? (
