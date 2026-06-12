@@ -4,14 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePortalAuth } from '@/hooks/usePortalAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { BookOpen, Calendar, Bell, Briefcase, User, LogOut, GraduationCap } from 'lucide-react';
 
 interface CourseRow {
   id: string;
-  name: string;
+  title: string;
   code: string;
-  color: string | null;
+  cover_image_url: string | null;
   term: string | null;
 }
 
@@ -19,7 +19,7 @@ interface UpcomingItem {
   kind: 'assignment' | 'quiz';
   id: string;
   course_id: string;
-  course_name: string;
+  course_title: string;
   title: string;
   due_at: string | null;
 }
@@ -28,9 +28,9 @@ interface AnnouncementRow {
   id: string;
   title: string;
   body: string | null;
-  created_at: string;
+  posted_at: string;
   course_id: string;
-  course_name?: string;
+  course_title?: string;
 }
 
 const StudentHome: React.FC = () => {
@@ -46,14 +46,13 @@ const StudentHome: React.FC = () => {
     const load = async () => {
       setLoadingData(true);
 
-      // Enrollments → courses
       const { data: enrolls } = await supabase
         .from('enrollments')
-        .select('course_id, courses ( id, name, code, color, term )')
+        .select('course_id, courses ( id, title, code, cover_image_url, term )')
         .eq('user_id', user.id);
 
-      const cs: CourseRow[] = (enrolls ?? [])
-        .map((e: any) => e.courses)
+      const cs: CourseRow[] = ((enrolls ?? []) as any[])
+        .map(e => e.courses)
         .filter(Boolean);
       setCourses(cs);
 
@@ -83,29 +82,29 @@ const StudentHome: React.FC = () => {
           .lte('due_at', horizon)
           .order('due_at', { ascending: true }),
         supabase.from('lms_announcements')
-          .select('id, title, body, created_at, course_id')
+          .select('id, title, body, posted_at, course_id')
           .in('course_id', courseIds)
-          .order('created_at', { ascending: false })
+          .order('posted_at', { ascending: false })
           .limit(5),
       ]);
 
       const byId: Record<string, string> = {};
-      cs.forEach(c => { byId[c.id] = c.name; });
+      cs.forEach(c => { byId[c.id] = c.title; });
 
       const up: UpcomingItem[] = [
-        ...(asgs ?? []).map((a: any) => ({
+        ...((asgs ?? []) as any[]).map(a => ({
           kind: 'assignment' as const, id: a.id, course_id: a.course_id,
-          course_name: byId[a.course_id] ?? 'Course', title: a.title, due_at: a.due_at,
+          course_title: byId[a.course_id] ?? 'Course', title: a.title, due_at: a.due_at,
         })),
-        ...(qzs ?? []).map((q: any) => ({
+        ...((qzs ?? []) as any[]).map(q => ({
           kind: 'quiz' as const, id: q.id, course_id: q.course_id,
-          course_name: byId[q.course_id] ?? 'Course', title: q.title, due_at: q.due_at,
+          course_title: byId[q.course_id] ?? 'Course', title: q.title, due_at: q.due_at,
         })),
       ].sort((a, b) => (a.due_at ?? '').localeCompare(b.due_at ?? ''));
       setUpcoming(up.slice(0, 8));
 
       setAnnouncements(
-        (anns ?? []).map((a: any) => ({ ...a, course_name: byId[a.course_id] ?? 'Course' }))
+        ((anns ?? []) as any[]).map(a => ({ ...a, course_title: byId[a.course_id] ?? 'Course' }))
       );
       setLoadingData(false);
     };
@@ -128,7 +127,6 @@ const StudentHome: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      {/* Header */}
       <header className="bg-background border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -154,7 +152,6 @@ const StudentHome: React.FC = () => {
           <p className="text-muted-foreground">Here's what's coming up in your CNA program.</p>
         </section>
 
-        {/* Courses */}
         <section>
           <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" /> My Courses
@@ -173,9 +170,9 @@ const StudentHome: React.FC = () => {
               {courses.map(c => (
                 <Card key={c.id} className="hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => navigate(`/portal/courses/${c.id}`)}>
-                  <div className="h-24 rounded-t-lg" style={{ background: c.color || '#7B4DB5' }} />
+                  <div className="h-24 rounded-t-lg bg-primary" style={c.cover_image_url ? { backgroundImage: `url(${c.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined} />
                   <CardContent className="p-4">
-                    <div className="font-semibold text-foreground mb-1 line-clamp-2">{c.name}</div>
+                    <div className="font-semibold text-foreground mb-1 line-clamp-2">{c.title}</div>
                     <div className="text-xs text-muted-foreground">{c.code}</div>
                     {c.term && <div className="text-xs text-muted-foreground mt-1">{c.term}</div>}
                   </CardContent>
@@ -186,7 +183,6 @@ const StudentHome: React.FC = () => {
         </section>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Upcoming */}
           <section>
             <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" /> Upcoming (next 14 days)
@@ -212,7 +208,7 @@ const StudentHome: React.FC = () => {
                         </Badge>
                         <span className="text-sm font-medium truncate">{item.title}</span>
                       </div>
-                      <div className="text-xs text-muted-foreground truncate">{item.course_name}</div>
+                      <div className="text-xs text-muted-foreground truncate">{item.course_title}</div>
                     </div>
                     <div className="text-xs text-muted-foreground whitespace-nowrap">
                       {item.due_at ? new Date(item.due_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
@@ -223,7 +219,6 @@ const StudentHome: React.FC = () => {
             </Card>
           </section>
 
-          {/* Announcements */}
           <section>
             <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
               <Bell className="h-5 w-5 text-primary" /> Recent Announcements
@@ -238,7 +233,7 @@ const StudentHome: React.FC = () => {
                   <div key={a.id} className="px-4 py-3">
                     <div className="text-sm font-medium">{a.title}</div>
                     <div className="text-xs text-muted-foreground mb-1">
-                      {a.course_name} · {new Date(a.created_at).toLocaleDateString()}
+                      {a.course_title} · {new Date(a.posted_at).toLocaleDateString()}
                     </div>
                     {a.body && (
                       <p className="text-xs text-muted-foreground line-clamp-2">{a.body}</p>

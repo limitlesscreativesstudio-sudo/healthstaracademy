@@ -26,10 +26,11 @@ const PortalLogin: React.FC = () => {
   const [availableRoles, setRoles]    = useState<UserRole[]>([]);
   const [chosenRole, setChosenRole]   = useState<UserRole | null>(null);
 
-  const getRedirect = () => {
+  const getRedirect = (role?: UserRole) => {
     const params = new URLSearchParams(window.location.search);
     const r = params.get('redirect');
-    if (r && r.startsWith('/portal/teach')) return r;
+    if (r && r.startsWith('/portal')) return r;
+    if (role === 'student') return '/portal';
     return '/portal/teach';
   };
 
@@ -58,7 +59,7 @@ const PortalLogin: React.FC = () => {
       return;
     }
 
-    window.location.replace(getRedirect());
+    window.location.replace(getRedirect(result.role));
   };
 
   const handleRoleSelect = async (role: UserRole) => {
@@ -187,7 +188,7 @@ const PortalLogin: React.FC = () => {
         <div style={{ marginTop:14, padding:'10px 14px', background:'#f0edf7', borderRadius:6, display:'flex', gap:8, alignItems:'flex-start' }}>
           <span style={{ fontSize:14, flexShrink:0 }}>📚</span>
           <p style={{ margin:0, fontSize:12, color:C.muted, fontFamily:'sans-serif', lineHeight:1.6 }}>
-            <strong style={{ color:C.text }}>Students:</strong> access is by invitation only. Check your email for an invite link from your instructor.
+            <strong style={{ color:C.text }}>Students:</strong> sign in here with the account from your invite email — you'll land on your Student Portal automatically.
           </p>
         </div>
       </div>
