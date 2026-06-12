@@ -3,15 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Users, GraduationCap, Mail, Activity, RefreshCw, LayoutDashboard, Briefcase } from "lucide-react";
+import { LogOut, Users, GraduationCap, Mail, Activity, RefreshCw, LayoutDashboard, Briefcase, ShieldCheck } from "lucide-react";
 import StudentPipeline from "./components/StudentPipeline";
 import CohortManager from "./components/CohortManager";
 import CohortOpsHub from "./components/CohortOpsHub";
 import JobPipelineTracker from "./components/JobPipelineTracker";
 import EmailLog from "./components/EmailLog";
 import WebhookInfo from "./components/WebhookInfo";
+import AuthAuditLog from "./components/AuthAuditLog";
 
-type Tab = "pipeline" | "cohorts" | "cohort_hub" | "job_pipeline" | "emails" | "webhooks";
+type Tab = "pipeline" | "cohorts" | "cohort_hub" | "job_pipeline" | "emails" | "webhooks" | "audit";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<Tab>("pipeline");
@@ -62,7 +63,9 @@ const AdminDashboard = () => {
     { id: "job_pipeline" as Tab, label: "Job Pipeline", icon: Briefcase },
     { id: "emails" as Tab, label: "Email Log", icon: Mail },
     { id: "webhooks" as Tab, label: "Zapier Setup", icon: Activity },
+    { id: "audit" as Tab, label: "Audit Log", icon: ShieldCheck },
   ];
+
 
   return (
     <div className="min-h-screen bg-muted">
@@ -105,6 +108,7 @@ const AdminDashboard = () => {
         {activeTab === "job_pipeline" && <JobPipelineTracker />}
         {activeTab === "emails" && <EmailLog />}
         {activeTab === "webhooks" && <WebhookInfo />}
+        {activeTab === "audit" && <AuthAuditLog />}
       </div>
     </div>
   );

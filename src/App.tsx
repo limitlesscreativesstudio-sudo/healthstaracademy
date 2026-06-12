@@ -6,6 +6,7 @@ import ProtectedRoute   from './pages/portal/teach/ProtectedRoute';
 import CreateAccount    from './pages/portal/teach/CreateAccount';
 import ForgotPassword   from './pages/portal/teach/ForgotPassword';
 import UpdatePassword from './pages/portal/teach/UpdatePassword';
+import ResetEmailSent from './pages/portal/teach/ResetEmailSent';
 import RoleGuard from './components/portal/RoleGuard';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -120,6 +121,7 @@ const AppShell = () => {
           <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<RoleGuard><QuizView /></RoleGuard>} />
           <Route path="/portal/teach/login"          element={<AuthProvider><PortalLogin /></AuthProvider>} />
           <Route path="/portal/teach/reset"          element={<AuthProvider><ForgotPassword /></AuthProvider>} />
+          <Route path="/portal/teach/reset/sent"     element={<ResetEmailSent />} />
           <Route path="/portal/teach/update-password" element={<AuthProvider><UpdatePassword /></AuthProvider>} />
           <Route path="/portal/teach/invite"         element={<AuthProvider><AcceptInvite /></AuthProvider>} />
           <Route path="/portal/teach/create-account" element={<AuthProvider><CreateAccount /></AuthProvider>} />
