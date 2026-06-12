@@ -5,7 +5,8 @@ import { AuthProvider } from './pages/portal/teach/AuthContext';
 import ProtectedRoute   from './pages/portal/teach/ProtectedRoute';
 import CreateAccount    from './pages/portal/teach/CreateAccount';
 import ForgotPassword   from './pages/portal/teach/ForgotPassword';
-import UpdatePassword   from './pages/portal/teach/UpdatePassword';
+import UpdatePassword from './pages/portal/teach/UpdatePassword';
+import RoleGuard from './components/portal/RoleGuard';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -109,20 +110,20 @@ const AppShell = () => {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/portal/login" element={<Navigate to="/portal/teach/login" replace />} />                  
           <Route path="/portal/accept-invite" element={<AcceptInvite />} />
-          <Route path="/portal" element={<StudentDashboard />} />
-          <Route path="/portal/account" element={<Account />} />
-          <Route path="/portal/career" element={<CareerPortal />} />
-          <Route path="/portal/required" element={<RequiredWork />} />
-          <Route path="/portal/courses" element={<StudentDashboard />} />
-          <Route path="/portal/courses/:courseId/*" element={<CourseView />} />
-          <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<AssignmentView />} />
-          <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<QuizView />} />
+          <Route path="/portal" element={<RoleGuard><StudentDashboard /></RoleGuard>} />
+          <Route path="/portal/account" element={<RoleGuard><Account /></RoleGuard>} />
+          <Route path="/portal/career" element={<RoleGuard><CareerPortal /></RoleGuard>} />
+          <Route path="/portal/required" element={<RoleGuard require="instructor"><RequiredWork /></RoleGuard>} />
+          <Route path="/portal/courses" element={<RoleGuard><StudentDashboard /></RoleGuard>} />
+          <Route path="/portal/courses/:courseId/*" element={<RoleGuard><CourseView /></RoleGuard>} />
+          <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<RoleGuard><AssignmentView /></RoleGuard>} />
+          <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<RoleGuard><QuizView /></RoleGuard>} />
           <Route path="/portal/teach/login"          element={<AuthProvider><PortalLogin /></AuthProvider>} />
           <Route path="/portal/teach/reset"          element={<AuthProvider><ForgotPassword /></AuthProvider>} />
           <Route path="/portal/teach/update-password" element={<AuthProvider><UpdatePassword /></AuthProvider>} />
           <Route path="/portal/teach/invite"         element={<AuthProvider><AcceptInvite /></AuthProvider>} />
           <Route path="/portal/teach/create-account" element={<AuthProvider><CreateAccount /></AuthProvider>} />
-          <Route path="/portal/teach"                element={<AuthProvider><ProtectedRoute><CourseView /></ProtectedRoute></AuthProvider>} />
+          <Route path="/portal/teach"                element={<RoleGuard require="instructor" fallback="/portal"><AuthProvider><ProtectedRoute><CourseView /></ProtectedRoute></AuthProvider></RoleGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

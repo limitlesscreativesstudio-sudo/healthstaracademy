@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { supabase } from './AuthContext';
 
 const C = {
@@ -35,13 +36,26 @@ const UpdatePassword: React.FC = () => {
 
   const submit = async () => {
     setError('');
-    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
-    if (password !== confirm) { setError('Passwords do not match.'); return; }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      toast.error('Password must be at least 8 characters.');
+      return;
+    }
+    if (password !== confirm) {
+      setError('Passwords do not match.');
+      toast.error('Passwords do not match.');
+      return;
+    }
     setLoading(true);
     const { error: err } = await supabase.auth.updateUser({ password });
     setLoading(false);
-    if (err) { setError(err.message); return; }
+    if (err) {
+      setError(err.message);
+      toast.error(`Update failed: ${err.message}`);
+      return;
+    }
     setDone(true);
+    toast.success('Password updated — redirecting to sign in…');
     setTimeout(() => { window.location.replace('/portal/teach/login'); }, 2500);
   };
 
