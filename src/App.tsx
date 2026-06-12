@@ -50,11 +50,7 @@ import CommunityResourcesPage from "./pages/portal/CommunityResourcesPage";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import StudentDashboard from "./pages/portal/teach/StudentDashboard";
-// Instructor screens were moved/removed in an earlier refactor; using StudentDashboard as placeholder
-const InstructorDashboard = StudentDashboard;
-const CourseEditor = StudentDashboard;
-const QuizEditor = StudentDashboard;
-const SubmissionsInbox = StudentDashboard;
+import StudentHome from "./pages/portal/teach/StudentHome";
 import AssignmentView from "./pages/portal/teach/AssignmentView";
 import QuizView from "./pages/portal/teach/QuizView";
 import Account from "./pages/portal/teach/Account";
@@ -111,11 +107,11 @@ const AppShell = () => {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/portal/login" element={<Navigate to="/portal/teach/login" replace />} />                  
           <Route path="/portal/accept-invite" element={<AcceptInvite />} />
-          <Route path="/portal" element={<RoleGuard><StudentDashboard /></RoleGuard>} />
+          <Route path="/portal" element={<RoleGuard><StudentHome /></RoleGuard>} />
           <Route path="/portal/account" element={<RoleGuard><Account /></RoleGuard>} />
           <Route path="/portal/career" element={<RoleGuard><CareerPortal /></RoleGuard>} />
           <Route path="/portal/required" element={<RoleGuard require="instructor"><RequiredWork /></RoleGuard>} />
-          <Route path="/portal/courses" element={<RoleGuard><StudentDashboard /></RoleGuard>} />
+          <Route path="/portal/courses" element={<RoleGuard><StudentHome /></RoleGuard>} />
           <Route path="/portal/courses/:courseId/*" element={<RoleGuard><CourseView /></RoleGuard>} />
           <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<RoleGuard><AssignmentView /></RoleGuard>} />
           <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<RoleGuard><QuizView /></RoleGuard>} />
