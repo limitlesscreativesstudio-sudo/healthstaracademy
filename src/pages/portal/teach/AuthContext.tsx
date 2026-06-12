@@ -1,13 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
-// ─── Supabase client ──────────────────────────────────────────────────────────
-// Uses Lovable's env vars (VITE_SUPABASE_PUBLISHABLE_KEY = anon key)
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-);
-
+// Re-export shared client so existing imports keep working
 export { supabase };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -30,6 +24,7 @@ export interface LoginResult {
   error?: string;
   needsRoleSelect?: boolean;
   availableRoles?: UserRole[];
+  role?: UserRole;
 }
 
 interface AuthContextValue {
@@ -71,9 +66,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser]       = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ── Restore session on page load ─────────────────────────────────────────
   useEffect(() => {
-    // Get current session from Supabase
+    // Subscribe FIRST to avoid missing the SIGNED_IN event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        // Defer DB calls so we don't block the auth callback
+        setTimeout(() => hydrateUser(session.user.id, session.user.email ?? ''), 0);
+      } else {
+        setUser(null);
+      }
+    });
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         await hydrateUser(session.user.id, session.user.email ?? '');
@@ -81,45 +84,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
     });
 
-    // Listen for auth state changes (login / logout / token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session?.user) {
-          await hydrateUser(session.user.id, session.user.email ?? '');
-        } else {
-          setUser(null);
-        }
-      }
-    );
-
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch profile from DB and set user state
   const hydrateUser = async (id: string, email: string) => {
-    const [{ data: profile, error: profileError }, { data: roleRows, error: rolesError }] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('user_id', id)
-        .maybeSingle(),
-      supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', id),
+    const [{ data: profile }, { data: roleRows }] = await Promise.all([
+      supabase.from('profiles').select('full_name').eq('user_id', id).maybeSingle(),
+      supabase.from('user_roles').select('role').eq('user_id', id),
     ]);
 
-    if (profileError || rolesError) {
-      console.error('Unable to load portal account', profileError || rolesError);
-      setUser(null);
-      return;
-    }
-
     const role = pickPrimaryRole((roleRows ?? []).map(r => r.role as UserRole));
-    if (!role) {
-      setUser(null);
-      return;
-    }
+    if (!role) { setUser(null); return; }
 
     setUser(buildUser(id, email, profile?.full_name || email, role));
   };
@@ -128,7 +103,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (
     email: string,
     password: string,
-    _chosenRole?: UserRole,
   ): Promise<LoginResult> => {
     const trimEmail = email.trim().toLowerCase();
     const trimPass  = password.trim();
@@ -137,48 +111,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!trimPass)  return { error: 'Please enter your password.' };
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email:    trimEmail,
+      email: trimEmail,
       password: trimPass,
     });
 
     if (error) {
-      // Friendly messages
-      if (error.message.includes('Invalid login')) {
+      if (error.message.toLowerCase().includes('invalid')) {
         return { error: 'Incorrect email or password. Please try again.' };
       }
-      if (error.message.includes('Email not confirmed')) {
+      if (error.message.toLowerCase().includes('not confirmed')) {
         return { error: 'Please check your email and confirm your account before signing in.' };
       }
       return { error: error.message };
     }
-
     if (!data.user) return { error: 'Login failed. Please try again.' };
 
-    // Check profile exists and role is not student (students use separate portal)
-    const [{ data: profile }, { data: roleRows, error: rolesError }] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('user_id', data.user.id)
-        .maybeSingle(),
-      supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', data.user.id),
-    ]);
-
-    if (!profile || rolesError) {
-      await supabase.auth.signOut();
-      return { error: 'Account not found. Contact your administrator.' };
-    }
-
+    // Determine role for routing (instructor/admin → /portal/teach, student → /portal)
+    const { data: roleRows } = await supabase
+      .from('user_roles').select('role').eq('user_id', data.user.id);
     const role = pickPrimaryRole((roleRows ?? []).map(r => r.role as UserRole));
-    if (role === 'student' || !role) {
+
+    if (!role) {
       await supabase.auth.signOut();
-      return { error: 'Students access the portal via the student login page.' };
+      return { error: 'No role assigned. Contact your administrator.' };
     }
 
-    // Fire-and-forget audit log of successful role-based login
     import('@/lib/authFeedback').then(({ logAuthEvent }) =>
       logAuthEvent({
         eventType: 'login_success',
@@ -188,20 +145,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       })
     ).catch(() => {});
 
-    // hydrateUser will be called automatically via onAuthStateChange
-    return {};
+    return { role };
   };
 
-  // ── Update profile name ───────────────────────────────────────────────────
   const updateProfile = async (name: string): Promise<UpdateProfileResult> => {
     if (!user) return { error: 'Not logged in.' };
     if (!name.trim()) return { error: 'Name cannot be empty.' };
 
     const { error } = await supabase
-      .from('profiles')
-      .update({ full_name: name.trim() })
-      .eq('user_id', user.id);
-
+      .from('profiles').update({ full_name: name.trim() }).eq('user_id', user.id);
     if (error) return { error: error.message };
 
     setUser(prev => prev ? {
@@ -209,11 +161,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       name: name.trim(),
       avatarInitials: name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
     } : null);
-
     return {};
   };
 
-  // ── Update password ───────────────────────────────────────────────────────
   const updatePassword = async (
     _currentPassword: string,
     newPassword: string,
@@ -226,7 +176,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return {};
   };
 
-  // ── Logout ────────────────────────────────────────────────────────────────
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -234,20 +183,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <AuthContext.Provider value={{
-      user,
-      loading,
-      login,
-      logout,
+      user, loading, login, logout,
       isAuthenticated: !!user,
-      updateProfile,
-      updatePassword,
+      updateProfile, updatePassword,
     }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 export const useAuth = (): AuthContextValue => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
