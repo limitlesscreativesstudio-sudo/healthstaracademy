@@ -57,16 +57,16 @@ export const logAuthEvent = async ({
   metadata,
 }: LogEventArgs) => {
   try {
-    await supabase.from("auth_audit_log").insert({
-      user_id: userId ?? null,
-      email: email ?? null,
+    await supabase.from("auth_audit_log").insert([{
+      user_id: userId ?? undefined,
+      email: email ?? undefined,
       event_type: eventType,
-      path: path ?? null,
-      required_role: requiredRole ?? null,
-      user_role: userRole ?? null,
-      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
-      metadata: metadata ?? null,
-    });
+      path: path ?? undefined,
+      required_role: requiredRole ?? undefined,
+      user_role: userRole ?? undefined,
+      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+      metadata: (metadata ?? undefined) as never,
+    }]);
   } catch (err) {
     console.debug("[authFeedback] audit log failed", err);
   }
