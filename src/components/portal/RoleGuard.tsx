@@ -1,41 +1,30 @@
 import { ReactNode, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { toast } from "sonner";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
-
-type Require = "auth" | "instructor" | "admin";
+import { showDeniedToast, logAuthEvent, RequiredRole } from "@/lib/authFeedback";
 
 interface Props {
   children: ReactNode;
-  require?: Require;
-  /** Where to send unauthorised but logged-in users. Defaults to /portal (student home). */
+  require?: RequiredRole;
   fallback?: string;
 }
 
-/**
- * Route guard for the student / instructor portal.
- *
- *  - require="auth"        → any logged-in user
- *  - require="instructor"  → instructor OR admin only
- *  - require="admin"       → admin only
- *
- * Unauthenticated visitors are bounced to /portal/login (handled by
- * usePortalAuth). Authenticated visitors with the wrong role are sent
- * to the `fallback` route with a friendly toast.
- */
 const RoleGuard = ({ children, require = "auth", fallback = "/portal" }: Props) => {
-  const { user, loading, isInstructor, isAdmin } = usePortalAuth(true);
+  const { user, loading, isInstructor, isAdmin, roles } = usePortalAuth(true);
   const location = useLocation();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
-        Loading…
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+          Loading…
+        </div>
       </div>
     );
   }
 
-  if (!user) return null; // usePortalAuth already redirects to /portal/login
+  if (!user) return null; // usePortalAuth redirects to /portal/login
 
   const allowed =
     require === "auth" ||
@@ -43,22 +32,37 @@ const RoleGuard = ({ children, require = "auth", fallback = "/portal" }: Props) 
     (require === "admin" && isAdmin);
 
   if (!allowed) {
-    return <DeniedRedirect to={fallback} require={require} from={location.pathname} />;
+    return (
+      <DeniedRedirect
+        to={fallback}
+        require={require}
+        from={location.pathname}
+        userId={user.id}
+        email={user.email ?? null}
+        userRole={roles.join(",") || null}
+      />
+    );
   }
 
   return <>{children}</>;
 };
 
-const DeniedRedirect = ({ to, require, from }: { to: string; require: Require; from: string }) => {
+const DeniedRedirect = ({
+  to, require, from, userId, email, userRole,
+}: {
+  to: string; require: RequiredRole; from: string;
+  userId: string; email: string | null; userRole: string | null;
+}) => {
   useEffect(() => {
-    const msg =
-      require === "admin"
-        ? "Admin access required."
-        : require === "instructor"
-          ? "Instructor access required."
-          : "You do not have access to that page.";
-    toast.error(msg);
-  }, [require]);
+    showDeniedToast(require);
+    logAuthEvent({
+      eventType: "denied_route",
+      userId, email,
+      path: from,
+      requiredRole: require,
+      userRole,
+    });
+  }, [require, from, userId, email, userRole]);
   return <Navigate to={to} replace state={{ from, denied: true }} />;
 };
 
