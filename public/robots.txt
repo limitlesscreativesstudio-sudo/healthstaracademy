@@ -12,3 +12,9 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://healthstaracademy.org/sitemap.xml
+Allow: /
+
+User-agent: *
+Allow: /

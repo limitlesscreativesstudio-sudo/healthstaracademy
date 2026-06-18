@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://healthstaracademy.org/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://healthstaracademy.org/about</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://healthstaracademy.org/programs</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://healthstaracademy.org/programs/cohorts</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://healthstaracademy.org/programs/admissions</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://healthstaracademy.org/programs/exam-prep</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://healthstaracademy.org/pre-qualification</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://healthstaracademy.org/locations</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://healthstaracademy.org/careers</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/gallery</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://healthstaracademy.org/contact</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://healthstaracademy.org/community-resources</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://healthstaracademy.org/blog</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/healthcare-career-path</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/cna-training-excellence</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/nursing-career-foundations</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/how-to-become-cna-in-california</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/fast-cna-certification-bay-area</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/cdph-approved-cna-training-sacramento</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/hybrid-cna-classes-near-stockton</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/cna-state-exam-prep-22-skills</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/cna-salary-california-2026</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/day-in-the-life-of-a-cna</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/financing-cna-training-california</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/cna-vs-hha-vs-medical-assistant</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/cna-programs-fremont-east-bay</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/blog/cna-to-rn-california</loc><priority>0.6</priority></url>
+  <url><loc>https://healthstaracademy.org/privacy-policy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://healthstaracademy.org/refund-policy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://healthstaracademy.org/terms-of-service</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+</urlset>
