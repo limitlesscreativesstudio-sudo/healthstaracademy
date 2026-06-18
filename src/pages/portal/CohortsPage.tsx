@@ -58,10 +58,22 @@ const getDeadline = (startDateStr: string, isWeekend: boolean) => {
 const CohortsPage = () => {
   const denefitsLink = "https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a";
 
-  const { data: allCohorts = [], isLoading } = useQuery({
+  const { data: allCohortsRaw = [], isLoading } = useQuery({
     queryKey: ["all-cohorts-public"],
     queryFn: fetchCohorts,
   });
+
+  // Hide cohorts whose start date has already passed; auto-close cohorts past their 14-day deadline
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const allCohorts = allCohortsRaw
+    .filter(c => new Date(c.start_date + "T00:00:00") >= today)
+    .map(c => {
+      const deadline = new Date(c.start_date + "T00:00:00");
+      deadline.setDate(deadline.getDate() - 14);
+      const pastDeadline = deadline < today;
+      return pastDeadline && c.status !== "closed" ? { ...c, status: "closed" } : c;
+    });
 
   const daytimeCohorts = allCohorts.filter(c => (c.program_type || "daytime") === "daytime");
   const weekendCohorts = allCohorts.filter(c => c.program_type === "weekend");
