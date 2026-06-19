@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { UserRole } from './AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const C = {
   primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF',
   border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', error:'#C0392B', success:'#127A1B',
 } as const;
 
-// ── Only these domains / emails can self-register ─────────────────────────────
-// SWAP: remove this check and handle via Supabase email allowlist or invite tokens
+// ── Only pre-approved staff emails can self-register ──────────────────────────
 const ALLOWED_SELF_REGISTER: string[] = [
-  'healthstaracademy.org',
   'healthstaracademy01@gmail.com',
   'limitlesscreativesstudio@gmail.com',
+  'knelson4677@gmail.com',
+  'agnesnamitala@gmail.com',
 ];
 
 const canSelfRegister = (email: string): boolean => {
@@ -22,12 +23,46 @@ const canSelfRegister = (email: string): boolean => {
 };
 
 const ROLE_OPTIONS: { value: UserRole; label: string; icon: string; desc: string }[] = [
-  { value:'admin',      label:'Administrator', icon:'🛡️', desc:'Full access — manage courses, users, settings, and reports.' },
   { value:'instructor', label:'Instructor',    icon:'🎓', desc:'Create and edit modules, grade students, manage attendance.' },
 ];
 
+type TextFieldProps = {
+  label: string;
+  id: string;
+  value: string;
+  error?: string;
+  onChange: (value: string) => void;
+  onClearError: (id: string) => void;
+  type?: string;
+  placeholder?: string;
+};
+
+const TextField: React.FC<TextFieldProps> = ({ label, id, value, error, onChange, onClearError, type = 'text', placeholder }) => (
+  <div style={{ marginBottom:16 }}>
+    <label htmlFor={id} style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:5 }}>{label} *</label>
+    <input
+      id={id}
+      name={id}
+      type={type}
+      value={value}
+      onChange={e => { onChange(e.target.value); onClearError(id); }}
+      placeholder={placeholder}
+      autoComplete={id === 'email' ? 'email' : id.includes('password') || id === 'confirm' ? 'new-password' : 'name'}
+      style={{ width:'100%', border:`1.5px solid ${error ? C.error : C.border}`, borderRadius:6, padding:'10px 12px', fontSize:14, fontFamily:'sans-serif', color:C.text, boxSizing:'border-box', outline:'none' }}
+      onFocus={e => (e.currentTarget.style.borderColor = error ? C.error : C.primary)}
+      onBlur={e  => (e.currentTarget.style.borderColor = error ? C.error : C.border)}
+    />
+    {error && (
+      <div style={{ color:C.error, fontSize:12, fontFamily:'sans-serif', marginTop:4, display:'flex', gap:4, alignItems:'flex-start' }}>
+        <span style={{ flexShrink:0 }}>⚠</span>{error}
+      </div>
+    )}
+  </div>
+);
+
 const CreateAccount: React.FC = () => {
   const [step, setStep]       = useState<'form'|'done'>('form');
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [name, setName]       = useState('');
   const [email, setEmail]     = useState('');
   const [role, setRole]       = useState<UserRole>('instructor');
@@ -36,6 +71,8 @@ const CreateAccount: React.FC = () => {
   const [showPass, setShowP]  = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors]   = useState<Record<string,string>>({});
+
+  const clearError = (id: string) => setErrors(p => ({ ...p, [id]:'' }));
 
   const validate = () => {
     const e: Record<string,string> = {};
@@ -54,30 +91,40 @@ const CreateAccount: React.FC = () => {
   const handleCreate = async () => {
     if (!validate()) return;
     setLoading(true);
-    await new Promise(r => setTimeout(r, 900));
-    // SWAP: const { data, error } = await supabase.auth.signUp({ email, password });
-    // SWAP: if (error) { setErrors({ email: error.message }); setLoading(false); return; }
-    // SWAP: await supabase.from('profiles').insert({ id: data.user.id, full_name: name, role, email });
+    const cleanEmail = email.trim().toLowerCase();
+    const { data, error } = await supabase.auth.signUp({
+      email: cleanEmail,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/portal/teach/login`,
+        data: {
+          full_name: name.trim(),
+          requested_role: role,
+        },
+      },
+    });
+    if (error) {
+      const message = error.message.toLowerCase().includes('already')
+        ? 'An account already exists for this email. Please sign in or use Forgot password.'
+        : error.message;
+      setErrors({ email: message });
+      setLoading(false);
+      return;
+    }
+    if (!data.user) {
+      setErrors({ email: 'Account creation did not complete. Please try again.' });
+      setLoading(false);
+      return;
+    }
+    if (data.user.identities && data.user.identities.length === 0) {
+      setErrors({ email: 'An account already exists for this email. Please sign in or use Forgot password to set a new password.' });
+      setLoading(false);
+      return;
+    }
+    setNeedsConfirmation(!data.session);
     setStep('done');
     setLoading(false);
   };
-
-  const Field: React.FC<{ label:string; id:string; value:string; onChange:(v:string)=>void; type?:string; placeholder?:string }> =
-    ({ label, id, value, onChange, type='text', placeholder }) => (
-    <div style={{ marginBottom:16 }}>
-      <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:5 }}>{label} *</label>
-      <input type={type} value={value} onChange={e => { onChange(e.target.value); setErrors(p => ({ ...p, [id]:'' })); }}
-        placeholder={placeholder}
-        style={{ width:'100%', border:`1.5px solid ${errors[id] ? C.error : C.border}`, borderRadius:6, padding:'10px 12px', fontSize:14, fontFamily:'sans-serif', color:C.text, boxSizing:'border-box', outline:'none' }}
-        onFocus={e => (e.target.style.borderColor = errors[id] ? C.error : C.primary)}
-        onBlur={e  => (e.target.style.borderColor = errors[id] ? C.error : C.border)}/>
-      {errors[id] && (
-        <div style={{ color:C.error, fontSize:12, fontFamily:'sans-serif', marginTop:4, display:'flex', gap:4, alignItems:'flex-start' }}>
-          <span style={{ flexShrink:0 }}>⚠</span>{errors[id]}
-        </div>
-      )}
-    </div>
-  );
 
   if (step === 'done') {
     return (
@@ -85,9 +132,13 @@ const CreateAccount: React.FC = () => {
         <div style={{ background:C.white, borderRadius:14, padding:44, width:440, maxWidth:'100%', textAlign:'center', boxShadow:'0 28px 90px rgba(0,0,0,0.3)' }}>
           <img src="/hsa-logo.png" alt="HSA" style={{ width:80, height:80, borderRadius:'50%', objectFit:'cover', margin:'0 auto 14px', display:'block' }}/>
           <div style={{ fontSize:48, marginBottom:12 }}>🎉</div>
-          <h2 style={{ fontSize:22, fontWeight:700, color:C.success, fontFamily:'sans-serif', margin:'0 0 10px' }}>Account Created!</h2>
+          <h2 style={{ fontSize:22, fontWeight:700, color:C.success, fontFamily:'sans-serif', margin:'0 0 10px' }}>{needsConfirmation ? 'Check Your Email' : 'Account Created!'}</h2>
           <p style={{ fontSize:14, color:C.muted, fontFamily:'sans-serif', lineHeight:1.7, margin:'0 0 8px' }}>
-            Welcome to Health Star Academy, <strong style={{ color:C.text }}>{name}</strong>!
+            {needsConfirmation ? (
+              <>We created your account for <strong style={{ color:C.text }}>{email.trim().toLowerCase()}</strong>. Confirm your email, then sign in.</>
+            ) : (
+              <>Welcome to Health Star Academy, <strong style={{ color:C.text }}>{name}</strong>!</>
+            )}
           </p>
           <div style={{ display:'inline-block', padding:'3px 14px', background:'#EDE8F7', borderRadius:20, fontSize:12, color:C.primary, fontFamily:'sans-serif', fontWeight:600, marginBottom:24 }}>
             Role: {role.charAt(0).toUpperCase() + role.slice(1)}
@@ -138,15 +189,15 @@ const CreateAccount: React.FC = () => {
         </div>
 
         {/* Form fields */}
-        <Field label="Full Name" id="name" value={name} onChange={setName} placeholder="Your full legal name"/>
-        <Field label="Email Address" id="email" value={email} onChange={setEmail} type="email" placeholder="you@healthstaracademy.org"/>
+        <TextField label="Full Name" id="name" value={name} error={errors.name} onChange={setName} onClearError={clearError} placeholder="Your full legal name"/>
+        <TextField label="Email Address" id="email" value={email} error={errors.email} onChange={setEmail} onClearError={clearError} type="email" placeholder="you@healthstaracademy.org"/>
         <div style={{ position:'relative' }}>
-          <Field label="Password" id="password" value={password} onChange={setPass} type={showPass?'text':'password'} placeholder="Min. 8 characters"/>
-          <button onClick={() => setShowP(!showPass)} style={{ position:'absolute', right:10, top:28, background:'none', border:'none', cursor:'pointer', color:C.muted, fontSize:12 }}>
+          <TextField label="Password" id="password" value={password} error={errors.password} onChange={setPass} onClearError={clearError} type={showPass?'text':'password'} placeholder="Min. 8 characters"/>
+          <button type="button" onClick={() => setShowP(!showPass)} style={{ position:'absolute', right:10, top:28, background:'none', border:'none', cursor:'pointer', color:C.muted, fontSize:12 }}>
             {showPass ? 'Hide' : 'Show'}
           </button>
         </div>
-        <Field label="Confirm Password" id="confirm" value={confirm} onChange={setConfirm} type={showPass?'text':'password'} placeholder="Re-enter password"/>
+        <TextField label="Confirm Password" id="confirm" value={confirm} error={errors.confirm} onChange={setConfirm} onClearError={clearError} type={showPass?'text':'password'} placeholder="Re-enter password"/>
 
         {/* Submit */}
         <button onClick={handleCreate} disabled={loading}
