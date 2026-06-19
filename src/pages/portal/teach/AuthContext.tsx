@@ -22,6 +22,8 @@ export interface UpdateProfileResult { error?: string; }
 
 export interface LoginResult {
   error?: string;
+  needsRoleSelect?: boolean;
+  availableRoles?: UserRole[];
   role?: UserRole;
 }
 
