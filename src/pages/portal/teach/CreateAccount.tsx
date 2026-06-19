@@ -127,9 +127,13 @@ const CreateAccount: React.FC = () => {
         <div style={{ background:C.white, borderRadius:14, padding:44, width:440, maxWidth:'100%', textAlign:'center', boxShadow:'0 28px 90px rgba(0,0,0,0.3)' }}>
           <img src="/hsa-logo.png" alt="HSA" style={{ width:80, height:80, borderRadius:'50%', objectFit:'cover', margin:'0 auto 14px', display:'block' }}/>
           <div style={{ fontSize:48, marginBottom:12 }}>🎉</div>
-          <h2 style={{ fontSize:22, fontWeight:700, color:C.success, fontFamily:'sans-serif', margin:'0 0 10px' }}>Account Created!</h2>
+          <h2 style={{ fontSize:22, fontWeight:700, color:C.success, fontFamily:'sans-serif', margin:'0 0 10px' }}>{needsConfirmation ? 'Check Your Email' : 'Account Created!'}</h2>
           <p style={{ fontSize:14, color:C.muted, fontFamily:'sans-serif', lineHeight:1.7, margin:'0 0 8px' }}>
-            Welcome to Health Star Academy, <strong style={{ color:C.text }}>{name}</strong>!
+            {needsConfirmation ? (
+              <>We created your account for <strong style={{ color:C.text }}>{email.trim().toLowerCase()}</strong>. Confirm your email, then sign in.</>
+            ) : (
+              <>Welcome to Health Star Academy, <strong style={{ color:C.text }}>{name}</strong>!</>
+            )}
           </p>
           <div style={{ display:'inline-block', padding:'3px 14px', background:'#EDE8F7', borderRadius:20, fontSize:12, color:C.primary, fontFamily:'sans-serif', fontWeight:600, marginBottom:24 }}>
             Role: {role.charAt(0).toUpperCase() + role.slice(1)}
@@ -180,15 +184,15 @@ const CreateAccount: React.FC = () => {
         </div>
 
         {/* Form fields */}
-        <Field label="Full Name" id="name" value={name} onChange={setName} placeholder="Your full legal name"/>
-        <Field label="Email Address" id="email" value={email} onChange={setEmail} type="email" placeholder="you@healthstaracademy.org"/>
+        <TextField label="Full Name" id="name" value={name} error={errors.name} onChange={setName} onClearError={clearError} placeholder="Your full legal name"/>
+        <TextField label="Email Address" id="email" value={email} error={errors.email} onChange={setEmail} onClearError={clearError} type="email" placeholder="you@healthstaracademy.org"/>
         <div style={{ position:'relative' }}>
-          <Field label="Password" id="password" value={password} onChange={setPass} type={showPass?'text':'password'} placeholder="Min. 8 characters"/>
-          <button onClick={() => setShowP(!showPass)} style={{ position:'absolute', right:10, top:28, background:'none', border:'none', cursor:'pointer', color:C.muted, fontSize:12 }}>
+          <TextField label="Password" id="password" value={password} error={errors.password} onChange={setPass} onClearError={clearError} type={showPass?'text':'password'} placeholder="Min. 8 characters"/>
+          <button type="button" onClick={() => setShowP(!showPass)} style={{ position:'absolute', right:10, top:28, background:'none', border:'none', cursor:'pointer', color:C.muted, fontSize:12 }}>
             {showPass ? 'Hide' : 'Show'}
           </button>
         </div>
-        <Field label="Confirm Password" id="confirm" value={confirm} onChange={setConfirm} type={showPass?'text':'password'} placeholder="Re-enter password"/>
+        <TextField label="Confirm Password" id="confirm" value={confirm} error={errors.confirm} onChange={setConfirm} onClearError={clearError} type={showPass?'text':'password'} placeholder="Re-enter password"/>
 
         {/* Submit */}
         <button onClick={handleCreate} disabled={loading}
