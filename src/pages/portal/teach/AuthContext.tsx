@@ -22,8 +22,6 @@ export interface UpdateProfileResult { error?: string; }
 
 export interface LoginResult {
   error?: string;
-  needsRoleSelect?: boolean;
-  availableRoles?: UserRole[];
   role?: UserRole;
 }
 
@@ -87,16 +85,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => subscription.unsubscribe();
   }, []);
 
-  const hydrateUser = async (id: string, email: string) => {
-    const [{ data: profile }, { data: roleRows }] = await Promise.all([
+  const hydrateUser = async (id: string, email: string): Promise<UserRole | null> => {
+    const [{ data: profile }, { data: roleRows, error: rolesError }] = await Promise.all([
       supabase.from('profiles').select('full_name').eq('user_id', id).maybeSingle(),
       supabase.from('user_roles').select('role').eq('user_id', id),
     ]);
 
+    if (rolesError) {
+      setUser(null);
+      return null;
+    }
+
     const role = pickPrimaryRole((roleRows ?? []).map(r => r.role as UserRole));
-    if (!role) { setUser(null); return; }
+    if (!role) { setUser(null); return null; }
 
     setUser(buildUser(id, email, profile?.full_name || email, role));
+    return role;
   };
 
   // ── Login ─────────────────────────────────────────────────────────────────
@@ -126,14 +130,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     if (!data.user) return { error: 'Login failed. Please try again.' };
 
-    // Determine role for routing (instructor/admin → /portal/teach, student → /portal)
-    const { data: roleRows } = await supabase
-      .from('user_roles').select('role').eq('user_id', data.user.id);
-    const role = pickPrimaryRole((roleRows ?? []).map(r => r.role as UserRole));
+    const role = await hydrateUser(data.user.id, data.user.email ?? trimEmail);
 
     if (!role) {
       await supabase.auth.signOut();
-      return { error: 'No role assigned. Contact your administrator.' };
+      return { error: 'Your account exists, but portal access has not been assigned yet. Contact your Health Star Academy administrator.' };
     }
 
     import('@/lib/authFeedback').then(({ logAuthEvent }) =>
