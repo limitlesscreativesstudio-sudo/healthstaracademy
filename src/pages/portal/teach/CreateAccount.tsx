@@ -116,6 +116,11 @@ const CreateAccount: React.FC = () => {
       setLoading(false);
       return;
     }
+    if (data.user.identities && data.user.identities.length === 0) {
+      setErrors({ email: 'An account already exists for this email. Please sign in or use Forgot password to set a new password.' });
+      setLoading(false);
+      return;
+    }
     setNeedsConfirmation(!data.session);
     setStep('done');
     setLoading(false);

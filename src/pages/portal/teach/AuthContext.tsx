@@ -111,14 +111,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     password: string,
   ): Promise<LoginResult> => {
     const trimEmail = email.trim().toLowerCase();
-    const trimPass  = password.trim();
+    const loginPassword  = password;
 
     if (!trimEmail) return { error: 'Please enter your email address.' };
-    if (!trimPass)  return { error: 'Please enter your password.' };
+    if (!loginPassword)  return { error: 'Please enter your password.' };
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: trimEmail,
-      password: trimPass,
+      password: loginPassword,
     });
 
     if (error) {
