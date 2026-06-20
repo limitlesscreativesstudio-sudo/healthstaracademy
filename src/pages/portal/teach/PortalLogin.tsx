@@ -153,6 +153,17 @@ const PortalLogin: React.FC = () => {
           <a href="/portal/teach/reset" style={{ fontSize:12, color:C.primary, fontFamily:'sans-serif', textDecoration:'none' }}>Forgot password?</a>
         </div>
 
+        {/* Preview-only warning: lovable.js fetch proxy can block Supabase auth POSTs */}
+        {typeof window !== 'undefined' && window.location.hostname.includes('id-preview--') && (
+          <div style={{ background:'#FFF8E1', border:'1px solid #F0D67A', borderRadius:6, padding:'10px 14px', marginBottom:16, display:'flex', gap:10, alignItems:'flex-start' }}>
+            <span style={{ fontSize:16, flexShrink:0 }}>ℹ️</span>
+            <span style={{ color:'#7A5A00', fontSize:12, fontFamily:'sans-serif', lineHeight:1.5 }}>
+              <strong>Preview mode:</strong> Sign-in may fail here due to a preview-only network proxy. Use the live site:{' '}
+              <a href="https://healthstaracademy.org/portal/teach/login" style={{ color:C.primary, fontWeight:600 }}>healthstaracademy.org/portal/teach/login</a>
+            </span>
+          </div>
+        )}
+
         {/* Error */}
         {error && (
           <div style={{ background:'#fdecea', border:'1px solid #f5c6c2', borderRadius:6, padding:'10px 14px', marginBottom:16, display:'flex', gap:10, alignItems:'flex-start' }}>
