@@ -1,10 +1,10 @@
-import PortalLogin  from './pages/portal/teach/PortalLogin';
+import CustomLogin from "./pages/CustomLogin";
 import AcceptInvite from './pages/portal/teach/AcceptInvite';
-import CourseView   from './pages/portal/teach/CourseView';
+import CourseView from './pages/portal/teach/CourseView';
 import { AuthProvider } from './pages/portal/teach/AuthContext';
-import ProtectedRoute   from './pages/portal/teach/ProtectedRoute';
-import CreateAccount    from './pages/portal/teach/CreateAccount';
-import ForgotPassword   from './pages/portal/teach/ForgotPassword';
+import ProtectedRoute from './pages/portal/teach/ProtectedRoute';
+import CreateAccount from './pages/portal/teach/CreateAccount';
+import ForgotPassword from './pages/portal/teach/ForgotPassword';
 import UpdatePassword from './pages/portal/teach/UpdatePassword';
 import ResetEmailSent from './pages/portal/teach/ResetEmailSent';
 import RoleGuard from './components/portal/RoleGuard';
@@ -105,7 +105,7 @@ const AppShell = () => {
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/portal/login" element={<Navigate to="/portal/teach/login" replace />} />                  
+          <Route path="/portal/login" element={<Navigate to="/portal/teach/login" replace />} />
           <Route path="/portal/accept-invite" element={<AcceptInvite />} />
           <Route path="/portal" element={<RoleGuard><StudentHome /></RoleGuard>} />
           <Route path="/portal/account" element={<RoleGuard><Account /></RoleGuard>} />
@@ -115,13 +115,13 @@ const AppShell = () => {
           <Route path="/portal/courses/:courseId/*" element={<RoleGuard><CourseView /></RoleGuard>} />
           <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<RoleGuard><AssignmentView /></RoleGuard>} />
           <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<RoleGuard><QuizView /></RoleGuard>} />
-          <Route path="/portal/teach/login"          element={<AuthProvider><PortalLogin /></AuthProvider>} />
-          <Route path="/portal/teach/reset"          element={<AuthProvider><ForgotPassword /></AuthProvider>} />
-          <Route path="/portal/teach/reset/sent"     element={<ResetEmailSent />} />
+          <Route path="/portal/teach/login" element={<CustomLogin />} />
+          <Route path="/portal/teach/reset" element={<AuthProvider><ForgotPassword /></AuthProvider>} />
+          <Route path="/portal/teach/reset/sent" element={<ResetEmailSent />} />
           <Route path="/portal/teach/update-password" element={<AuthProvider><UpdatePassword /></AuthProvider>} />
-          <Route path="/portal/teach/invite"         element={<AuthProvider><AcceptInvite /></AuthProvider>} />
+          <Route path="/portal/teach/invite" element={<AuthProvider><AcceptInvite /></AuthProvider>} />
           <Route path="/portal/teach/create-account" element={<AuthProvider><CreateAccount /></AuthProvider>} />
-          <Route path="/portal/teach"                element={<RoleGuard require="instructor" fallback="/portal"><AuthProvider><ProtectedRoute><CourseView /></ProtectedRoute></AuthProvider></RoleGuard>} />
+          <Route path="/portal/teach" element={<RoleGuard require="instructor" fallback="/portal"><AuthProvider><ProtectedRoute><CourseView /></ProtectedRoute></AuthProvider></RoleGuard>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
@@ -133,16 +133,16 @@ const AppShell = () => {
 
 const App = () => (
   <HelmetProvider>
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ScrollToTop />
-        <AppShell />
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <ScrollToTop />
+          <AppShell />
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   </HelmetProvider>
 );
 
