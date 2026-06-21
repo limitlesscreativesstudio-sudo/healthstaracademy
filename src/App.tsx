@@ -1,4 +1,5 @@
 import CustomLogin from "./pages/CustomLogin";
+import PortalLogin from "./pages/portal/teach/PortalLogin";
 import AcceptInvite from './pages/portal/teach/AcceptInvite';
 import CourseView from './pages/portal/teach/CourseView';
 import { AuthProvider } from './pages/portal/teach/AuthContext';
