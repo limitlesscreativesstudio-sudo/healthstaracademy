@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase'; // Adjust this import to your supabase client file
+import { supabase } from '@/integrations/supabase/client';
 
 export default function CustomLogin() {
   const [email, setEmail] = useState('');
@@ -23,9 +23,9 @@ export default function CustomLogin() {
       return;
     }
 
-    // Login successful! Redirect to your dashboard
+    // Login successful! Redirect to the portal
     if (data.user) {
-      window.location.href = '/dashboard'; // Change to your app's main page
+      window.location.href = '/portal';
     }
   };
 
