@@ -186,15 +186,16 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
         .from('modules').select('id,title,published,position')
         .eq('course_id', courseUuid).order('position');
       const { data: itemRows } = await supabase
-        .from('module_items').select('id,module_id,item_type,title,published,position')
+        .from('module_items').select('id,module_id,item_type,title,published,position,points,file_url,file_name,file_type')
         .eq('course_id', courseUuid).order('position');
       if (modRows) {
         setMods(modRows.map(m => ({
           id: m.id, name: m.title, published: m.published,
           expanded: true, position: m.position,
-          items: (itemRows ?? []).filter(it => it.module_id === m.id).map(it => ({
+          items: (itemRows ?? []).filter(it => it.module_id === m.id).map((it: any) => ({
             id: it.id, type: it.item_type, name: it.title,
-            pts: it.points ?? undefined, published: it.published, indent: it.indent,
+            pts: it.points ?? undefined, published: it.published, indent: 0,
+            file_url: it.file_url, file_name: it.file_name,
           })),
         })));
       }
