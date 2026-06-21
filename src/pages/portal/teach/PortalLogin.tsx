@@ -116,9 +116,9 @@ const PortalLogin: React.FC = () => {
       <div style={{ background:C.white, borderRadius:14, padding:44, width:440, maxWidth:'100%', boxShadow:'0 28px 90px rgba(0,0,0,0.32)' }}>
 
         {/* Logo */}
-        <div style={{ textAlign:'center', marginBottom:32 }}>
+        <div style={{ textAlign:'center', marginBottom:16 }}>
           <img src="/hsa-logo.png" alt="Health Star Academy"
-            style={{ width:88, height:88, borderRadius:'50%', objectFit:'cover', margin:'0 auto 14px', display:'block', filter:'drop-shadow(0 6px 18px rgba(91,200,232,0.5))' }}/>
+            style={{ width:60, height:60, borderRadius:'50%', objectFit:'cover', margin:'0 auto 14px', display:'block', filter:'drop-shadow(0 6px 18px rgba(91,200,232,0.5))' }}/>
           <h1 style={{ margin:0, fontSize:23, fontWeight:800, color:C.text, fontFamily:'sans-serif' }}>Health Star Academy</h1>
           <p style={{ margin:'5px 0 0', color:C.muted, fontSize:13, fontFamily:'sans-serif' }}>Instructor Portal — HSA LMS</p>
         </div>
@@ -182,7 +182,7 @@ const PortalLogin: React.FC = () => {
         </button>
 
         {/* Google sign-in */}
-        <div style={{ display:'flex', alignItems:'center', gap:10, margin:'18px 0 12px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, margin:'14px 0 10px' }}>
           <div style={{ flex:1, height:1, background:C.border }}/>
           <span style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>OR</span>
           <div style={{ flex:1, height:1, background:C.border }}/>
@@ -217,7 +217,7 @@ const PortalLogin: React.FC = () => {
         <style>{`@keyframes hsa-spin { to { transform: rotate(360deg); } }`}</style>
 
         {/* Divider */}
-        <div style={{ display:'flex', alignItems:'center', gap:10, margin:'22px 0 16px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, margin:'16px 0 12px' }}>
           <div style={{ flex:1, height:1, background:C.border }}/>
           <span style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif', whiteSpace:'nowrap' }}>Don't have an account?</span>
           <div style={{ flex:1, height:1, background:C.border }}/>
