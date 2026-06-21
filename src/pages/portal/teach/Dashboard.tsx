@@ -148,15 +148,15 @@ const CreateCourseModal: React.FC<{
     const { data, error } = await supabase
       .from('courses')
       .insert({
-        name:        name.trim(),
-        code:        code.trim(),
-        description: desc.trim(),
-        term:        term.trim(),
+        title:         name.trim(),
+        code:          code.trim(),
+        description:   desc.trim(),
+        term:          term.trim(),
         color,
-        teacher_id:  userId,
-        published:   false,
+        instructor_id: userId,
+        status:        'draft',
       })
-      .select()
+      .select('id,title,code,color,status,term,description,created_at')
       .single();
 
     if (error) {
@@ -169,7 +169,7 @@ const CreateCourseModal: React.FC<{
       return;
     }
 
-    onCreated(data as DBCourse);
+    onCreated({ ...(data as any), name: (data as any).title, published: (data as any).status === 'published' } as DBCourse);
     onClose();
   };
 
@@ -299,9 +299,11 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
     setLoading(true);
     const { data, error } = await supabase
       .from('courses')
-      .select('id,name,code,color,published,term,description,created_at')
+      .select('id,title,code,color,status,term,description,created_at')
       .order('created_at', { ascending: false });
-    if (!error && data) setCourses(data as DBCourse[]);
+    if (!error && data) {
+      setCourses(data.map((c: any) => ({ ...c, name: c.title, published: c.status === 'published' })) as DBCourse[]);
+    }
     setLoading(false);
   };
 
@@ -309,8 +311,9 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
 
   // ── Publish toggle ─────────────────────────────────────────────────────────
   const handlePublishToggle = async (id: string, current: boolean) => {
+    const nextStatus = !current ? 'published' : 'draft';
     setCourses(p => p.map(c => c.id === id ? { ...c, published: !current } : c));
-    await supabase.from('courses').update({ published: !current }).eq('id', id);
+    await supabase.from('courses').update({ status: nextStatus }).eq('id', id);
   };
 
   // ── Delete course ──────────────────────────────────────────────────────────
