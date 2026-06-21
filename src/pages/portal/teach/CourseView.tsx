@@ -166,7 +166,7 @@ const AnnouncementsPanel: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
 };
 
 // ── Modules home ──────────────────────────────────────────────────────────────
-const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMount?: number }> = ({ canEdit, courseUuid, openAddOnMount }) => {
+const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMount?: number; onCourseAction?: (a: string) => void }> = ({ canEdit, courseUuid, openAddOnMount, onCourseAction }) => {
   const [mods, setMods]       = useState<Module[]>([]);
   const [dbLoading, setDbLoading] = useState(true);
   const [addMod, setAddMod]   = useState(false);
