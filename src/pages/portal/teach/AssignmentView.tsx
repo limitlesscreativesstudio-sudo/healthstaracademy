@@ -38,7 +38,7 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
     setSaving(true);
     const { data, error } = await supabase.from('assignments')
       .insert({
-        course_id: courseId, name: form.name.trim(), type: form.type,
+        course_id: courseId, title: form.name.trim(), submission_type: form.type,
         group_name: form.group_name, points: parseInt(form.points) || 0,
         due_at: form.due_at || null, published: form.published,
       }).select().single();
@@ -134,9 +134,9 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
           <div style={{ border:`1px solid ${C.border}`, borderRadius:'0 0 6px 6px', overflow:'hidden', background:C.white }}>
             {assignments.filter(a => a.group_name === group).map((a, i, arr) => (
               <div key={a.id} style={{ padding:'12px 14px', borderBottom: i < arr.length-1 ? `1px solid ${C.border}` : 'none', display:'flex', alignItems:'center', gap:12 }}>
-                <span style={{ fontSize:18 }}>{typeIcon(a.type)}</span>
+                <span style={{ fontSize:18 }}>{typeIcon(a.submission_type)}</span>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontSize:13, fontWeight:600, color:C.primary, fontFamily:'sans-serif' }}>{a.name}</div>
+                  <div style={{ fontSize:13, fontWeight:600, color:C.primary, fontFamily:'sans-serif' }}>{a.title}</div>
                   <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif', marginTop:2 }}>
                     {a.points} pts
                     {a.due_at && ` • Due ${new Date(a.due_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}`}
