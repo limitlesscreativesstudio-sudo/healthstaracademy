@@ -1,4 +1,5 @@
 import CustomLogin from "./pages/CustomLogin";
+import PortalLogin from "./pages/portal/teach/PortalLogin";
 import AcceptInvite from './pages/portal/teach/AcceptInvite';
 import CourseView from './pages/portal/teach/CourseView';
 import { AuthProvider } from './pages/portal/teach/AuthContext';
@@ -115,7 +116,7 @@ const AppShell = () => {
           <Route path="/portal/courses/:courseId/*" element={<RoleGuard><CourseView /></RoleGuard>} />
           <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<RoleGuard><AssignmentView /></RoleGuard>} />
           <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<RoleGuard><QuizView /></RoleGuard>} />
-          <Route path="/portal/teach/login" element={<CustomLogin />} />
+          <Route path="/portal/teach/login"          element={<AuthProvider><PortalLogin /></AuthProvider>} />
           <Route path="/portal/teach/reset" element={<AuthProvider><ForgotPassword /></AuthProvider>} />
           <Route path="/portal/teach/reset/sent" element={<ResetEmailSent />} />
           <Route path="/portal/teach/update-password" element={<AuthProvider><UpdatePassword /></AuthProvider>} />
