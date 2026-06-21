@@ -705,11 +705,15 @@ const CourseView: React.FC = () => {
             </div>
 
             <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
-              <button style={{ padding:'5px 14px', background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>
-                View as Student
-              </button>
+              {realCanEdit && (
+                <button onClick={() => setStudentView(v => !v)}
+                  style={{ padding:'5px 14px', background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>
+                  {studentView ? '↩ Back to Instructor View' : '👁 View as Student'}
+                </button>
+              )}
               {canEdit && (
-                <button style={{ padding:'5px 14px', background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.4)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
+                <button onClick={() => { setActiveTab('modules'); setOpenAddModule(n => n + 1); }}
+                  style={{ padding:'5px 14px', background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.4)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
                   + Module
                 </button>
               )}
