@@ -432,19 +432,20 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
       </div>
       <div style={{ marginBottom:16 }}>
         <h3 style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 10px', textTransform:'uppercase', letterSpacing:0.5 }}>Course Actions</h3>
-        {[
-          ['📥','Import Existing Content'],
-          ['🔄','Import from Commons'],
-          ['🏠','Choose Home Page'],
-          ['📊','View Course Stream'],
-          ['📢','New Announcement'],
-          ['📈','New Analytics'],
-          ['🔔','View Notifications'],
-        ].map(([icon, label]) => (
-          <div key={label as string} style={{ display:'flex', alignItems:'center', gap:7, padding:'6px 0', borderBottom:`1px solid ${C.border}`, cursor:'pointer', fontSize:12, fontFamily:'sans-serif', color:C.primary }}
+        {([
+          ['📥','Import Existing Content','import'],
+          ['🔄','Import from Commons','commons'],
+          ['🏠','Choose Home Page','home-page'],
+          ['📊','View Course Stream','stream'],
+          ['📢','New Announcement','new-announcement'],
+          ['📈','New Analytics','analytics'],
+          ['🔔','View Notifications','notifications'],
+        ] as const).map(([icon, label, action]) => (
+          <div key={label} onClick={() => onCourseAction?.(action)}
+            style={{ display:'flex', alignItems:'center', gap:7, padding:'6px 0', borderBottom:`1px solid ${C.border}`, cursor:'pointer', fontSize:12, fontFamily:'sans-serif', color:C.primary }}
             onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = C.text}
             onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = C.primary}>
-            <span>{icon as string}</span>{label as string}
+            <span>{icon}</span>{label}
           </div>
         ))}
       </div>
