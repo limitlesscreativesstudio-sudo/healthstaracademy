@@ -115,7 +115,7 @@ const AppShell = () => {
           <Route path="/portal/courses/:courseId/*" element={<RoleGuard><CourseView /></RoleGuard>} />
           <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<RoleGuard><AssignmentView /></RoleGuard>} />
           <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<RoleGuard><QuizView /></RoleGuard>} />
-          <Route path="/portal/teach/login" element={<CustomLogin />} />
+          <Route path="/portal/teach/login"          element={<AuthProvider><PortalLogin /></AuthProvider>} />
           <Route path="/portal/teach/reset" element={<AuthProvider><ForgotPassword /></AuthProvider>} />
           <Route path="/portal/teach/reset/sent" element={<ResetEmailSent />} />
           <Route path="/portal/teach/update-password" element={<AuthProvider><UpdatePassword /></AuthProvider>} />
