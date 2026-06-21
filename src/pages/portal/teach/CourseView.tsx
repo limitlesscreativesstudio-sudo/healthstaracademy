@@ -359,14 +359,18 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
             <>
               {m.items.map((it, i) => (
                 <div key={it.id}
+                  onClick={() => { if (it.file_url) window.open(it.file_url, '_blank', 'noopener'); }}
                   style={{ padding:'9px 14px', paddingLeft:14 + (it.indent * 20), display:'flex', alignItems:'center', gap:10, borderBottom:i < m.items.length - 1 ? `1px solid ${C.border}` : 'none', cursor:'pointer' }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#faf9fc'}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
                   <span style={{ fontSize:13 }}>{itemIcon(it.type)}</span>
-                  <span style={{ flex:1, fontSize:13, color:C.primary, fontFamily:'sans-serif', fontWeight:500 }}>{it.name}</span>
+                  <span style={{ flex:1, fontSize:13, color:C.primary, fontFamily:'sans-serif', fontWeight:500 }}>
+                    {it.name}
+                    {it.file_name && <span style={{ marginLeft:8, color:C.muted, fontWeight:400, fontSize:11 }}>📎 {it.file_name}</span>}
+                  </span>
                   {it.pts && <span style={{ fontSize:12, color:C.muted }}>{it.pts} pts</span>}
                   <div
-                    onClick={() => toggleIPub(it.id as string, it.published)}
+                    onClick={(e) => { e.stopPropagation(); toggleIPub(it.id as string, it.published); }}
                     title={it.published ? 'Published' : 'Unpublished'}
                     style={{ width:16, height:16, borderRadius:'50%', background:it.published ? C.success : C.border, cursor:'pointer', flexShrink:0 }}
                   />
@@ -377,7 +381,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
               {addItem === m.id && canEdit ? (
                 <div style={{ padding:'12px 14px', borderTop:`1px solid ${C.border}`, background:'#faf9fc' }}>
                   <div style={{ display:'flex', gap:8, marginBottom:8 }}>
-                    <select value={ni.type} onChange={e => setNi(p => ({ ...p, type:e.target.value }))}
+                    <select value={ni.type} onChange={e => setNi(p => ({ ...p, type:e.target.value, file: null }))}
                       style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 8px', fontSize:12, fontFamily:'sans-serif', color:C.text }}>
                       {['page','assignment','quiz','file','video','discussion'].map(t => (
                         <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
@@ -388,9 +392,17 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
                     <input value={ni.pts} onChange={e => setNi(p => ({ ...p, pts:e.target.value }))} placeholder="pts"
                       style={{ width:52, border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 7px', fontSize:13, fontFamily:'sans-serif', color:C.text, outline:'none' }}/>
                   </div>
+                  {(ni.type === 'file' || ni.type === 'video') && (
+                    <div style={{ marginBottom:8 }}>
+                      <input type="file" onChange={e => setNi(p => ({ ...p, file: e.target.files?.[0] ?? null }))}
+                        accept={ni.type === 'video' ? 'video/*' : undefined}
+                        style={{ fontSize:12, fontFamily:'sans-serif' }}/>
+                      {ni.file && <span style={{ marginLeft:8, fontSize:11, color:C.muted }}>{ni.file.name} ({Math.round(ni.file.size/1024)} KB)</span>}
+                    </div>
+                  )}
                   <div style={{ display:'flex', gap:6 }}>
                     <button onClick={saveItem} style={{ padding:'5px 14px', border:'none', borderRadius:4, background:C.primary, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>Add</button>
-                    <button onClick={() => setAddItem(null)} style={{ padding:'5px 11px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
+                    <button onClick={() => { setAddItem(null); setNi({ title:'', type:'page', pts:'', file: null }); }} style={{ padding:'5px 11px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
                   </div>
                 </div>
               ) : (
