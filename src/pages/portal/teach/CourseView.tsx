@@ -109,6 +109,7 @@ const AnnouncementsPanel: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
   ]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title:'', body:'' });
+  useEffect(() => { (window as any).__hsaOpenAnn = () => setOpen(true); return () => { delete (window as any).__hsaOpenAnn; }; }, []);
 
   const post = () => {
     if (!form.title || !form.body) return;
