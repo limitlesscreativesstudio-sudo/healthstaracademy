@@ -165,13 +165,16 @@ const AnnouncementsPanel: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
 };
 
 // ── Modules home ──────────────────────────────────────────────────────────────
-const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canEdit, courseUuid }) => {
+const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMount?: number }> = ({ canEdit, courseUuid, openAddOnMount }) => {
   const [mods, setMods]       = useState<Module[]>([]);
   const [dbLoading, setDbLoading] = useState(true);
   const [addMod, setAddMod]   = useState(false);
   const [newName, setNewName] = useState('');
   const [addItem, setAddItem] = useState<string | null>(null);
-  const [ni, setNi]           = useState({ title:'', type:'page', pts:'' }); const [editId, setEditId] = useState<string | null>(null); const [editName, setEditName] = useState('');
+  const [ni, setNi]           = useState<{ title: string; type: string; pts: string; file: File | null }>({ title:'', type:'page', pts:'', file: null }); const [editId, setEditId] = useState<string | null>(null); const [editName, setEditName] = useState('');
+
+  // Open Add Module form on demand (when top "+ Module" button is clicked)
+  useEffect(() => { if (openAddOnMount && canEdit) setAddMod(true); }, [openAddOnMount, canEdit]);
 
   // Load from Supabase on mount
   useEffect(() => {
