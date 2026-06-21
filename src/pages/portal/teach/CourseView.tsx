@@ -498,7 +498,7 @@ const NAV_ITEMS = [
 const CourseView: React.FC = () => {
   const { user: authUser, logout } = useAuth();
 
-  const canEdit        = authUser?.canEdit        ?? false;
+  const realCanEdit    = authUser?.canEdit        ?? false;
   const canManageUsers = authUser?.canManageUsers  ?? false;
 
   const [activeCourse, setActiveCourse] = useState<Course>(COURSES[0]);
@@ -508,6 +508,9 @@ const CourseView: React.FC = () => {
   const [showDashboard, setShowDashboard] = useState(true);
   const [pageLoading, setPageLoading]   = useState(true);
   const [pageError, setPageError]       = useState('');
+  const [studentView, setStudentView]   = useState(false);
+  const [openAddModule, setOpenAddModule] = useState(0);
+  const canEdit = realCanEdit && !studentView;
 
   // Simulate initial data load
   // SWAP: fetch courses from Supabase here
