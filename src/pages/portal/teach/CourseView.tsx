@@ -309,10 +309,14 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
               />
             )}
             {canEdit && (
-              <button onClick={() => { setEditId(m.id as string); setEditName(m.name); }} title='Rename' style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:13, padding:'2px 4px' }}>✏️</button> <button onClick={() => duplicateMod(m)} title='Duplicate' style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:13, padding:'2px 4px' }}>⧉</button> <button onClick={() => setAddItem(m.id as string)}
-                style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:12, fontFamily:'sans-serif', padding:'2px 6px' }}>
-                + Item
-              </button>
+              <>
+                <button onClick={() => { setEditId(m.id as string); setEditName(m.name); }} title='Rename' style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:13, padding:'2px 4px' }}>✏️</button>
+                <button onClick={() => duplicateMod(m)} title='Duplicate' style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:13, padding:'2px 4px' }}>⧉</button>
+                <button onClick={() => setAddItem(m.id as string)}
+                  style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:12, fontFamily:'sans-serif', padding:'2px 6px' }}>
+                  + Item
+                </button>
+              </>
             )}
             {canEdit && (
               <button onClick={() => deleteMod(m.id as string)}
