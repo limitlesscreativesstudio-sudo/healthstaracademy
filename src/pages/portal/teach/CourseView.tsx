@@ -32,6 +32,7 @@ interface Course {
 interface ModuleItem {
   id: string; type: string; name: string;
   pts?: number; published: boolean; indent: number;
+  file_url?: string | null; file_name?: string | null;
 }
 interface Module {
   id: string; name: string; published: boolean;
