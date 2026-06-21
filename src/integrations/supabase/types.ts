@@ -19,6 +19,7 @@ export type Database = {
           course_id: string
           created_at: string
           due_at: string | null
+          group_name: string
           id: string
           instructions: string | null
           module_item_id: string | null
@@ -32,6 +33,7 @@ export type Database = {
           course_id: string
           created_at?: string
           due_at?: string | null
+          group_name?: string
           id?: string
           instructions?: string | null
           module_item_id?: string | null
@@ -45,6 +47,7 @@ export type Database = {
           course_id?: string
           created_at?: string
           due_at?: string | null
+          group_name?: string
           id?: string
           instructions?: string | null
           module_item_id?: string | null
@@ -870,6 +873,11 @@ export type Database = {
           created_at: string
           drive_file_id: string | null
           external_url: string | null
+          file_name: string | null
+          file_size: number | null
+          file_type: string | null
+          file_url: string | null
+          folder: string | null
           folder_id: string | null
           id: string
           mime_type: string | null
@@ -886,6 +894,11 @@ export type Database = {
           created_at?: string
           drive_file_id?: string | null
           external_url?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          folder?: string | null
           folder_id?: string | null
           id?: string
           mime_type?: string | null
@@ -902,6 +915,11 @@ export type Database = {
           created_at?: string
           drive_file_id?: string | null
           external_url?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          folder?: string | null
           folder_id?: string | null
           id?: string
           mime_type?: string | null
@@ -980,7 +998,9 @@ export type Database = {
           body_html: string
           course_id: string
           created_at: string
+          front_page: boolean
           id: string
+          published: boolean
           title: string
           updated_at: string
         }
@@ -988,7 +1008,9 @@ export type Database = {
           body_html?: string
           course_id: string
           created_at?: string
+          front_page?: boolean
           id?: string
+          published?: boolean
           title: string
           updated_at?: string
         }
@@ -996,7 +1018,9 @@ export type Database = {
           body_html?: string
           course_id?: string
           created_at?: string
+          front_page?: boolean
           id?: string
+          published?: boolean
           title?: string
           updated_at?: string
         }
