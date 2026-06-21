@@ -171,7 +171,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
   const [addMod, setAddMod]   = useState(false);
   const [newName, setNewName] = useState('');
   const [addItem, setAddItem] = useState<string | null>(null);
-  const [ni, setNi]           = useState({ title:'', type:'page', pts:'' });
+  const [ni, setNi]           = useState({ title:'', type:'page', pts:'' }); const [editId, setEditId] = useState<string | null>(null); const [editName, setEditName] = useState('');
 
   // Load from Supabase on mount
   useEffect(() => {
@@ -244,7 +244,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
 
   const deleteMod = async (id: string) => {
     setMods(p => p.filter(m => m.id !== id));
-    if (courseUuid) await supabase.from('modules').delete().eq('id', id);
+    if (courseUuid) await supabase.from('modules').delete().eq('id', id); }; const renameMod = async (id: string, title: string) => { setMods(p => p.map(m => m.id === id ? { ...m, name: title } : m)); if (courseUuid) await supabase.from('modules').update({ title }).eq('id', id); }; const duplicateMod = async (src: Module) => { if (!courseUuid) return; const { data: nm } = await supabase.from('modules').insert({ course_id: courseUuid, title: src.name + ' (Copy)', published: false, position: mods.length }).select().single(); if (!nm) return; const its = src.items.map((it, idx) => ({ module_id: nm.id, item_type: it.type, title: it.name, published: false, position: idx })); if (its.length) await supabase.from('module_items').insert(its); const { data: nits } = await supabase.from('module_items').select('id,module_id,item_type,title,published,position').eq('module_id', nm.id); setMods(p => [...p, { id: nm.id, name: nm.title, published: false, expanded: true, position: mods.length, items: (nits ?? []).map((it) => ({ id: it.id, type: it.item_type, name: it.title, pts: undefined, published: false, indent: 0 })) }]);
   };
 
   if (dbLoading) return <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Loading modules...</div>;
@@ -297,7 +297,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
               style={{ background:'none', border:'none', cursor:'pointer', padding:0, color:C.text, fontSize:14, flexShrink:0 }}>
               {m.expanded ? '▼' : '▶'}
             </button>
-            <span style={{ flex:1, fontWeight:700, fontSize:13, fontFamily:'sans-serif', color:C.text, lineHeight:1.4 }}>{m.name}</span>
+            <span style={{ flex:1, fontWeight:700, fontSize:13, fontFamily:'sans-serif', color:C.text, lineHeight:1.4 }}>{editId === m.id ? (<input autoFocus value={editName} onChange={e => setEditName(e.target.value)} onBlur={() => { if (editName.trim()) renameMod(m.id as string, editName.trim()); setEditId(null); }} onKeyDown={e => { if (e.key === 'Enter') { if (editName.trim()) renameMod(m.id as string, editName.trim()); setEditId(null); } if (e.key === 'Escape') setEditId(null); }} style={{ flex:1, fontWeight:700, fontSize:13, fontFamily:'sans-serif', padding:'2px 6px', border:'1px solid '+C.primary, borderRadius:4 }} />) : (<span onDoubleClick={() => { setEditId(m.id as string); setEditName(m.name); }} title='Double-click to rename'>{m.name}</span>)}</span>
             {!m.published && (
               <span style={{ fontSize:10, padding:'2px 8px', borderRadius:20, background:C.bg, color:C.muted, fontFamily:'sans-serif' }}>Unpublished</span>
             )}
@@ -309,7 +309,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
               />
             )}
             {canEdit && (
-              <button onClick={() => setAddItem(m.id as string)}
+              <button onClick={() => { setEditId(m.id as string); setEditName(m.name); }} title='Rename' style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:13, padding:'2px 4px' }}>✏️</button> <button onClick={() => duplicateMod(m)} title='Duplicate' style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:13, padding:'2px 4px' }}>⧉</button> <button onClick={() => setAddItem(m.id as string)}
                 style={{ background:'none', border:'none', cursor:'pointer', color:C.primary, fontSize:12, fontFamily:'sans-serif', padding:'2px 6px' }}>
                 + Item
               </button>
