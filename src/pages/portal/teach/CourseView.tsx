@@ -549,11 +549,23 @@ const CourseView: React.FC = () => {
     />
   );
 
+  const handleCourseAction = (action: string) => {
+    switch (action) {
+      case 'home-page':       alert('Choose Home Page: keep Modules as your home, or pick Announcements/Syllabus/Pages.\n\n(Hooking this to a saved setting is the next step.)'); break;
+      case 'stream':          setActiveTab('announcements'); break;
+      case 'new-announcement': setActiveTab('announcements'); setTimeout(() => { (window as any).__hsaOpenAnn?.(); }, 50); break;
+      case 'analytics':       setActiveTab('analytics'); break;
+      case 'notifications':   setActiveTab('announcements'); break;
+      case 'import':          alert('Import Existing Content is coming soon. For now, use Duplicate to New Cohort from the Dashboard.'); break;
+      case 'commons':         alert('Import from Commons is not yet enabled.'); break;
+    }
+  };
+
   // Build sections map inside component so canEdit is available
   const cid = activeCourse?.uuid;
   const SECTIONS: Record<string, React.ReactNode> = {
-    home:          <ModulesHome    canEdit={canEdit} courseUuid={cid} />,
-    modules:       <ModulesHome    canEdit={canEdit} courseUuid={cid} />,
+    home:          <ModulesHome    canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
+    modules:       <ModulesHome    canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
     announcements: <AnnouncementsPanel canEdit={canEdit} />,
     assignments:   <AssignmentView courseId={cid} canEdit={canEdit} />,
     quizzes:       <QuizView />,
@@ -561,7 +573,7 @@ const CourseView: React.FC = () => {
     people:        <StudentDashboard courseId={cid} canEdit={canEdit} />,
     pages:         <PagesTab       courseId={cid} canEdit={canEdit} />,
     files:         <FilesTab       courseId={cid} canEdit={canEdit} />,
-    syllabus:      <SyllabusTab />,
+    syllabus:      <SyllabusTab courseUuid={cid} canEdit={canEdit} />,
     attendance:    <AttendanceTab  courseId={cid} canEdit={canEdit} />,
     clinical:      <ClinicalSkillsTab />,
     readiness:     <ReadinessTab />,
