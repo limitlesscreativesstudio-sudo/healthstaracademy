@@ -1,5 +1,6 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { supabase } from './AuthContext';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B' } as const;
 
@@ -20,23 +21,84 @@ const SYLLABUS: WeekItem[] = [
   { day:'Clinical Week 2', topics:['Independent Clinical Practice','State Exam Prep'], materials:['State Exam Study Guide','Practice Questions'], hours:40 },
 ];
 
-const SyllabusTab: React.FC = () => {
-  const [editing, setEditing] = useState(false);
+interface Props { courseUuid?: string; canEdit?: boolean; }
+
+const SyllabusTab: React.FC<Props> = ({ courseUuid, canEdit = false }) => {
   const [expanded, setExpanded] = useState<string|null>('Day 1');
+  const [syllabusUrl, setSyllabusUrl] = useState<string | null>(null);
+  const [syllabusName, setSyllabusName] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [moduleNames, setModuleNames] = useState<string[]>([]);
+
+  // Load existing syllabus + modules
+  useEffect(() => {
+    if (!courseUuid) return;
+    (async () => {
+      const { data: course } = await supabase.from('courses')
+        .select('syllabus_url,syllabus_name').eq('id', courseUuid).maybeSingle();
+      if (course) { setSyllabusUrl(course.syllabus_url ?? null); setSyllabusName(course.syllabus_name ?? null); }
+      const { data: mods } = await supabase.from('modules')
+        .select('title').eq('course_id', courseUuid).order('position');
+      setModuleNames((mods ?? []).map(m => m.title));
+    })();
+  }, [courseUuid]);
+
+  const upload = async (file: File) => {
+    if (!courseUuid) { alert('Save the course first before uploading a syllabus.'); return; }
+    setUploading(true);
+    const ext = file.name.split('.').pop() ?? 'pdf';
+    const path = `${courseUuid}/syllabus/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('course-files')
+      .upload(path, file, { contentType: file.type, upsert: true });
+    if (error) { alert('Upload failed: ' + error.message); setUploading(false); return; }
+    const { data: signed } = await supabase.storage.from('course-files').createSignedUrl(path, 60 * 60 * 24 * 365);
+    const url = signed?.signedUrl ?? null;
+    await supabase.from('courses').update({ syllabus_url: url, syllabus_name: file.name }).eq('id', courseUuid);
+    setSyllabusUrl(url); setSyllabusName(file.name); setUploading(false);
+  };
+
+  const removeDoc = async () => {
+    if (!courseUuid || !confirm('Remove the uploaded syllabus document?')) return;
+    await supabase.from('courses').update({ syllabus_url: null, syllabus_name: null }).eq('id', courseUuid);
+    setSyllabusUrl(null); setSyllabusName(null);
+  };
 
   const totalHours = SYLLABUS.reduce((s, w) => s + w.hours, 0);
+  const isPdf = syllabusUrl && (syllabusName?.toLowerCase().endsWith('.pdf') || syllabusUrl.includes('.pdf'));
 
   return (
     <div style={{ padding:24 }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Course Syllabus</h2>
-        <div style={{ display:'flex', gap:8 }}>
-          <button style={{ padding:'7px 16px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Export PDF</button>
-          <button onClick={() => setEditing(!editing)}
-            style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
-            {editing ? '✓ Save Syllabus' : '✏️ Edit Syllabus'}
-          </button>
+      </div>
+
+      {/* Uploaded syllabus document */}
+      <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, padding:20, marginBottom:20 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+          <h3 style={{ margin:0, fontSize:14, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Syllabus Document</h3>
+          {canEdit && (
+            <label style={{ padding:'7px 14px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:uploading ? 'wait' : 'pointer' }}>
+              {uploading ? 'Uploading…' : (syllabusUrl ? '↻ Replace PDF' : '📤 Upload PDF / DOCX')}
+              <input type="file" accept=".pdf,.doc,.docx" style={{ display:'none' }}
+                disabled={uploading}
+                onChange={e => { const f = e.target.files?.[0]; if (f) upload(f); e.currentTarget.value = ''; }}/>
+            </label>
+          )}
         </div>
+        {syllabusUrl ? (
+          <>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, fontSize:13, fontFamily:'sans-serif' }}>
+              <span>📎</span>
+              <a href={syllabusUrl} target="_blank" rel="noopener noreferrer" style={{ color:C.primary, textDecoration:'none', fontWeight:600 }}>{syllabusName ?? 'Syllabus'}</a>
+              {canEdit && <button onClick={removeDoc} style={{ marginLeft:'auto', background:'none', border:'none', color:C.muted, cursor:'pointer', fontSize:12 }}>Remove</button>}
+            </div>
+            {isPdf && <iframe src={syllabusUrl} title="Syllabus PDF" style={{ width:'100%', height:600, border:`1px solid ${C.border}`, borderRadius:6 }}/>}
+          </>
+        ) : (
+          <div style={{ fontSize:13, color:C.muted, fontFamily:'sans-serif' }}>
+            {canEdit ? 'No syllabus document uploaded yet. Upload a PDF to display it here for students.' : 'The instructor has not uploaded a syllabus document yet.'}
+          </div>
+        )}
       </div>
 
       {/* Course overview */}
@@ -50,6 +112,16 @@ const SyllabusTab: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Modules currently in this course */}
+      {moduleNames.length > 0 && (
+        <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, padding:20, marginBottom:20 }}>
+          <h3 style={{ margin:'0 0 12px', fontSize:14, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Modules in this Course</h3>
+          <ol style={{ margin:0, paddingLeft:20, fontSize:13, color:C.text, fontFamily:'sans-serif', lineHeight:1.7 }}>
+            {moduleNames.map(n => <li key={n}>{n}</li>)}
+          </ol>
+        </div>
+      )}
 
       {/* Grading breakdown */}
       <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, padding:20, marginBottom:20 }}>

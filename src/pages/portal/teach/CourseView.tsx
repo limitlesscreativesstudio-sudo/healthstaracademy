@@ -32,6 +32,7 @@ interface Course {
 interface ModuleItem {
   id: string; type: string; name: string;
   pts?: number; published: boolean; indent: number;
+  file_url?: string | null; file_name?: string | null;
 }
 interface Module {
   id: string; name: string; published: boolean;
@@ -108,6 +109,7 @@ const AnnouncementsPanel: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
   ]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title:'', body:'' });
+  useEffect(() => { (window as any).__hsaOpenAnn = () => setOpen(true); return () => { delete (window as any).__hsaOpenAnn; }; }, []);
 
   const post = () => {
     if (!form.title || !form.body) return;
@@ -165,13 +167,16 @@ const AnnouncementsPanel: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
 };
 
 // ── Modules home ──────────────────────────────────────────────────────────────
-const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canEdit, courseUuid }) => {
+const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMount?: number; onCourseAction?: (a: string) => void }> = ({ canEdit, courseUuid, openAddOnMount, onCourseAction }) => {
   const [mods, setMods]       = useState<Module[]>([]);
   const [dbLoading, setDbLoading] = useState(true);
   const [addMod, setAddMod]   = useState(false);
   const [newName, setNewName] = useState('');
   const [addItem, setAddItem] = useState<string | null>(null);
-  const [ni, setNi]           = useState({ title:'', type:'page', pts:'' }); const [editId, setEditId] = useState<string | null>(null); const [editName, setEditName] = useState('');
+  const [ni, setNi]           = useState<{ title: string; type: string; pts: string; file: File | null }>({ title:'', type:'page', pts:'', file: null }); const [editId, setEditId] = useState<string | null>(null); const [editName, setEditName] = useState('');
+
+  // Open Add Module form on demand (when top "+ Module" button is clicked)
+  useEffect(() => { if (openAddOnMount && canEdit) setAddMod(true); }, [openAddOnMount, canEdit]);
 
   // Load from Supabase on mount
   useEffect(() => {
@@ -182,15 +187,16 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
         .from('modules').select('id,title,published,position')
         .eq('course_id', courseUuid).order('position');
       const { data: itemRows } = await supabase
-        .from('module_items').select('id,module_id,item_type,title,published,position')
+        .from('module_items').select('id,module_id,item_type,title,published,position,points,file_url,file_name,file_type')
         .eq('course_id', courseUuid).order('position');
       if (modRows) {
         setMods(modRows.map(m => ({
           id: m.id, name: m.title, published: m.published,
           expanded: true, position: m.position,
-          items: (itemRows ?? []).filter(it => it.module_id === m.id).map(it => ({
+          items: (itemRows ?? []).filter(it => it.module_id === m.id).map((it: any) => ({
             id: it.id, type: it.item_type, name: it.title,
-            pts: it.points ?? undefined, published: it.published, indent: it.indent,
+            pts: it.points ?? undefined, published: it.published, indent: 0,
+            file_url: it.file_url, file_name: it.file_name,
           })),
         })));
       }
@@ -228,18 +234,41 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
   const saveItem = async () => {
     if (!ni.title.trim() || !addItem) return;
     const mod = mods.find(m => m.id === addItem);
-    if (courseUuid) {
-      const { data, error } = await supabase.from('module_items')
-        .insert({ module_id: addItem, item_type: ni.type, title: ni.title.trim(),
-          published: false, position: mod?.items.length ?? 0 })
-        .select().single();
-      if (!error && data) {
-        setMods(p => p.map(m => m.id === addItem ? {
-          ...m, items: [...m.items, { id: data.id, type: data.item_type, name: data.title, pts: undefined, published: false, indent: 0 }]
-        } : m));
-      }
+    if (!courseUuid) { setNi({ title:'', type:'page', pts:'', file: null }); setAddItem(null); return; }
+
+    let fileUrl: string | null = null;
+    let fileName: string | null = null;
+    let fileType: string | null = null;
+
+    // Upload attachment if File/Video type and file provided
+    if ((ni.type === 'file' || ni.type === 'video') && ni.file) {
+      const ext = ni.file.name.split('.').pop() ?? 'bin';
+      const path = `${courseUuid}/module-items/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('course-files')
+        .upload(path, ni.file, { contentType: ni.file.type, upsert: false });
+      if (upErr) { alert('Upload failed: ' + upErr.message); return; }
+      const { data: signed } = await supabase.storage.from('course-files').createSignedUrl(path, 60 * 60 * 24 * 365);
+      fileUrl = signed?.signedUrl ?? null;
+      fileName = ni.file.name;
+      fileType = ni.file.type;
     }
-    setNi({ title:'', type:'page', pts:'' }); setAddItem(null);
+
+    const { data, error } = await supabase.from('module_items')
+      .insert({ module_id: addItem, course_id: courseUuid, item_type: ni.type, title: ni.title.trim(),
+        published: false, position: mod?.items.length ?? 0,
+        points: ni.pts ? Number(ni.pts) : null,
+        file_url: fileUrl, file_name: fileName, file_type: fileType })
+      .select().single();
+    if (!error && data) {
+      setMods(p => p.map(m => m.id === addItem ? {
+        ...m, items: [...m.items, { id: data.id, type: data.item_type, name: data.title,
+          pts: data.points ?? undefined, published: false, indent: 0,
+          file_url: (data as any).file_url, file_name: (data as any).file_name } as any]
+      } : m));
+    } else if (error) {
+      alert('Failed to add item: ' + error.message);
+    }
+    setNi({ title:'', type:'page', pts:'', file: null }); setAddItem(null);
   };
 
   const deleteMod = async (id: string) => {
@@ -331,14 +360,18 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
             <>
               {m.items.map((it, i) => (
                 <div key={it.id}
+                  onClick={() => { if (it.file_url) window.open(it.file_url, '_blank', 'noopener'); }}
                   style={{ padding:'9px 14px', paddingLeft:14 + (it.indent * 20), display:'flex', alignItems:'center', gap:10, borderBottom:i < m.items.length - 1 ? `1px solid ${C.border}` : 'none', cursor:'pointer' }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#faf9fc'}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
                   <span style={{ fontSize:13 }}>{itemIcon(it.type)}</span>
-                  <span style={{ flex:1, fontSize:13, color:C.primary, fontFamily:'sans-serif', fontWeight:500 }}>{it.name}</span>
+                  <span style={{ flex:1, fontSize:13, color:C.primary, fontFamily:'sans-serif', fontWeight:500 }}>
+                    {it.name}
+                    {it.file_name && <span style={{ marginLeft:8, color:C.muted, fontWeight:400, fontSize:11 }}>📎 {it.file_name}</span>}
+                  </span>
                   {it.pts && <span style={{ fontSize:12, color:C.muted }}>{it.pts} pts</span>}
                   <div
-                    onClick={() => toggleIPub(it.id as string, it.published)}
+                    onClick={(e) => { e.stopPropagation(); toggleIPub(it.id as string, it.published); }}
                     title={it.published ? 'Published' : 'Unpublished'}
                     style={{ width:16, height:16, borderRadius:'50%', background:it.published ? C.success : C.border, cursor:'pointer', flexShrink:0 }}
                   />
@@ -349,7 +382,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
               {addItem === m.id && canEdit ? (
                 <div style={{ padding:'12px 14px', borderTop:`1px solid ${C.border}`, background:'#faf9fc' }}>
                   <div style={{ display:'flex', gap:8, marginBottom:8 }}>
-                    <select value={ni.type} onChange={e => setNi(p => ({ ...p, type:e.target.value }))}
+                    <select value={ni.type} onChange={e => setNi(p => ({ ...p, type:e.target.value, file: null }))}
                       style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 8px', fontSize:12, fontFamily:'sans-serif', color:C.text }}>
                       {['page','assignment','quiz','file','video','discussion'].map(t => (
                         <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
@@ -360,9 +393,17 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
                     <input value={ni.pts} onChange={e => setNi(p => ({ ...p, pts:e.target.value }))} placeholder="pts"
                       style={{ width:52, border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 7px', fontSize:13, fontFamily:'sans-serif', color:C.text, outline:'none' }}/>
                   </div>
+                  {(ni.type === 'file' || ni.type === 'video') && (
+                    <div style={{ marginBottom:8 }}>
+                      <input type="file" onChange={e => setNi(p => ({ ...p, file: e.target.files?.[0] ?? null }))}
+                        accept={ni.type === 'video' ? 'video/*' : undefined}
+                        style={{ fontSize:12, fontFamily:'sans-serif' }}/>
+                      {ni.file && <span style={{ marginLeft:8, fontSize:11, color:C.muted }}>{ni.file.name} ({Math.round(ni.file.size/1024)} KB)</span>}
+                    </div>
+                  )}
                   <div style={{ display:'flex', gap:6 }}>
                     <button onClick={saveItem} style={{ padding:'5px 14px', border:'none', borderRadius:4, background:C.primary, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>Add</button>
-                    <button onClick={() => setAddItem(null)} style={{ padding:'5px 11px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
+                    <button onClick={() => { setAddItem(null); setNi({ title:'', type:'page', pts:'', file: null }); }} style={{ padding:'5px 11px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
                   </div>
                 </div>
               ) : (
@@ -392,19 +433,20 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
       </div>
       <div style={{ marginBottom:16 }}>
         <h3 style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 10px', textTransform:'uppercase', letterSpacing:0.5 }}>Course Actions</h3>
-        {[
-          ['📥','Import Existing Content'],
-          ['🔄','Import from Commons'],
-          ['🏠','Choose Home Page'],
-          ['📊','View Course Stream'],
-          ['📢','New Announcement'],
-          ['📈','New Analytics'],
-          ['🔔','View Notifications'],
-        ].map(([icon, label]) => (
-          <div key={label as string} style={{ display:'flex', alignItems:'center', gap:7, padding:'6px 0', borderBottom:`1px solid ${C.border}`, cursor:'pointer', fontSize:12, fontFamily:'sans-serif', color:C.primary }}
+        {([
+          ['📥','Import Existing Content','import'],
+          ['🔄','Import from Commons','commons'],
+          ['🏠','Choose Home Page','home-page'],
+          ['📊','View Course Stream','stream'],
+          ['📢','New Announcement','new-announcement'],
+          ['📈','New Analytics','analytics'],
+          ['🔔','View Notifications','notifications'],
+        ] as const).map(([icon, label, action]) => (
+          <div key={label} onClick={() => onCourseAction?.(action)}
+            style={{ display:'flex', alignItems:'center', gap:7, padding:'6px 0', borderBottom:`1px solid ${C.border}`, cursor:'pointer', fontSize:12, fontFamily:'sans-serif', color:C.primary }}
             onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = C.text}
             onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = C.primary}>
-            <span>{icon as string}</span>{label as string}
+            <span>{icon}</span>{label}
           </div>
         ))}
       </div>
@@ -457,7 +499,7 @@ const NAV_ITEMS = [
 const CourseView: React.FC = () => {
   const { user: authUser, logout } = useAuth();
 
-  const canEdit        = authUser?.canEdit        ?? false;
+  const realCanEdit    = authUser?.canEdit        ?? false;
   const canManageUsers = authUser?.canManageUsers  ?? false;
 
   const [activeCourse, setActiveCourse] = useState<Course>(COURSES[0]);
@@ -467,6 +509,9 @@ const CourseView: React.FC = () => {
   const [showDashboard, setShowDashboard] = useState(true);
   const [pageLoading, setPageLoading]   = useState(true);
   const [pageError, setPageError]       = useState('');
+  const [studentView, setStudentView]   = useState(false);
+  const [openAddModule, setOpenAddModule] = useState(0);
+  const canEdit = realCanEdit && !studentView;
 
   // Simulate initial data load
   // SWAP: fetch courses from Supabase here
@@ -505,11 +550,23 @@ const CourseView: React.FC = () => {
     />
   );
 
+  const handleCourseAction = (action: string) => {
+    switch (action) {
+      case 'home-page':       alert('Choose Home Page: keep Modules as your home, or pick Announcements/Syllabus/Pages.\n\n(Hooking this to a saved setting is the next step.)'); break;
+      case 'stream':          setActiveTab('announcements'); break;
+      case 'new-announcement': setActiveTab('announcements'); setTimeout(() => { (window as any).__hsaOpenAnn?.(); }, 50); break;
+      case 'analytics':       setActiveTab('analytics'); break;
+      case 'notifications':   setActiveTab('announcements'); break;
+      case 'import':          alert('Import Existing Content is coming soon. For now, use Duplicate to New Cohort from the Dashboard.'); break;
+      case 'commons':         alert('Import from Commons is not yet enabled.'); break;
+    }
+  };
+
   // Build sections map inside component so canEdit is available
   const cid = activeCourse?.uuid;
   const SECTIONS: Record<string, React.ReactNode> = {
-    home:          <ModulesHome    canEdit={canEdit} courseUuid={cid} />,
-    modules:       <ModulesHome    canEdit={canEdit} courseUuid={cid} />,
+    home:          <ModulesHome    canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
+    modules:       <ModulesHome    canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
     announcements: <AnnouncementsPanel canEdit={canEdit} />,
     assignments:   <AssignmentView courseId={cid} canEdit={canEdit} />,
     quizzes:       <QuizView />,
@@ -517,7 +574,7 @@ const CourseView: React.FC = () => {
     people:        <StudentDashboard courseId={cid} canEdit={canEdit} />,
     pages:         <PagesTab       courseId={cid} canEdit={canEdit} />,
     files:         <FilesTab       courseId={cid} canEdit={canEdit} />,
-    syllabus:      <SyllabusTab />,
+    syllabus:      <SyllabusTab courseUuid={cid} canEdit={canEdit} />,
     attendance:    <AttendanceTab  courseId={cid} canEdit={canEdit} />,
     clinical:      <ClinicalSkillsTab />,
     readiness:     <ReadinessTab />,
@@ -648,11 +705,15 @@ const CourseView: React.FC = () => {
             </div>
 
             <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
-              <button style={{ padding:'5px 14px', background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>
-                View as Student
-              </button>
+              {realCanEdit && (
+                <button onClick={() => setStudentView(v => !v)}
+                  style={{ padding:'5px 14px', background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>
+                  {studentView ? '↩ Back to Instructor View' : '👁 View as Student'}
+                </button>
+              )}
               {canEdit && (
-                <button style={{ padding:'5px 14px', background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.4)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
+                <button onClick={() => { setActiveTab('modules'); setOpenAddModule(n => n + 1); }}
+                  style={{ padding:'5px 14px', background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.4)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
                   + Module
                 </button>
               )}

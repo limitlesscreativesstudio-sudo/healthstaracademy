@@ -36,8 +36,9 @@ const CourseCard: React.FC<{
   onEnter: () => void;
   onPublishToggle: (id: string, current: boolean) => void;
   onDelete: (id: string) => void;
+  onDuplicate: (course: DBCourse) => Promise<void>;
   canEdit: boolean;
-}> = ({ course, onEnter, onPublishToggle, onDelete, canEdit }) => {
+}> = ({ course, onEnter, onPublishToggle, onDelete, onDuplicate, canEdit }) => {
   const [menu, setMenu] = useState(false);
 
   return (
@@ -77,6 +78,18 @@ const CourseCard: React.FC<{
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.bg}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
                   {course.published ? '🔒 Unpublish' : '✅ Publish'}
+                </div>
+                <div onClick={() => { onEnter(); setMenu(false); }}
+                  style={{ padding:'9px 14px', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', color:C.text }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.bg}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
+                  ✏️ Edit Modules
+                </div>
+                <div onClick={async () => { setMenu(false); await onDuplicate(course); }}
+                  style={{ padding:'9px 14px', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', color:C.text }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.bg}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
+                  ⧉ Duplicate to New Cohort
                 </div>
                 <div onClick={() => { if (confirm(`Delete "${course.name}"? This cannot be undone.`)) { onDelete(course.id); } setMenu(false); }}
                   style={{ padding:'9px 14px', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', color:C.error }}
@@ -322,6 +335,41 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
     await supabase.from('courses').delete().eq('id', id);
   };
 
+  // ── Duplicate course (clones modules + module_items) ───────────────────────
+  const handleDuplicate = async (src: DBCourse) => {
+    const newName = prompt(`Duplicate "${src.name}" as a new cohort. New course name:`, src.name + ' (Copy)');
+    if (!newName) return;
+    const newCode = prompt('New course code (must be unique):', src.code + '-COPY');
+    if (!newCode) return;
+
+    const { data: newCourse, error: cErr } = await supabase.from('courses').insert({
+      title: newName.trim(), code: newCode.trim(), description: (src as any).description ?? '',
+      term: src.term, color: src.color, instructor_id: user?.id, status: 'draft',
+    }).select('id,title,code,color,status,term,description,created_at').single();
+    if (cErr || !newCourse) { alert('Failed to create course: ' + (cErr?.message ?? 'unknown')); return; }
+
+    const { data: srcMods } = await supabase.from('modules')
+      .select('id,title,published,position').eq('course_id', src.id).order('position');
+
+    for (const m of (srcMods ?? [])) {
+      const { data: nm } = await supabase.from('modules').insert({
+        course_id: newCourse.id, title: m.title, published: false, position: m.position,
+      }).select('id').single();
+      if (!nm) continue;
+      const { data: srcItems } = await supabase.from('module_items')
+        .select('item_type,title,points,published,position,file_url,file_name,file_type')
+        .eq('module_id', m.id).order('position');
+      if (srcItems && srcItems.length) {
+        await supabase.from('module_items').insert(
+          srcItems.map((it: any) => ({ ...it, module_id: nm.id, course_id: newCourse.id, published: false }))
+        );
+      }
+    }
+
+    await loadCourses();
+    alert(`Created "${newName}" with ${srcMods?.length ?? 0} modules copied.`);
+  };
+
   const published   = courses.filter(c => c.published);
   const unpublished = courses.filter(c => !c.published);
   const visible     = TODO_ITEMS.filter(t => !dismissed.includes(t.id));
@@ -383,6 +431,7 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
                       onEnter={() => onEnterCourse(c)}
                       onPublishToggle={handlePublishToggle}
                       onDelete={handleDelete}
+                      onDuplicate={handleDuplicate}
                       canEdit={canEdit}/>
                   ))}
                 </div>
@@ -401,6 +450,7 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
                       onEnter={() => onEnterCourse(c)}
                       onPublishToggle={handlePublishToggle}
                       onDelete={handleDelete}
+                      onDuplicate={handleDuplicate}
                       canEdit={canEdit}/>
                   ))}
                 </div>

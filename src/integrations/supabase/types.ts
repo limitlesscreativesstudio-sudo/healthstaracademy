@@ -535,7 +535,9 @@ export type Database = {
           start_at: string | null
           status: string
           syllabus_html: string
+          syllabus_name: string | null
           syllabus_show_summary: boolean
+          syllabus_url: string | null
           term: string | null
           time_zone: string | null
           title: string
@@ -561,7 +563,9 @@ export type Database = {
           start_at?: string | null
           status?: string
           syllabus_html?: string
+          syllabus_name?: string | null
           syllabus_show_summary?: boolean
+          syllabus_url?: string | null
           term?: string | null
           time_zone?: string | null
           title: string
@@ -587,7 +591,9 @@ export type Database = {
           start_at?: string | null
           status?: string
           syllabus_html?: string
+          syllabus_name?: string | null
           syllabus_show_summary?: boolean
+          syllabus_url?: string | null
           term?: string | null
           time_zone?: string | null
           title?: string
@@ -1038,6 +1044,9 @@ export type Database = {
         Row: {
           content_ref: string | null
           created_at: string
+          file_name: string | null
+          file_type: string | null
+          file_url: string | null
           id: string
           item_type: string
           module_id: string
@@ -1050,6 +1059,9 @@ export type Database = {
         Insert: {
           content_ref?: string | null
           created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           item_type: string
           module_id: string
@@ -1062,6 +1074,9 @@ export type Database = {
         Update: {
           content_ref?: string | null
           created_at?: string
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           item_type?: string
           module_id?: string
