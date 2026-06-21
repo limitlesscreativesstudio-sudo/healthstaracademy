@@ -187,8 +187,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
         .from('modules').select('id,title,published,position')
         .eq('course_id', courseUuid).order('position');
       const { data: itemRows } = await supabase
-        .from('module_items').select('id,module_id,item_type,title,published,position,points,file_url,file_name,file_type')
-        .eq('course_id', courseUuid).order('position');
+        .from('module_items').select('id,module_id,item_type,title,published,position,file_url,file_name,file_type,content_ref,url').order('position');
       if (modRows) {
         setMods(modRows.map(m => ({
           id: m.id, name: m.title, published: m.published,
@@ -254,9 +253,9 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
     }
 
     const { data, error } = await supabase.from('module_items')
-      .insert({ module_id: addItem, course_id: courseUuid, item_type: ni.type, title: ni.title.trim(),
+      .insert({ module_id: addItem, item_type: ni.type, title: ni.title.trim(),
         published: false, position: mod?.items.length ?? 0,
-        points: ni.pts ? Number(ni.pts) : null,
+        content_ref: ni.contentRef || null,
         file_url: fileUrl, file_name: fileName, file_type: fileType })
       .select().single();
     if (!error && data) {
