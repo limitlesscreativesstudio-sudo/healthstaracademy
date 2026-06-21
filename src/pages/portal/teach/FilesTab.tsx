@@ -25,7 +25,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
     setLoading(true);
-    const { data } = await supabase.from('course_files')
+    const { data } = await supabase.from('lms_files')
       .select('*').eq('course_id', courseId).order('created_at', { ascending:false });
     if (data) setFiles(data);
     setLoading(false);
@@ -45,7 +45,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
       const { error: upErr } = await supabase.storage.from('course-files').upload(path, file);
       if (upErr) { setError(`Failed to upload ${file.name}: ${upErr.message}`); continue; }
       const { data: { publicUrl } } = supabase.storage.from('course-files').getPublicUrl(path);
-      const { data: row } = await supabase.from('course_files').insert({
+      const { data: row } = await supabase.from('lms_files').insert({
         course_id: courseId, file_name: file.name, file_url: publicUrl,
         file_type: ext, file_size: file.size, folder: selFolder,
       }).select().single();
@@ -58,7 +58,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const deleteFile = async (id: string, fileUrl: string) => {
     if (!confirm('Delete this file? This cannot be undone.')) return;
     setFiles(p => p.filter(f => f.id !== id));
-    await supabase.from('course_files').delete().eq('id', id);
+    await supabase.from('lms_files').delete().eq('id', id);
     // Also remove from storage
     const path = fileUrl.split('/course-files/')[1];
     if (path) await supabase.storage.from('course-files').remove([decodeURIComponent(path)]);
