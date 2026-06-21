@@ -231,18 +231,41 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
   const saveItem = async () => {
     if (!ni.title.trim() || !addItem) return;
     const mod = mods.find(m => m.id === addItem);
-    if (courseUuid) {
-      const { data, error } = await supabase.from('module_items')
-        .insert({ module_id: addItem, item_type: ni.type, title: ni.title.trim(),
-          published: false, position: mod?.items.length ?? 0 })
-        .select().single();
-      if (!error && data) {
-        setMods(p => p.map(m => m.id === addItem ? {
-          ...m, items: [...m.items, { id: data.id, type: data.item_type, name: data.title, pts: undefined, published: false, indent: 0 }]
-        } : m));
-      }
+    if (!courseUuid) { setNi({ title:'', type:'page', pts:'', file: null }); setAddItem(null); return; }
+
+    let fileUrl: string | null = null;
+    let fileName: string | null = null;
+    let fileType: string | null = null;
+
+    // Upload attachment if File/Video type and file provided
+    if ((ni.type === 'file' || ni.type === 'video') && ni.file) {
+      const ext = ni.file.name.split('.').pop() ?? 'bin';
+      const path = `${courseUuid}/module-items/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('course-files')
+        .upload(path, ni.file, { contentType: ni.file.type, upsert: false });
+      if (upErr) { alert('Upload failed: ' + upErr.message); return; }
+      const { data: signed } = await supabase.storage.from('course-files').createSignedUrl(path, 60 * 60 * 24 * 365);
+      fileUrl = signed?.signedUrl ?? null;
+      fileName = ni.file.name;
+      fileType = ni.file.type;
     }
-    setNi({ title:'', type:'page', pts:'' }); setAddItem(null);
+
+    const { data, error } = await supabase.from('module_items')
+      .insert({ module_id: addItem, course_id: courseUuid, item_type: ni.type, title: ni.title.trim(),
+        published: false, position: mod?.items.length ?? 0,
+        points: ni.pts ? Number(ni.pts) : null,
+        file_url: fileUrl, file_name: fileName, file_type: fileType })
+      .select().single();
+    if (!error && data) {
+      setMods(p => p.map(m => m.id === addItem ? {
+        ...m, items: [...m.items, { id: data.id, type: data.item_type, name: data.title,
+          pts: data.points ?? undefined, published: false, indent: 0,
+          file_url: (data as any).file_url, file_name: (data as any).file_name } as any]
+      } : m));
+    } else if (error) {
+      alert('Failed to add item: ' + error.message);
+    }
+    setNi({ title:'', type:'page', pts:'', file: null }); setAddItem(null);
   };
 
   const deleteMod = async (id: string) => {
