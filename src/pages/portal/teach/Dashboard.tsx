@@ -431,6 +431,7 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
                       onEnter={() => onEnterCourse(c)}
                       onPublishToggle={handlePublishToggle}
                       onDelete={handleDelete}
+                      onDuplicate={handleDuplicate}
                       canEdit={canEdit}/>
                   ))}
                 </div>
@@ -449,6 +450,7 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
                       onEnter={() => onEnterCourse(c)}
                       onPublishToggle={handlePublishToggle}
                       onDelete={handleDelete}
+                      onDuplicate={handleDuplicate}
                       canEdit={canEdit}/>
                   ))}
                 </div>
