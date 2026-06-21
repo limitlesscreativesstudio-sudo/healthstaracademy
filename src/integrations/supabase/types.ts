@@ -56,6 +56,39 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_log: {
+        Row: {
+          action: string | null
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          table_name: string | null
+        }
+        Insert: {
+          action?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+        }
+        Update: {
+          action?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+        }
+        Relationships: []
+      }
       auth_audit_log: {
         Row: {
           created_at: string
@@ -106,9 +139,11 @@ export type Database = {
           clock_out_lng: number | null
           course_id: string
           created_at: string
+          hours: number
           hours_worked: number | null
           id: string
           notes: string | null
+          session_type: string
           shift_date: string
           student_user_id: string
           updated_at: string
@@ -126,9 +161,11 @@ export type Database = {
           clock_out_lng?: number | null
           course_id: string
           created_at?: string
+          hours?: number
           hours_worked?: number | null
           id?: string
           notes?: string | null
+          session_type?: string
           shift_date?: string
           student_user_id: string
           updated_at?: string
@@ -146,9 +183,11 @@ export type Database = {
           clock_out_lng?: number | null
           course_id?: string
           created_at?: string
+          hours?: number
           hours_worked?: number | null
           id?: string
           notes?: string | null
+          session_type?: string
           shift_date?: string
           student_user_id?: string
           updated_at?: string
@@ -258,6 +297,7 @@ export type Database = {
           notes: string | null
           paid_in_full_link: string | null
           payment_plan_link: string | null
+          program_id: string | null
           program_type: string | null
           start_date: string
           status: string
@@ -276,6 +316,7 @@ export type Database = {
           notes?: string | null
           paid_in_full_link?: string | null
           payment_plan_link?: string | null
+          program_id?: string | null
           program_type?: string | null
           start_date: string
           status?: string
@@ -294,6 +335,7 @@ export type Database = {
           notes?: string | null
           paid_in_full_link?: string | null
           payment_plan_link?: string | null
+          program_id?: string | null
           program_type?: string | null
           start_date?: string
           status?: string
@@ -301,6 +343,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cohorts_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cohorts_template_source_id_fkey"
             columns: ["template_source_id"]
@@ -429,6 +478,7 @@ export type Database = {
         Row: {
           code: string | null
           cohort_id: string | null
+          color: string | null
           cover_image_url: string | null
           created_at: string
           default_view: string
@@ -454,6 +504,7 @@ export type Database = {
         Insert: {
           code?: string | null
           cohort_id?: string | null
+          color?: string | null
           cover_image_url?: string | null
           created_at?: string
           default_view?: string
@@ -479,6 +530,7 @@ export type Database = {
         Update: {
           code?: string | null
           cohort_id?: string | null
+          color?: string | null
           cover_image_url?: string | null
           created_at?: string
           default_view?: string
@@ -1065,6 +1117,39 @@ export type Database = {
         }
         Relationships: []
       }
+      programs: {
+        Row: {
+          active: boolean
+          code: string | null
+          created_at: string
+          id: string
+          name: string
+          regulating_body: string | null
+          required_clinical_hours: number
+          required_theory_hours: number
+        }
+        Insert: {
+          active?: boolean
+          code?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          regulating_body?: string | null
+          required_clinical_hours?: number
+          required_theory_hours?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          regulating_body?: string | null
+          required_clinical_hours?: number
+          required_theory_hours?: number
+        }
+        Relationships: []
+      }
       quiz_attempts: {
         Row: {
           answers: Json
@@ -1197,6 +1282,90 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      skill_definitions: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          name: string
+          program_id: string | null
+          sort_order: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          program_id?: string | null
+          sort_order?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          program_id?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_definitions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skill_signoffs: {
+        Row: {
+          id: string
+          notes: string | null
+          signed_off_at: string
+          signed_off_by: string | null
+          skill_id: string
+          student_id: string
+        }
+        Insert: {
+          id?: string
+          notes?: string | null
+          signed_off_at?: string
+          signed_off_by?: string | null
+          skill_id: string
+          student_id: string
+        }
+        Update: {
+          id?: string
+          notes?: string | null
+          signed_off_at?: string
+          signed_off_by?: string | null
+          skill_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_signoffs_signed_off_by_fkey"
+            columns: ["signed_off_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_signoffs_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skill_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_signoffs_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_skill_signoffs: {
         Row: {
