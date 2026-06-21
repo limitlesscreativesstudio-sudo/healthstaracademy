@@ -335,6 +335,41 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
     await supabase.from('courses').delete().eq('id', id);
   };
 
+  // ── Duplicate course (clones modules + module_items) ───────────────────────
+  const handleDuplicate = async (src: DBCourse) => {
+    const newName = prompt(`Duplicate "${src.name}" as a new cohort. New course name:`, src.name + ' (Copy)');
+    if (!newName) return;
+    const newCode = prompt('New course code (must be unique):', src.code + '-COPY');
+    if (!newCode) return;
+
+    const { data: newCourse, error: cErr } = await supabase.from('courses').insert({
+      title: newName.trim(), code: newCode.trim(), description: (src as any).description ?? '',
+      term: src.term, color: src.color, instructor_id: user?.id, status: 'draft',
+    }).select('id,title,code,color,status,term,description,created_at').single();
+    if (cErr || !newCourse) { alert('Failed to create course: ' + (cErr?.message ?? 'unknown')); return; }
+
+    const { data: srcMods } = await supabase.from('modules')
+      .select('id,title,published,position').eq('course_id', src.id).order('position');
+
+    for (const m of (srcMods ?? [])) {
+      const { data: nm } = await supabase.from('modules').insert({
+        course_id: newCourse.id, title: m.title, published: false, position: m.position,
+      }).select('id').single();
+      if (!nm) continue;
+      const { data: srcItems } = await supabase.from('module_items')
+        .select('item_type,title,points,published,position,file_url,file_name,file_type')
+        .eq('module_id', m.id).order('position');
+      if (srcItems && srcItems.length) {
+        await supabase.from('module_items').insert(
+          srcItems.map((it: any) => ({ ...it, module_id: nm.id, course_id: newCourse.id, published: false }))
+        );
+      }
+    }
+
+    await loadCourses();
+    alert(`Created "${newName}" with ${srcMods?.length ?? 0} modules copied.`);
+  };
+
   const published   = courses.filter(c => c.published);
   const unpublished = courses.filter(c => !c.published);
   const visible     = TODO_ITEMS.filter(t => !dismissed.includes(t.id));
