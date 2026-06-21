@@ -40,12 +40,12 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
 
       // Load assignments
       const { data: asgns } = await supabase.from('assignments')
-        .select('id, name, points').eq('course_id', courseId).order('created_at');
+        .select('id, name:title, points').eq('course_id', courseId).order('created_at');
       setAssignments(asgns ?? []);
 
       // Load grades
       const { data: gradeRows } = await supabase.from('grades')
-        .select('student_id, assignment_id, score').eq('course_id', courseId);
+        .select('student_id:user_id, assignment_id, score').eq('course_id', courseId);
       const map: GradeMap = {};
       for (const s of studs) {
         map[s.id] = {};
@@ -69,9 +69,9 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
     setGrades(p => ({ ...p, [editing.s]: { ...(p[editing.s] ?? {}), [editing.a]: score } }));
     setEditing(null);
     await supabase.from('grades').upsert({
-      course_id: courseId, student_id: editing.s,
+      course_id: courseId, user_id: editing.s,
       assignment_id: editing.a, score,
-    }, { onConflict: 'student_id,assignment_id' });
+    }, { onConflict: 'user_id,assignment_id' });
   };
 
   const totalPts = assignments.reduce((s, a) => s + a.points, 0);
