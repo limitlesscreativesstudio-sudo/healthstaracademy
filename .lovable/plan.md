@@ -1,173 +1,52 @@
-## Investigation report: production login 400
+## What I'll fix
 
-**No code was changed and nothing was deployed.**
+### 1. Clear all test/demo students
+- Delete all rows from `enrollments`, `submissions`, `grades`, `attendance`, `clinical_attendance`, `clinical_hours`, `quiz_attempts`, `student_skill_signoffs`, `skill_signoffs`, `notifications`, and `students`.
+- Remove the `student` role from every `user_roles` row.
+- Delete every `auth.users` account that does **not** have the `admin` or `instructor` role (this wipes seeded students; instructors/admins are kept).
+- Profiles for deleted auth users are removed by cascade.
 
-### 1) Does “Create Instructor / Admin Account” create a real Auth user?
+### 2. Top course header — wire the dead buttons
+- **View as Student**: toggles a `viewMode` state so `canEdit` flips to `false`; button label becomes "Back to Instructor View". Persists per tab.
+- **+ Module** (top right, next to View as Student): jumps to Modules tab and opens the Add Module form (same handler the inline button uses).
 
-**Yes, the `/portal/teach/create-account` flow does attempt to create a real Auth user.**
+### 3. + Item dropdown — make File / Video actually attach
+- When type = `file` (or `video`), show a real `<input type="file">`.
+- On Add: upload to `course-files` bucket at `{courseUuid}/module-items/{uuid}-{filename}`, store the public URL + filename on the `module_items` row (uses the new `file_url`/`file_name`/`file_type`/`file_size` columns on `lms_files` — for module items I'll add `file_url`/`file_name`/`file_type` columns to `module_items`).
+- Clicking a file/video item opens the URL in a new tab.
 
-Code path:
+### 4. Course Actions sidebar (right rail)
+- Wire each link: **Choose Home Page** → opens existing `ChooseHomePageDialog`; **View Course Stream** → Announcements tab; **New Announcement** → Announcements tab + open form; **New Analytics** → Analytics tab; **View Notifications** → opens NotificationBell panel; **Import Existing Content** / **Import from Commons** → toast "Coming soon" (honest placeholder, not a silent no-op).
 
-```text
-/portal/teach/login
-  -> “Create Instructor / Admin Account” link
-  -> /portal/teach/create-account
-  -> CreateAccount.handleCreate()
-  -> auth.signUp({ email, password, options })
+### 5. Syllabus tab — keep structured schedule + add uploaded PDF
+- Add a top section "Syllabus Document" with file upload (PDF/DOCX) → `course-files/{courseUuid}/syllabus/...`. Stored on a new column `courses.syllabus_url` + `syllabus_name`. Shown inline via `<iframe>` for PDFs, download link for others.
+- Keep the existing day-by-day schedule editor below.
+- Add a note: schedule rows auto-pull module names once modules are created (best-effort: read `modules` table and list module titles per day).
+
+### 6. Dashboard — duplicate/edit course-template modules
+- Add row-level "Duplicate to cohort" and "Edit" buttons on each course card's module list in `Dashboard.tsx`.
+- Duplicate: copies all modules + module_items from the template course into the selected destination cohort.
+- Edit: opens that cohort's Modules tab directly.
+
+### 7. Schema additions (one migration)
+```sql
+ALTER TABLE module_items
+  ADD COLUMN IF NOT EXISTS file_url text,
+  ADD COLUMN IF NOT EXISTS file_name text,
+  ADD COLUMN IF NOT EXISTS file_type text;
+
+ALTER TABLE courses
+  ADD COLUMN IF NOT EXISTS syllabus_url text,
+  ADD COLUMN IF NOT EXISTS syllabus_name text;
 ```
 
-What it sends:
+## Out of scope (will flag, not fix this turn)
+- Discussions / Outcomes / Rubrics / Lucid full implementations — these stay as honest "Coming soon" placeholders.
+- Real Canvas-style syllabus auto-generation from assignments — only module-name pull-through is included.
 
-- Email: `email.trim().toLowerCase()`
-- Password: the raw password React state value
-- Metadata: `full_name` and `requested_role`
-- Redirect: `/portal/teach/login`
-
-It does **not** manually insert only a profile row. Profile and role rows are handled by the backend trigger after a real Auth user is inserted.
-
-However, I found two important issues:
-
-- The button label says **“Create Instructor / Admin Account”**, but the form only offers the `instructor` role. It does **not** create an admin account.
-- The separate invite page, `/portal/teach/invite` or `/portal/accept-invite`, is still a mock/simulated flow. It can show “account created,” but its real `signUp` / profile / invite update calls are commented out. Anyone using that invite flow would not get a real password login account.
-
-### 2) Is the password altered on creation vs login?
-
-**I did not find code that hashes, trims, lowercases, or otherwise changes the password before sending it to Auth.**
-
-Creation path:
-
-```text
-CreateAccount.tsx
-  password state
-  -> auth.signUp({ email: cleanEmail, password })
-```
-
-Login path:
-
-```text
-PortalLogin.tsx
-  password state
-  -> login(email.trim(), password)
-  -> AuthContext.login()
-  -> auth.signInWithPassword({ email: trimEmail, password: loginPassword })
-```
-
-The only normalization is on the email address. Password is passed through as typed.
-
-One minor note: login checks `!password.trim()` only to reject a blank/all-space password, but it still sends the original `password` value, not the trimmed value.
-
-### 3) Is email confirmation causing this?
-
-**For the accounts currently in Auth, email confirmation is not the cause.**
-
-Backend records show:
-
-- Existing password users are confirmed.
-- There are currently **0 unconfirmed Auth users**.
-- Existing password users have `has_password = true`.
-
-Also, the app has a separate error branch for “email not confirmed.” The error you’re seeing is mapped from an Auth `invalid login credentials` response, not a confirmation-required response.
-
-### 4) Where does the HTTP 400 originate?
-
-The 400 originates at the Auth password-token endpoint before the app queries profiles or roles:
-
-```text
-PortalLogin.handleLogin()
-  -> AuthContext.login()
-  -> auth.signInWithPassword()
-  -> POST /auth/v1/token?grant_type=password
-  -> Auth returns HTTP 400 invalid login credentials
-  -> AuthContext maps that to:
-     “Incorrect email or password. Please try again.”
-```
-
-So this is a true credential failure: the email/password pair does not match a real password-based Auth user.
-
-### Backend data findings
-
-Only **3 Auth users** currently exist.
-
-The self-register allowlist contains:
-
-```text
-healthstaracademy01@gmail.com
-limitlesscreativesstudio@gmail.com
-knelson4677@gmail.com
-agnesnamitala@gmail.com
-```
-
-But only these two allowlisted emails currently exist as Auth users:
-
-```text
-healthstaracademy01@gmail.com
-limitlesscreativesstudio@gmail.com
-```
-
-Both have:
-
-```text
-has_password = true
-email confirmed = true
-roles = student + instructor
-```
-
-These allowlisted emails do **not** currently exist as Auth users:
-
-```text
-knelson4677@gmail.com
-agnesnamitala@gmail.com
-```
-
-If either of those emails is being used to log in after “creating an account,” the 400 is expected because there is no real Auth user for that email.
-
-There is also one Google-only user with no password hash. Password login will fail for any user that exists only through Google/invite and has not set a password.
-
-## Most likely root cause
-
-The production 400 is not caused by the preview proxy and not caused by password trimming in the visible code.
-
-The most likely causes are:
-
-1. The account being tested does **not actually exist** in Auth, despite the UI flow seeming successful.
-2. The user used the simulated invite flow, which does not create a real Auth user or password.
-3. The user exists through Google/invite only and has no password set.
-4. The tested email already existed, and a repeated signup did not change its password; login then fails if the typed password is not the real stored password.
-
-## Recommended fix
-
-### Immediate operational fix
-
-- For the exact email being tested, verify whether it exists in Auth.
-- If it does not exist, create it through the real `/portal/teach/create-account` flow or create/reset it from the backend admin tools.
-- If it exists but the password is unknown, use the password reset flow instead of repeated signup attempts.
-- If it is a Google-only/invited account, set a password through password reset before using email/password login.
-
-### Code fix I recommend next
-
-1. Make the invite flow real or hide it until implemented.
-   - The current invite page can falsely imply an account was created.
-   - It should validate real invite records and create/set the Auth user password.
-
-2. Rename the public signup CTA.
-   - Current label: “Create Instructor / Admin Account”
-   - More accurate: “Create Instructor Account”
-   - Admin account creation should not be public self-registration.
-
-3. Improve signup error messaging.
-   - Clearly distinguish:
-     - account created, check email
-     - account already exists, reset password
-     - signup blocked/not completed
-     - email not authorized
-
-4. Add a backend-backed admin creation/reset path for staff accounts.
-   - Admin-only flow creates real Auth users, assigns roles, and optionally sends a password setup email.
-   - This avoids repeated public signup confusion.
-
-5. Keep the login password handling unchanged.
-   - The current login path correctly sends the raw password.
-
-<presentation-actions>
-<presentation-link url="https://docs.lovable.dev/tips-tricks/troubleshooting">Troubleshooting docs</presentation-link>
-</presentation-actions>
+## Files touched
+- New migration: schema + storage policy updates
+- `src/pages/portal/teach/CourseView.tsx` — view-as-student, top + Module, course actions wiring, file-upload in + Item
+- `src/pages/portal/teach/SyllabusTab.tsx` — upload + display PDF, accept `courseUuid` prop
+- `src/pages/portal/teach/Dashboard.tsx` — duplicate/edit module buttons on cohort cards
+- One-off data cleanup via the insert tool to remove demo students
