@@ -78,6 +78,18 @@ const CourseCard: React.FC<{
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
                   {course.published ? '🔒 Unpublish' : '✅ Publish'}
                 </div>
+                <div onClick={() => { onEnter(); setMenu(false); }}
+                  style={{ padding:'9px 14px', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', color:C.text }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.bg}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
+                  ✏️ Edit Modules
+                </div>
+                <div onClick={async () => { setMenu(false); await onDuplicate(course); }}
+                  style={{ padding:'9px 14px', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', color:C.text }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.bg}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
+                  ⧉ Duplicate to New Cohort
+                </div>
                 <div onClick={() => { if (confirm(`Delete "${course.name}"? This cannot be undone.`)) { onDelete(course.id); } setMenu(false); }}
                   style={{ padding:'9px 14px', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', color:C.error }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#fdecea'}
