@@ -62,7 +62,7 @@ export default function CustomLogin() {
               onChange={(e) => { setEmail(e.target.value); setError(''); }}
               placeholder="you@healthstaracademy.org"
               required
-              style={{ width: '100%', border: \`1.5px solid \${C.border}\`, borderRadius: 6, padding: '10px 12px', fontSize: 14, fontFamily: 'sans-serif', color: C.text, boxSizing: 'border-box', outline: 'none' }}
+              style={{ width: '100%', border: `1.5px solid \${C.border}`, borderRadius: 6, padding: '10px 12px', fontSize: 14, fontFamily: 'sans-serif', color: C.text, boxSizing: 'border-box', outline: 'none' }}
               onFocus={(e) => (e.target.style.borderColor = C.primary)}
               onBlur={(e) => (e.target.style.borderColor = C.border)}
             />
@@ -77,7 +77,7 @@ export default function CustomLogin() {
               onChange={(e) => { setPassword(e.target.value); setError(''); }}
               placeholder="••••••••"
               required
-              style={{ width: '100%', border: \`1.5px solid \${C.border}\`, borderRadius: 6, padding: '10px 40px 10px 12px', fontSize: 14, fontFamily: 'sans-serif', color: C.text, boxSizing: 'border-box', outline: 'none' }}
+              style={{ width: '100%', border: `1.5px solid \${C.border}`, borderRadius: 6, padding: '10px 40px 10px 12px', fontSize: 14, fontFamily: 'sans-serif', color: C.text, boxSizing: 'border-box', outline: 'none' }}
               onFocus={(e) => (e.target.style.borderColor = C.primary)}
               onBlur={(e) => (e.target.style.borderColor = C.border)}
             />
@@ -109,7 +109,7 @@ export default function CustomLogin() {
           </button>
         </form>
 
-        <style>{\`@keyframes hsa-spin { to { transform: rotate(360deg); } }\`}</style>
+        <style>{`@keyframes hsa-spin { to { transform: rotate(360deg); } }`}</style>
 
         {/* Divider */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '22px 0 16px' }}>
@@ -120,7 +120,7 @@ export default function CustomLogin() {
 
         {/* Create account */}
         <a href="/portal/teach/create-account"
-          style={{ display: 'block', width: '100%', padding: '11px', border: \`1.5px solid \${C.primary}\`, borderRadius: 6, fontSize: 14, fontWeight: 600, fontFamily: 'sans-serif', color: C.primary, textAlign: 'center', textDecoration: 'none', background: 'transparent', boxSizing: 'border-box' }}>
+          style={{ display: 'block', width: '100%', padding: '11px', border: `1.5px solid \${C.primary}`, borderRadius: 6, fontSize: 14, fontWeight: 600, fontFamily: 'sans-serif', color: C.primary, textAlign: 'center', textDecoration: 'none', background: 'transparent', boxSizing: 'border-box' }}>
           Create Instructor / Admin Account
         </a>
       </div>
