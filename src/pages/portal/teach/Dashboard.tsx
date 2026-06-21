@@ -280,7 +280,7 @@ const CreateCourseModal: React.FC<{
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const canEdit = user?.canEdit ?? false;
 
   const [courses,     setCourses]     = useState<DBCourse[]>([]);
@@ -327,7 +327,7 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
     <div style={{ display:'flex', minHeight:'100vh', background:C.bg }}>
 
       {/* ── Main area ─────────────────────────────────────────────────────── */}
-      <div style={{ flex:1, padding:'28px 28px 40px', overflowY:'auto', maxWidth:'calc(100% - 280px)' }}>
+      <aside style={{ width:220, flexShrink:0, background:C.nav, minHeight:'100vh', display:'flex', flexDirection:'column', padding:'20px 0', position:'sticky', top:0, alignSelf:'flex-start' }}><div style={{ display:'flex', flexDirection:'column', alignItems:'center', padding:'0 16px 18px', borderBottom:'1px solid rgba(255,255,255,0.15)', marginBottom:12 }}><img src="/hsa-logo.png" alt="Health Star Academy" style={{ width:56, height:56, borderRadius:'50%', objectFit:'cover', marginBottom:10 }}/><div style={{ color:'#fff', fontSize:13, fontWeight:700, fontFamily:'sans-serif', textAlign:'center' }}>Health Star Academy</div><div style={{ color:'rgba(255,255,255,0.7)', fontSize:11, fontFamily:'sans-serif', marginTop:2 }}>Instructor Portal</div></div><a href="/portal/teach" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>🏠 Dashboard</a><a href="/portal/account" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>👤 Account</a><a href="/portal/career" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>💼 Career</a><div style={{ flex:1 }} />{user?.email && <div style={{ color:'rgba(255,255,255,0.6)', fontSize:10, fontFamily:'sans-serif', padding:'0 22px 8px', wordBreak:'break-all' }}>{user.email}</div>}<button onClick={() => logout()} style={{ margin:'0 16px', padding:'10px', background:'rgba(255,255,255,0.12)', color:'#fff', border:'1px solid rgba(255,255,255,0.25)', borderRadius:6, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer' }}>↩ Sign out</button></aside><div style={{ flex:1, padding:'28px 28px 40px', overflowY:'auto', maxWidth:'calc(100% - 280px)' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
           <h1 style={{ margin:0, fontSize:24, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>
             Dashboard
