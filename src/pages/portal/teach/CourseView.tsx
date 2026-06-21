@@ -179,17 +179,17 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
     const load = async () => {
       setDbLoading(true);
       const { data: modRows } = await supabase
-        .from('modules').select('id,name,published,position')
+        .from('modules').select('id,title,published,position')
         .eq('course_id', courseUuid).order('position');
       const { data: itemRows } = await supabase
-        .from('module_items').select('id,module_id,type,title,points,published,indent,position')
+        .from('module_items').select('id,module_id,item_type,title,published,position')
         .eq('course_id', courseUuid).order('position');
       if (modRows) {
         setMods(modRows.map(m => ({
-          id: m.id, name: m.name, published: m.published,
+          id: m.id, name: m.title, published: m.published,
           expanded: true, position: m.position,
           items: (itemRows ?? []).filter(it => it.module_id === m.id).map(it => ({
-            id: it.id, type: it.type, name: it.title,
+            id: it.id, type: it.item_type, name: it.title,
             pts: it.points ?? undefined, published: it.published, indent: it.indent,
           })),
         })));
@@ -216,10 +216,10 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
     if (!newName.trim()) return;
     if (courseUuid) {
       const { data, error } = await supabase.from('modules')
-        .insert({ course_id: courseUuid, name: newName.trim(), published: false, position: mods.length })
+        .insert({ course_id: courseUuid, title: newName.trim(), published: false, position: mods.length })
         .select().single();
       if (!error && data) {
-        setMods(p => [...p, { id: data.id, name: data.name, published: false, expanded: true, position: mods.length, items: [] }]);
+        setMods(p => [...p, { id: data.id, name: data.title, published: false, expanded: true, position: mods.length, items: [] }]);
       }
     }
     setNewName(''); setAddMod(false);
@@ -230,12 +230,12 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string }> = ({ canE
     const mod = mods.find(m => m.id === addItem);
     if (courseUuid) {
       const { data, error } = await supabase.from('module_items')
-        .insert({ module_id: addItem, course_id: courseUuid, type: ni.type, title: ni.title.trim(),
-          points: ni.pts ? parseInt(ni.pts) : null, published: false, indent: 0, position: mod?.items.length ?? 0 })
+        .insert({ module_id: addItem, item_type: ni.type, title: ni.title.trim(),
+          published: false, position: mod?.items.length ?? 0 })
         .select().single();
       if (!error && data) {
         setMods(p => p.map(m => m.id === addItem ? {
-          ...m, items: [...m.items, { id: data.id, type: data.type, name: data.title, pts: data.points ?? undefined, published: false, indent: 0 }]
+          ...m, items: [...m.items, { id: data.id, type: data.item_type, name: data.title, pts: undefined, published: false, indent: 0 }]
         } : m));
       }
     }
