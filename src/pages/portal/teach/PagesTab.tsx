@@ -18,7 +18,7 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
     setLoading(true);
-    const { data } = await supabase.from('pages')
+    const { data } = await supabase.from('lms_pages')
       .select('*').eq('course_id', courseId).order('updated_at', { ascending:false });
     if (data) setPages(data);
     setLoading(false);
@@ -30,13 +30,13 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     if (!form.title.trim() || !courseId) return;
     setSaving(true);
     if (editing) {
-      const { data } = await supabase.from('pages')
-        .update({ title:form.title, body:form.body, published:form.published, front_page:form.front_page, updated_at: new Date().toISOString() })
+      const { data } = await supabase.from('lms_pages')
+        .update({ title:form.title, body_html:form.body, published:form.published, front_page:form.front_page, updated_at: new Date().toISOString() })
         .eq('id', editing.id).select().single();
       if (data) setPages(p => p.map(x => x.id === editing.id ? data : x));
     } else {
-      const { data } = await supabase.from('pages')
-        .insert({ course_id:courseId, title:form.title, body:form.body, published:form.published, front_page:form.front_page })
+      const { data } = await supabase.from('lms_pages')
+        .insert({ course_id:courseId, title:form.title, body_html:form.body, published:form.published, front_page:form.front_page })
         .select().single();
       if (data) setPages(p => [data, ...p]);
     }
@@ -48,18 +48,18 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const deletePage = async (id: string) => {
     if (!confirm('Delete this page?')) return;
     setPages(p => p.filter(x => x.id !== id));
-    await supabase.from('pages').delete().eq('id', id);
+    await supabase.from('lms_pages').delete().eq('id', id);
   };
 
   const openEdit = (page: Page) => {
     setEditing(page);
-    setForm({ title:page.title, body:page.body || '', published:page.published, front_page:page.front_page });
+    setForm({ title:page.title, body:page.body_html || '', published:page.published, front_page:page.front_page });
     setCreating(true);
   };
 
   const togglePub = async (id: string, current: boolean) => {
     setPages(p => p.map(x => x.id === id ? { ...x, published: !current } : x));
-    await supabase.from('pages').update({ published: !current }).eq('id', id);
+    await supabase.from('lms_pages').update({ published: !current }).eq('id', id);
   };
 
   const isEditorOpen = creating || editing !== null;
