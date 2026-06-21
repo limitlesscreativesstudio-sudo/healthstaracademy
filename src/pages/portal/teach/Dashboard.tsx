@@ -36,8 +36,9 @@ const CourseCard: React.FC<{
   onEnter: () => void;
   onPublishToggle: (id: string, current: boolean) => void;
   onDelete: (id: string) => void;
+  onDuplicate: (course: DBCourse) => Promise<void>;
   canEdit: boolean;
-}> = ({ course, onEnter, onPublishToggle, onDelete, canEdit }) => {
+}> = ({ course, onEnter, onPublishToggle, onDelete, onDuplicate, canEdit }) => {
   const [menu, setMenu] = useState(false);
 
   return (
