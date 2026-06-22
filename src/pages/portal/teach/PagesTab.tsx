@@ -1,6 +1,7 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from './AuthContext';
+import { uploadViaXhr } from './uploadViaXhr';
 import RichTextEditor, { sanitizeHtml } from '@/components/portal/RichTextEditor';
 
 const fileIcon = (t: string) => ({ pdf:'📄', pptx:'📊', ppt:'📊', docx:'📝', doc:'📝', mp4:'🎥', mov:'🎥', jpg:'🖼️', png:'🖼️', xlsx:'📈' }[(t||'').toLowerCase()] ?? '📎');
@@ -244,7 +245,7 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
                   const f = files[i];
                   const ext = (f.name.split('.').pop() ?? '').toLowerCase();
                   const path = `${courseId}/pages/${Date.now()}_${f.name}`;
-                  const { error: upErr } = await supabase.storage.from('course-files').upload(path, f);
+                  const { error: upErr } = await uploadViaXhr('course-files', path, f);
                   if (upErr) { setUpError(`Failed: ${f.name} – ${upErr.message}`); continue; }
                   // course-files bucket is private — signed URL (1 year) is what Office Viewer / iframes need.
                   const { data: signed } = await supabase.storage.from('course-files').createSignedUrl(path, 60 * 60 * 24 * 365);

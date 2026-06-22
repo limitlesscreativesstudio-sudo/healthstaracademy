@@ -1,6 +1,7 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './AuthContext';
+import { uploadViaXhr } from './uploadViaXhr';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -42,7 +43,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
       setUploadPct(Math.round(((i) / fileList.length) * 100));
       const ext  = file.name.split('.').pop() ?? '';
       const path = `${courseId}/${Date.now()}_${file.name}`;
-      const { error: upErr } = await supabase.storage.from('course-files').upload(path, file);
+      const { error: upErr } = await uploadViaXhr('course-files', path, file, { onProgress: (p) => setUploadPct(p) });
       if (upErr) { setError(`Failed to upload ${file.name}: ${upErr.message}`); continue; }
       const { data: { publicUrl } } = supabase.storage.from('course-files').getPublicUrl(path);
       const { data: row } = await supabase.from('lms_files').insert({
