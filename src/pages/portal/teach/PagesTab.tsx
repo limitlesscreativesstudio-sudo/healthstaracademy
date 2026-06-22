@@ -16,6 +16,9 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [creating, setCreating] = useState(false);
   const [form,     setForm]     = useState({ title:'', body:'', published:false, front_page:false });
   const [saving,   setSaving]   = useState(false);
+  const [uploading,setUploading]= useState(false);
+  const [upError,  setUpError]  = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
