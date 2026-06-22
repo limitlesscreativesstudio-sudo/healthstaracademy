@@ -170,6 +170,7 @@ const AnnouncementsPanel: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
 const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMount?: number; onCourseAction?: (a: string) => void }> = ({ canEdit, courseUuid, openAddOnMount, onCourseAction }) => {
   const [mods, setMods]       = useState<Module[]>([]);
   const [dbLoading, setDbLoading] = useState(true);
+  const [dbError, setDbError] = useState('');
   const [addMod, setAddMod]   = useState(false);
   const [newName, setNewName] = useState('');
   const [addItem, setAddItem] = useState<string | null>(null);
@@ -183,25 +184,38 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
     if (!courseUuid) { setDbLoading(false); return; }
     const load = async () => {
       setDbLoading(true);
+      setDbError('');
       const { data: modRows } = await supabase
         .from('modules').select('id,title,published,position')
         .eq('course_id', courseUuid).order('position');
-      const { data: itemRows } = await supabase
-        .from('module_items').select('id,module_id,item_type,title,published,position,file_url,file_name,file_type,content_ref,url').order('position');
-      if (modRows) {
-        setMods(modRows.map(m => ({
-          id: m.id, name: m.title, published: m.published,
-          expanded: true, position: m.position,
-          items: (itemRows ?? []).filter(it => it.module_id === m.id).map((it: any) => ({
-            id: it.id, type: it.item_type, name: it.title,
-            pts: it.points ?? undefined, published: it.published, indent: 0,
-            file_url: it.file_url, file_name: it.file_name,
-          })),
-        })));
-      }
+      if (!modRows) { setMods([]); setDbLoading(false); return; }
+      const moduleIds = modRows.map(m => m.id);
+      const { data: itemRows, error: itemErr } = moduleIds.length
+        ? await supabase
+          .from('module_items')
+          .select('id,module_id,item_type,title,published,position,file_url,file_name,file_type,content_ref,url')
+          .in('module_id', moduleIds)
+          .order('position')
+        : { data: [], error: null } as any;
+      if (itemErr) setDbError(itemErr.message);
+      setMods(modRows.map(m => ({
+        id: m.id, name: m.title, published: m.published,
+        expanded: true, position: m.position,
+        items: (itemRows ?? []).filter(it => it.module_id === m.id).map((it: any) => ({
+          id: it.id, type: it.item_type, name: it.title,
+          pts: it.points ?? undefined, published: it.published, indent: 0,
+          file_url: it.file_url, file_name: it.file_name,
+        })),
+      })));
       setDbLoading(false);
     };
     load();
+    const ch = supabase
+      .channel(`course-modules:${courseUuid}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'modules', filter: `course_id=eq.${courseUuid}` }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'module_items' }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, [courseUuid]);
 
   const toggle = (id: string) =>
@@ -219,6 +233,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
 
   const saveMod = async () => {
     if (!newName.trim()) return;
+    if (!courseUuid) { alert('Open a saved course from the Dashboard before adding modules.'); return; }
     if (courseUuid) {
       const { data, error } = await supabase.from('modules')
         .insert({ course_id: courseUuid, title: newName.trim(), published: false, position: mods.length })
@@ -304,6 +319,11 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
           )}
         </div>
       </div>
+      {dbError && (
+        <div style={{ marginBottom:14, padding:'10px 14px', background:'#FDEDED', border:'1px solid #F5C2C7', borderRadius:6, fontSize:13, color:C.error, fontFamily:'sans-serif' }}>
+          Modules could not fully load: {dbError}
+        </div>
+      )}
 
       {addMod && canEdit && (
         <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:5, padding:16, marginBottom:14 }}>
@@ -317,7 +337,11 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
         </div>
       )}
 
-      {mods.map(m => (
+      {mods.length === 0 && !addMod ? (
+        <div style={{ background:C.white, border:`1px dashed ${C.border}`, borderRadius:8, padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif', fontSize:13 }}>
+          No modules are saved for this course yet.
+        </div>
+      ) : mods.map(m => (
         <div key={m.id} style={{ border:`1px solid ${C.border}`, borderRadius:5, marginBottom:10, overflow:'hidden', background:C.white }}>
           {/* Module header row */}
           <div style={{ padding:'11px 14px', background:'#F0EDF7', display:'flex', alignItems:'center', gap:10, borderBottom:m.expanded ? `1px solid ${C.border}` : 'none' }}>
