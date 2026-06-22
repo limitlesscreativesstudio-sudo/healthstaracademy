@@ -526,6 +526,7 @@ const CourseView: React.FC = () => {
   const canManageUsers = authUser?.canManageUsers  ?? false;
 
   const [activeCourse, setActiveCourse] = useState<Course>(COURSES[0]);
+  const [courseOptions, setCourseOptions] = useState<Course[]>([]);
   const [activeTab, setActiveTab]       = useState('home');
   const [showCourses, setShowCourses]   = useState(false);
   const [showProfile, setShowProfile]   = useState(false);
@@ -542,6 +543,24 @@ const CourseView: React.FC = () => {
     const load = async () => {
       try {
         setPageLoading(true);
+        const { data } = await supabase
+          .from('courses')
+          .select('id,title,code,color,status,term')
+          .order('created_at', { ascending: false });
+        if (data?.length) {
+          const mapped = data.map((c: any, index: number) => ({
+            id: index + 1,
+            uuid: c.id,
+            name: c.title,
+            code: c.code,
+            color: c.color || C.primary,
+            term: c.term || '',
+            students: 0,
+            published: c.status === 'published',
+          }));
+          setCourseOptions(mapped);
+          setActiveCourse(prev => prev.uuid ? (mapped.find(c => c.uuid === prev.uuid) ?? prev) : mapped[0]);
+        }
         await new Promise(r => setTimeout(r, 700));
         setPageLoading(false);
       } catch (err: any) {
@@ -560,8 +579,10 @@ const CourseView: React.FC = () => {
   if (pageLoading) return <CourseViewSkeleton />;
   if (showDashboard) return (
     <Dashboard onEnterCourse={(course) => {
-      setActiveCourse({ id: 1, uuid: course.id, name: course.name, code: course.code,
-        color: course.color, term: course.term, students: 0, published: course.published });
+      const selected = { id: 1, uuid: course.id, name: course.name, code: course.code,
+        color: course.color || C.primary, term: course.term, students: 0, published: course.published };
+      setActiveCourse(selected);
+      setCourseOptions(prev => prev.some(c => c.uuid === selected.uuid) ? prev : [selected, ...prev]);
       setShowDashboard(false);
       setActiveTab('home');
     }}/>
@@ -584,6 +605,8 @@ const CourseView: React.FC = () => {
       case 'commons':         alert('Import from Commons is not yet enabled.'); break;
     }
   };
+
+  const switcherCourses = courseOptions.length ? courseOptions : (activeCourse.uuid ? [activeCourse] : COURSES);
 
   // Build sections map inside component so canEdit is available
   const cid = activeCourse?.uuid;
@@ -708,8 +731,8 @@ const CourseView: React.FC = () => {
                   <div style={{ padding:'8px 14px', fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', borderBottom:`1px solid ${C.border}` }}>
                     Switch Course
                   </div>
-                  {COURSES.map(course => (
-                    <div key={course.id}
+                  {switcherCourses.map(course => (
+                    <div key={course.uuid ?? course.id}
                       onClick={() => { setActiveCourse(course); setShowCourses(false); setActiveTab('home'); }}
                       style={{ padding:'11px 14px', display:'flex', alignItems:'center', gap:12, cursor:'pointer', background:course.id === activeCourse.id ? '#EDE8F7' : C.white, borderBottom:`1px solid ${C.border}` }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f4f2fa'}
