@@ -244,7 +244,7 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
                   const f = files[i];
                   const ext = (f.name.split('.').pop() ?? '').toLowerCase();
                   const path = `${courseId}/pages/${Date.now()}_${f.name}`;
-                  const { error: upErr } = await supabase.storage.from('course-files').upload(path, f);
+                  const { error: upErr } = await uploadViaXhr('course-files', path, f);
                   if (upErr) { setUpError(`Failed: ${f.name} – ${upErr.message}`); continue; }
                   // course-files bucket is private — signed URL (1 year) is what Office Viewer / iframes need.
                   const { data: signed } = await supabase.storage.from('course-files').createSignedUrl(path, 60 * 60 * 24 * 365);
