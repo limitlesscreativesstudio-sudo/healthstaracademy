@@ -170,6 +170,7 @@ const AnnouncementsPanel: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
 const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMount?: number; onCourseAction?: (a: string) => void }> = ({ canEdit, courseUuid, openAddOnMount, onCourseAction }) => {
   const [mods, setMods]       = useState<Module[]>([]);
   const [dbLoading, setDbLoading] = useState(true);
+  const [dbError, setDbError] = useState('');
   const [addMod, setAddMod]   = useState(false);
   const [newName, setNewName] = useState('');
   const [addItem, setAddItem] = useState<string | null>(null);
@@ -183,25 +184,38 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
     if (!courseUuid) { setDbLoading(false); return; }
     const load = async () => {
       setDbLoading(true);
+      setDbError('');
       const { data: modRows } = await supabase
         .from('modules').select('id,title,published,position')
         .eq('course_id', courseUuid).order('position');
-      const { data: itemRows } = await supabase
-        .from('module_items').select('id,module_id,item_type,title,published,position,file_url,file_name,file_type,content_ref,url').order('position');
-      if (modRows) {
-        setMods(modRows.map(m => ({
-          id: m.id, name: m.title, published: m.published,
-          expanded: true, position: m.position,
-          items: (itemRows ?? []).filter(it => it.module_id === m.id).map((it: any) => ({
-            id: it.id, type: it.item_type, name: it.title,
-            pts: it.points ?? undefined, published: it.published, indent: 0,
-            file_url: it.file_url, file_name: it.file_name,
-          })),
-        })));
-      }
+      if (!modRows) { setMods([]); setDbLoading(false); return; }
+      const moduleIds = modRows.map(m => m.id);
+      const { data: itemRows, error: itemErr } = moduleIds.length
+        ? await supabase
+          .from('module_items')
+          .select('id,module_id,item_type,title,published,position,file_url,file_name,file_type,content_ref,url')
+          .in('module_id', moduleIds)
+          .order('position')
+        : { data: [], error: null } as any;
+      if (itemErr) setDbError(itemErr.message);
+      setMods(modRows.map(m => ({
+        id: m.id, name: m.title, published: m.published,
+        expanded: true, position: m.position,
+        items: (itemRows ?? []).filter(it => it.module_id === m.id).map((it: any) => ({
+          id: it.id, type: it.item_type, name: it.title,
+          pts: it.points ?? undefined, published: it.published, indent: 0,
+          file_url: it.file_url, file_name: it.file_name,
+        })),
+      })));
       setDbLoading(false);
     };
     load();
+    const ch = supabase
+      .channel(`course-modules:${courseUuid}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'modules', filter: `course_id=eq.${courseUuid}` }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'module_items' }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, [courseUuid]);
 
   const toggle = (id: string) =>
@@ -219,6 +233,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
 
   const saveMod = async () => {
     if (!newName.trim()) return;
+    if (!courseUuid) { alert('Open a saved course from the Dashboard before adding modules.'); return; }
     if (courseUuid) {
       const { data, error } = await supabase.from('modules')
         .insert({ course_id: courseUuid, title: newName.trim(), published: false, position: mods.length })
@@ -304,6 +319,11 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
           )}
         </div>
       </div>
+      {dbError && (
+        <div style={{ marginBottom:14, padding:'10px 14px', background:'#FDEDED', border:'1px solid #F5C2C7', borderRadius:6, fontSize:13, color:C.error, fontFamily:'sans-serif' }}>
+          Modules could not fully load: {dbError}
+        </div>
+      )}
 
       {addMod && canEdit && (
         <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:5, padding:16, marginBottom:14 }}>
@@ -317,7 +337,11 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
         </div>
       )}
 
-      {mods.map(m => (
+      {mods.length === 0 && !addMod ? (
+        <div style={{ background:C.white, border:`1px dashed ${C.border}`, borderRadius:8, padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif', fontSize:13 }}>
+          No modules are saved for this course yet.
+        </div>
+      ) : mods.map(m => (
         <div key={m.id} style={{ border:`1px solid ${C.border}`, borderRadius:5, marginBottom:10, overflow:'hidden', background:C.white }}>
           {/* Module header row */}
           <div style={{ padding:'11px 14px', background:'#F0EDF7', display:'flex', alignItems:'center', gap:10, borderBottom:m.expanded ? `1px solid ${C.border}` : 'none' }}>
@@ -502,6 +526,7 @@ const CourseView: React.FC = () => {
   const canManageUsers = authUser?.canManageUsers  ?? false;
 
   const [activeCourse, setActiveCourse] = useState<Course>(COURSES[0]);
+  const [courseOptions, setCourseOptions] = useState<Course[]>([]);
   const [activeTab, setActiveTab]       = useState('home');
   const [showCourses, setShowCourses]   = useState(false);
   const [showProfile, setShowProfile]   = useState(false);
@@ -518,6 +543,24 @@ const CourseView: React.FC = () => {
     const load = async () => {
       try {
         setPageLoading(true);
+        const { data } = await supabase
+          .from('courses')
+          .select('id,title,code,color,status,term')
+          .order('created_at', { ascending: false });
+        if (data?.length) {
+          const mapped = data.map((c: any, index: number) => ({
+            id: index + 1,
+            uuid: c.id,
+            name: c.title,
+            code: c.code,
+            color: c.color || C.primary,
+            term: c.term || '',
+            students: 0,
+            published: c.status === 'published',
+          }));
+          setCourseOptions(mapped);
+          setActiveCourse(prev => prev.uuid ? (mapped.find(c => c.uuid === prev.uuid) ?? prev) : mapped[0]);
+        }
         await new Promise(r => setTimeout(r, 700));
         setPageLoading(false);
       } catch (err: any) {
@@ -536,8 +579,10 @@ const CourseView: React.FC = () => {
   if (pageLoading) return <CourseViewSkeleton />;
   if (showDashboard) return (
     <Dashboard onEnterCourse={(course) => {
-      setActiveCourse({ id: 1, uuid: course.id, name: course.name, code: course.code,
-        color: course.color, term: course.term, students: 0, published: course.published });
+      const selected = { id: 1, uuid: course.id, name: course.name, code: course.code,
+        color: course.color || C.primary, term: course.term, students: 0, published: course.published };
+      setActiveCourse(selected);
+      setCourseOptions(prev => prev.some(c => c.uuid === selected.uuid) ? prev : [selected, ...prev]);
       setShowDashboard(false);
       setActiveTab('home');
     }}/>
@@ -560,6 +605,8 @@ const CourseView: React.FC = () => {
       case 'commons':         alert('Import from Commons is not yet enabled.'); break;
     }
   };
+
+  const switcherCourses = courseOptions.length ? courseOptions : (activeCourse.uuid ? [activeCourse] : COURSES);
 
   // Build sections map inside component so canEdit is available
   const cid = activeCourse?.uuid;
@@ -684,8 +731,8 @@ const CourseView: React.FC = () => {
                   <div style={{ padding:'8px 14px', fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', borderBottom:`1px solid ${C.border}` }}>
                     Switch Course
                   </div>
-                  {COURSES.map(course => (
-                    <div key={course.id}
+                  {switcherCourses.map(course => (
+                    <div key={course.uuid ?? course.id}
                       onClick={() => { setActiveCourse(course); setShowCourses(false); setActiveTab('home'); }}
                       style={{ padding:'11px 14px', display:'flex', alignItems:'center', gap:12, cursor:'pointer', background:course.id === activeCourse.id ? '#EDE8F7' : C.white, borderBottom:`1px solid ${C.border}` }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f4f2fa'}
