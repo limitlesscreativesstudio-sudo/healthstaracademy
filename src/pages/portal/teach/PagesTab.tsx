@@ -1,6 +1,8 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './AuthContext';
+
+const fileIcon = (t: string) => ({ pdf:'📄', pptx:'📊', ppt:'📊', docx:'📝', doc:'📝', mp4:'🎥', mov:'🎥', jpg:'🖼️', png:'🖼️', xlsx:'📈' }[(t||'').toLowerCase()] ?? '📎');
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -14,6 +16,9 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [creating, setCreating] = useState(false);
   const [form,     setForm]     = useState({ title:'', body:'', published:false, front_page:false });
   const [saving,   setSaving]   = useState(false);
+  const [uploading,setUploading]= useState(false);
+  const [upError,  setUpError]  = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
@@ -69,12 +74,49 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Pages</h2>
         {canEdit && !isEditorOpen && (
-          <button onClick={() => { setCreating(true); setEditing(null); setForm({ title:'', body:'', published:false, front_page:false }); }}
-            style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
-            + New Page
-          </button>
+          <div style={{ display:'flex', gap:8 }}>
+            <input ref={fileRef} type="file" style={{ display:'none' }} multiple
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.mp4,.mov"
+              onChange={async e => {
+                const files = e.target.files; if (!files || !courseId) return;
+                setUploading(true); setUpError('');
+                const newPages: Page[] = [];
+                for (let i = 0; i < files.length; i++) {
+                  const f = files[i];
+                  const ext = f.name.split('.').pop() ?? '';
+                  const path = `${courseId}/pages/${Date.now()}_${f.name}`;
+                  const { error: upErr } = await supabase.storage.from('course-files').upload(path, f);
+                  if (upErr) { setUpError(`Failed: ${f.name} – ${upErr.message}`); continue; }
+                  const { data: { publicUrl } } = supabase.storage.from('course-files').getPublicUrl(path);
+                  const isPdf = ext.toLowerCase() === 'pdf';
+                  const isImg = ['png','jpg','jpeg','gif','webp'].includes(ext.toLowerCase());
+                  const body = isPdf
+                    ? `<iframe src="${publicUrl}" style="width:100%;height:800px;border:1px solid #ccc;border-radius:6px"></iframe><p><a href="${publicUrl}" target="_blank" rel="noopener">Open ${f.name} in new tab</a></p>`
+                    : isImg
+                    ? `<img src="${publicUrl}" alt="${f.name}" style="max-width:100%;height:auto;border-radius:6px"/>`
+                    : `<p>${fileIcon(ext)} <a href="${publicUrl}" target="_blank" rel="noopener" download>${f.name}</a> (${(f.size/1024).toFixed(0)} KB)</p>`;
+                  const title = f.name.replace(/\.[^.]+$/, '');
+                  const { data: row } = await supabase.from('lms_pages').insert({
+                    course_id: courseId, title, body_html: body, published: true, front_page: false,
+                  }).select().single();
+                  if (row) newPages.push(row);
+                }
+                setPages(p => [...newPages, ...p]);
+                setUploading(false);
+                if (fileRef.current) fileRef.current.value = '';
+              }}/>
+            <button onClick={() => fileRef.current?.click()} disabled={uploading}
+              style={{ padding:'7px 14px', border:`1px solid ${C.primary}`, borderRadius:5, background:C.white, color:C.primary, fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600, opacity: uploading?0.7:1 }}>
+              {uploading ? 'Uploading…' : '⬆ Upload Document'}
+            </button>
+            <button onClick={() => { setCreating(true); setEditing(null); setForm({ title:'', body:'', published:false, front_page:false }); }}
+              style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
+              + New Page
+            </button>
+          </div>
         )}
       </div>
+      {upError && <div style={{ background:'#FDEDED', color:C.error, padding:'8px 12px', borderRadius:5, fontSize:12, fontFamily:'sans-serif', marginBottom:12 }}>{upError}</div>}
 
       {/* Editor */}
       {isEditorOpen && (
