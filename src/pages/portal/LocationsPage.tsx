@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { MapPin, Phone, Clock, Navigation, Building2, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { MapPin, Phone, Clock, Navigation, Building2, ChevronDown, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import HeroBanner from '@/components/HeroBanner';
@@ -9,6 +10,7 @@ import heroImage from '@/assets/hero-programs.jpg';
 import stocktonFacility from '@/assets/stockton-facility.jpg';
 import studentCareTraining from '@/assets/student-care-training.jpg';
 import studentsVitalsPractice from '@/assets/students-vitals-practice.jpg';
+import { CITY_MARKETS } from '@/data/cityMarkets';
 
 interface Facility {
   name: string;
@@ -253,6 +255,29 @@ const LocationsPage = () => {
               <LocationItem key={location.city} location={location} />
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* City Landing Pages */}
+      <section className="py-12 bg-muted/20 border-t">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <h2 className="text-2xl font-bold text-foreground mb-2">CNA Classes by City</h2>
+          <p className="text-muted-foreground mb-6">
+            Dedicated information pages for each market we serve across California.
+          </p>
+          <ul className="grid sm:grid-cols-2 md:grid-cols-3 gap-2">
+            {CITY_MARKETS.map((m) => (
+              <li key={m.slug}>
+                <Link
+                  to={`/cna-classes/${m.slug}`}
+                  className="flex items-center justify-between gap-2 rounded border bg-background hover:bg-muted/50 px-3 py-2 text-sm transition"
+                >
+                  <span className="font-medium">CNA Classes in {m.city}, {m.state}</span>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
