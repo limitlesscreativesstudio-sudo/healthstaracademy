@@ -83,6 +83,7 @@ const AppShell = () => {
           <Route path="/pre-qualification" element={<PreQualificationPage />} />
           <Route path="/programs/exam-prep" element={<ExamPrepPage />} />
           <Route path="/locations" element={<LocationsPage />} />
+          <Route path="/cna-classes/:city" element={<CityLandingPage />} />
           <Route path="/careers" element={<CareersPage />} />
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/contact" element={<ContactPage />} />
