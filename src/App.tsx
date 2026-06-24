@@ -25,6 +25,7 @@ import HomePage from "./pages/portal/HomePage";
 import AboutPage from "./pages/portal/AboutPage";
 import ProgramsPage from "./pages/portal/ProgramsPage";
 import LocationsPage from "./pages/portal/LocationsPage";
+import CityLandingPage from "./pages/portal/CityLandingPage";
 import AdmissionsPage from "./pages/portal/AdmissionsPage";
 import PreQualificationPage from "./pages/portal/PreQualificationPage";
 import CohortsPage from "./pages/portal/CohortsPage";
