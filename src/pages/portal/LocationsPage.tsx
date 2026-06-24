@@ -10,6 +10,7 @@ import heroImage from '@/assets/hero-programs.jpg';
 import stocktonFacility from '@/assets/stockton-facility.jpg';
 import studentCareTraining from '@/assets/student-care-training.jpg';
 import studentsVitalsPractice from '@/assets/students-vitals-practice.jpg';
+import { CITY_MARKETS } from '@/data/cityMarkets';
 
 interface Facility {
   name: string;
