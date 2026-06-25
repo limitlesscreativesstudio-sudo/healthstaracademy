@@ -14,6 +14,207 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_actions: {
+        Row: {
+          action_type: string
+          agent: string
+          applied_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          payload: Json
+          requires_approval: boolean
+          run_id: string | null
+          status: string
+        }
+        Insert: {
+          action_type: string
+          agent: string
+          applied_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json
+          requires_approval?: boolean
+          run_id?: string | null
+          status?: string
+        }
+        Update: {
+          action_type?: string
+          agent?: string
+          applied_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json
+          requires_approval?: boolean
+          run_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_actions_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "agent_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_conversations: {
+        Row: {
+          agent: string
+          created_at: string
+          id: string
+          session_token: string | null
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          agent: string
+          created_at?: string
+          id?: string
+          session_token?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          agent?: string
+          created_at?: string
+          id?: string
+          session_token?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      agent_findings: {
+        Row: {
+          agent: string
+          created_at: string
+          detail: string | null
+          id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          run_id: string | null
+          severity: string
+          status: string
+          suggested_fix: string | null
+          target_id: string | null
+          target_table: string | null
+          title: string
+        }
+        Insert: {
+          agent: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          run_id?: string | null
+          severity?: string
+          status?: string
+          suggested_fix?: string | null
+          target_id?: string | null
+          target_table?: string | null
+          title: string
+        }
+        Update: {
+          agent?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          run_id?: string | null
+          severity?: string
+          status?: string
+          suggested_fix?: string | null
+          target_id?: string | null
+          target_table?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_findings_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "agent_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          parts: Json | null
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          parts?: Json | null
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          parts?: Json | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "agent_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_runs: {
+        Row: {
+          agent: string
+          cost_credits: number | null
+          finished_at: string | null
+          id: string
+          metadata: Json | null
+          started_at: string
+          status: string
+          summary: string | null
+        }
+        Insert: {
+          agent: string
+          cost_credits?: number | null
+          finished_at?: string | null
+          id?: string
+          metadata?: Json | null
+          started_at?: string
+          status?: string
+          summary?: string | null
+        }
+        Update: {
+          agent?: string
+          cost_credits?: number | null
+          finished_at?: string | null
+          id?: string
+          metadata?: Json | null
+          started_at?: string
+          status?: string
+          summary?: string | null
+        }
+        Relationships: []
+      }
       assignments: {
         Row: {
           course_id: string
@@ -688,6 +889,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gbp_posts: {
+        Row: {
+          agent: string
+          body: string
+          created_at: string
+          cta_label: string | null
+          cta_url: string | null
+          id: string
+          image_url: string | null
+          published_at: string | null
+          scheduled_for: string | null
+          status: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent?: string
+          body: string
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          id?: string
+          image_url?: string | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent?: string
+          body?: string
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          id?: string
+          image_url?: string | null
+          published_at?: string | null
+          scheduled_for?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       grades: {
         Row: {
