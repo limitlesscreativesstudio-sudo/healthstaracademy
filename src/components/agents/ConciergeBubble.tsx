@@ -97,18 +97,40 @@ const ConciergeBubble = () => {
               <div className="text-sm"><Loader2 className="h-4 w-4 animate-spin inline" /></div>
             )}
           </div>
-          <div className="p-2 border-t flex gap-2">
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") onSend(); }}
-              placeholder="Type your question…"
-              className="flex-1 px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-[#319795]"
-            />
-            <Button size="sm" onClick={onSend} disabled={status === "submitted" || status === "streaming"} className="bg-[#319795] hover:bg-[#2C7A7B]">
-              <Send className="h-4 w-4" />
-            </Button>
+          <div className="p-2 border-t space-y-2">
+            {messages.length === 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  "How much does the program cost?",
+                  "When does the next cohort start?",
+                  "What are the requirements?",
+                  "Where are the clinical sites?",
+                  "Do you offer financing?",
+                ].map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => sendMessage({ text: q })}
+                    disabled={status === "submitted" || status === "streaming"}
+                    className="text-xs px-2.5 py-1 rounded-full border border-[#319795]/40 text-[#319795] hover:bg-[#319795]/10 transition disabled:opacity-50"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") onSend(); }}
+                placeholder="Type your question…"
+                className="flex-1 px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-[#319795]"
+              />
+              <Button size="sm" onClick={onSend} disabled={status === "submitted" || status === "streaming"} className="bg-[#319795] hover:bg-[#2C7A7B]">
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       )}
