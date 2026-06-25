@@ -1,13 +1,1 @@
 project_id = "pguwdjjpeogrxldcrvof"
-
-[functions.agent-concierge]
-verify_jwt = false
-
-[functions.agent-sentinel]
-verify_jwt = false
-
-[functions.agent-scribe]
-verify_jwt = false
-
-[functions.agent-broadcaster]
-verify_jwt = false
