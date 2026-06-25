@@ -62,6 +62,7 @@ import PrivacyPolicyPage from "./pages/portal/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/portal/TermsOfServicePage";
 import RefundPolicyPage from "./pages/portal/RefundPolicyPage";
 import NotFound from "./pages/portal/NotFound";
+import ConciergeBubble from "./components/agents/ConciergeBubble";
 
 const queryClient = new QueryClient();
 
@@ -130,6 +131,7 @@ const AppShell = () => {
       </div>
       {!isApp && <Footer />}
       {!isApp && <StickyMobileCTA />}
+      <ConciergeBubble />
     </div>
   );
 };
