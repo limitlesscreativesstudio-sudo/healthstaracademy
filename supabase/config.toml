@@ -1,11 +1,13 @@
 project_id = "pguwdjjpeogrxldcrvof"
 
-[functions.enrollment-webhook]
+[functions.agent-concierge]
 verify_jwt = false
 
-[functions.send-enrollment-email]
+[functions.agent-sentinel]
 verify_jwt = false
 
-[functions.student-lookup]
+[functions.agent-scribe]
 verify_jwt = false
 
+[functions.agent-broadcaster]
+verify_jwt = false
