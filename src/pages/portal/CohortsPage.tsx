@@ -14,6 +14,14 @@ import cohortStudentMale2 from "@/assets/cohort-student-male-2.jpg";
 import cohortStudentMale3 from "@/assets/cohort-student-male-3.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import {
+  COHORTS_PAUSED,
+  COHORT_PAUSE_HEADLINE,
+  COHORT_PAUSE_MESSAGE,
+  COHORT_PAUSE_CTA_TEXT,
+  COHORT_PAUSE_CTA_LINK,
+} from "@/data/cohortPause";
+
 
 const cohortImages = [cohortStudentMale2, cohortStudentFemale3, cohortStudentFemale4, cohortStudentMale3];
 
@@ -289,73 +297,108 @@ const CohortsPage = () => {
           </div>
         </section>
 
-        {/* Loading state */}
-        {isLoading && (
-          <section className="py-12 bg-neutral-light">
-            <div className="flex items-center justify-center gap-3">
-              <Loader2 className="h-6 w-6 animate-spin text-purple" />
-              <span className="text-gray-dark">Loading cohorts...</span>
-            </div>
-          </section>
-        )}
-
-        {/* Daytime Cohorts */}
-        {!isLoading && daytimeCohorts.length > 0 && (
-          <section className="py-12 bg-neutral-light">
-            <div className="container-custom">
-              <div className="text-center mb-10">
-                <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">Daytime Cohorts</h2>
-                <p className="text-gray-dark max-w-2xl mx-auto">Monday – Thursday, 6:00 AM – 2:30 PM · 6 weeks</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-                {daytimeCohorts.map((c, i) => renderCohortCard(c, i, false))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Weekend Cohorts */}
-        {!isLoading && weekendCohorts.length > 0 && (
-          <section className="py-12 bg-background">
-            <div className="container-custom">
-              <div className="text-center mb-10">
-                <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
-                  Weekend Cohorts
-                  <span className="ml-3 inline-block bg-cyan/20 text-cyan text-sm font-bold px-3 py-1 rounded-full align-middle">NEW</span>
+        {/* Cohorts paused — restructuring schedule */}
+        {COHORTS_PAUSED ? (
+          <section className="py-16 bg-neutral-light">
+            <div className="container-custom max-w-3xl">
+              <div className="bg-background rounded-2xl shadow-medium border-2 border-purple/20 p-8 md:p-12 text-center">
+                <div className="inline-flex items-center gap-2 bg-purple/10 text-purple font-semibold text-xs uppercase tracking-wider px-3 py-1.5 rounded-full mb-4">
+                  <Clock className="h-3.5 w-3.5" /> Enrollment temporarily paused
+                </div>
+                <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
+                  {COHORT_PAUSE_HEADLINE}
                 </h2>
-                <p className="text-gray-dark max-w-2xl mx-auto">Saturday & Sunday, 6:00 AM – 6:00 PM · 8 weekends (16 class days)</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-                {weekendCohorts.map((c, i) => renderCohortCard(c, i, true))}
+                <p className="text-gray-dark md:text-lg leading-relaxed mb-8">
+                  {COHORT_PAUSE_MESSAGE}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button variant="default" size="lg" asChild>
+                    <Link to={COHORT_PAUSE_CTA_LINK}>
+                      {COHORT_PAUSE_CTA_TEXT} <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="lg" asChild>
+                    <a href="tel:2093234169">Call (209) 323-4169</a>
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-medium mt-6">
+                  Tuition, curriculum, and program length will remain the same when new dates open.
+                </p>
               </div>
             </div>
           </section>
+        ) : (
+          <>
+            {/* Loading state */}
+            {isLoading && (
+              <section className="py-12 bg-neutral-light">
+                <div className="flex items-center justify-center gap-3">
+                  <Loader2 className="h-6 w-6 animate-spin text-purple" />
+                  <span className="text-gray-dark">Loading cohorts...</span>
+                </div>
+              </section>
+            )}
+
+            {/* Daytime Cohorts */}
+            {!isLoading && daytimeCohorts.length > 0 && (
+              <section className="py-12 bg-neutral-light">
+                <div className="container-custom">
+                  <div className="text-center mb-10">
+                    <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">Daytime Cohorts</h2>
+                    <p className="text-gray-dark max-w-2xl mx-auto">Monday – Thursday, 6:00 AM – 2:30 PM · 6 weeks</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                    {daytimeCohorts.map((c, i) => renderCohortCard(c, i, false))}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Weekend Cohorts */}
+            {!isLoading && weekendCohorts.length > 0 && (
+              <section className="py-12 bg-background">
+                <div className="container-custom">
+                  <div className="text-center mb-10">
+                    <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
+                      Weekend Cohorts
+                      <span className="ml-3 inline-block bg-cyan/20 text-cyan text-sm font-bold px-3 py-1 rounded-full align-middle">NEW</span>
+                    </h2>
+                    <p className="text-gray-dark max-w-2xl mx-auto">Saturday & Sunday, 6:00 AM – 6:00 PM · 8 weekends (16 class days)</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                    {weekendCohorts.map((c, i) => renderCohortCard(c, i, true))}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Deadline notice */}
+            {!isLoading && (
+              <section className="py-6 bg-neutral-light">
+                <div className="container-custom text-center">
+                  {(() => {
+                    const next = getNextUpcomingCohort("daytime");
+                    const nextWeekend = getNextUpcomingCohort("weekend");
+                    return (
+                      <>
+                        <p className="text-charcoal text-lg md:text-xl font-bold mb-2">
+                          ⚠️ Next daytime deadline: {next.deadline} ({next.startDate} start)
+                        </p>
+                        <p className="text-charcoal text-lg md:text-xl font-bold mb-4">
+                          ⚠️ Next weekend deadline: {nextWeekend.deadline} ({nextWeekend.startDate} start)
+                        </p>
+                      </>
+                    );
+                  })()}
+                  <p className="text-gray-medium text-xs">
+                    Have questions? Call <a href="tel:2093234169" className="text-purple hover:underline">(209) 323-4169</a> or email <a href="mailto:info@healthstaracademy.org" className="text-purple hover:underline">info@healthstaracademy.org</a>
+                  </p>
+                </div>
+              </section>
+            )}
+          </>
         )}
 
-        {/* Deadline notice */}
-        {!isLoading && (
-          <section className="py-6 bg-neutral-light">
-            <div className="container-custom text-center">
-              {(() => {
-                const next = getNextUpcomingCohort("daytime");
-                const nextWeekend = getNextUpcomingCohort("weekend");
-                return (
-                  <>
-                    <p className="text-charcoal text-lg md:text-xl font-bold mb-2">
-                      ⚠️ Next daytime deadline: {next.deadline} ({next.startDate} start)
-                    </p>
-                    <p className="text-charcoal text-lg md:text-xl font-bold mb-4">
-                      ⚠️ Next weekend deadline: {nextWeekend.deadline} ({nextWeekend.startDate} start)
-                    </p>
-                  </>
-                );
-              })()}
-              <p className="text-gray-medium text-xs">
-                Have questions? Call <a href="tel:2093234169" className="text-purple hover:underline">(209) 323-4169</a> or email <a href="mailto:info@healthstaracademy.org" className="text-purple hover:underline">info@healthstaracademy.org</a>
-              </p>
-            </div>
-          </section>
-        )}
 
         {/* Additional Financing */}
         <section className="py-12 bg-background">

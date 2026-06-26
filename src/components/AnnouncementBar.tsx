@@ -1,6 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
-import { X, Calendar, ChevronLeft, ChevronRight, Clock, Sparkles } from 'lucide-react';
+import { X, Calendar, ChevronLeft, ChevronRight, Clock, Sparkles, Pause } from 'lucide-react';
 import { getNextUpcomingCohort } from '@/data/cohortSchedule';
+import {
+  COHORTS_PAUSED,
+  COHORT_PAUSE_HEADLINE,
+  COHORT_PAUSE_MESSAGE,
+  COHORT_PAUSE_CTA_TEXT,
+  COHORT_PAUSE_CTA_LINK,
+} from '@/data/cohortPause';
+
 
 // A/B test variants for messaging format. Variant assigned once per visitor (localStorage).
 type Variant = 'A' | 'B';
@@ -109,6 +117,49 @@ const AnnouncementBar = () => {
   }, [deadlineDate]);
 
   if (!isVisible) return null;
+
+  // Paused mode — cohort calendar is being restructured. Show a single notice
+  // pointing to the interest list, no dates, no countdown.
+  if (COHORTS_PAUSED) {
+    return (
+      <div className="sticky top-[120px] z-40 bg-gradient-to-r from-purple to-magenta text-white overflow-hidden shadow-lg">
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.3),transparent_50%)]" />
+        </div>
+        <div className="container-custom relative py-2.5">
+          <div className="flex items-center gap-3">
+            <Pause className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-xs md:text-sm leading-tight">
+                {COHORT_PAUSE_HEADLINE}
+              </p>
+              <p className="hidden md:block text-xs opacity-90 mt-0.5">
+                {COHORT_PAUSE_MESSAGE}
+              </p>
+              <p className="md:hidden text-[10px] opacity-90 mt-0.5">
+                Restructuring schedule to add instructor breaks &amp; Psych Tech dates.
+              </p>
+            </div>
+            <a
+              href={COHORT_PAUSE_CTA_LINK}
+              className="flex-shrink-0 bg-white text-purple font-semibold px-3 py-1.5 rounded-full text-xs md:text-sm hover:bg-white/90 transition-colors shadow"
+            >
+              {COHORT_PAUSE_CTA_TEXT} →
+            </a>
+            <button
+              onClick={() => setIsVisible(false)}
+              className="flex-shrink-0 p-1 rounded-full hover:bg-white/20 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
 
   const current = announcements[currentIndex];
   const next = () => setCurrentIndex((p) => (p + 1) % announcements.length);
