@@ -1,6 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
-import { X, Calendar, ChevronLeft, ChevronRight, Clock, Sparkles } from 'lucide-react';
+import { X, Calendar, ChevronLeft, ChevronRight, Clock, Sparkles, Pause } from 'lucide-react';
 import { getNextUpcomingCohort } from '@/data/cohortSchedule';
+import {
+  COHORTS_PAUSED,
+  COHORT_PAUSE_HEADLINE,
+  COHORT_PAUSE_MESSAGE,
+  COHORT_PAUSE_CTA_TEXT,
+  COHORT_PAUSE_CTA_LINK,
+} from '@/data/cohortPause';
+
 
 // A/B test variants for messaging format. Variant assigned once per visitor (localStorage).
 type Variant = 'A' | 'B';
