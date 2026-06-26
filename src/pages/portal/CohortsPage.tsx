@@ -14,6 +14,14 @@ import cohortStudentMale2 from "@/assets/cohort-student-male-2.jpg";
 import cohortStudentMale3 from "@/assets/cohort-student-male-3.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import {
+  COHORTS_PAUSED,
+  COHORT_PAUSE_HEADLINE,
+  COHORT_PAUSE_MESSAGE,
+  COHORT_PAUSE_CTA_TEXT,
+  COHORT_PAUSE_CTA_LINK,
+} from "@/data/cohortPause";
+
 
 const cohortImages = [cohortStudentMale2, cohortStudentFemale3, cohortStudentFemale4, cohortStudentMale3];
 
