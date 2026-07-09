@@ -1,6 +1,6 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
-import React, { useState } from 'react';
-import { useAuth } from './AuthContext';
+import React, { useState, useRef, useEffect } from 'react';
+import { useAuth, supabase } from './AuthContext';
 
 const C = {
   primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF',
@@ -11,7 +11,142 @@ const C = {
 const TABS = ['Course Details','Sections','Navigation','Apps','Feature Options','Integrations'] as const;
 type Tab = typeof TABS[number];
 
-const CourseDetails: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
+const ACCEPTED_TYPES = ['image/jpeg','image/png','image/webp','image/gif'];
+const MAX_BYTES = 5 * 1024 * 1024; // 5MB
+const COURSE_IMAGE_BUCKET = 'page-images'; // public bucket allowed by workspace policy
+
+const CourseImageUploader: React.FC<{ courseId?: string; canEdit: boolean }> = ({ courseId, canEdit }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [dragOver, setDragOver] = useState(false);
+
+  useEffect(() => {
+    if (!courseId) { setImageUrl(null); return; }
+    let cancel = false;
+    (async () => {
+      const { data } = await supabase.from('courses').select('image_url').eq('id', courseId).maybeSingle();
+      if (!cancel) setImageUrl((data as any)?.image_url ?? null);
+    })();
+    return () => { cancel = true; };
+  }, [courseId]);
+
+  const handleFile = async (file: File) => {
+    setError('');
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setError('Unsupported format. Use JPG, PNG, WEBP, or GIF.'); return;
+    }
+    if (file.size > MAX_BYTES) {
+      setError(`File too large (${(file.size/1024/1024).toFixed(1)}MB). Max 5MB.`); return;
+    }
+    if (!courseId) { setError('No course selected.'); return; }
+
+    setUploading(true);
+    const ext = (file.name.split('.').pop() || file.type.split('/')[1] || 'jpg').toLowerCase();
+    const path = `course-images/${courseId}/${Date.now()}.${ext}`;
+
+    const { error: upErr } = await supabase.storage
+      .from(COURSE_IMAGE_BUCKET)
+      .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+
+    if (upErr) { setError(upErr.message); setUploading(false); return; }
+
+    const { data: pub } = supabase.storage.from(COURSE_IMAGE_BUCKET).getPublicUrl(path);
+    const url = pub.publicUrl;
+
+    const { error: dbErr } = await supabase.from('courses').update({ image_url: url }).eq('id', courseId);
+    if (dbErr) { setError(dbErr.message); setUploading(false); return; }
+
+    setImageUrl(url);
+    setUploading(false);
+  };
+
+  const onPick = () => { if (canEdit && !uploading && inputRef.current) inputRef.current.click(); };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false);
+    if (!canEdit || uploading) return;
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
+  };
+
+  const remove = async () => {
+    if (!courseId || !canEdit || uploading) return;
+    setError('');
+    const { error: dbErr } = await supabase.from('courses').update({ image_url: null }).eq('id', courseId);
+    if (dbErr) { setError(dbErr.message); return; }
+    setImageUrl(null);
+  };
+
+  return (
+    <div style={{ marginBottom:22 }}>
+      <label style={{ display:'block', fontSize:13, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:8 }}>Image:</label>
+      <input
+        ref={inputRef} type="file" accept={ACCEPTED_TYPES.join(',')} style={{ display:'none' }}
+        onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }}
+      />
+      <div
+        onClick={imageUrl ? undefined : onPick}
+        onDragOver={e => { e.preventDefault(); if (canEdit && !uploading) setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={onDrop}
+        style={{
+          width:260, height:160, position:'relative', overflow:'hidden',
+          border:`2px dashed ${dragOver ? C.primary : C.border}`, borderRadius:8,
+          background: imageUrl ? '#000' : C.bg,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          cursor: canEdit && !imageUrl && !uploading ? 'pointer' : 'default',
+          transition: 'border-color .15s',
+        }}>
+        {uploading ? (
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, color:C.muted, fontFamily:'sans-serif', fontSize:12 }}>
+            <span style={{ width:26, height:26, border:`3px solid ${C.border}`, borderTopColor:C.primary, borderRadius:'50%', display:'inline-block', animation:'hsa-img-spin 0.8s linear infinite' }}/>
+            Uploading…
+            <style>{`@keyframes hsa-img-spin { to { transform: rotate(360deg); } }`}</style>
+          </div>
+        ) : imageUrl ? (
+          <>
+            <img src={imageUrl} alt="Course cover" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+            {canEdit && (
+              <div style={{ position:'absolute', bottom:8, right:8, display:'flex', gap:6 }}>
+                <button onClick={onPick}
+                  style={{ padding:'6px 12px', border:'none', borderRadius:4, background:C.primary, color:'white', fontSize:12, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer' }}>
+                  Change
+                </button>
+                <button onClick={remove}
+                  style={{ padding:'6px 12px', border:'none', borderRadius:4, background:'rgba(0,0,0,0.65)', color:'white', fontSize:12, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer' }}>
+                  Remove
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, color:C.muted, fontFamily:'sans-serif', fontSize:12, textAlign:'center', padding:12 }}>
+            <span style={{ fontSize:30 }}>🖼️</span>
+            {canEdit ? (
+              <>
+                <span style={{ fontWeight:600, color:C.text }}>Choose Image</span>
+                <span>or drag &amp; drop here</span>
+                <span style={{ fontSize:11 }}>JPG, PNG, WEBP, GIF · max 5MB</span>
+              </>
+            ) : (
+              <span>No image uploaded</span>
+            )}
+          </div>
+        )}
+      </div>
+      {error && (
+        <div style={{ marginTop:8, fontSize:12, color:C.error, fontFamily:'sans-serif' }}>⚠️ {error}</div>
+      )}
+      {!courseId && canEdit && (
+        <div style={{ marginTop:8, fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>Select a course to enable uploads.</div>
+      )}
+    </div>
+  );
+};
+
+const CourseDetails: React.FC<{ canEdit: boolean; courseId?: string }> = ({ canEdit, courseId }) => {
   const [name, setName]       = useState('Health Star Academy Hybrid Day NATP Sandbox');
   const [code, setCode]       = useState('Hybrid Day NATP');
   const [tz, setTz]           = useState('Pacific Time (US & Canada) (-08:00/-07:00)');
@@ -23,9 +158,9 @@ const CourseDetails: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
   const save = () => { setSaved(true); setTimeout(() => setSaved(false), 3000); };
 
   return (
-    <div style={{ display:'flex', gap:32 }}>
+    <div style={{ display:'flex', gap:32, flexWrap:'wrap' }}>
       {/* Left form */}
-      <div style={{ flex:1, maxWidth:680 }}>
+      <div style={{ flex:1, minWidth:320, maxWidth:680 }}>
         <h2 style={{ fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 24px' }}>Course Details</h2>
 
         {saved && (
@@ -34,14 +169,8 @@ const CourseDetails: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
           </div>
         )}
 
-        {/* Course image */}
-        <div style={{ marginBottom:22 }}>
-          <label style={{ display:'block', fontSize:13, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:8 }}>Image:</label>
-          <div style={{ width:200, height:130, border:`2px dashed ${C.border}`, borderRadius:6, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8, background:C.bg, cursor:canEdit?'pointer':'default' }}>
-            <span style={{ fontSize:28 }}>🖼️</span>
-            {canEdit && <span style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>Choose Image</span>}
-          </div>
-        </div>
+        <CourseImageUploader courseId={courseId} canEdit={canEdit} />
+
 
         {/* Name */}
         <div style={{ marginBottom:18 }}>
@@ -222,7 +351,7 @@ const Navigation: React.FC = () => {
   );
 };
 
-const SettingsTab: React.FC = () => {
+const SettingsTab: React.FC<{ courseId?: string }> = ({ courseId }) => {
   const { user } = useAuth();
   const canEdit = user?.canEdit ?? false;
   const [activeTab, setActiveTab] = useState<Tab>('Course Details');
@@ -230,7 +359,7 @@ const SettingsTab: React.FC = () => {
   return (
     <div style={{ padding:24 }}>
       {/* Tab bar */}
-      <div style={{ display:'flex', borderBottom:`2px solid ${C.border}`, marginBottom:28, gap:0 }}>
+      <div style={{ display:'flex', borderBottom:`2px solid ${C.border}`, marginBottom:28, gap:0, flexWrap:'wrap' }}>
         {TABS.map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             style={{ padding:'10px 18px', border:'none', borderBottom:activeTab===tab?`3px solid ${C.primary}`:'3px solid transparent', background:'transparent', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', color:activeTab===tab?C.primary:C.muted, fontWeight:activeTab===tab?600:400, marginBottom:-2 }}>
@@ -238,7 +367,8 @@ const SettingsTab: React.FC = () => {
           </button>
         ))}
       </div>
-      {activeTab === 'Course Details' && <CourseDetails canEdit={canEdit}/>}
+      {activeTab === 'Course Details' && <CourseDetails canEdit={canEdit} courseId={courseId}/>}
+
       {activeTab === 'Sections'       && <Sections canEdit={canEdit}/>}
       {activeTab === 'Navigation'     && <Navigation/>}
       {activeTab === 'Apps'           && <div style={{ fontSize:14, color:C.muted, fontFamily:'sans-serif' }}>No external apps configured. Connect apps via LTI integration.</div>}

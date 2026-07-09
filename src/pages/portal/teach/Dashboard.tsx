@@ -20,11 +20,13 @@ interface DBCourse {
   name: string;
   code: string;
   color: string;
+  image_url?: string | null;
   published: boolean;
   term: string;
   description: string;
   created_at: string;
 }
+
 
 interface Props {
   onEnterCourse: (course: DBCourse) => void;
@@ -47,13 +49,20 @@ const CourseCard: React.FC<{
       onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(61,27,110,0.18)'}
       onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = 'none'}>
 
-      {/* Color band */}
+      {/* Course cover — image if present, colored band otherwise */}
       <div onClick={onEnter}
-        style={{ height:130, background:course.color, display:'flex', alignItems:'center',
-          justifyContent:'center', position:'relative' }}>
-        <img src="/hsa-logo.png" alt="HSA"
-          style={{ width:72, height:72, borderRadius:'50%', objectFit:'cover',
-            border:'3px solid rgba(255,255,255,0.4)', opacity:0.9 }}/>
+        style={{
+          height:130,
+          background: course.image_url
+            ? `${course.color} url("${course.image_url}") center/cover no-repeat`
+            : course.color,
+          display:'flex', alignItems:'center', justifyContent:'center', position:'relative',
+        }}>
+        {!course.image_url && (
+          <img src="/hsa-logo.png" alt="HSA"
+            style={{ width:72, height:72, borderRadius:'50%', objectFit:'cover',
+              border:'3px solid rgba(255,255,255,0.4)', opacity:0.9 }}/>
+        )}
         {!course.published && (
           <div style={{ position:'absolute', top:8, left:8,
             background:'rgba(0,0,0,0.5)', borderRadius:4, padding:'2px 8px',
@@ -169,7 +178,7 @@ const CreateCourseModal: React.FC<{
         instructor_id: userId,
         status:        'draft',
       })
-      .select('id,title,code,color,status,term,description,created_at')
+      .select('id,title,code,color,image_url,status,term,description,created_at')
       .single();
 
     if (error) {
@@ -312,7 +321,7 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
     setLoading(true);
     const { data, error } = await supabase
       .from('courses')
-      .select('id,title,code,color,status,term,description,created_at')
+      .select('id,title,code,color,image_url,status,term,description,created_at')
       .order('created_at', { ascending: false });
     if (!error && data) {
       setCourses(data.map((c: any) => ({ ...c, name: c.title, published: c.status === 'published' })) as DBCourse[]);
@@ -345,7 +354,7 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
     const { data: newCourse, error: cErr } = await supabase.from('courses').insert({
       title: newName.trim(), code: newCode.trim(), description: (src as any).description ?? '',
       term: src.term, color: src.color, instructor_id: user?.id, status: 'draft',
-    }).select('id,title,code,color,status,term,description,created_at').single();
+    }).select('id,title,code,color,image_url,status,term,description,created_at').single();
     if (cErr || !newCourse) { alert('Failed to create course: ' + (cErr?.message ?? 'unknown')); return; }
 
     const { data: srcMods } = await supabase.from('modules')

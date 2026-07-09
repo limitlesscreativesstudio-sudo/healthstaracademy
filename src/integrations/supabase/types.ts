@@ -729,6 +729,7 @@ export type Database = {
           front_page_html: string
           home_page_type: string
           id: string
+          image_url: string | null
           instructor_id: string
           license: string | null
           nav_order: Json
@@ -757,6 +758,7 @@ export type Database = {
           front_page_html?: string
           home_page_type?: string
           id?: string
+          image_url?: string | null
           instructor_id: string
           license?: string | null
           nav_order?: Json
@@ -785,6 +787,7 @@ export type Database = {
           front_page_html?: string
           home_page_type?: string
           id?: string
+          image_url?: string | null
           instructor_id?: string
           license?: string | null
           nav_order?: Json
