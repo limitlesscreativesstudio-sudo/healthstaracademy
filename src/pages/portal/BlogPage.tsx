@@ -41,6 +41,7 @@ const BlogPage = () => {
     })();
   }, []);
 
+  const allArticles = [
     {
       slug: "how-to-become-cna-in-california",
       title: "How to Become a CNA in California: Step-by-Step Certification Guide",
