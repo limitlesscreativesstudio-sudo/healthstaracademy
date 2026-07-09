@@ -71,7 +71,7 @@ const SyllabusTab: React.FC<Props> = ({ courseUuid, canEdit = false }) => {
   };
 
   const totalHours = SYLLABUS.reduce((s, w) => s + w.hours, 0);
-  const isPdf = syllabusUrl && (syllabusName?.toLowerCase().endsWith('.pdf') || syllabusUrl.includes('.pdf'));
+  const syllabusExt = (syllabusName?.split('.').pop() ?? '').toLowerCase();
 
   return (
     <div style={{ padding:24 }}>
