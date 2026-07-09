@@ -9,38 +9,58 @@ interface Ev { id:string; refId:string; title:string; date:Date; type:'assignmen
 
 interface Props { courseId?: string; canEdit?: boolean; }
 
+interface EvExt extends Ev { section?: string | null; }
+
 const CalendarTab: React.FC<Props> = ({ courseId }) => {
   const navigate = useNavigate();
-  const [events, setEvents] = useState<Ev[]>([]);
+  const [events, setEvents] = useState<EvExt[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'month'|'agenda'>('month');
   const [monthCursor, setMonthCursor] = useState(() => { const d = new Date(); d.setDate(1); return d; });
-  const [selected, setSelected] = useState<Ev | null>(null);
+  const [selected, setSelected] = useState<EvExt | null>(null);
+  const [typeFilter, setTypeFilter] = useState<'all'|'assignment'|'quiz'|'attendance'>('all');
+  const [sectionFilter, setSectionFilter] = useState<string>('all');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (!courseId) { setLoading(false); return; }
     const load = async () => {
       setLoading(true);
       const [{ data: asgn }, { data: qz }, { data: att }] = await Promise.all([
-        supabase.from('assignments').select('id,title,due_at,submission_type').eq('course_id', courseId).not('due_at','is',null),
+        supabase.from('assignments').select('id,title,due_at,submission_type,group_name').eq('course_id', courseId).not('due_at','is',null),
         supabase.from('quizzes').select('id,title,due_at').eq('course_id', courseId).not('due_at','is',null),
         supabase.from('attendance').select('id,session_date').eq('course_id', courseId),
       ]);
-      const evs: Ev[] = [];
+      const evs: EvExt[] = [];
       (asgn ?? []).forEach(a => {
         const isQuiz = a.submission_type === 'quiz' || a.submission_type === 'exam';
-        evs.push({ id:`a-${a.id}`, refId:a.id, title:a.title, date:new Date(a.due_at), type:isQuiz?'quiz':'assignment', color: isQuiz?C.warn:C.primary });
+        evs.push({ id:`a-${a.id}`, refId:a.id, title:a.title, date:new Date(a.due_at), type:isQuiz?'quiz':'assignment', color: isQuiz?C.warn:C.primary, section: a.group_name || null });
       });
-      (qz ?? []).forEach(q => evs.push({ id:`q-${q.id}`, refId:q.id, title:q.title, date:new Date(q.due_at), type:'quiz', color:C.warn }));
-      // dedupe attendance dates
+      (qz ?? []).forEach(q => evs.push({ id:`q-${q.id}`, refId:q.id, title:q.title, date:new Date(q.due_at), type:'quiz', color:C.warn, section: null }));
       const attDates = new Set((att ?? []).map(a => a.session_date));
-      attDates.forEach(d => evs.push({ id:`att-${d}`, refId:'', title:'Class Session', date:new Date(d+'T09:00:00'), type:'attendance', color:C.accent }));
+      attDates.forEach(d => evs.push({ id:`att-${d}`, refId:'', title:'Class Session', date:new Date(d+'T09:00:00'), type:'attendance', color:C.accent, section: null }));
       evs.sort((a,b) => a.date.getTime() - b.date.getTime());
       setEvents(evs);
       setLoading(false);
     };
     load();
   }, [courseId]);
+
+  const sectionOptions = useMemo(() => {
+    const s = new Set<string>();
+    events.forEach(e => { if (e.section) s.add(e.section); });
+    return Array.from(s).sort();
+  }, [events]);
+
+  const filteredEvents = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return events.filter(e => {
+      if (typeFilter !== 'all' && e.type !== typeFilter) return false;
+      if (sectionFilter !== 'all' && (e.section || '') !== sectionFilter) return false;
+      if (q && !e.title.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [events, typeFilter, sectionFilter, search]);
 
   const monthGrid = useMemo(() => {
     const start = new Date(monthCursor); start.setDate(1);
@@ -53,14 +73,14 @@ const CalendarTab: React.FC<Props> = ({ courseId }) => {
     return cells;
   }, [monthCursor]);
 
-  const eventsOnDay = (d: Date) => events.filter(e =>
+  const eventsOnDay = (d: Date) => filteredEvents.filter(e =>
     e.date.getFullYear()===d.getFullYear() && e.date.getMonth()===d.getMonth() && e.date.getDate()===d.getDate()
   );
 
   const upcoming = useMemo(() => {
     const now = new Date();
-    return events.filter(e => e.date >= now).slice(0, 20);
-  }, [events]);
+    return filteredEvents.filter(e => e.date >= now).slice(0, 20);
+  }, [filteredEvents]);
 
   const monthLabel = monthCursor.toLocaleString('default', { month:'long', year:'numeric' });
 
