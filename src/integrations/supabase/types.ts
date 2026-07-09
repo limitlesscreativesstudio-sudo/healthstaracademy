@@ -381,6 +381,66 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_drafts: {
+        Row: {
+          agent: string
+          body_markdown: string
+          category: string | null
+          created_at: string
+          hero_image_url: string | null
+          id: string
+          meta_description: string | null
+          published_at: string | null
+          read_time: string | null
+          scheduled_for: string | null
+          slug: string
+          status: string
+          target_city: string | null
+          target_keyword: string | null
+          title: string
+          tldr: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent?: string
+          body_markdown: string
+          category?: string | null
+          created_at?: string
+          hero_image_url?: string | null
+          id?: string
+          meta_description?: string | null
+          published_at?: string | null
+          read_time?: string | null
+          scheduled_for?: string | null
+          slug: string
+          status?: string
+          target_city?: string | null
+          target_keyword?: string | null
+          title: string
+          tldr?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent?: string
+          body_markdown?: string
+          category?: string | null
+          created_at?: string
+          hero_image_url?: string | null
+          id?: string
+          meta_description?: string | null
+          published_at?: string | null
+          read_time?: string | null
+          scheduled_for?: string | null
+          slug?: string
+          status?: string
+          target_city?: string | null
+          target_keyword?: string | null
+          title?: string
+          tldr?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clinical_attendance: {
         Row: {
           clinical_site: string
