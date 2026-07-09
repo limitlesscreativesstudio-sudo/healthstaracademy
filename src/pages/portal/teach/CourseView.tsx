@@ -176,6 +176,16 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
   const [newName, setNewName] = useState('');
   const [addItem, setAddItem] = useState<string | null>(null);
   const [ni, setNi]           = useState<{ title: string; type: string; pts: string; file: File | null }>({ title:'', type:'page', pts:'', file: null }); const [editId, setEditId] = useState<string | null>(null); const [editName, setEditName] = useState('');
+  const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type: string } | null>(null);
+
+  const openItem = (it: ModuleItem) => {
+    if (!it.file_url) return;
+    const path = it.file_url.split('/course-files/')[1];
+    const cleanPath = path ? decodeURIComponent(path.split('?')[0]) : null;
+    const ext = (it.file_name || '').split('.').pop() || '';
+    if (cleanPath) setViewer({ src: { bucket: 'course-files', path: cleanPath }, name: it.file_name || it.name, type: ext });
+    else setViewer({ src: { url: it.file_url }, name: it.file_name || it.name, type: ext });
+  };
 
   // Open Add Module form on demand (when top "+ Module" button is clicked)
   useEffect(() => { if (openAddOnMount && canEdit) setAddMod(true); }, [openAddOnMount, canEdit]);
