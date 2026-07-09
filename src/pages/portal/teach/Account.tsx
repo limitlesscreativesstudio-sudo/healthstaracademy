@@ -47,7 +47,9 @@ const Section: React.FC<{ title:string; subtitle?:string; children:React.ReactNo
 );
 
 // ── Main component ─────────────────────────────────────────────────────────────
-const Account: React.FC = () => {
+interface AccountProps { onBackToDashboard?: () => void; isAdmin?: boolean; }
+
+const Account: React.FC<AccountProps> = ({ onBackToDashboard, isAdmin }) => {
   const { user, updateProfile, updatePassword } = useAuth();
 
   // Profile fields — pre-filled from auth context
@@ -68,11 +70,37 @@ const Account: React.FC = () => {
   const [passMsg, setPassMsg]   = useState<{ type:'success'|'error'; text:string } | null>(null);
   const [passLoading, setPassLoading] = useState(false);
 
-  // Notifications
-  const [notifEmail, setNotifEmail] = useState(true);
-  const [notifSub, setNotifSub]     = useState(true);
-  const [notifGrade, setNotifGrade] = useState(false);
+  // Notifications (extended)
+  const [prefs, setPrefs] = useState({
+    emailSubmission: true,
+    emailMessage: true,
+    emailWeeklyGrades: false,
+    emailNewDiscussion: true,
+    emailDiscussionReply: true,
+    emailLateSubmission: true,
+    emailQuizAttempt: false,
+    emailAttendanceMissed: true,
+    emailAnnouncement: true,
+    smsUrgent: false,
+    digestDaily: false,
+    digestWeekly: true,
+    quietHours: false,
+    quietStart: '21:00',
+    quietEnd: '07:00',
+  });
+  const setPref = (k: keyof typeof prefs, v: any) => setPrefs(p => ({ ...p, [k]: v }));
   const [notifMsg, setNotifMsg]     = useState<{ type:'success'|'error'; text:string } | null>(null);
+
+  // Persist prefs locally per user (backend column can be added later)
+  React.useEffect(() => {
+    if (!user?.id) return;
+    try { const raw = localStorage.getItem(`hsa_notif_prefs_${user.id}`); if (raw) setPrefs(p => ({ ...p, ...JSON.parse(raw) })); } catch {}
+  }, [user?.id]);
+  const saveNotifPrefs = () => {
+    try { if (user?.id) localStorage.setItem(`hsa_notif_prefs_${user.id}`, JSON.stringify(prefs)); } catch {}
+    setNotifMsg({ type:'success', text:'Notification preferences saved.' });
+    setTimeout(() => setNotifMsg(null), 3000);
+  };
 
   // ── Save profile ────────────────────────────────────────────────────────────
   const saveProfile = async () => {
