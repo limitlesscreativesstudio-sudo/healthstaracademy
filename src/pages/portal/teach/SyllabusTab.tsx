@@ -85,8 +85,8 @@ const SyllabusTab: React.FC<Props> = ({ courseUuid, canEdit = false }) => {
           <h3 style={{ margin:0, fontSize:14, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Syllabus Document</h3>
           {canEdit && (
             <label style={{ padding:'7px 14px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:uploading ? 'wait' : 'pointer' }}>
-              {uploading ? 'Uploading…' : (syllabusUrl ? '↻ Replace PDF' : '📤 Upload PDF / DOCX')}
-              <input type="file" accept=".pdf,.doc,.docx" style={{ display:'none' }}
+              {uploading ? 'Uploading…' : (syllabusUrl ? '↻ Replace Document' : '📤 Upload Syllabus')}
+              <input type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx" style={{ display:'none' }}
                 disabled={uploading}
                 onChange={e => { const f = e.target.files?.[0]; if (f) upload(f); e.currentTarget.value = ''; }}/>
             </label>
