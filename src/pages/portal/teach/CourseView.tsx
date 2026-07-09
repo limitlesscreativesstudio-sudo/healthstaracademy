@@ -489,6 +489,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
         <h3 style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 8px', textTransform:'uppercase', letterSpacing:0.5 }}>Coming Up</h3>
         <p style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', margin:0 }}>Nothing for the next week</p>
         <a href="#" style={{ fontSize:11, color:C.primary, fontFamily:'sans-serif', textDecoration:'none', display:'block', marginTop:6 }}>View Calendar →</a>
+      </div>
     </div>
     </div>
     <ContentViewer
