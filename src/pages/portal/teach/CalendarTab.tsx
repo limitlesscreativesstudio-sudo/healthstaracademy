@@ -1,14 +1,16 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from './AuthContext';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', warn:'#E67E22', success:'#127A1B' } as const;
 
-interface Ev { id:string; title:string; date:Date; type:'assignment'|'quiz'|'attendance'; color:string; }
+interface Ev { id:string; refId:string; title:string; date:Date; type:'assignment'|'quiz'|'attendance'; color:string; }
 
 interface Props { courseId?: string; canEdit?: boolean; }
 
 const CalendarTab: React.FC<Props> = ({ courseId }) => {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<Ev[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'month'|'agenda'>('month');
@@ -27,12 +29,12 @@ const CalendarTab: React.FC<Props> = ({ courseId }) => {
       const evs: Ev[] = [];
       (asgn ?? []).forEach(a => {
         const isQuiz = a.submission_type === 'quiz' || a.submission_type === 'exam';
-        evs.push({ id:`a-${a.id}`, title:a.title, date:new Date(a.due_at), type:isQuiz?'quiz':'assignment', color: isQuiz?C.warn:C.primary });
+        evs.push({ id:`a-${a.id}`, refId:a.id, title:a.title, date:new Date(a.due_at), type:isQuiz?'quiz':'assignment', color: isQuiz?C.warn:C.primary });
       });
-      (qz ?? []).forEach(q => evs.push({ id:`q-${q.id}`, title:q.title, date:new Date(q.due_at), type:'quiz', color:C.warn }));
+      (qz ?? []).forEach(q => evs.push({ id:`q-${q.id}`, refId:q.id, title:q.title, date:new Date(q.due_at), type:'quiz', color:C.warn }));
       // dedupe attendance dates
       const attDates = new Set((att ?? []).map(a => a.session_date));
-      attDates.forEach(d => evs.push({ id:`att-${d}`, title:'Class Session', date:new Date(d+'T09:00:00'), type:'attendance', color:C.accent }));
+      attDates.forEach(d => evs.push({ id:`att-${d}`, refId:'', title:'Class Session', date:new Date(d+'T09:00:00'), type:'attendance', color:C.accent }));
       evs.sort((a,b) => a.date.getTime() - b.date.getTime());
       setEvents(evs);
       setLoading(false);
@@ -71,6 +73,8 @@ const CalendarTab: React.FC<Props> = ({ courseId }) => {
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
           <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text }}>Calendar</h2>
           <div style={{ marginLeft:'auto', display:'flex', gap:6 }}>
+            <button onClick={() => { const d=new Date(); d.setDate(1); setMonthCursor(d); }}
+              style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, fontSize:12, cursor:'pointer' }}>Today</button>
             {(['month','agenda'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
                 style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:view===v?C.primary:C.white, color:view===v?'white':C.text, fontSize:12, cursor:'pointer', textTransform:'capitalize' }}>
@@ -163,7 +167,21 @@ const CalendarTab: React.FC<Props> = ({ courseId }) => {
             <h3 style={{ margin:'0 0 6px', color:C.text, fontFamily:'sans-serif' }}>{selected.title}</h3>
             <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', marginBottom:12 }}>{selected.date.toLocaleString()}</div>
             <div style={{ fontSize:13, color:C.text, fontFamily:'sans-serif', textTransform:'capitalize' }}>Type: {selected.type}</div>
-            <button onClick={() => setSelected(null)} style={{ marginTop:16, padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', cursor:'pointer', fontFamily:'sans-serif' }}>Close</button>
+            <div style={{ marginTop:16, display:'flex', gap:8 }}>
+              {selected.refId && selected.type !== 'attendance' && (
+                <button onClick={() => {
+                  const isQuiz = selected.type === 'quiz' && selected.id.startsWith('q-');
+                  const path = isQuiz
+                    ? `/portal/courses/${courseId}/quizzes/${selected.refId}`
+                    : `/portal/courses/${courseId}/assignments/${selected.refId}`;
+                  navigate(path);
+                }}
+                  style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', cursor:'pointer', fontFamily:'sans-serif' }}>
+                  Open
+                </button>
+              )}
+              <button onClick={() => setSelected(null)} style={{ padding:'7px 16px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, cursor:'pointer', fontFamily:'sans-serif' }}>Close</button>
+            </div>
           </div>
         </div>
       )}
