@@ -267,21 +267,62 @@ const Account: React.FC<AccountProps> = ({ onBackToDashboard, isAdmin }) => {
       </Section>
 
       {/* ── Notification Preferences ── */}
-      <Section title="Notification Preferences">
+      <Section title="Notification Preferences" subtitle="Choose which activity generates an email or SMS. Applies to all courses you teach.">
         {notifMsg && <Toast type={notifMsg.type} message={notifMsg.text}/>}
-        {[
-          ['notifEmail', 'Email me when a student submits an assignment', notifEmail, setNotifEmail],
-          ['notifSub',   'Email me when a student sends a message',       notifSub,   setNotifSub],
-          ['notifGrade', 'Email me weekly grade export summaries',        notifGrade, setNotifGrade],
-        ].map(([key, label, val, set]) => (
-          <label key={key as string} style={{ display:'flex', alignItems:'center', gap:10, fontSize:13, fontFamily:'sans-serif', color:C.text, marginBottom:14, cursor:'pointer' }}>
-            <input type="checkbox" checked={val as boolean} onChange={e => (set as Function)(e.target.checked)}
-              style={{ accentColor:C.primary, width:16, height:16 }}/>
-            {label as string}
+
+        <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, margin:'0 0 10px' }}>Student Activity</div>
+        {([
+          ['emailSubmission',      'A student submits an assignment'],
+          ['emailLateSubmission',  'A student submits an assignment after the due date'],
+          ['emailQuizAttempt',     'A student submits a quiz or exam attempt'],
+          ['emailMessage',         'A student sends me a direct message'],
+          ['emailAttendanceMissed','A student is marked absent in attendance'],
+        ] as const).map(([k, label]) => (
+          <label key={k} style={{ display:'flex', alignItems:'center', gap:10, fontSize:13, fontFamily:'sans-serif', color:C.text, marginBottom:10, cursor:'pointer' }}>
+            <input type="checkbox" checked={prefs[k] as boolean} onChange={e => setPref(k, e.target.checked)} style={{ accentColor:C.primary, width:16, height:16 }}/>
+            {label}
           </label>
         ))}
-        <button onClick={() => { setNotifMsg({ type:'success', text:'Notification preferences saved.' }); setTimeout(() => setNotifMsg(null), 3000); }}
-          style={{ padding:'9px 24px', background:C.primary, color:'white', border:'none', borderRadius:6, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer' }}>
+
+        <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, margin:'18px 0 10px' }}>Discussions & Announcements</div>
+        {([
+          ['emailNewDiscussion',   'A new discussion is posted in one of my courses'],
+          ['emailDiscussionReply', 'Someone replies to a discussion I started or replied to'],
+          ['emailAnnouncement',    'An announcement is posted (as CC when I authored it)'],
+        ] as const).map(([k, label]) => (
+          <label key={k} style={{ display:'flex', alignItems:'center', gap:10, fontSize:13, fontFamily:'sans-serif', color:C.text, marginBottom:10, cursor:'pointer' }}>
+            <input type="checkbox" checked={prefs[k] as boolean} onChange={e => setPref(k, e.target.checked)} style={{ accentColor:C.primary, width:16, height:16 }}/>
+            {label}
+          </label>
+        ))}
+
+        <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, margin:'18px 0 10px' }}>Digests & Delivery</div>
+        {([
+          ['digestDaily',        'Send me a daily digest at 8:00 AM'],
+          ['digestWeekly',       'Send me a weekly summary every Monday'],
+          ['emailWeeklyGrades',  'Include weekly grade export summary'],
+          ['smsUrgent',          'Text me for urgent items (clinical no-shows, exam failures)'],
+        ] as const).map(([k, label]) => (
+          <label key={k} style={{ display:'flex', alignItems:'center', gap:10, fontSize:13, fontFamily:'sans-serif', color:C.text, marginBottom:10, cursor:'pointer' }}>
+            <input type="checkbox" checked={prefs[k] as boolean} onChange={e => setPref(k, e.target.checked)} style={{ accentColor:C.primary, width:16, height:16 }}/>
+            {label}
+          </label>
+        ))}
+
+        <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, margin:'18px 0 10px' }}>Quiet Hours</div>
+        <label style={{ display:'flex', alignItems:'center', gap:10, fontSize:13, fontFamily:'sans-serif', color:C.text, marginBottom:10, cursor:'pointer' }}>
+          <input type="checkbox" checked={prefs.quietHours} onChange={e => setPref('quietHours', e.target.checked)} style={{ accentColor:C.primary, width:16, height:16 }}/>
+          Pause non-urgent notifications during quiet hours
+        </label>
+        {prefs.quietHours && (
+          <div style={{ display:'flex', gap:10, alignItems:'center', marginLeft:26, marginBottom:14, fontSize:12, color:C.text, fontFamily:'sans-serif' }}>
+            From <input type="time" value={prefs.quietStart} onChange={e => setPref('quietStart', e.target.value)} style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:'4px 8px' }}/>
+            to <input type="time" value={prefs.quietEnd} onChange={e => setPref('quietEnd', e.target.value)} style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:'4px 8px' }}/>
+          </div>
+        )}
+
+        <button onClick={saveNotifPrefs}
+          style={{ marginTop:8, padding:'9px 24px', background:C.primary, color:'white', border:'none', borderRadius:6, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer' }}>
           Save Preferences
         </button>
       </Section>
