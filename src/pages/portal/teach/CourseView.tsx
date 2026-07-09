@@ -737,8 +737,14 @@ const CourseView: React.FC = () => {
         <img src="/hsa-logo.png" alt="HSA" onClick={() => setShowDashboard(true)}
           title="Go to Dashboard"
           style={{ width:38, height:38, borderRadius:'50%', marginBottom:16, cursor:'pointer', objectFit:'cover', border:'2px solid rgba(255,255,255,0.3)', display:'block' }}/>
-        {['🏠','📚','📅','✉️','⏱️'].map((icon, i) => (
-          <div key={i}
+        {[
+          { icon:'🏠', title:'Home',     onClick:() => { setActiveTab('home');         setMobileNavOpen(false); setShowDashboard(true);  setShowProfile(false); } },
+          { icon:'📚', title:'Courses',  onClick:() => { setShowCourses(true);         setMobileNavOpen(false); setShowDashboard(false); setShowProfile(false); } },
+          { icon:'📅', title:'Calendar', onClick:() => { setActiveTab('calendar');     setMobileNavOpen(false); setShowDashboard(false); setShowProfile(false); } },
+          { icon:'👤', title:'Account',  onClick:() => { setActiveTab('account');      setMobileNavOpen(false); setShowDashboard(false); setShowProfile(false); } },
+          { icon:'💼', title:'Career',   onClick:() => { setActiveTab('career');       setMobileNavOpen(false); setShowDashboard(false); setShowProfile(false); } },
+        ].map(({ icon, title, onClick }) => (
+          <div key={title} onClick={onClick} title={title}
             style={{ width:52, height:48, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:17, borderLeft:'3px solid transparent' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'white'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.6)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
