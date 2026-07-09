@@ -76,7 +76,18 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  const [viewerFile, setViewerFile] = useState<{ src: ContentSource; name: string; type: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const openInFullViewer = (url: string, name: string, ext: string) => {
+    const raw = url.split('/course-files/')[1];
+    const path = raw ? decodeURIComponent(raw.split('?')[0]) : null;
+    setViewerFile({
+      src: path ? { bucket: 'course-files', path } : { url },
+      name,
+      type: ext,
+    });
+  };
 
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
