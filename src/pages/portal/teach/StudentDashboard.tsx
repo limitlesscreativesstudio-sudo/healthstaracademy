@@ -40,110 +40,112 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   const [addError,     setAddError]     = useState('');
   const [selected,     setSelected]     = useState<string[]>([]);
 
-  // ── Load enrollments ───────────────────────────────────────────────────────
+  // ── Load enrollments + pending invites ─────────────────────────────────────
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
     setLoading(true);
-    const { data, error } = await supabase
-      .from('enrollments')
-      .select(`
-        id,
-        section,
-        profiles (
-          id,
-          full_name,
-          email,
-          role
-        )
-      `)
-      .eq('course_id', courseId);
+    const [enrRes, pendRes] = await Promise.all([
+      supabase
+        .from('enrollments')
+        .select(`id, role, section_id, user_id, profiles ( id, full_name )`)
+        .eq('course_id', courseId),
+      supabase
+        .from('pending_enrollments')
+        .select('id, email, section, status, invited_at')
+        .eq('course_id', courseId)
+        .eq('status', 'pending'),
+    ]);
 
-    if (!error && data) {
-      const built: Person[] = data.map((row: any) => {
+    const built: Person[] = [];
+    if (!enrRes.error && enrRes.data) {
+      for (const row of enrRes.data as any[]) {
         const p = row.profiles;
-        const initials = (p?.full_name ?? 'U')
-          .split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
-        return {
+        const name = p?.full_name ?? 'Student';
+        const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+        built.push({
           enrollmentId:   row.id,
           profileId:      p?.id ?? '',
-          name:           p?.full_name ?? p?.email ?? 'Unknown',
-          email:          p?.email ?? '',
-          role:           p?.role ?? 'student',
-          section:        row.section ?? '',
+          name,
+          email:          '',
+          role:           row.role ?? 'student',
+          section:        '',
           pending:        false,
-          avatarInitials: initials,
-        };
-      });
-      setPeople(built);
+          avatarInitials: initials || 'S',
+        });
+      }
     }
+    if (!pendRes.error && pendRes.data) {
+      for (const row of pendRes.data as any[]) {
+        const initials = row.email.slice(0, 2).toUpperCase();
+        built.push({
+          enrollmentId:   `pending:${row.id}`,
+          profileId:      '',
+          name:           row.email.split('@')[0],
+          email:          row.email,
+          role:           'student',
+          section:        row.section ?? '',
+          pending:        true,
+          avatarInitials: initials,
+        });
+      }
+    }
+    setPeople(built);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, [courseId]);
 
-  // ── Add people by email ────────────────────────────────────────────────────
+  // ── Add people by email (sends invitation email) ───────────────────────────
   const addPeople = async () => {
     if (!emails.trim() || !courseId) return;
     setAddingPeople(true);
     setAddError('');
 
     const list = emails.split(/[,\n]/).map(e => e.trim()).filter(Boolean);
-    const errors: string[] = [];
 
-    for (const email of list) {
-      // Look up profile by email
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, role')
-        .eq('email', email.toLowerCase())
-        .single();
+    const { data, error } = await supabase.functions.invoke('invite-student', {
+      body: {
+        courseId,
+        emails: list,
+        section: addSection,
+        redirectTo: `${window.location.origin}/portal/teach/login`,
+      },
+    });
 
-      if (!profile) {
-        errors.push(`${email} — not found. They must have a Supabase account first.`);
-        continue;
-      }
-
-      // Check not already enrolled
-      const { data: existing } = await supabase
-        .from('enrollments')
-        .select('id')
-        .eq('course_id', courseId)
-        .eq('student_id', profile.id)
-        .single();
-
-      if (existing) {
-        errors.push(`${email} — already enrolled.`);
-        continue;
-      }
-
-      // Enroll them
-      await supabase.from('enrollments').insert({
-        course_id:  courseId,
-        student_id: profile.id,
-        section:    addSection,
-      });
-    }
-
-    if (errors.length > 0) {
-      setAddError(errors.join('\n'));
+    if (error) {
+      setAddError(error.message || 'Failed to send invitations.');
     } else {
-      setShowModal(false);
-      setEmails('');
+      const failed = (data?.results ?? []).filter((r: any) => !r.ok);
+      if (failed.length > 0) {
+        setAddError(failed.map((r: any) => `${r.email} — ${r.message}`).join('\n'));
+      } else {
+        setShowModal(false);
+        setEmails('');
+      }
     }
     await load();
     setAddingPeople(false);
   };
 
-  // ── Remove (unenroll) ──────────────────────────────────────────────────────
+  // ── Remove (unenroll or cancel invite) ─────────────────────────────────────
+  const removeOne = async (id: string) => {
+    if (id.startsWith('pending:')) {
+      const peId = id.slice('pending:'.length);
+      await supabase.from('pending_enrollments').delete().eq('id', peId);
+    } else {
+      await supabase.from('enrollments').delete().eq('id', id);
+    }
+  };
+
   const removePerson = async (enrollmentId: string) => {
     setPeople(p => p.filter(x => x.enrollmentId !== enrollmentId));
-    await supabase.from('enrollments').delete().eq('id', enrollmentId);
+    await removeOne(enrollmentId);
   };
 
   const removeSelected = async () => {
     if (!selected.length) return;
     if (!confirm(`Remove ${selected.length} person${selected.length > 1 ? 's' : ''} from this course?`)) return;
-    for (const id of selected) await supabase.from('enrollments').delete().eq('id', id);
+    for (const id of selected) await removeOne(id);
     setPeople(p => p.filter(x => !selected.includes(x.enrollmentId)));
     setSelected([]);
   };
@@ -291,7 +293,15 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
                         {p.avatarInitials}
                       </div>
                       <div>
-                        <div style={{ fontSize:13, fontWeight:600, color:C.primary }}>{p.name}</div>
+                        <div style={{ fontSize:13, fontWeight:600, color:C.primary, display:'flex', alignItems:'center', gap:6 }}>
+                          {p.name}
+                          {p.pending && (
+                            <span style={{ fontSize:10, padding:'2px 8px', borderRadius:20, fontWeight:700,
+                              background:'#FFF3CD', color:'#8A6D00', border:'1px solid #FFE082' }}>
+                              PENDING
+                            </span>
+                          )}
+                        </div>
                         <div style={{ fontSize:11, color:C.muted }}>{p.email}</div>
                       </div>
                     </div>
@@ -359,8 +369,8 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
 
             <div style={{ background:'#EDE8F7', borderRadius:6, padding:'10px 14px', marginBottom:18,
               fontSize:12, color:C.text, fontFamily:'sans-serif', lineHeight:1.6 }}>
-              💡 The person must already have a Supabase account. Enter their email address below.
-              If they don't have an account yet, create one in Supabase → Auth → Users first.
+              💡 Enter the student's email address. They will receive an invitation
+              email to create their account and access this course.
             </div>
 
             {addError && (

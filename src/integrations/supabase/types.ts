@@ -1489,6 +1489,47 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_enrollments: {
+        Row: {
+          accepted_at: string | null
+          course_id: string
+          email: string
+          id: string
+          invited_at: string
+          invited_by: string | null
+          section: string | null
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          course_id: string
+          email: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          section?: string | null
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          course_id?: string
+          email?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          section?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
