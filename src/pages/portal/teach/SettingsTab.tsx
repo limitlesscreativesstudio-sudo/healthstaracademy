@@ -351,7 +351,7 @@ const Navigation: React.FC = () => {
   );
 };
 
-const SettingsTab: React.FC = () => {
+const SettingsTab: React.FC<{ courseId?: string }> = ({ courseId }) => {
   const { user } = useAuth();
   const canEdit = user?.canEdit ?? false;
   const [activeTab, setActiveTab] = useState<Tab>('Course Details');
@@ -359,7 +359,7 @@ const SettingsTab: React.FC = () => {
   return (
     <div style={{ padding:24 }}>
       {/* Tab bar */}
-      <div style={{ display:'flex', borderBottom:`2px solid ${C.border}`, marginBottom:28, gap:0 }}>
+      <div style={{ display:'flex', borderBottom:`2px solid ${C.border}`, marginBottom:28, gap:0, flexWrap:'wrap' }}>
         {TABS.map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             style={{ padding:'10px 18px', border:'none', borderBottom:activeTab===tab?`3px solid ${C.primary}`:'3px solid transparent', background:'transparent', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', color:activeTab===tab?C.primary:C.muted, fontWeight:activeTab===tab?600:400, marginBottom:-2 }}>
@@ -367,7 +367,8 @@ const SettingsTab: React.FC = () => {
           </button>
         ))}
       </div>
-      {activeTab === 'Course Details' && <CourseDetails canEdit={canEdit}/>}
+      {activeTab === 'Course Details' && <CourseDetails canEdit={canEdit} courseId={courseId}/>}
+
       {activeTab === 'Sections'       && <Sections canEdit={canEdit}/>}
       {activeTab === 'Navigation'     && <Navigation/>}
       {activeTab === 'Apps'           && <div style={{ fontSize:14, color:C.muted, fontFamily:'sans-serif' }}>No external apps configured. Connect apps via LTI integration.</div>}
