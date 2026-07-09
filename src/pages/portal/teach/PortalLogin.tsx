@@ -160,8 +160,8 @@ const PortalLogin: React.FC = () => {
         </div>
 
         {/* Forgot password */}
-        <div style={{ textAlign:'right', marginBottom:18 }}>
-          <a href="/portal/teach/reset" style={{ fontSize:12, color:C.primary, fontFamily:'sans-serif', textDecoration:'none' }}>Forgot password?</a>
+        <div style={{ textAlign:'right', marginBottom:14 }}>
+          <a href="/portal/teach/reset" style={{ fontSize:12, color:C.primary, fontFamily:'sans-serif', textDecoration:'none', fontWeight:600 }}>Forgot password? Reset it →</a>
         </div>
 
         {/* Preview-only warning: lovable.js fetch proxy can block Supabase auth POSTs */}
@@ -177,9 +177,25 @@ const PortalLogin: React.FC = () => {
 
         {/* Error */}
         {error && (
-          <div style={{ background:'#fdecea', border:'1px solid #f5c6c2', borderRadius:6, padding:'10px 14px', marginBottom:16, display:'flex', gap:10, alignItems:'flex-start' }}>
-            <span style={{ fontSize:16, flexShrink:0 }}>⚠️</span>
-            <span style={{ color:C.error, fontSize:13, fontFamily:'sans-serif', lineHeight:1.5 }}>{error}</span>
+          <div style={{ background:'#fdecea', border:'1px solid #f5c6c2', borderRadius:6, padding:'12px 14px', marginBottom:16 }}>
+            <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+              <span style={{ fontSize:16, flexShrink:0 }}>⚠️</span>
+              <span style={{ color:C.error, fontSize:13, fontFamily:'sans-serif', lineHeight:1.5 }}>{error}</span>
+            </div>
+            {showResetHint && (
+              <div style={{ marginTop:10, paddingTop:10, borderTop:'1px solid #f5c6c2', fontSize:12, color:C.text, fontFamily:'sans-serif', lineHeight:1.55 }}>
+                <strong>Next steps:</strong>
+                <ul style={{ margin:'6px 0 8px 18px', padding:0 }}>
+                  <li>Double-check your email address for typos.</li>
+                  <li>Make sure Caps Lock is off — passwords are case-sensitive.</li>
+                  <li>If you still can't sign in, reset your password below.</li>
+                </ul>
+                <a href="/portal/teach/reset"
+                  style={{ display:'inline-block', marginTop:4, padding:'8px 14px', background:C.primary, color:'#fff', borderRadius:6, fontSize:13, fontWeight:700, textDecoration:'none' }}>
+                  Reset my password
+                </a>
+              </div>
+            )}
           </div>
         )}
 
