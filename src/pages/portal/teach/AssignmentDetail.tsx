@@ -39,8 +39,8 @@ const fmtDate = (iso: string | null | undefined) =>
 
 const AssignmentDetail: React.FC = () => {
   const { courseId, assignmentId } = useParams<{ courseId: string; assignmentId: string }>();
-  const { user } = useAuth();
-  const isStaff = user?.role === 'instructor' || user?.role === 'admin';
+  const { user, isInstructor } = usePortalAuth(true);
+  const isStaff = isInstructor;
 
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(true);
