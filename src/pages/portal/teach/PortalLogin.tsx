@@ -39,8 +39,11 @@ const PortalLogin: React.FC = () => {
     if (isAuthenticated) window.location.replace(getRedirect());
   }, [isAuthenticated]);
 
+  const [showResetHint, setShowResetHint] = useState(false);
+
   const handleLogin = async (roleOverride?: UserRole) => {
     setError('');
+    setShowResetHint(false);
     if (!email.trim())    { setError('Please enter your email address.'); return; }
     if (!password.trim()) { setError('Please enter your password.'); return; }
 
@@ -49,7 +52,14 @@ const PortalLogin: React.FC = () => {
     setLoading(false);
 
     if (result.error) {
+      const msg = result.error.toLowerCase();
+      const isCreds =
+        msg.includes('incorrect') ||
+        msg.includes('invalid') ||
+        msg.includes('credentials') ||
+        msg.includes('password');
       setError(result.error);
+      setShowResetHint(isCreds);
       setNeedsRole(false);
       return;
     }
