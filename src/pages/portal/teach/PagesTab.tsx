@@ -278,7 +278,7 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
               ↕ Smart Sort
             </button>
             <input ref={fileRef} type="file" style={{ display:'none' }} multiple
-              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.mp4,.mov"
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.gif,.webp,.svg,.mp4,.mov,.webm,.m4v,.mp3,.wav,.m4a"
               onChange={async e => {
                 const files = e.target.files; if (!files || !courseId) return;
                 setUploading(true); setUpError('');
