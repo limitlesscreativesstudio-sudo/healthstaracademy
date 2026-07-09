@@ -90,9 +90,9 @@ const CalendarTab: React.FC<Props> = ({ courseId }) => {
   return (
     <div style={{ padding:24, display:'flex', gap:20, fontFamily:'sans-serif' }}>
       <div style={{ flex:1, minWidth:0 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, flexWrap:'wrap' }}>
           <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text }}>Calendar</h2>
-          <div style={{ marginLeft:'auto', display:'flex', gap:6 }}>
+          <div style={{ marginLeft:'auto', display:'flex', gap:6, flexWrap:'wrap' }}>
             <button onClick={() => { const d=new Date(); d.setDate(1); setMonthCursor(d); }}
               style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, fontSize:12, cursor:'pointer' }}>Today</button>
             {(['month','agenda'] as const).map(v => (
@@ -102,6 +102,28 @@ const CalendarTab: React.FC<Props> = ({ courseId }) => {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Filters */}
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14, flexWrap:'wrap' }}>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search events…"
+            style={{ padding:'6px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:12, fontFamily:'sans-serif', minWidth:160 }}/>
+          {(['all','assignment','quiz','attendance'] as const).map(t => (
+            <button key={t} onClick={() => setTypeFilter(t)}
+              style={{ padding:'5px 12px', border:`1px solid ${typeFilter===t?C.primary:C.border}`, borderRadius:20, background:typeFilter===t?C.primary:C.white, color:typeFilter===t?'white':C.text, fontSize:11, cursor:'pointer', textTransform:'capitalize' }}>
+              {t === 'all' ? 'All' : t === 'attendance' ? 'Sessions' : t + 's'}
+            </button>
+          ))}
+          {sectionOptions.length > 0 && (
+            <select value={sectionFilter} onChange={e => setSectionFilter(e.target.value)}
+              style={{ padding:'6px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:12, fontFamily:'sans-serif' }}>
+              <option value="all">All sections</option>
+              {sectionOptions.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          )}
+          <span style={{ marginLeft:'auto', fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>
+            {filteredEvents.length} event{filteredEvents.length===1?'':'s'}
+          </span>
         </div>
 
         {view === 'month' ? (
