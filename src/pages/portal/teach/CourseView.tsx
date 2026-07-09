@@ -17,6 +17,8 @@ import Dashboard         from './Dashboard';
 import SettingsTab       from './SettingsTab';
 import CalendarTab       from './CalendarTab';
 import RubricsTab        from './RubricsTab';
+import StudentProgress   from './StudentProgress';
+import Account           from './Account';
 import { useAuth, supabase } from './AuthContext';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
 import { toast, Toaster } from 'sonner';
@@ -555,6 +557,7 @@ const NAV_ITEMS = [
   { id:'assignments',   label:'Assignments',        icon:'✅' },
   { id:'discussions',   label:'Discussions',        icon:'💬' },
   { id:'grades',        label:'Grades',             icon:'📊' },
+  { id:'progress',      label:'Progress',           icon:'📈' },
   { id:'people',        label:'People',             icon:'👥' },
   { id:'pages',         label:'Pages',              icon:'📄' },
   { id:'files',         label:'Files',              icon:'📁' },
@@ -726,7 +729,8 @@ const CourseView: React.FC = () => {
     analytics:     <Placeholder title="New Analytics" />,
     lucid:         <Placeholder title="Lucid (Whiteboard)" />,
     settings:      <SettingsTab courseId={cid} />,
-    account:       <SettingsTab courseId={cid} />,
+    account:       <Account onBackToDashboard={() => { setActiveTab('home'); setShowDashboard(true); }} isAdmin={authUser?.role === 'admin'} />,
+    progress:      <StudentProgress courseId={cid} />,
     calendar:      <CalendarTab courseId={cid} canEdit={canEdit} />,
   };
 

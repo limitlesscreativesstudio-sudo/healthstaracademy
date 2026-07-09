@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from './AuthContext';
+import { toast } from 'sonner';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -95,17 +96,29 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [courseId]);
 
   const saveGrade = async () => {
-    if (!editing || !courseId) return;
+    if (!editing || !courseId) { setEditing(null); return; }
     const col = columns.find(c => c.id === editing.a);
     const raw = editVal.trim();
-    if (raw === '') { setEditing(null); return; }
-    const score = parseFloat(raw);
-    if (isNaN(score)) { setEditing(null); return; }
-    setGrades(p => ({ ...p, [editing.s]: { ...(p[editing.s] ?? {}), [editing.a]: score } }));
     const target = editing;
+    if (raw === '') { setEditing(null); return; }
+    const score = Number(raw);
+    if (!isFinite(score) || isNaN(score)) {
+      toast.error('Score must be a number');
+      return;
+    }
+    if (score < 0) {
+      toast.error('Score cannot be negative');
+      return;
+    }
+    if (col && col.points > 0 && score > col.points) {
+      toast.error(`Score exceeds max (${col.points}). Enter a value between 0 and ${col.points}.`);
+      return;
+    }
+    const prev = grades[target.s]?.[target.a] ?? null;
+    setGrades(p => ({ ...p, [target.s]: { ...(p[target.s] ?? {}), [target.a]: score } }));
     setEditing(null);
     if (col?.kind === 'assignment') {
-      await supabase.from('grades').upsert({
+      const { error } = await supabase.from('grades').upsert({
         course_id: courseId,
         user_id: target.s,
         assignment_id: target.a,
@@ -113,6 +126,12 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
         max_score: col.points || null,
         graded_at: new Date().toISOString(),
       }, { onConflict: 'assignment_id,user_id' });
+      if (error) {
+        setGrades(p => ({ ...p, [target.s]: { ...(p[target.s] ?? {}), [target.a]: prev } }));
+        toast.error('Could not save grade: ' + error.message);
+      } else {
+        toast.success('Grade saved');
+      }
     }
   };
 

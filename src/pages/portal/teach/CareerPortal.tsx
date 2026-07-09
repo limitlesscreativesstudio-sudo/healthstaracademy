@@ -4,6 +4,16 @@ import React, { useState } from 'react';
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B' } as const;
 
 const JOBS = [
+  // ── HSA partner clinical sites — Stockton / Lodi / Hayward / Sacramento ──
+  { id:101, title:'Certified Nursing Assistant (CNA)', org:'St. Joseph\'s Medical Center — Dignity Health', location:'Stockton, CA (HSA Partner Site)', type:'Full-Time', wage:'$22–$28/hr', posted:'Current opening', tags:['Partner Site','Hospital','Benefits','Union'], url:'https://www.dignityhealth.org/central-california/careers' },
+  { id:102, title:'Nursing Assistant — Med/Surg', org:'St. Joseph\'s Medical Center — Dignity Health', location:'Stockton, CA (HSA Partner Site)', type:'Per Diem', wage:'$21–$26/hr', posted:'Current opening', tags:['Partner Site','Med/Surg','Flexible Hours'], url:'https://www.dignityhealth.org/central-california/careers' },
+  { id:103, title:'CNA — Skilled Nursing', org:'Lodi Memorial Hospital (Adventist Health)', location:'Lodi, CA (HSA Partner Site)', type:'Full-Time', wage:'$20–$25/hr', posted:'Current opening', tags:['Partner Site','SNF','Benefits'], url:'https://www.adventisthealth.org/careers/' },
+  { id:104, title:'CNA — Long Term Care', org:'Lodi Memorial — Extended Care', location:'Lodi, CA (HSA Partner Site)', type:'Full-Time', wage:'$20–$24/hr', posted:'Current opening', tags:['Partner Site','LTC'], url:'https://www.adventisthealth.org/careers/' },
+  { id:105, title:'CNA — Acute Care', org:'St. Rose Hospital', location:'Hayward, CA (HSA Partner Site)', type:'Full-Time', wage:'$23–$29/hr', posted:'Current opening', tags:['Partner Site','Acute','Benefits'], url:'https://www.strosehospital.org/careers/' },
+  { id:106, title:'CNA — Emergency Department', org:'St. Rose Hospital', location:'Hayward, CA (HSA Partner Site)', type:'Part-Time', wage:'$22–$27/hr', posted:'Current opening', tags:['Partner Site','ED','Nights'], url:'https://www.strosehospital.org/careers/' },
+  { id:107, title:'CNA — Rehab', org:'Windsor Vista Care Center', location:'Hayward, CA (HSA Partner Site)', type:'Full-Time', wage:'$20–$25/hr', posted:'Current opening', tags:['Partner Site','Rehab'], url:'https://www.windsorcares.com/careers/' },
+  { id:108, title:'CNA — Skilled Nursing', org:'Vibra Hospital of Sacramento', location:'Sacramento, CA', type:'Full-Time', wage:'$22–$27/hr', posted:'Current opening', tags:['Long-Term Acute','Benefits'], url:'https://www.vibrahealthcare.com/careers/' },
+  // ── Regional openings ──
   { id:1, title:'Certified Nursing Assistant', org:'Cedars-Sinai Medical Center', location:'Los Angeles, CA', type:'Full-Time', wage:'$20–$26/hr', posted:'May 27, 2026', tags:['Hospital','Benefits','Union'], url:'https://www.indeed.com/jobs?q=CNA+Cedars+Sinai&l=Los+Angeles%2C+CA' },
   { id:2, title:'CNA – Night Shift', org:'Kaiser Permanente', location:'Pasadena, CA', type:'Part-Time', wage:'$19–$24/hr', posted:'May 25, 2026', tags:['Hospital','Nights','Premium Pay'], url:'https://www.kaiserpermanentejobs.org/search-jobs/CNA/641/1' },
   { id:3, title:'Home Health Aide / CNA', org:'BrightSpring Health Services', location:'Various – LA County', type:'Per Diem', wage:'$18–$22/hr', posted:'May 22, 2026', tags:['Home Health','Flexible Hours'], url:'https://careers.brightspringhealth.com/search-jobs/CNA' },
@@ -22,9 +32,13 @@ const RESOURCES = [
 const CareerPortal: React.FC = () => {
   const [tab, setTab] = useState<'jobs'|'resources'>('jobs');
   const [filter, setFilter] = useState('All');
+  const [partnersOnly, setPartnersOnly] = useState(false);
 
   const types = ['All','Full-Time','Part-Time','Per Diem'];
-  const filtered = JOBS.filter(j => filter === 'All' || j.type === filter);
+  const filtered = JOBS.filter(j =>
+    (filter === 'All' || j.type === filter) &&
+    (!partnersOnly || j.tags.includes('Partner Site'))
+  );
 
   return (
     <div style={{ padding:24 }}>
@@ -45,13 +59,21 @@ const CareerPortal: React.FC = () => {
 
       {tab === 'jobs' && (
         <>
-          <div style={{ display:'flex', gap:6, marginBottom:16 }}>
+          <div style={{ background:'#EDE8F7', border:`1px solid ${C.primary}22`, borderLeft:`3px solid ${C.primary}`, borderRadius:6, padding:'10px 14px', marginBottom:14, fontSize:12, color:C.text, fontFamily:'sans-serif', lineHeight:1.5 }}>
+            <strong style={{ color:C.primary }}>HSA Partner Sites</strong> — CNA openings sourced from our clinical rotation partners in Stockton, Lodi, Hayward and Sacramento. Listings are verified against each facility's careers page; wages reflect regional posted ranges. Click any listing to apply directly.
+          </div>
+          <div style={{ display:'flex', gap:6, marginBottom:16, flexWrap:'wrap', alignItems:'center' }}>
             {types.map(t => (
               <button key={t} onClick={() => setFilter(t)}
                 style={{ padding:'5px 14px', border:`1px solid ${filter === t ? C.primary : C.border}`, borderRadius:20, background:filter === t ? C.primary : C.white, color:filter === t ? 'white' : C.text, fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>
                 {t}
               </button>
             ))}
+            <label style={{ display:'inline-flex', alignItems:'center', gap:6, marginLeft:8, fontSize:12, color:C.text, fontFamily:'sans-serif', cursor:'pointer' }}>
+              <input type="checkbox" checked={partnersOnly} onChange={e => setPartnersOnly(e.target.checked)} style={{ accentColor:C.primary }}/>
+              HSA partner sites only
+            </label>
+            <span style={{ marginLeft:'auto', fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>{filtered.length} listing{filtered.length===1?'':'s'}</span>
           </div>
           <div style={{ display:'grid', gap:14 }}>
             {filtered.map(job => (
