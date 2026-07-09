@@ -304,6 +304,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
   if (dbLoading) return <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Loading modules...</div>;
 
   return (
+    <>
     <div style={{ display:'flex' }}>
     <div style={{ flex:1, padding:24 }}>
       {!courseUuid && (
