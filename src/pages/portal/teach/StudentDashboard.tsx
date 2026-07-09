@@ -40,42 +40,56 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   const [addError,     setAddError]     = useState('');
   const [selected,     setSelected]     = useState<string[]>([]);
 
-  // ── Load enrollments ───────────────────────────────────────────────────────
+  // ── Load enrollments + pending invites ─────────────────────────────────────
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
     setLoading(true);
-    const { data, error } = await supabase
-      .from('enrollments')
-      .select(`
-        id,
-        section,
-        profiles (
-          id,
-          full_name,
-          email,
-          role
-        )
-      `)
-      .eq('course_id', courseId);
+    const [enrRes, pendRes] = await Promise.all([
+      supabase
+        .from('enrollments')
+        .select(`id, role, section_id, user_id, profiles ( id, full_name )`)
+        .eq('course_id', courseId),
+      supabase
+        .from('pending_enrollments')
+        .select('id, email, section, status, invited_at')
+        .eq('course_id', courseId)
+        .eq('status', 'pending'),
+    ]);
 
-    if (!error && data) {
-      const built: Person[] = data.map((row: any) => {
+    const built: Person[] = [];
+    if (!enrRes.error && enrRes.data) {
+      for (const row of enrRes.data as any[]) {
         const p = row.profiles;
-        const initials = (p?.full_name ?? 'U')
-          .split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
-        return {
+        const name = p?.full_name ?? 'Student';
+        const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+        built.push({
           enrollmentId:   row.id,
           profileId:      p?.id ?? '',
-          name:           p?.full_name ?? p?.email ?? 'Unknown',
-          email:          p?.email ?? '',
-          role:           p?.role ?? 'student',
-          section:        row.section ?? '',
+          name,
+          email:          '',
+          role:           row.role ?? 'student',
+          section:        '',
           pending:        false,
-          avatarInitials: initials,
-        };
-      });
-      setPeople(built);
+          avatarInitials: initials || 'S',
+        });
+      }
     }
+    if (!pendRes.error && pendRes.data) {
+      for (const row of pendRes.data as any[]) {
+        const initials = row.email.slice(0, 2).toUpperCase();
+        built.push({
+          enrollmentId:   `pending:${row.id}`,
+          profileId:      '',
+          name:           row.email.split('@')[0],
+          email:          row.email,
+          role:           'student',
+          section:        row.section ?? '',
+          pending:        true,
+          avatarInitials: initials,
+        });
+      }
+    }
+    setPeople(built);
     setLoading(false);
   };
 
