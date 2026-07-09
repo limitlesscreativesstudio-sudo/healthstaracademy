@@ -722,12 +722,12 @@ const CourseView: React.FC = () => {
     career:        <CareerPortal />,
     discussions:   <DiscussionsTab courseId={cid} canEdit={canEdit} />,
     outcomes:      <Placeholder title="Outcomes" />,
-    rubrics:       <Placeholder title="Rubrics" />,
+    rubrics:       <RubricsTab courseId={cid} canEdit={canEdit} />,
     analytics:     <Placeholder title="New Analytics" />,
     lucid:         <Placeholder title="Lucid (Whiteboard)" />,
     settings:      <SettingsTab courseId={cid} />,
     account:       <SettingsTab courseId={cid} />,
-    calendar:      <CalendarTab />,
+    calendar:      <CalendarTab courseId={cid} canEdit={canEdit} />,
   };
 
   return (
