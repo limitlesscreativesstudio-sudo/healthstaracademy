@@ -32,9 +32,13 @@ const RESOURCES = [
 const CareerPortal: React.FC = () => {
   const [tab, setTab] = useState<'jobs'|'resources'>('jobs');
   const [filter, setFilter] = useState('All');
+  const [partnersOnly, setPartnersOnly] = useState(false);
 
   const types = ['All','Full-Time','Part-Time','Per Diem'];
-  const filtered = JOBS.filter(j => filter === 'All' || j.type === filter);
+  const filtered = JOBS.filter(j =>
+    (filter === 'All' || j.type === filter) &&
+    (!partnersOnly || j.tags.includes('Partner Site'))
+  );
 
   return (
     <div style={{ padding:24 }}>
@@ -55,7 +59,10 @@ const CareerPortal: React.FC = () => {
 
       {tab === 'jobs' && (
         <>
-          <div style={{ display:'flex', gap:6, marginBottom:16 }}>
+          <div style={{ background:'#EDE8F7', border:`1px solid ${C.primary}22`, borderLeft:`3px solid ${C.primary}`, borderRadius:6, padding:'10px 14px', marginBottom:14, fontSize:12, color:C.text, fontFamily:'sans-serif', lineHeight:1.5 }}>
+            <strong style={{ color:C.primary }}>HSA Partner Sites</strong> — CNA openings sourced from our clinical rotation partners in Stockton, Lodi, Hayward and Sacramento. Listings are verified against each facility's careers page; wages reflect regional posted ranges. Click any listing to apply directly.
+          </div>
+          <div style={{ display:'flex', gap:6, marginBottom:16, flexWrap:'wrap', alignItems:'center' }}>
             {types.map(t => (
               <button key={t} onClick={() => setFilter(t)}
                 style={{ padding:'5px 14px', border:`1px solid ${filter === t ? C.primary : C.border}`, borderRadius:20, background:filter === t ? C.primary : C.white, color:filter === t ? 'white' : C.text, fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>
