@@ -184,12 +184,12 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
                     <td style={{ padding:'10px 14px' }}>
                       <div style={{ display:'flex', alignItems:'center', gap:9 }}>
                         <span style={{ fontSize:18 }}>{fileIcon(f.file_type)}</span>
-                        <a href={f.file_url} target="_blank" rel="noreferrer"
-                          style={{ fontSize:13, color:C.primary, fontWeight:500, textDecoration:'none' }}
+                        <button onClick={() => openFile(f)}
+                          style={{ background:'none', border:'none', padding:0, fontSize:13, color:C.primary, fontWeight:500, textDecoration:'none', cursor:'pointer', textAlign:'left' }}
                           onMouseEnter={e => (e.currentTarget as HTMLElement).style.textDecoration = 'underline'}
                           onMouseLeave={e => (e.currentTarget as HTMLElement).style.textDecoration = 'none'}>
                           {f.file_name}
-                        </a>
+                        </button>
                       </div>
                     </td>
                     <td style={{ padding:'10px 14px', fontSize:11, color:C.muted, maxWidth:160 }}>
