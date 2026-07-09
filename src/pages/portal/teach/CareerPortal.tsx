@@ -69,6 +69,11 @@ const CareerPortal: React.FC = () => {
                 {t}
               </button>
             ))}
+            <label style={{ display:'inline-flex', alignItems:'center', gap:6, marginLeft:8, fontSize:12, color:C.text, fontFamily:'sans-serif', cursor:'pointer' }}>
+              <input type="checkbox" checked={partnersOnly} onChange={e => setPartnersOnly(e.target.checked)} style={{ accentColor:C.primary }}/>
+              HSA partner sites only
+            </label>
+            <span style={{ marginLeft:'auto', fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>{filtered.length} listing{filtered.length===1?'':'s'}</span>
           </div>
           <div style={{ display:'grid', gap:14 }}>
             {filtered.map(job => (
