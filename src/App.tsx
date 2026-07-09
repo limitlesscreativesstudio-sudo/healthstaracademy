@@ -112,14 +112,15 @@ const AppShell = () => {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/portal/login" element={<Navigate to="/portal/teach/login" replace />} />
           <Route path="/portal/accept-invite" element={<AcceptInvite />} />
-          <Route path="/portal" element={<RoleGuard><StudentHome /></RoleGuard>} />
-          <Route path="/portal/account" element={<RoleGuard><Account /></RoleGuard>} />
-          <Route path="/portal/career" element={<RoleGuard><CareerPortal /></RoleGuard>} />
-          <Route path="/portal/required" element={<RoleGuard require="instructor"><RequiredWork /></RoleGuard>} />
-          <Route path="/portal/courses" element={<RoleGuard><StudentHome /></RoleGuard>} />
-          <Route path="/portal/courses/:courseId/*" element={<RoleGuard><CourseView /></RoleGuard>} />
-          <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<RoleGuard><AssignmentDetail /></RoleGuard>} />
-          <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<RoleGuard><QuizView /></RoleGuard>} />
+          <Route path="/portal" element={<AuthProvider><RoleGuard><StudentHome /></RoleGuard></AuthProvider>} />
+          <Route path="/portal/account" element={<AuthProvider><RoleGuard><Account /></RoleGuard></AuthProvider>} />
+          <Route path="/portal/career" element={<AuthProvider><RoleGuard><CareerPortal /></RoleGuard></AuthProvider>} />
+          <Route path="/portal/required" element={<AuthProvider><RoleGuard require="instructor"><RequiredWork /></RoleGuard></AuthProvider>} />
+          <Route path="/portal/courses" element={<AuthProvider><RoleGuard><StudentHome /></RoleGuard></AuthProvider>} />
+          <Route path="/portal/courses/:courseId/*" element={<AuthProvider><RoleGuard><CourseView /></RoleGuard></AuthProvider>} />
+          <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<AuthProvider><RoleGuard><AssignmentDetail /></RoleGuard></AuthProvider>} />
+          <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<AuthProvider><RoleGuard><QuizView /></RoleGuard></AuthProvider>} />
+
           <Route path="/portal/teach/login"          element={<AuthProvider><PortalLogin /></AuthProvider>} />
           <Route path="/portal/teach/reset" element={<AuthProvider><ForgotPassword /></AuthProvider>} />
           <Route path="/portal/teach/reset/sent" element={<ResetEmailSent />} />
