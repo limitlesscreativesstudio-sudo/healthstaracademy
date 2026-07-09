@@ -145,6 +145,12 @@ const Account: React.FC<AccountProps> = ({ onBackToDashboard, isAdmin }) => {
 
   return (
     <div style={{ padding:28, maxWidth:740, margin:'0 auto' }}>
+      {onBackToDashboard && (
+        <button onClick={onBackToDashboard}
+          style={{ marginBottom:16, background:'none', border:`1px solid ${C.border}`, borderRadius:6, padding:'7px 14px', color:C.primary, fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
+          ← Back to Dashboard
+        </button>
+      )}
       <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:28 }}>
         <div>
           <h1 style={{ margin:0, fontSize:22, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Account Settings</h1>
