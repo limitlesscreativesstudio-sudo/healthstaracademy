@@ -17,6 +17,8 @@ import Dashboard         from './Dashboard';
 import SettingsTab       from './SettingsTab';
 import CalendarTab       from './CalendarTab';
 import RubricsTab        from './RubricsTab';
+import StudentProgress   from './StudentProgress';
+import Account           from './Account';
 import { useAuth, supabase } from './AuthContext';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
 import { toast, Toaster } from 'sonner';
