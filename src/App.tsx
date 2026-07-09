@@ -54,6 +54,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import StudentDashboard from "./pages/portal/teach/StudentDashboard";
 import StudentHome from "./pages/portal/teach/StudentHome";
 import AssignmentView from "./pages/portal/teach/AssignmentView";
+import AssignmentDetail from "./pages/portal/teach/AssignmentDetail";
 import QuizView from "./pages/portal/teach/QuizView";
 import Account from "./pages/portal/teach/Account";
 import CareerPortal from "./pages/portal/teach/CareerPortal";
