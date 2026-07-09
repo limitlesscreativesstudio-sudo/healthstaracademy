@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './AuthContext';
+import { usePortalAuth } from '@/hooks/usePortalAuth';
 import { uploadViaXhr } from './uploadViaXhr';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
 import { Button } from '@/components/ui/button';
