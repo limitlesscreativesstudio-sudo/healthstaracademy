@@ -394,7 +394,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
             <>
               {m.items.map((it, i) => (
                 <div key={it.id}
-                  onClick={() => { if (it.file_url) window.open(it.file_url, '_blank', 'noopener'); }}
+                  onClick={() => { if (it.file_url) openItem(it); }}
                   style={{ padding:'9px 14px', paddingLeft:14 + (it.indent * 20), display:'flex', alignItems:'center', gap:10, borderBottom:i < m.items.length - 1 ? `1px solid ${C.border}` : 'none', cursor:'pointer' }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#faf9fc'}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
