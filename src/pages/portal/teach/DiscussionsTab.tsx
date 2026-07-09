@@ -128,8 +128,14 @@ const DiscussionsTab: React.FC<Props> = ({ courseId, canEdit }) => {
         <div style={{ marginBottom:8, fontSize:13, color:C.muted, fontFamily:'sans-serif', fontWeight:600 }}>{replies.length} {replies.length===1?'reply':'replies'}</div>
         {replies.map(r => (
           <div key={r.id} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:14, marginBottom:8 }}>
-            <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', marginBottom:6 }}>
-              <strong style={{ color:C.primary }}>{r.author_name}</strong> • {new Date(r.created_at).toLocaleString()}
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+              <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>
+                <strong style={{ color:C.primary }}>{r.author_name}</strong> • {new Date(r.created_at).toLocaleString()}
+              </div>
+              {(canEdit || r.author_id === user?.id) && (
+                <button onClick={() => delReply(r.id)}
+                  style={{ padding:'2px 8px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:11, color:C.error, cursor:'pointer' }}>✕</button>
+              )}
             </div>
             <div style={{ fontSize:13, color:C.text, fontFamily:'sans-serif', whiteSpace:'pre-wrap', lineHeight:1.6 }}>{r.body}</div>
           </div>
