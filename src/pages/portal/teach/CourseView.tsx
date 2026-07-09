@@ -725,6 +725,7 @@ const CourseView: React.FC = () => {
     analytics:     <Placeholder title="New Analytics" />,
     lucid:         <Placeholder title="Lucid (Whiteboard)" />,
     settings:      <SettingsTab />,
+    account:       <SettingsTab />,
     calendar:      <CalendarTab />,
   };
 
