@@ -30,6 +30,12 @@ const SyllabusTab: React.FC<Props> = ({ courseUuid, canEdit = false }) => {
   const [syllabusName, setSyllabusName] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [moduleNames, setModuleNames] = useState<string[]>([]);
+  const [viewerOpen, setViewerOpen] = useState(false);
+
+  const syllabusPath = syllabusUrl ? (syllabusUrl.split('/course-files/')[1] ? decodeURIComponent(syllabusUrl.split('/course-files/')[1].split('?')[0]) : null) : null;
+  const syllabusSource: ContentSource | null = syllabusUrl
+    ? (syllabusPath ? { bucket: 'course-files', path: syllabusPath } : { url: syllabusUrl })
+    : null;
 
   // Load existing syllabus + modules
   useEffect(() => {
