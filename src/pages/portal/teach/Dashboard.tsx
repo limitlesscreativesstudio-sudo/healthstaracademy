@@ -20,11 +20,13 @@ interface DBCourse {
   name: string;
   code: string;
   color: string;
+  image_url?: string | null;
   published: boolean;
   term: string;
   description: string;
   created_at: string;
 }
+
 
 interface Props {
   onEnterCourse: (course: DBCourse) => void;
