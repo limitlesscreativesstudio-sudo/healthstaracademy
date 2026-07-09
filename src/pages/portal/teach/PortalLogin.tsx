@@ -262,6 +262,14 @@ const PortalLogin: React.FC = () => {
             <strong style={{ color:C.text }}>Students:</strong> sign in here with the account from your invite email — you'll land on your Student Portal automatically.
           </p>
         </div>
+
+        {/* Password reset help */}
+        <div style={{ marginTop:10, padding:'10px 14px', background:'#EAF6FB', border:`1px solid ${C.accent}55`, borderRadius:6, display:'flex', gap:8, alignItems:'flex-start' }}>
+          <span style={{ fontSize:14, flexShrink:0 }}>🔑</span>
+          <p style={{ margin:0, fontSize:12, color:C.text, fontFamily:'sans-serif', lineHeight:1.6 }}>
+            <strong>Forgot your password?</strong> Click <a href="/portal/teach/reset" style={{ color:C.primary, fontWeight:600, textDecoration:'none' }}>Reset it</a>, enter your HSA email, and we'll send a secure link. Open it in the same browser to set a new password on this portal.
+          </p>
+        </div>
       </div>
     </div>
   );
