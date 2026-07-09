@@ -16,6 +16,7 @@ import AssignmentView    from './AssignmentView';
 import Dashboard         from './Dashboard';
 import SettingsTab       from './SettingsTab';
 import CalendarTab       from './CalendarTab';
+import RubricsTab        from './RubricsTab';
 import { useAuth, supabase } from './AuthContext';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
 import { toast, Toaster } from 'sonner';
@@ -721,12 +722,12 @@ const CourseView: React.FC = () => {
     career:        <CareerPortal />,
     discussions:   <DiscussionsTab courseId={cid} canEdit={canEdit} />,
     outcomes:      <Placeholder title="Outcomes" />,
-    rubrics:       <Placeholder title="Rubrics" />,
+    rubrics:       <RubricsTab courseId={cid} canEdit={canEdit} />,
     analytics:     <Placeholder title="New Analytics" />,
     lucid:         <Placeholder title="Lucid (Whiteboard)" />,
     settings:      <SettingsTab courseId={cid} />,
     account:       <SettingsTab courseId={cid} />,
-    calendar:      <CalendarTab />,
+    calendar:      <CalendarTab courseId={cid} canEdit={canEdit} />,
   };
 
   return (
