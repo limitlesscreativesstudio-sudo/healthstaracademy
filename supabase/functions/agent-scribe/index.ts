@@ -1,4 +1,6 @@
-// Scribe: weekly SEO + content audit. Uses Lovable AI to analyze city pages and blog posts.
+// Scribe: weekly SEO audit + full blog-post drafting.
+// - Audits city landing pages for basic SEO issues.
+// - Drafts one full blog post (title, meta, markdown body) targeting a rotating city keyword.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "npm:ai";
 import { createLovableAiGatewayProvider, corsHeaders } from "../_shared/ai-gateway.ts";
@@ -6,6 +8,19 @@ import { createLovableAiGatewayProvider, corsHeaders } from "../_shared/ai-gatew
 const CITY_URLS = [
   "stockton","lodi","hayward","sacramento","fremont","oakland","tracy","manteca","modesto",
 ];
+
+// Rotating angle library — Scribe picks whichever city/angle combo hasn't been drafted recently.
+const ANGLES = [
+  { keyword: "CNA classes in {city}", angle: "beginner overview of hybrid CNA training for {city} residents" },
+  { keyword: "CNA salary {city}", angle: "2026 wage breakdown by shift/setting for CNAs in {city} with hiring outlook" },
+  { keyword: "fast CNA certification {city}", angle: "how to certify in 6 weeks from {city} with the hybrid model" },
+  { keyword: "CNA state exam prep {city}", angle: "how {city} students should prepare for the 22 CDPH skills" },
+  { keyword: "CNA to RN pathway {city}", angle: "career ladder from CNA to LVN/RN starting in {city}" },
+  { keyword: "financing CNA training {city}", angle: "how {city} students pay for training with Denefits + payment plans" },
+];
+
+const slugify = (s: string) =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -16,8 +31,10 @@ Deno.serve(async (req) => {
   const { data: run } = await supabase.from("agent_runs").insert({ agent: "scribe", status: "running" }).select("id").single();
   const runId = run?.id;
   const findings: any[] = [];
+  let draftedSlug: string | null = null;
 
   try {
+    // --- 1. City page SEO audit ---
     for (const city of CITY_URLS) {
       const url = `https://healthstaracademy.org/cna-classes/${city}`;
       try {
@@ -37,8 +54,7 @@ Deno.serve(async (req) => {
             title: `SEO issues on /cna-classes/${city}`,
             detail: issues.join("; "),
             suggested_fix: "Edit src/data/cityMarkets.ts and src/pages/portal/CityLandingPage.tsx for this city.",
-            target_table: "page",
-            target_id: `/cna-classes/${city}`,
+            target_table: "page", target_id: `/cna-classes/${city}`,
           });
         }
       } catch (e) {
@@ -50,21 +66,121 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Draft this week's blog idea
-    const { text } = await generateText({
-      model: gateway("google/gemini-3-flash-preview"),
-      prompt: `Suggest ONE blog post idea for Health Star Academy (CNA training in California) for this week. Give: title (<60 chars), meta description (<160 chars), 5-bullet outline. Focus on local SEO for Stockton/Sacramento/Bay Area.`,
-    });
-    findings.push({
-      agent: "scribe", run_id: runId, severity: "info",
-      title: "Weekly blog post idea",
-      detail: text,
-      suggested_fix: "Approve and ask the Mentor to draft the full post.",
-    });
+    // --- 2. Draft one full blog post ---
+    // Pick a city+angle we haven't targeted in the last 60 days.
+    const { data: recent } = await supabase
+      .from("blog_drafts").select("target_city, target_keyword, created_at")
+      .gte("created_at", new Date(Date.now() - 60 * 86400_000).toISOString());
+    const usedKeys = new Set((recent ?? []).map((r: any) => `${r.target_city}::${r.target_keyword}`));
+
+    let pick: { city: string; keyword: string; angle: string } | null = null;
+    outer: for (const city of CITY_URLS) {
+      for (const a of ANGLES) {
+        const kw = a.keyword.replace("{city}", city.charAt(0).toUpperCase() + city.slice(1));
+        if (!usedKeys.has(`${city}::${kw}`)) {
+          pick = { city, keyword: kw, angle: a.angle.replace("{city}", city) };
+          break outer;
+        }
+      }
+    }
+    if (!pick) pick = { city: "stockton", keyword: "CNA classes Stockton California", angle: "evergreen overview" };
+
+    const cityTitle = pick.city.charAt(0).toUpperCase() + pick.city.slice(1);
+    const prompt = `You are the Scribe agent for Health Star Academy — a CDPH-approved hybrid CNA training program (online theory, in-person clinicals in Stockton, Lodi, Hayward).
+
+Write ONE full blog post targeting the keyword: "${pick.keyword}".
+Angle: ${pick.angle}.
+Voice: professional, empowering, compassionate. Use definitive terms. Do not use the word "flexible". Use "career support" not "job placement".
+
+Return STRICT JSON only (no markdown fences) with keys:
+{
+  "title": string (max 60 chars, includes the keyword),
+  "meta_description": string (max 155 chars, includes the keyword and a benefit),
+  "tldr": string (2 sentences, plain summary),
+  "category": string (one of: Stockton, Lodi, Hayward, Sacramento, Bay Area, Exam Prep, Career Guide, Financing),
+  "read_time": string (e.g. "8 min read"),
+  "body_markdown": string (1200-1800 words, well-structured markdown with an intro, 5-7 H2 sections using ##, bullet lists where useful, an FAQ H2 at the end with 4 questions, and at least 3 internal links written as [anchor](/path) — MUST include links to /pre-qualification, /programs/cohorts, and /cna-classes/${pick.city}. No H1 — the title renders separately. No images.)
+}
+
+Facts you may reference:
+- Tuition $2,499 total ($175 enrollment fee)
+- 6-week Daytime or 8-weekend tracks, 14-day enrollment deadline
+- 75% entrance exam pass score
+- CDPH approved, BBB accredited
+- Clinical sites: Stockton, Lodi, Hayward
+- Serving ${cityTitle} students
+- Denefits financing available
+- Contact: healthstaracademy.org/pre-qualification`;
+
+    let parsed: any = null;
+    try {
+      const { text } = await generateText({
+        model: gateway("openai/gpt-5.5"),
+        prompt,
+      });
+      const cleaned = text.replace(/^```json\s*|\s*```$/g, "").trim();
+      parsed = JSON.parse(cleaned);
+    } catch (e) {
+      findings.push({
+        agent: "scribe", run_id: runId, severity: "medium",
+        title: "Blog draft generation failed",
+        detail: e instanceof Error ? e.message : String(e),
+      });
+    }
+
+    if (parsed?.title && parsed?.body_markdown) {
+      const baseSlug = slugify(parsed.title);
+      // Ensure unique slug
+      let slug = baseSlug;
+      let n = 1;
+      while (true) {
+        const { data: exists } = await supabase.from("blog_drafts").select("id").eq("slug", slug).maybeSingle();
+        if (!exists) break;
+        n += 1;
+        slug = `${baseSlug}-${n}`;
+      }
+      const { data: draft, error: draftErr } = await supabase.from("blog_drafts").insert({
+        agent: "scribe",
+        title: String(parsed.title).slice(0, 120),
+        slug,
+        meta_description: String(parsed.meta_description ?? "").slice(0, 160),
+        tldr: parsed.tldr ?? null,
+        category: parsed.category ?? "CNA Training",
+        read_time: parsed.read_time ?? "8 min read",
+        target_keyword: pick.keyword,
+        target_city: pick.city,
+        body_markdown: parsed.body_markdown,
+        status: "draft",
+      }).select("id, slug").single();
+
+      if (!draftErr && draft) {
+        draftedSlug = draft.slug;
+        findings.push({
+          agent: "scribe", run_id: runId, severity: "info",
+          title: `New blog draft: ${parsed.title}`,
+          detail: `Target: ${pick.keyword} • ${parsed.read_time ?? ""}\n\n${parsed.tldr ?? ""}`,
+          suggested_fix: "Review in the Blog tab of Agents Hub, edit if needed, then click Publish.",
+          target_table: "blog_drafts", target_id: draft.id,
+        });
+      } else if (draftErr) {
+        findings.push({
+          agent: "scribe", run_id: runId, severity: "medium",
+          title: "Blog draft insert failed",
+          detail: draftErr.message,
+        });
+      }
+    }
 
     if (findings.length) await supabase.from("agent_findings").insert(findings);
-    await supabase.from("agent_runs").update({ status: "ok", finished_at: new Date().toISOString(), summary: `${findings.length} item(s)` }).eq("id", runId);
-    return new Response(JSON.stringify({ ok: true, findings: findings.length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    await supabase.from("agent_runs").update({
+      status: "ok",
+      finished_at: new Date().toISOString(),
+      summary: `${findings.length} finding(s)${draftedSlug ? `, drafted /${draftedSlug}` : ""}`,
+    }).eq("id", runId);
+
+    return new Response(JSON.stringify({ ok: true, findings: findings.length, draft_slug: draftedSlug }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await supabase.from("agent_runs").update({ status: "error", finished_at: new Date().toISOString(), summary: msg }).eq("id", runId);

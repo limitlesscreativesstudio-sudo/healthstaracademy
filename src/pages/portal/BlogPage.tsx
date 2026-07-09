@@ -1,15 +1,46 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Calendar, Clock, Instagram, Facebook } from "lucide-react";
+import { ArrowRight, Calendar, Clock, Instagram, Facebook, Sparkles } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
+import { supabase } from "@/integrations/supabase/client";
 import studentsVitalsPractice from "@/assets/students-vitals-practice.jpg";
 import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
 import cnaStudentsConfident from "@/assets/cna-students-confident.jpg";
 import studentCareTraining from "@/assets/student-care-training.jpg";
 
 const BlogPage = () => {
+  const [aiPosts, setAiPosts] = useState<Array<{
+    slug: string; title: string; excerpt: string; author: string; date: string;
+    publishDate: Date; readTime: string; category: string; image: string; isAgent?: boolean;
+  }>>([]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("blog_drafts")
+        .select("slug,title,tldr,meta_description,category,read_time,published_at,hero_image_url")
+        .eq("status", "published")
+        .order("published_at", { ascending: false });
+      if (data) {
+        setAiPosts(data.map((p: any) => ({
+          slug: p.slug,
+          title: p.title,
+          excerpt: p.tldr ?? p.meta_description ?? "",
+          author: "Health Star Academy",
+          date: p.published_at ? new Date(p.published_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "",
+          publishDate: new Date(p.published_at ?? Date.now()),
+          readTime: p.read_time ?? "8 min read",
+          category: p.category ?? "CNA Training",
+          image: p.hero_image_url ?? studentsVitalsPractice,
+          isAgent: true,
+        })));
+      }
+    })();
+  }, []);
+
   const allArticles = [
     {
       slug: "how-to-become-cna-in-california",
@@ -167,9 +198,9 @@ const BlogPage = () => {
     },
   ];
 
-  // Only show articles whose scheduled publish date has arrived
+  // Only show articles whose scheduled publish date has arrived; merge in AI-drafted posts.
   const now = new Date();
-  const articles = allArticles
+  const articles = [...aiPosts, ...allArticles]
     .filter((a) => a.publishDate <= now)
     .sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime());
 

@@ -46,6 +46,7 @@ import FinancingCnaTraining from "./pages/blog/FinancingCnaTraining";
 import CnaVsHhaVsMedTech from "./pages/blog/CnaVsHhaVsMedTech";
 import CnaProgramsFremontEastBay from "./pages/blog/CnaProgramsFremontEastBay";
 import CnaToRnCalifornia from "./pages/blog/CnaToRnCalifornia";
+import AgentBlogPost from "./pages/blog/AgentBlogPost";
 import ExamPrepPage from "./pages/portal/ExamPrepPage";
 import CareersPage from "./pages/portal/CareersPage";
 import CommunityResourcesPage from "./pages/portal/CommunityResourcesPage";
@@ -105,6 +106,7 @@ const AppShell = () => {
           <Route path="/blog/cna-vs-hha-vs-medical-assistant" element={<CnaVsHhaVsMedTech />} />
           <Route path="/blog/cna-programs-fremont-east-bay" element={<CnaProgramsFremontEastBay />} />
           <Route path="/blog/cna-to-rn-california" element={<CnaToRnCalifornia />} />
+          <Route path="/blog/:slug" element={<AgentBlogPost />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/refund-policy" element={<RefundPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />

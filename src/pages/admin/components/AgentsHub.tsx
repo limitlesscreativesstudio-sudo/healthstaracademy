@@ -2,51 +2,72 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Play, CheckCircle2, X, Activity, Shield, MessageSquare, Megaphone, Search, GraduationCap, Users } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Loader2, Play, CheckCircle2, X, Activity, Shield, MessageSquare, Megaphone, Search, GraduationCap, Users, FileText, ExternalLink, Sparkles } from "lucide-react";
 import AgentChat from "@/components/agents/AgentChat";
+import { Link } from "react-router-dom";
 
-type Finding = {
-  id: string; agent: string; severity: string; title: string; detail: string | null;
-  suggested_fix: string | null; status: string; created_at: string;
-};
+type Finding = { id: string; agent: string; severity: string; title: string; detail: string | null; suggested_fix: string | null; status: string; created_at: string; };
 type Run = { id: string; agent: string; status: string; started_at: string; finished_at: string | null; summary: string | null };
 type GbpPost = { id: string; title: string | null; body: string; status: string; scheduled_for: string | null; created_at: string };
+type BlogDraft = {
+  id: string; agent: string; title: string; slug: string; meta_description: string | null;
+  tldr: string | null; category: string | null; read_time: string | null;
+  target_keyword: string | null; target_city: string | null; body_markdown: string;
+  status: string; published_at: string | null; created_at: string;
+};
 
 const AGENTS = [
   { id: "sentinel", name: "Sentinel", desc: "Site health & pipeline monitor", icon: Shield, fn: "agent-sentinel" },
   { id: "concierge", name: "Concierge", desc: "Public site chat", icon: MessageSquare, fn: null },
   { id: "advocate", name: "Advocate", desc: "Student support", icon: Users, fn: null },
   { id: "mentor", name: "Mentor", desc: "Instructor LMS copilot", icon: GraduationCap, fn: null },
-  { id: "scribe", name: "Scribe", desc: "Content & SEO audit", icon: Search, fn: "agent-scribe" },
+  { id: "scribe", name: "Scribe", desc: "Content, SEO & blog drafts", icon: Search, fn: "agent-scribe" },
   { id: "broadcaster", name: "Broadcaster", desc: "Weekly GBP post drafts", icon: Megaphone, fn: "agent-broadcaster" },
 ];
 
-const sevColor: Record<string,string> = {
+const sevColor: Record<string, string> = {
   high: "bg-red-100 text-red-800",
   medium: "bg-amber-100 text-amber-800",
   low: "bg-blue-100 text-blue-800",
   info: "bg-slate-100 text-slate-700",
 };
 
+const statusColor: Record<string, string> = {
+  draft: "bg-slate-100 text-slate-700",
+  scheduled: "bg-blue-100 text-blue-800",
+  published: "bg-emerald-100 text-emerald-800",
+  archived: "bg-gray-100 text-gray-600",
+};
+
 const AgentsHub = () => {
   const [findings, setFindings] = useState<Finding[]>([]);
   const [runs, setRuns] = useState<Run[]>([]);
   const [posts, setPosts] = useState<GbpPost[]>([]);
+  const [drafts, setDrafts] = useState<BlogDraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState<string | null>(null);
-  const [tab, setTab] = useState<"findings" | "runs" | "chat" | "gbp">("findings");
+  const [tab, setTab] = useState<"findings" | "runs" | "chat" | "gbp" | "blog">("blog");
   const [chatAgent, setChatAgent] = useState<"advocate" | "mentor">("mentor");
+  const [editing, setEditing] = useState<BlogDraft | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const load = async () => {
-    const [{ data: f }, { data: r }, { data: g }] = await Promise.all([
+    const [{ data: f }, { data: r }, { data: g }, { data: b }] = await Promise.all([
       supabase.from("agent_findings").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(50),
       supabase.from("agent_runs").select("*").order("started_at", { ascending: false }).limit(20),
       supabase.from("gbp_posts").select("*").order("created_at", { ascending: false }).limit(10),
+      supabase.from("blog_drafts").select("*").order("created_at", { ascending: false }).limit(50),
     ]);
     setFindings((f ?? []) as Finding[]);
     setRuns((r ?? []) as Run[]);
     setPosts((g ?? []) as GbpPost[]);
+    setDrafts((b ?? []) as BlogDraft[]);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -72,6 +93,48 @@ const AgentsHub = () => {
     setFindings(findings.filter(f => f.id !== id));
   };
 
+  const callPublish = async (id: string, action: "publish" | "unpublish" | "archive" | "update", patch?: Record<string, unknown>) => {
+    const { error } = await supabase.functions.invoke("publish-blog-post", { body: { id, action, patch } });
+    if (error) throw error;
+  };
+
+  const publish = async (d: BlogDraft) => {
+    try {
+      await callPublish(d.id, "publish");
+      toast({ title: "Published", description: `/blog/${d.slug} is live.` });
+      await load();
+    } catch (e: any) {
+      toast({ title: "Publish failed", description: e.message, variant: "destructive" });
+    }
+  };
+  const unpublish = async (d: BlogDraft) => {
+    try { await callPublish(d.id, "unpublish"); toast({ title: "Unpublished" }); await load(); }
+    catch (e: any) { toast({ title: "Failed", description: e.message, variant: "destructive" }); }
+  };
+  const archive = async (d: BlogDraft) => {
+    try { await callPublish(d.id, "archive"); toast({ title: "Archived" }); await load(); }
+    catch (e: any) { toast({ title: "Failed", description: e.message, variant: "destructive" }); }
+  };
+  const saveEdit = async () => {
+    if (!editing) return;
+    setSaving(true);
+    try {
+      await callPublish(editing.id, "update", {
+        title: editing.title,
+        meta_description: editing.meta_description,
+        tldr: editing.tldr,
+        category: editing.category,
+        read_time: editing.read_time,
+        body_markdown: editing.body_markdown,
+      });
+      toast({ title: "Saved" });
+      setEditing(null);
+      await load();
+    } catch (e: any) {
+      toast({ title: "Save failed", description: e.message, variant: "destructive" });
+    } finally { setSaving(false); }
+  };
+
   if (loading) return <div className="flex items-center justify-center p-12"><Loader2 className="animate-spin" /></div>;
 
   return (
@@ -81,7 +144,6 @@ const AgentsHub = () => {
         <p className="text-muted-foreground text-sm">Your AI team watching the site, the portal, and your students.</p>
       </div>
 
-      {/* Agent cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {AGENTS.map(a => {
           const Icon = a.icon;
@@ -103,10 +165,10 @@ const AgentsHub = () => {
         })}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b">
-        {(["findings","runs","chat","gbp"] as const).map(t => (
+      <div className="flex gap-1 border-b flex-wrap">
+        {(["blog","findings","runs","chat","gbp"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 text-sm font-medium border-b-2 ${tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}>
+            {t === "blog" && <><FileText className="inline h-3 w-3 mr-1" />Blog ({drafts.length})</>}
             {t === "findings" && `Findings (${findings.length})`}
             {t === "runs" && "Recent runs"}
             {t === "chat" && "Chat with an agent"}
@@ -115,9 +177,53 @@ const AgentsHub = () => {
         ))}
       </div>
 
+      {tab === "blog" && (
+        <div className="space-y-3">
+          <div className="text-xs text-muted-foreground flex items-center gap-2">
+            <Sparkles className="h-3 w-3" />
+            Scribe drafts one full blog post per week. Review, edit if needed, then publish — it goes live at <code className="bg-muted px-1 rounded">/blog/&lt;slug&gt;</code>.
+          </div>
+          {drafts.length === 0 && (
+            <div className="text-sm text-muted-foreground p-4 border rounded-lg">
+              No drafts yet. Click <strong>Run now</strong> on the Scribe card above to generate one right now.
+            </div>
+          )}
+          {drafts.map(d => (
+            <div key={d.id} className="border rounded-lg p-4 bg-background">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <Badge className={statusColor[d.status] ?? ""}>{d.status}</Badge>
+                    {d.category && <Badge variant="outline">{d.category}</Badge>}
+                    {d.target_keyword && <span className="text-xs text-muted-foreground">🎯 {d.target_keyword}</span>}
+                  </div>
+                  <div className="font-semibold text-base">{d.title}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">/blog/{d.slug} · {d.read_time ?? ""} · drafted {new Date(d.created_at).toLocaleDateString()}</div>
+                  {d.tldr && <div className="text-sm mt-2 text-muted-foreground">{d.tldr}</div>}
+                </div>
+                <div className="flex flex-col gap-1 shrink-0">
+                  <Button size="sm" variant="outline" onClick={() => setEditing(d)}>Edit</Button>
+                  {d.status !== "published" ? (
+                    <Button size="sm" onClick={() => publish(d)}><CheckCircle2 className="h-3 w-3 mr-1" />Publish</Button>
+                  ) : (
+                    <>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link to={`/blog/${d.slug}`} target="_blank"><ExternalLink className="h-3 w-3 mr-1" />View</Link>
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => unpublish(d)}>Unpublish</Button>
+                    </>
+                  )}
+                  <Button size="sm" variant="ghost" onClick={() => archive(d)}><X className="h-3 w-3" /></Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {tab === "findings" && (
         <div className="space-y-2">
-          {findings.length === 0 && <div className="text-sm text-muted-foreground p-4 border rounded-lg">No open findings. The agents will report here as they spot issues.</div>}
+          {findings.length === 0 && <div className="text-sm text-muted-foreground p-4 border rounded-lg">No open findings.</div>}
           {findings.map(f => (
             <div key={f.id} className="border rounded-lg p-4 bg-background">
               <div className="flex items-start justify-between gap-3">
@@ -167,7 +273,7 @@ const AgentsHub = () => {
 
       {tab === "gbp" && (
         <div className="space-y-2">
-          {posts.length === 0 && <div className="text-sm text-muted-foreground p-4 border rounded-lg">No GBP drafts yet. Click "Run now" on Broadcaster to generate one.</div>}
+          {posts.length === 0 && <div className="text-sm text-muted-foreground p-4 border rounded-lg">No GBP drafts yet.</div>}
           {posts.map(p => (
             <div key={p.id} className="border rounded-lg p-4 bg-background">
               <div className="flex items-center justify-between mb-2">
@@ -180,6 +286,57 @@ const AgentsHub = () => {
           ))}
         </div>
       )}
+
+      {/* Edit dialog */}
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit blog draft</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium">Title (≤60)</label>
+                  <Input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium">Meta description (≤160)</label>
+                  <Textarea rows={2} value={editing.meta_description ?? ""} onChange={(e) => setEditing({ ...editing, meta_description: e.target.value })} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium">TL;DR</label>
+                  <Textarea rows={2} value={editing.tldr ?? ""} onChange={(e) => setEditing({ ...editing, tldr: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-medium">Category</label>
+                    <Input value={editing.category ?? ""} onChange={(e) => setEditing({ ...editing, category: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Read time</label>
+                    <Input value={editing.read_time ?? ""} onChange={(e) => setEditing({ ...editing, read_time: e.target.value })} />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium">Body (markdown)</label>
+                  <Textarea rows={22} className="font-mono text-xs" value={editing.body_markdown} onChange={(e) => setEditing({ ...editing, body_markdown: e.target.value })} />
+                </div>
+              </div>
+              <div className="border rounded p-4 bg-muted/30 overflow-y-auto max-h-[70vh]">
+                <div className="text-xs text-muted-foreground mb-2">Preview</div>
+                <h1 className="text-2xl font-bold mb-2">{editing.title}</h1>
+                {editing.tldr && <p className="text-muted-foreground mb-4">{editing.tldr}</p>}
+                <div className="prose prose-sm max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{editing.body_markdown}</ReactMarkdown>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+            <Button onClick={saveEdit} disabled={saving}>{saving && <Loader2 className="animate-spin h-3 w-3 mr-1" />}Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
