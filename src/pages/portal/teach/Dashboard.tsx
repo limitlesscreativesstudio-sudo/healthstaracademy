@@ -49,13 +49,20 @@ const CourseCard: React.FC<{
       onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(61,27,110,0.18)'}
       onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = 'none'}>
 
-      {/* Color band */}
+      {/* Course cover — image if present, colored band otherwise */}
       <div onClick={onEnter}
-        style={{ height:130, background:course.color, display:'flex', alignItems:'center',
-          justifyContent:'center', position:'relative' }}>
-        <img src="/hsa-logo.png" alt="HSA"
-          style={{ width:72, height:72, borderRadius:'50%', objectFit:'cover',
-            border:'3px solid rgba(255,255,255,0.4)', opacity:0.9 }}/>
+        style={{
+          height:130,
+          background: course.image_url
+            ? `${course.color} url("${course.image_url}") center/cover no-repeat`
+            : course.color,
+          display:'flex', alignItems:'center', justifyContent:'center', position:'relative',
+        }}>
+        {!course.image_url && (
+          <img src="/hsa-logo.png" alt="HSA"
+            style={{ width:72, height:72, borderRadius:'50%', objectFit:'cover',
+              border:'3px solid rgba(255,255,255,0.4)', opacity:0.9 }}/>
+        )}
         {!course.published && (
           <div style={{ position:'absolute', top:8, left:8,
             background:'rgba(0,0,0,0.5)', borderRadius:4, padding:'2px 8px',
