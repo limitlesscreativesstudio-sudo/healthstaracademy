@@ -467,6 +467,13 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
           </div>
         </div>
       )}
+      <ContentViewer
+        open={!!viewerFile}
+        onClose={() => setViewerFile(null)}
+        source={viewerFile?.src ?? null}
+        fileName={viewerFile?.name}
+        fileType={viewerFile?.type}
+      />
     </div>
   );
 };
