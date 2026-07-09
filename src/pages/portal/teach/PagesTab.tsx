@@ -201,12 +201,23 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     const file = extractFileUrl(page.body_html);
     if (file) {
       const { url, ext } = file;
+      const fileName = page.title + (ext ? `.${ext}` : '');
+      const FullscreenBtn = (
+        <button onClick={() => openInFullViewer(url, fileName, ext)}
+          style={{ position:'absolute', top:10, right:10, zIndex:5, padding:'6px 12px', border:'none', borderRadius:5, background:'rgba(0,0,0,0.65)', color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
+          ⛶ Fullscreen
+        </button>
+      );
       if (ext === 'pdf') {
-        return <iframe src={url} title={page.title} style={{ width:'100%', height:'100%', border:'none', background:'#525659' }}/>;
+        return <div style={{ position:'relative', width:'100%', height:'100%' }}>
+          {FullscreenBtn}
+          <iframe src={url} title={page.title} style={{ width:'100%', height:'100%', border:'none', background:'#525659' }}/>
+        </div>;
       }
       if (['ppt','pptx','doc','docx','xls','xlsx'].includes(ext)) {
         return (
-          <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column' }}>
+          <div style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', position:'relative' }}>
+            {FullscreenBtn}
             <iframe src={officeViewer(url)} title={page.title} style={{ width:'100%', flex:1, border:'none' }}/>
             <div style={{ padding:'6px 10px', background:'#F8F6FC', borderTop:`1px solid ${C.border}`, fontSize:11, fontFamily:'sans-serif', color:C.muted, display:'flex', justifyContent:'space-between' }}>
               <span>Viewer not loading? <a href={googleDocsViewer(url)} target="_blank" rel="noopener noreferrer" style={{ color:C.primary, fontWeight:600 }}>Try Google viewer</a></span>
@@ -216,15 +227,35 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
         );
       }
       if (['png','jpg','jpeg','gif','webp','svg'].includes(ext)) {
-        return <div style={{ width:'100%', height:'100%', overflow:'auto', background:'#222', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+        return <div style={{ position:'relative', width:'100%', height:'100%', overflow:'auto', background:'#222', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+          {FullscreenBtn}
           <img src={url} alt={page.title} style={{ maxWidth:'100%', maxHeight:'100%', borderRadius:6 }}/>
         </div>;
       }
-      if (['mp4','mov','webm'].includes(ext)) {
-        return <div style={{ width:'100%', height:'100%', background:'#000', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      if (['mp4','mov','webm','m4v','ogg'].includes(ext)) {
+        return <div style={{ position:'relative', width:'100%', height:'100%', background:'#000', display:'flex', alignItems:'center', justifyContent:'center' }}>
+          {FullscreenBtn}
           <video src={url} controls style={{ maxWidth:'100%', maxHeight:'100%' }}/>
         </div>;
       }
+      if (['mp3','wav','m4a','aac','flac'].includes(ext)) {
+        return <div style={{ position:'relative', width:'100%', height:'100%', background:'#1a1a1a', display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+          {FullscreenBtn}
+          <div style={{ background:'#2a2a2a', padding:24, borderRadius:10, minWidth:320 }}>
+            <div style={{ color:'white', fontFamily:'sans-serif', fontSize:14, marginBottom:12, textAlign:'center' }}>🎵 {page.title}</div>
+            <audio src={url} controls style={{ width:'100%' }}/>
+          </div>
+        </div>;
+      }
+      // Unknown type — offer fullscreen download card
+      return <div style={{ position:'relative', width:'100%', height:'100%', background:'#f5f5f5', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        {FullscreenBtn}
+        <div style={{ textAlign:'center', fontFamily:'sans-serif' }}>
+          <div style={{ fontSize:48, marginBottom:10 }}>📄</div>
+          <div style={{ fontSize:14, color:C.text, marginBottom:12 }}>{page.title}</div>
+          <a href={url} download target="_blank" rel="noreferrer" style={{ padding:'8px 18px', background:C.primary, color:'white', textDecoration:'none', borderRadius:5, fontSize:13, fontWeight:600 }}>⬇ Download</a>
+        </div>
+      </div>;
     }
     // Fallback: render HTML body (covers Video Conference info, custom-written pages).
     return (
