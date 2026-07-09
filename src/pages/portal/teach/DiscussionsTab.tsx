@@ -81,6 +81,14 @@ const DiscussionsTab: React.FC<Props> = ({ courseId, canEdit }) => {
     toast.success('Reply posted');
   };
 
+  const delReply = async (id: string) => {
+    if (!confirm('Delete this reply?')) return;
+    const { error } = await supabase.from('discussion_replies').delete().eq('id', id);
+    if (error) return toast.error('Could not delete reply');
+    setReplies(p => p.filter(r => r.id !== id));
+    toast.success('Reply deleted');
+  };
+
   const createTopic = async () => {
     if (!nf.title.trim() || !courseId || !user?.id) return;
     const { data, error } = await supabase.from('discussions')
