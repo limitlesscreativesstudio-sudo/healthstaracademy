@@ -198,9 +198,9 @@ const BlogPage = () => {
     },
   ];
 
-  // Only show articles whose scheduled publish date has arrived
+  // Only show articles whose scheduled publish date has arrived; merge in AI-drafted posts.
   const now = new Date();
-  const articles = allArticles
+  const articles = [...aiPosts, ...allArticles]
     .filter((a) => a.publishDate <= now)
     .sort((a, b) => b.publishDate.getTime() - a.publishDate.getTime());
 
