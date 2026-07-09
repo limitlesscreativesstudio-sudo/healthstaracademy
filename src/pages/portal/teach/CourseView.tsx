@@ -557,6 +557,7 @@ const NAV_ITEMS = [
   { id:'assignments',   label:'Assignments',        icon:'✅' },
   { id:'discussions',   label:'Discussions',        icon:'💬' },
   { id:'grades',        label:'Grades',             icon:'📊' },
+  { id:'progress',      label:'Progress',           icon:'📈' },
   { id:'people',        label:'People',             icon:'👥' },
   { id:'pages',         label:'Pages',              icon:'📄' },
   { id:'files',         label:'Files',              icon:'📁' },
