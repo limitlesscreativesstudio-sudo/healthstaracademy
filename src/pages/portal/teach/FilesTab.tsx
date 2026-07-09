@@ -199,10 +199,10 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
                     <td style={{ padding:'10px 14px', fontSize:12, color:C.muted }}>{new Date(f.created_at).toLocaleDateString()}</td>
                     <td style={{ padding:'10px 14px' }}>
                       <div style={{ display:'flex', gap:6 }}>
-                        <a href={f.file_url} download target="_blank" rel="noreferrer"
-                          style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:11, cursor:'pointer', color:C.text, textDecoration:'none' }}>
-                          ⬇ Download
-                        </a>
+                        <button onClick={() => openFile(f)}
+                          style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:11, cursor:'pointer', color:C.text }}>
+                          👁 Preview
+                        </button>
                         {canEdit && (
                           <button onClick={() => deleteFile(f.id, f.file_url)}
                             style={{ padding:'4px 8px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:11, cursor:'pointer', color:C.error }}>✕</button>
