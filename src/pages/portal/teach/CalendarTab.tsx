@@ -29,12 +29,12 @@ const CalendarTab: React.FC<Props> = ({ courseId }) => {
       const evs: Ev[] = [];
       (asgn ?? []).forEach(a => {
         const isQuiz = a.submission_type === 'quiz' || a.submission_type === 'exam';
-        evs.push({ id:`a-${a.id}`, title:a.title, date:new Date(a.due_at), type:isQuiz?'quiz':'assignment', color: isQuiz?C.warn:C.primary });
+        evs.push({ id:`a-${a.id}`, refId:a.id, title:a.title, date:new Date(a.due_at), type:isQuiz?'quiz':'assignment', color: isQuiz?C.warn:C.primary });
       });
-      (qz ?? []).forEach(q => evs.push({ id:`q-${q.id}`, title:q.title, date:new Date(q.due_at), type:'quiz', color:C.warn }));
+      (qz ?? []).forEach(q => evs.push({ id:`q-${q.id}`, refId:q.id, title:q.title, date:new Date(q.due_at), type:'quiz', color:C.warn }));
       // dedupe attendance dates
       const attDates = new Set((att ?? []).map(a => a.session_date));
-      attDates.forEach(d => evs.push({ id:`att-${d}`, title:'Class Session', date:new Date(d+'T09:00:00'), type:'attendance', color:C.accent }));
+      attDates.forEach(d => evs.push({ id:`att-${d}`, refId:'', title:'Class Session', date:new Date(d+'T09:00:00'), type:'attendance', color:C.accent }));
       evs.sort((a,b) => a.date.getTime() - b.date.getTime());
       setEvents(evs);
       setLoading(false);
