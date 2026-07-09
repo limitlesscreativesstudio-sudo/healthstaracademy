@@ -22,7 +22,18 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [uploadPct,  setUploadPct]  = useState(0);
   const [selFolder,  setSelFolder]  = useState(FOLDERS[0]);
   const [error,      setError]      = useState('');
+  const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const pathFromUrl = (url: string): string | null => {
+    const m = url.split('/course-files/')[1];
+    return m ? decodeURIComponent(m.split('?')[0]) : null;
+  };
+  const openFile = (f: CourseFile) => {
+    const path = pathFromUrl(f.file_url);
+    if (path) setViewer({ src: { bucket: 'course-files', path }, name: f.file_name, type: f.file_type });
+    else setViewer({ src: { url: f.file_url }, name: f.file_name, type: f.file_type });
+  };
 
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
