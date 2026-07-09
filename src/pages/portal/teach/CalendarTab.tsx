@@ -167,7 +167,21 @@ const CalendarTab: React.FC<Props> = ({ courseId }) => {
             <h3 style={{ margin:'0 0 6px', color:C.text, fontFamily:'sans-serif' }}>{selected.title}</h3>
             <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', marginBottom:12 }}>{selected.date.toLocaleString()}</div>
             <div style={{ fontSize:13, color:C.text, fontFamily:'sans-serif', textTransform:'capitalize' }}>Type: {selected.type}</div>
-            <button onClick={() => setSelected(null)} style={{ marginTop:16, padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', cursor:'pointer', fontFamily:'sans-serif' }}>Close</button>
+            <div style={{ marginTop:16, display:'flex', gap:8 }}>
+              {selected.refId && selected.type !== 'attendance' && (
+                <button onClick={() => {
+                  const isQuiz = selected.type === 'quiz' && selected.id.startsWith('q-');
+                  const path = isQuiz
+                    ? `/portal/courses/${courseId}/quizzes/${selected.refId}`
+                    : `/portal/courses/${courseId}/assignments/${selected.refId}`;
+                  navigate(path);
+                }}
+                  style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', cursor:'pointer', fontFamily:'sans-serif' }}>
+                  Open
+                </button>
+              )}
+              <button onClick={() => setSelected(null)} style={{ padding:'7px 16px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, cursor:'pointer', fontFamily:'sans-serif' }}>Close</button>
+            </div>
           </div>
         </div>
       )}
