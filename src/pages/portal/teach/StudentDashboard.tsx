@@ -293,7 +293,15 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
                         {p.avatarInitials}
                       </div>
                       <div>
-                        <div style={{ fontSize:13, fontWeight:600, color:C.primary }}>{p.name}</div>
+                        <div style={{ fontSize:13, fontWeight:600, color:C.primary, display:'flex', alignItems:'center', gap:6 }}>
+                          {p.name}
+                          {p.pending && (
+                            <span style={{ fontSize:10, padding:'2px 8px', borderRadius:20, fontWeight:700,
+                              background:'#FFF3CD', color:'#8A6D00', border:'1px solid #FFE082' }}>
+                              PENDING
+                            </span>
+                          )}
+                        </div>
                         <div style={{ fontSize:11, color:C.muted }}>{p.email}</div>
                       </div>
                     </div>
