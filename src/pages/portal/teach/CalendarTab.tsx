@@ -1,14 +1,16 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from './AuthContext';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', warn:'#E67E22', success:'#127A1B' } as const;
 
-interface Ev { id:string; title:string; date:Date; type:'assignment'|'quiz'|'attendance'; color:string; }
+interface Ev { id:string; refId:string; title:string; date:Date; type:'assignment'|'quiz'|'attendance'; color:string; }
 
 interface Props { courseId?: string; canEdit?: boolean; }
 
 const CalendarTab: React.FC<Props> = ({ courseId }) => {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<Ev[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'month'|'agenda'>('month');
