@@ -369,8 +369,8 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
 
             <div style={{ background:'#EDE8F7', borderRadius:6, padding:'10px 14px', marginBottom:18,
               fontSize:12, color:C.text, fontFamily:'sans-serif', lineHeight:1.6 }}>
-              💡 The person must already have a Supabase account. Enter their email address below.
-              If they don't have an account yet, create one in Supabase → Auth → Users first.
+              💡 Enter the student's email address. They will receive an invitation
+              email to create their account and access this course.
             </div>
 
             {addError && (
