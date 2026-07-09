@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import AttendanceTab     from './AttendanceTab';
 import CareerPortal      from './CareerPortal';
 import ClinicalSkillsTab from './ClinicalSkillsTab';
+import DiscussionsTab    from './DiscussionsTab';
 import FilesTab          from './FilesTab';
 import PagesTab          from './PagesTab';
 import QuizView          from './QuizView';
@@ -17,6 +18,17 @@ import SettingsTab       from './SettingsTab';
 import CalendarTab       from './CalendarTab';
 import { useAuth, supabase } from './AuthContext';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
+import { toast, Toaster } from 'sonner';
+
+const useIsMobile = () => {
+  const [m, setM] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+  useEffect(() => {
+    const on = () => setM(window.innerWidth < 768);
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+  return m;
+};
 
 const C = {
   nav:'#3D1B6E', primary:'#7B4DB5', accent:'#5BC8E8',
@@ -101,22 +113,50 @@ const CourseViewError: React.FC<{ message: string; onRetry: () => void }> = ({ m
   </div>
 );
 
-// ── Announcements panel ───────────────────────────────────────────────────────
-const AnnouncementsPanel: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
-  const [anns, setAnns] = useState([
-    { id:1, title:'Week 3 Clinical Prep Reminder',     body:'Please review the hand washing technique video before your clinical visit this Friday. Bring your signed skills checklist.', date:'May 26, 2026', replies:3 },
-    { id:2, title:'Vital Signs Lab Rescheduled',       body:'Due to facility maintenance, the Vital Signs Lab has been moved to June 22. Please update your calendars.',                   date:'May 24, 2026', replies:7 },
-    { id:3, title:'Welcome to the 2026-1 Cohort!',     body:'Welcome! Please read through the syllabus and complete the Student Handbook acknowledgement before Day 2.',                   date:'Jan 26, 2026', replies:12 },
-  ]);
+
+// ── Announcements panel (Supabase-wired) ──────────────────────────────────────
+const AnnouncementsPanel: React.FC<{ canEdit: boolean; courseId?: string }> = ({ canEdit, courseId }) => {
+  const { user } = useAuth();
+  const [anns, setAnns] = useState<any[]>([]);
+  const [names, setNames] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title:'', body:'' });
+
+  const load = async () => {
+    if (!courseId) { setLoading(false); return; }
+    setLoading(true);
+    const { data } = await supabase.from('lms_announcements')
+      .select('id,title,body,posted_by,posted_at').eq('course_id', courseId).order('posted_at',{ ascending:false });
+    setAnns(data ?? []);
+    const ids = [...new Set((data ?? []).map(a => a.posted_by).filter(Boolean))];
+    if (ids.length) {
+      const { data: p } = await supabase.from('profiles').select('user_id,full_name').in('user_id', ids as any);
+      const n: Record<string,string> = {};
+      (p ?? []).forEach(pr => { n[pr.user_id] = pr.full_name; });
+      setNames(n);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, [courseId]);
   useEffect(() => { (window as any).__hsaOpenAnn = () => setOpen(true); return () => { delete (window as any).__hsaOpenAnn; }; }, []);
 
-  const post = () => {
-    if (!form.title || !form.body) return;
-    setAnns(p => [{ id:Date.now(), title:form.title, body:form.body, date:'Today', replies:0 }, ...p]);
-    setForm({ title:'', body:'' });
-    setOpen(false);
+  const post = async () => {
+    if (!form.title || !form.body || !courseId || !user?.id) return;
+    const { data, error } = await supabase.from('lms_announcements')
+      .insert({ course_id: courseId, title: form.title, body: form.body, posted_by: user.id }).select().single();
+    if (error) return toast.error('Could not post announcement');
+    setAnns(p => [data, ...p]);
+    setForm({ title:'', body:'' }); setOpen(false);
+    toast.success('Announcement posted');
+  };
+
+  const del = async (id: string) => {
+    const { error } = await supabase.from('lms_announcements').delete().eq('id', id);
+    if (error) return toast.error('Failed to delete');
+    setAnns(p => p.filter(x => x.id !== id));
+    toast.success('Deleted');
   };
 
   return (
@@ -129,38 +169,33 @@ const AnnouncementsPanel: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
           </button>
         )}
       </div>
-      {open && (
+      {open && canEdit && (
         <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:6, padding:20, marginBottom:16 }}>
-          <div style={{ marginBottom:12 }}>
-            <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Title *</label>
-            <input value={form.title} onChange={e => setForm(p => ({ ...p, title:e.target.value }))}
-              style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', outline:'none' }}/>
-          </div>
-          <div style={{ marginBottom:12 }}>
-            <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Message *</label>
-            <textarea value={form.body} onChange={e => setForm(p => ({ ...p, body:e.target.value }))} rows={4}
-              style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', resize:'vertical', boxSizing:'border-box', outline:'none' }}/>
-          </div>
-          <div style={{ display:'flex', gap:8 }}>
+          <input value={form.title} onChange={e => setForm(p => ({ ...p, title:e.target.value }))} placeholder="Title *"
+            style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:14, fontFamily:'sans-serif', boxSizing:'border-box', outline:'none', marginBottom:10 }}/>
+          <textarea value={form.body} onChange={e => setForm(p => ({ ...p, body:e.target.value }))} rows={4} placeholder="Message *"
+            style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', resize:'vertical', boxSizing:'border-box', outline:'none' }}/>
+          <div style={{ display:'flex', gap:8, marginTop:10 }}>
             <button onClick={post} style={{ padding:'7px 18px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Post</button>
             <button onClick={() => setOpen(false)} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>Cancel</button>
           </div>
         </div>
       )}
-      {anns.map(a => (
+      {loading ? <p style={{ color:C.muted, fontFamily:'sans-serif' }}>Loading…</p> :
+       anns.length === 0 ? <p style={{ color:C.muted, fontFamily:'sans-serif' }}>No announcements yet.</p> :
+       anns.map(a => (
         <div key={a.id} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:18, marginBottom:10 }}>
           <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
             <h3 style={{ margin:0, fontSize:15, fontWeight:700, color:C.primary, fontFamily:'sans-serif' }}>{a.title}</h3>
             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-              <span style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>{a.date}</span>
+              <span style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>{new Date(a.posted_at).toLocaleDateString()}</span>
               {canEdit && (
-                <button onClick={() => setAnns(p => p.filter(x => x.id !== a.id))}
-                  style={{ background:'none', border:'none', cursor:'pointer', color:C.error, fontSize:14 }}>✕</button>
+                <button onClick={() => del(a.id)} style={{ background:'none', border:'none', cursor:'pointer', color:C.error, fontSize:14 }}>✕</button>
               )}
             </div>
           </div>
-          <p style={{ margin:'0 0 8px', fontSize:13, color:C.text, fontFamily:'sans-serif', lineHeight:1.65 }}>{a.body}</p>
-          <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>{a.replies} replies</div>
+          <p style={{ margin:'0 0 8px', fontSize:13, color:C.text, fontFamily:'sans-serif', lineHeight:1.65, whiteSpace:'pre-wrap' }}>{a.body}</p>
+          <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>Posted by {names[a.posted_by] || 'Instructor'}</div>
         </div>
       ))}
     </div>
@@ -556,6 +591,44 @@ const CourseView: React.FC = () => {
   const [studentView, setStudentView]   = useState(false);
   const [openAddModule, setOpenAddModule] = useState(0);
   const canEdit = realCanEdit && !studentView;
+  const isMobile = useIsMobile();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifs, setNotifs] = useState<{ id:string; title:string; sub:string; link?:string }[]>([]);
+  const [notifsSeen, setNotifsSeen] = useState(false);
+
+  // Load notifications: recent submissions (instructor) + upcoming due-in-48h
+  useEffect(() => {
+    const cid = activeCourse?.uuid;
+    if (!cid) return;
+    let cancelled = false;
+    const load = async () => {
+      const in48 = new Date(Date.now() + 48*3600*1000).toISOString();
+      const nowIso = new Date().toISOString();
+      const items: any[] = [];
+      const { data: dues } = await supabase.from('assignments')
+        .select('id,title,due_at').eq('course_id', cid).eq('published', true)
+        .gte('due_at', nowIso).lte('due_at', in48).order('due_at');
+      (dues ?? []).forEach(a => items.push({ id:`due-${a.id}`, title:`Due soon: ${a.title}`, sub:new Date(a.due_at).toLocaleString() }));
+      if (canEdit) {
+        const { data: asgnRows } = await supabase.from('assignments').select('id,title').eq('course_id', cid);
+        const ids = (asgnRows ?? []).map(a => a.id);
+        if (ids.length) {
+          const { data: subs } = await supabase.from('submissions')
+            .select('id,assignment_id,submitted_at,user_id').in('assignment_id', ids)
+            .order('submitted_at',{ ascending:false }).limit(5);
+          (subs ?? []).forEach(s => {
+            const asg = (asgnRows ?? []).find(a => a.id === s.assignment_id);
+            items.push({ id:`sub-${s.id}`, title:`New submission: ${asg?.title || 'Assignment'}`, sub:new Date(s.submitted_at).toLocaleString() });
+          });
+        }
+      }
+      if (!cancelled) { setNotifs(items); setNotifsSeen(false); }
+    };
+    load();
+  }, [activeCourse?.uuid, canEdit]);
+
+  const unreadCount = notifsSeen ? 0 : notifs.length;
 
   // Simulate initial data load
   // SWAP: fetch courses from Supabase here
@@ -633,9 +706,9 @@ const CourseView: React.FC = () => {
   const SECTIONS: Record<string, React.ReactNode> = {
     home:          <ModulesHome    canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
     modules:       <ModulesHome    canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
-    announcements: <AnnouncementsPanel canEdit={canEdit} />,
+    announcements: <AnnouncementsPanel canEdit={canEdit} courseId={cid} />,
     assignments:   <AssignmentView courseId={cid} canEdit={canEdit} />,
-    quizzes:       <QuizView />,
+    quizzes:       <QuizView courseId={cid} canEdit={canEdit} />,
     grades:        <StudentGrades  courseId={cid} canEdit={canEdit} />,
     people:        <StudentDashboard courseId={cid} canEdit={canEdit} />,
     pages:         <PagesTab       courseId={cid} canEdit={canEdit} />,
@@ -646,7 +719,7 @@ const CourseView: React.FC = () => {
     readiness:     <ReadinessTab />,
     required:      <RequiredWork />,
     career:        <CareerPortal />,
-    discussions:   <Placeholder title="Discussions" />,
+    discussions:   <DiscussionsTab courseId={cid} canEdit={canEdit} />,
     outcomes:      <Placeholder title="Outcomes" />,
     rubrics:       <Placeholder title="Rubrics" />,
     analytics:     <Placeholder title="New Analytics" />,
@@ -770,17 +843,54 @@ const CourseView: React.FC = () => {
               )}
             </div>
 
-            <div style={{ marginLeft:'auto', display:'flex', gap:8 }}>
-              {realCanEdit && (
+            <div style={{ marginLeft:'auto', display:'flex', gap:8, alignItems:'center' }}>
+              {/* Notification bell */}
+              <div style={{ position:'relative' }}>
+                <button onClick={() => { setNotifOpen(v => !v); if (!notifOpen) setNotifsSeen(true); }}
+                  style={{ position:'relative', padding:'5px 10px', background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:5, color:'white', fontSize:14, cursor:'pointer' }}
+                  aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ''}`}>
+                  🔔
+                  {unreadCount > 0 && (
+                    <span style={{ position:'absolute', top:-4, right:-4, minWidth:18, height:18, padding:'0 5px', borderRadius:9, background:C.error, color:'white', fontSize:10, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                {notifOpen && (
+                  <div style={{ position:'absolute', top:'110%', right:0, width:320, background:C.white, border:`1px solid ${C.border}`, borderRadius:8, boxShadow:'0 8px 28px rgba(0,0,0,0.18)', zIndex:200, overflow:'hidden' }}>
+                    <div style={{ padding:'10px 14px', borderBottom:`1px solid ${C.border}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                      <span style={{ fontWeight:700, fontSize:13, color:C.text, fontFamily:'sans-serif' }}>Notifications</span>
+                      {notifs.length > 0 && <button onClick={() => { setNotifsSeen(true); }} style={{ background:'none', border:'none', color:C.primary, fontSize:11, cursor:'pointer' }}>Mark all read</button>}
+                    </div>
+                    <div style={{ maxHeight:340, overflowY:'auto' }}>
+                      {notifs.length === 0 ? (
+                        <div style={{ padding:24, textAlign:'center', color:C.muted, fontSize:12, fontFamily:'sans-serif' }}>You're all caught up.</div>
+                      ) : notifs.map(n => (
+                        <div key={n.id} style={{ padding:'10px 14px', borderBottom:`1px solid ${C.border}`, fontFamily:'sans-serif' }}>
+                          <div style={{ fontSize:12, fontWeight:600, color:C.text }}>{n.title}</div>
+                          <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{n.sub}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {realCanEdit && !isMobile && (
                 <button onClick={() => setStudentView(v => !v)}
                   style={{ padding:'5px 14px', background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer' }}>
                   {studentView ? '↩ Back to Instructor View' : '👁 View as Student'}
                 </button>
               )}
-              {canEdit && (
+              {canEdit && !isMobile && (
                 <button onClick={() => { setActiveTab('modules'); setOpenAddModule(n => n + 1); }}
                   style={{ padding:'5px 14px', background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.4)', borderRadius:5, color:'white', fontSize:12, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
                   + Module
+                </button>
+              )}
+              {isMobile && (
+                <button onClick={() => setMobileNavOpen(true)}
+                  style={{ padding:'5px 10px', background:'rgba(255,255,255,0.2)', border:'1px solid rgba(255,255,255,0.4)', borderRadius:5, color:'white', fontSize:16, cursor:'pointer' }} aria-label="Open menu">
+                  ☰
                 </button>
               )}
             </div>
@@ -790,29 +900,75 @@ const CourseView: React.FC = () => {
         {/* Sidebar + content */}
         <div style={{ display:'flex', flex:1 }}>
 
-          {/* Course sidebar nav */}
-          <div style={{ width:200, background:C.white, borderRight:`1px solid ${C.border}`, flexShrink:0, minHeight:'calc(100vh - 76px)', overflowY:'auto' }}>
-            {NAV_ITEMS.map(item => {
-              const active = activeTab === item.id || (item.id === 'modules' && activeTab === 'home');
-              return (
-                <div key={item.id} onClick={() => setActiveTab(item.id)}
-                  style={{ padding:'9px 14px', display:'flex', alignItems:'center', gap:9, cursor:'pointer', borderLeft:active ? `3px solid ${C.primary}` : '3px solid transparent', background:active ? '#EDE8F7' : 'transparent', color:active ? C.primary : C.text, fontFamily:'sans-serif', fontSize:13, fontWeight:active ? 600 : 400 }}
-                  onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = '#f5f3fa'; }}
-                  onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                  <span style={{ fontSize:13 }}>{item.icon}</span>
-                  {item.label}
+          {/* Course sidebar nav (desktop) or drawer (mobile) */}
+          {!isMobile && (
+            <div style={{ width:200, background:C.white, borderRight:`1px solid ${C.border}`, flexShrink:0, minHeight:'calc(100vh - 76px)', overflowY:'auto' }}>
+              {NAV_ITEMS.map(item => {
+                const active = activeTab === item.id || (item.id === 'modules' && activeTab === 'home');
+                return (
+                  <div key={item.id} onClick={() => setActiveTab(item.id)}
+                    style={{ padding:'9px 14px', display:'flex', alignItems:'center', gap:9, cursor:'pointer', borderLeft:active ? `3px solid ${C.primary}` : '3px solid transparent', background:active ? '#EDE8F7' : 'transparent', color:active ? C.primary : C.text, fontFamily:'sans-serif', fontSize:13, fontWeight:active ? 600 : 400 }}
+                    onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = '#f5f3fa'; }}
+                    onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                    <span style={{ fontSize:13 }}>{item.icon}</span>
+                    {item.label}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {isMobile && mobileNavOpen && (
+            <div onClick={() => setMobileNavOpen(false)}
+              style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:250 }}>
+              <div onClick={e => e.stopPropagation()}
+                style={{ position:'absolute', top:0, left:0, bottom:0, width:260, background:C.white, overflowY:'auto', paddingBottom:20, boxShadow:'2px 0 10px rgba(0,0,0,0.15)' }}>
+                <div style={{ padding:'14px 16px', borderBottom:`1px solid ${C.border}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <span style={{ fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Course Menu</span>
+                  <button onClick={() => setMobileNavOpen(false)} style={{ background:'none', border:'none', fontSize:18, cursor:'pointer' }}>✕</button>
                 </div>
-              );
-            })}
-          </div>
+                {NAV_ITEMS.map(item => {
+                  const active = activeTab === item.id || (item.id === 'modules' && activeTab === 'home');
+                  return (
+                    <div key={item.id} onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }}
+                      style={{ padding:'12px 16px', display:'flex', alignItems:'center', gap:10, cursor:'pointer', background:active?'#EDE8F7':'transparent', color:active?C.primary:C.text, fontFamily:'sans-serif', fontSize:14, fontWeight:active?600:400 }}>
+                      <span>{item.icon}</span>{item.label}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Tab content */}
-          <div style={{ flex:1, background:C.bg, overflowY:'auto' }}>
+          <div style={{ flex:1, background:C.bg, overflowY:'auto', paddingBottom: isMobile ? 64 : 0 }}>
             {SECTIONS[activeTab] ?? <Placeholder title={activeTab} />}
           </div>
         </div>
+
+        {/* Mobile bottom nav */}
+        {isMobile && (
+          <div style={{ position:'fixed', bottom:0, left:52, right:0, height:56, background:C.white, borderTop:`1px solid ${C.border}`, display:'flex', zIndex:150, boxShadow:'0 -2px 10px rgba(0,0,0,0.08)' }}>
+            {[
+              { id:'home', icon:'🏠', label:'Home' },
+              { id:'people', icon:'👥', label:'People' },
+              { id:'grades', icon:'📊', label:'Grades' },
+              { id:'attendance', icon:'✔️', label:'Attend' },
+              { id:'settings', icon:'⚙️', label:'More' },
+            ].map(t => {
+              const active = activeTab === t.id || (t.id==='home' && activeTab==='modules');
+              return (
+                <button key={t.id} onClick={() => setActiveTab(t.id)}
+                  style={{ flex:1, border:'none', background:'transparent', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:active?C.primary:C.muted, fontSize:10, fontFamily:'sans-serif', cursor:'pointer', gap:2 }}>
+                  <span style={{ fontSize:18 }}>{t.icon}</span>{t.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
+      <Toaster position="bottom-right" richColors />
       <style>{`@keyframes hsa-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
     </div>
   );

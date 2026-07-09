@@ -803,6 +803,76 @@ export type Database = {
         }
         Relationships: []
       }
+      discussion_replies: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          discussion_id: string
+          id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          discussion_id: string
+          id?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          discussion_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_replies_discussion_id_fkey"
+            columns: ["discussion_id"]
+            isOneToOne: false
+            referencedRelation: "discussions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussions: {
+        Row: {
+          author_id: string
+          body: string | null
+          course_id: string
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          body?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       enrollment_emails: {
         Row: {
           created_at: string
