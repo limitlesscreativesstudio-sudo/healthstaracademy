@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './AuthContext';
 import { uploadViaXhr } from './uploadViaXhr';
+import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -21,7 +22,18 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [uploadPct,  setUploadPct]  = useState(0);
   const [selFolder,  setSelFolder]  = useState(FOLDERS[0]);
   const [error,      setError]      = useState('');
+  const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const pathFromUrl = (url: string): string | null => {
+    const m = url.split('/course-files/')[1];
+    return m ? decodeURIComponent(m.split('?')[0]) : null;
+  };
+  const openFile = (f: CourseFile) => {
+    const path = pathFromUrl(f.file_url);
+    if (path) setViewer({ src: { bucket: 'course-files', path }, name: f.file_name, type: f.file_type });
+    else setViewer({ src: { url: f.file_url }, name: f.file_name, type: f.file_type });
+  };
 
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
@@ -172,12 +184,12 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
                     <td style={{ padding:'10px 14px' }}>
                       <div style={{ display:'flex', alignItems:'center', gap:9 }}>
                         <span style={{ fontSize:18 }}>{fileIcon(f.file_type)}</span>
-                        <a href={f.file_url} target="_blank" rel="noreferrer"
-                          style={{ fontSize:13, color:C.primary, fontWeight:500, textDecoration:'none' }}
+                        <button onClick={() => openFile(f)}
+                          style={{ background:'none', border:'none', padding:0, fontSize:13, color:C.primary, fontWeight:500, textDecoration:'none', cursor:'pointer', textAlign:'left' }}
                           onMouseEnter={e => (e.currentTarget as HTMLElement).style.textDecoration = 'underline'}
                           onMouseLeave={e => (e.currentTarget as HTMLElement).style.textDecoration = 'none'}>
                           {f.file_name}
-                        </a>
+                        </button>
                       </div>
                     </td>
                     <td style={{ padding:'10px 14px', fontSize:11, color:C.muted, maxWidth:160 }}>
@@ -187,10 +199,10 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
                     <td style={{ padding:'10px 14px', fontSize:12, color:C.muted }}>{new Date(f.created_at).toLocaleDateString()}</td>
                     <td style={{ padding:'10px 14px' }}>
                       <div style={{ display:'flex', gap:6 }}>
-                        <a href={f.file_url} download target="_blank" rel="noreferrer"
-                          style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:11, cursor:'pointer', color:C.text, textDecoration:'none' }}>
-                          ⬇ Download
-                        </a>
+                        <button onClick={() => openFile(f)}
+                          style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:11, cursor:'pointer', color:C.text }}>
+                          👁 Preview
+                        </button>
                         {canEdit && (
                           <button onClick={() => deleteFile(f.id, f.file_url)}
                             style={{ padding:'4px 8px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:11, cursor:'pointer', color:C.error }}>✕</button>
@@ -204,6 +216,13 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
           </div>
         )}
       </div>
+      <ContentViewer
+        open={!!viewer}
+        onClose={() => setViewer(null)}
+        source={viewer?.src ?? null}
+        fileName={viewer?.name}
+        fileType={viewer?.type}
+      />
     </div>
   );
 };

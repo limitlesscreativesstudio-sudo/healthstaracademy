@@ -16,6 +16,7 @@ import Dashboard         from './Dashboard';
 import SettingsTab       from './SettingsTab';
 import CalendarTab       from './CalendarTab';
 import { useAuth, supabase } from './AuthContext';
+import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
 
 const C = {
   nav:'#3D1B6E', primary:'#7B4DB5', accent:'#5BC8E8',
@@ -175,6 +176,16 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
   const [newName, setNewName] = useState('');
   const [addItem, setAddItem] = useState<string | null>(null);
   const [ni, setNi]           = useState<{ title: string; type: string; pts: string; file: File | null }>({ title:'', type:'page', pts:'', file: null }); const [editId, setEditId] = useState<string | null>(null); const [editName, setEditName] = useState('');
+  const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type: string } | null>(null);
+
+  const openItem = (it: ModuleItem) => {
+    if (!it.file_url) return;
+    const path = it.file_url.split('/course-files/')[1];
+    const cleanPath = path ? decodeURIComponent(path.split('?')[0]) : null;
+    const ext = (it.file_name || '').split('.').pop() || '';
+    if (cleanPath) setViewer({ src: { bucket: 'course-files', path: cleanPath }, name: it.file_name || it.name, type: ext });
+    else setViewer({ src: { url: it.file_url }, name: it.file_name || it.name, type: ext });
+  };
 
   // Open Add Module form on demand (when top "+ Module" button is clicked)
   useEffect(() => { if (openAddOnMount && canEdit) setAddMod(true); }, [openAddOnMount, canEdit]);
@@ -293,6 +304,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
   if (dbLoading) return <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Loading modules...</div>;
 
   return (
+    <>
     <div style={{ display:'flex' }}>
     <div style={{ flex:1, padding:24 }}>
       {!courseUuid && (
@@ -383,7 +395,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
             <>
               {m.items.map((it, i) => (
                 <div key={it.id}
-                  onClick={() => { if (it.file_url) window.open(it.file_url, '_blank', 'noopener'); }}
+                  onClick={() => { if (it.file_url) openItem(it); }}
                   style={{ padding:'9px 14px', paddingLeft:14 + (it.indent * 20), display:'flex', alignItems:'center', gap:10, borderBottom:i < m.items.length - 1 ? `1px solid ${C.border}` : 'none', cursor:'pointer' }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#faf9fc'}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
@@ -480,6 +492,14 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
       </div>
     </div>
     </div>
+    <ContentViewer
+      open={!!viewer}
+      onClose={() => setViewer(null)}
+      source={viewer?.src ?? null}
+      fileName={viewer?.name}
+      fileType={viewer?.type}
+    />
+    </>
   );
 };
 
