@@ -16,6 +16,7 @@ import Dashboard         from './Dashboard';
 import SettingsTab       from './SettingsTab';
 import CalendarTab       from './CalendarTab';
 import { useAuth, supabase } from './AuthContext';
+import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
 
 const C = {
   nav:'#3D1B6E', primary:'#7B4DB5', accent:'#5BC8E8',
