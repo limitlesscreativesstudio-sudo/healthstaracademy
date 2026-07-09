@@ -216,6 +216,13 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
           </div>
         )}
       </div>
+      <ContentViewer
+        open={!!viewer}
+        onClose={() => setViewer(null)}
+        source={viewer?.src ?? null}
+        fileName={viewer?.name}
+        fileType={viewer?.type}
+      />
     </div>
   );
 };
