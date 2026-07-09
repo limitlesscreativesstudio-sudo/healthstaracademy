@@ -728,7 +728,8 @@ const CourseView: React.FC = () => {
     analytics:     <Placeholder title="New Analytics" />,
     lucid:         <Placeholder title="Lucid (Whiteboard)" />,
     settings:      <SettingsTab courseId={cid} />,
-    account:       <SettingsTab courseId={cid} />,
+    account:       <Account onBackToDashboard={() => { setActiveTab('home'); setShowDashboard(true); }} isAdmin={authUser?.role === 'admin'} />,
+    progress:      <StudentProgress courseId={cid} />,
     calendar:      <CalendarTab courseId={cid} canEdit={canEdit} />,
   };
 
