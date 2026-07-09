@@ -96,17 +96,29 @@ const SyllabusTab: React.FC<Props> = ({ courseUuid, canEdit = false }) => {
           <>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, fontSize:13, fontFamily:'sans-serif' }}>
               <span>📎</span>
-              <a href={syllabusUrl} target="_blank" rel="noopener noreferrer" style={{ color:C.primary, textDecoration:'none', fontWeight:600 }}>{syllabusName ?? 'Syllabus'}</a>
+              <button onClick={() => setViewerOpen(true)} style={{ background:'none', border:'none', padding:0, color:C.primary, fontWeight:600, cursor:'pointer', textDecoration:'none' }}>
+                {syllabusName ?? 'Syllabus'}
+              </button>
+              <button onClick={() => setViewerOpen(true)} style={{ marginLeft:6, padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:11, cursor:'pointer', color:C.text, fontFamily:'sans-serif' }}>
+                👁 Preview
+              </button>
               {canEdit && <button onClick={removeDoc} style={{ marginLeft:'auto', background:'none', border:'none', color:C.muted, cursor:'pointer', fontSize:12 }}>Remove</button>}
             </div>
-            {isPdf && <iframe src={syllabusUrl} title="Syllabus PDF" style={{ width:'100%', height:600, border:`1px solid ${C.border}`, borderRadius:6 }}/>}
           </>
         ) : (
           <div style={{ fontSize:13, color:C.muted, fontFamily:'sans-serif' }}>
-            {canEdit ? 'No syllabus document uploaded yet. Upload a PDF to display it here for students.' : 'The instructor has not uploaded a syllabus document yet.'}
+            {canEdit ? 'No syllabus document uploaded yet. Upload a PDF, Word doc, or PowerPoint to display it here for students.' : 'The instructor has not uploaded a syllabus document yet.'}
           </div>
         )}
       </div>
+      <ContentViewer
+        open={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        source={syllabusSource}
+        fileName={syllabusName ?? undefined}
+        fileType={syllabusExt}
+        title="Course Syllabus"
+      />
 
       {/* Course overview */}
       <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, padding:20, marginBottom:20 }}>
