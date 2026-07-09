@@ -65,12 +65,16 @@ const AgentBlogPost = () => {
         title={`${post.title} | Health Star Academy`}
         description={post.meta_description ?? post.tldr ?? ""}
         canonical={`/blog/${post.slug}`}
-        jsonLd={jsonLd}
+        type="article"
+        image={post.hero_image_url ?? undefined}
+        publishedTime={published.toISOString()}
+        structuredData={jsonLd}
       />
       <HeroBanner
         title={post.title}
         subtitle={post.tldr ?? undefined}
-        image={post.hero_image_url ?? "/placeholder.svg"}
+        imageSrc={post.hero_image_url ?? "/placeholder.svg"}
+        imageAlt={post.title}
       />
       <article className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
