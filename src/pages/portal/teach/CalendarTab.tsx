@@ -73,6 +73,8 @@ const CalendarTab: React.FC<Props> = ({ courseId }) => {
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
           <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text }}>Calendar</h2>
           <div style={{ marginLeft:'auto', display:'flex', gap:6 }}>
+            <button onClick={() => { const d=new Date(); d.setDate(1); setMonthCursor(d); }}
+              style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, fontSize:12, cursor:'pointer' }}>Today</button>
             {(['month','agenda'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
                 style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:view===v?C.primary:C.white, color:view===v?'white':C.text, fontSize:12, cursor:'pointer', textTransform:'capitalize' }}>
