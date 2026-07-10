@@ -153,26 +153,48 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
     visibleCols.reduce((s, a) => s + (grades[sId]?.[a.id] ?? 0), 0);
 
   const exportCsv = () => {
-    const header = ['Student', ...visibleCols.map(c => `${c.name} (/${c.points})`), `Total (/${totalPts})`, '%', 'Letter'];
+    const header = [
+      'Student',
+      ...visibleCols.map(c => `${c.name} [${c.kind === 'quiz' ? 'Quiz' : 'Assignment'}] (/${c.points})`),
+      `Total (/${totalPts})`, '%', 'Letter',
+    ];
     const rows = visibleStudents.map(s => {
       const tot = studentTotal(s.id);
       const pct = totalPts > 0 ? Math.round((tot / totalPts) * 100) : 0;
       return [
         s.name,
-        ...visibleCols.map(c => grades[s.id]?.[c.id] ?? ''),
+        ...visibleCols.map(c => {
+          const g = grades[s.id]?.[c.id];
+          // Validation-safe: strip anything out of range so the CSV never contains an invalid score
+          if (g == null || !isFinite(g)) return '';
+          if (g < 0) return '';
+          if (c.points > 0 && g > c.points) return c.points;
+          return g;
+        }),
         tot, `${pct}%`, letter(pct),
       ];
     });
-    const csv = [header, ...rows].map(r => r.map(v => {
+    // Append a small rejected-edits log so anyone reviewing the export sees which entries were blocked
+    const rejectRows: any[][] = [];
+    if (rejects.length) {
+      rejectRows.push([]);
+      rejectRows.push(['Rejected edits (this session)']);
+      rejectRows.push(['Time', 'Student', 'Column', 'Value entered', 'Reason']);
+      rejects.forEach(r => rejectRows.push([r.at.toISOString(), r.student, r.column, r.value, r.reason]));
+    }
+    const csv = [header, ...rows, ...rejectRows].map(r => r.map(v => {
       const str = String(v ?? '');
       return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
     }).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = `gradebook-${courseId}.csv`; a.click();
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url; a.download = `gradebook-${courseId}-${stamp}.csv`; a.click();
     URL.revokeObjectURL(url);
+    toast.success(`Exported ${visibleStudents.length} students × ${visibleCols.length} columns`);
   };
+
 
   return (
     <div style={{ padding:24 }}>
