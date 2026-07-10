@@ -877,6 +877,42 @@ export type Database = {
         }
         Relationships: []
       }
+      discussion_audit: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          course_id: string | null
+          created_at: string
+          discussion_id: string | null
+          id: string
+          reply_id: string | null
+          snapshot: Json | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          discussion_id?: string | null
+          id?: string
+          reply_id?: string | null
+          snapshot?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          course_id?: string | null
+          created_at?: string
+          discussion_id?: string | null
+          id?: string
+          reply_id?: string | null
+          snapshot?: Json | null
+        }
+        Relationships: []
+      }
       discussion_replies: {
         Row: {
           author_id: string
@@ -884,6 +920,7 @@ export type Database = {
           created_at: string
           discussion_id: string
           id: string
+          parent_reply_id: string | null
         }
         Insert: {
           author_id: string
@@ -891,6 +928,7 @@ export type Database = {
           created_at?: string
           discussion_id: string
           id?: string
+          parent_reply_id?: string | null
         }
         Update: {
           author_id?: string
@@ -898,6 +936,7 @@ export type Database = {
           created_at?: string
           discussion_id?: string
           id?: string
+          parent_reply_id?: string | null
         }
         Relationships: [
           {
@@ -905,6 +944,13 @@ export type Database = {
             columns: ["discussion_id"]
             isOneToOne: false
             referencedRelation: "discussions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_replies_parent_reply_id_fkey"
+            columns: ["parent_reply_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_replies"
             referencedColumns: ["id"]
           },
         ]

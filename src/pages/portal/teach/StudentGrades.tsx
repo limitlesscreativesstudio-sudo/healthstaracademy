@@ -22,6 +22,9 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
   const [editVal,     setEditVal]     = useState('');
   const [filter,      setFilter]      = useState<'all'|'assignment'|'quiz'>('all');
   const [search,      setSearch]      = useState('');
+  const [rejects,     setRejects]     = useState<Array<{ id: string; student: string; column: string; value: string; reason: string; at: Date }>>([]);
+  const [showRejects, setShowRejects] = useState(false);
+
 
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
@@ -95,6 +98,13 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [courseId]);
 
+  const logReject = (target: { s: string; a: string }, value: string, reason: string) => {
+    const student = students.find(x => x.id === target.s)?.name ?? target.s;
+    const column = columns.find(x => x.id === target.a)?.name ?? target.a;
+    setRejects(p => [{ id: crypto.randomUUID(), student, column, value, reason, at: new Date() }, ...p].slice(0, 50));
+    toast.error(`${reason} — ${student} / ${column}`);
+  };
+
   const saveGrade = async () => {
     if (!editing || !courseId) { setEditing(null); return; }
     const col = columns.find(c => c.id === editing.a);
@@ -102,17 +112,10 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
     const target = editing;
     if (raw === '') { setEditing(null); return; }
     const score = Number(raw);
-    if (!isFinite(score) || isNaN(score)) {
-      toast.error('Score must be a number');
-      return;
-    }
-    if (score < 0) {
-      toast.error('Score cannot be negative');
-      return;
-    }
+    if (!isFinite(score) || isNaN(score)) { logReject(target, raw, 'Score must be a number'); return; }
+    if (score < 0) { logReject(target, raw, 'Score cannot be negative'); return; }
     if (col && col.points > 0 && score > col.points) {
-      toast.error(`Score exceeds max (${col.points}). Enter a value between 0 and ${col.points}.`);
-      return;
+      logReject(target, raw, `Score exceeds max (${col.points})`); return;
     }
     const prev = grades[target.s]?.[target.a] ?? null;
     setGrades(p => ({ ...p, [target.s]: { ...(p[target.s] ?? {}), [target.a]: score } }));
@@ -128,12 +131,13 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
       }, { onConflict: 'assignment_id,user_id' });
       if (error) {
         setGrades(p => ({ ...p, [target.s]: { ...(p[target.s] ?? {}), [target.a]: prev } }));
-        toast.error('Could not save grade: ' + error.message);
+        logReject(target, raw, 'Save failed: ' + error.message);
       } else {
         toast.success('Grade saved');
       }
     }
   };
+
 
   const visibleCols = useMemo(
     () => columns.filter(c => filter === 'all' || c.kind === filter),
@@ -149,26 +153,48 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
     visibleCols.reduce((s, a) => s + (grades[sId]?.[a.id] ?? 0), 0);
 
   const exportCsv = () => {
-    const header = ['Student', ...visibleCols.map(c => `${c.name} (/${c.points})`), `Total (/${totalPts})`, '%', 'Letter'];
+    const header = [
+      'Student',
+      ...visibleCols.map(c => `${c.name} [${c.kind === 'quiz' ? 'Quiz' : 'Assignment'}] (/${c.points})`),
+      `Total (/${totalPts})`, '%', 'Letter',
+    ];
     const rows = visibleStudents.map(s => {
       const tot = studentTotal(s.id);
       const pct = totalPts > 0 ? Math.round((tot / totalPts) * 100) : 0;
       return [
         s.name,
-        ...visibleCols.map(c => grades[s.id]?.[c.id] ?? ''),
+        ...visibleCols.map(c => {
+          const g = grades[s.id]?.[c.id];
+          // Validation-safe: strip anything out of range so the CSV never contains an invalid score
+          if (g == null || !isFinite(g)) return '';
+          if (g < 0) return '';
+          if (c.points > 0 && g > c.points) return c.points;
+          return g;
+        }),
         tot, `${pct}%`, letter(pct),
       ];
     });
-    const csv = [header, ...rows].map(r => r.map(v => {
+    // Append a small rejected-edits log so anyone reviewing the export sees which entries were blocked
+    const rejectRows: any[][] = [];
+    if (rejects.length) {
+      rejectRows.push([]);
+      rejectRows.push(['Rejected edits (this session)']);
+      rejectRows.push(['Time', 'Student', 'Column', 'Value entered', 'Reason']);
+      rejects.forEach(r => rejectRows.push([r.at.toISOString(), r.student, r.column, r.value, r.reason]));
+    }
+    const csv = [header, ...rows, ...rejectRows].map(r => r.map(v => {
       const str = String(v ?? '');
       return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
     }).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = `gradebook-${courseId}.csv`; a.click();
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url; a.download = `gradebook-${courseId}-${stamp}.csv`; a.click();
     URL.revokeObjectURL(url);
+    toast.success(`Exported ${visibleStudents.length} students × ${visibleCols.length} columns`);
   };
+
 
   return (
     <div style={{ padding:24 }}>
@@ -184,9 +210,36 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
             </button>
           ))}
           <button onClick={exportCsv} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>📤 Export CSV</button>
+          <button onClick={() => setShowRejects(v => !v)} style={{ padding:'7px 14px', border:`1px solid ${rejects.length?C.error:C.border}`, borderRadius:5, background:rejects.length?'#FDECEA':C.white, color:rejects.length?C.error:C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
+            ⚠️ Rejected edits{rejects.length ? ` (${rejects.length})` : ''}
+          </button>
           <button onClick={load} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>🔄 Refresh</button>
         </div>
       </div>
+
+      {showRejects && (
+        <div style={{ background:C.white, border:`1px solid ${C.error}55`, borderRadius:6, padding:14, marginBottom:14 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+            <strong style={{ color:C.error, fontFamily:'sans-serif', fontSize:13 }}>Rejected grade edits ({rejects.length})</strong>
+            {rejects.length > 0 && (
+              <button onClick={() => setRejects([])} style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Clear</button>
+            )}
+          </div>
+          {rejects.length === 0 ? (
+            <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>No rejected edits in this session.</div>
+          ) : (
+            <div style={{ maxHeight:180, overflowY:'auto' }}>
+              {rejects.map(r => (
+                <div key={r.id} style={{ fontSize:12, color:C.text, fontFamily:'sans-serif', padding:'6px 0', borderBottom:`1px dashed ${C.border}` }}>
+                  <strong>{r.student}</strong> · {r.column} · entered <code>{r.value}</code> — <span style={{ color:C.error }}>{r.reason}</span>
+                  <span style={{ color:C.muted, marginLeft:8 }}>{r.at.toLocaleTimeString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
 
       {!courseId ? (
         <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Open a course to view the gradebook.</div>
