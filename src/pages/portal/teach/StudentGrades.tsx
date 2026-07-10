@@ -188,9 +188,36 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
             </button>
           ))}
           <button onClick={exportCsv} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>📤 Export CSV</button>
+          <button onClick={() => setShowRejects(v => !v)} style={{ padding:'7px 14px', border:`1px solid ${rejects.length?C.error:C.border}`, borderRadius:5, background:rejects.length?'#FDECEA':C.white, color:rejects.length?C.error:C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
+            ⚠️ Rejected edits{rejects.length ? ` (${rejects.length})` : ''}
+          </button>
           <button onClick={load} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>🔄 Refresh</button>
         </div>
       </div>
+
+      {showRejects && (
+        <div style={{ background:C.white, border:`1px solid ${C.error}55`, borderRadius:6, padding:14, marginBottom:14 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+            <strong style={{ color:C.error, fontFamily:'sans-serif', fontSize:13 }}>Rejected grade edits ({rejects.length})</strong>
+            {rejects.length > 0 && (
+              <button onClick={() => setRejects([])} style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Clear</button>
+            )}
+          </div>
+          {rejects.length === 0 ? (
+            <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>No rejected edits in this session.</div>
+          ) : (
+            <div style={{ maxHeight:180, overflowY:'auto' }}>
+              {rejects.map(r => (
+                <div key={r.id} style={{ fontSize:12, color:C.text, fontFamily:'sans-serif', padding:'6px 0', borderBottom:`1px dashed ${C.border}` }}>
+                  <strong>{r.student}</strong> · {r.column} · entered <code>{r.value}</code> — <span style={{ color:C.error }}>{r.reason}</span>
+                  <span style={{ color:C.muted, marginLeft:8 }}>{r.at.toLocaleTimeString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
 
       {!courseId ? (
         <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Open a course to view the gradebook.</div>
