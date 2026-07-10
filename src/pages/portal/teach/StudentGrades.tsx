@@ -98,6 +98,13 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [courseId]);
 
+  const logReject = (target: { s: string; a: string }, value: string, reason: string) => {
+    const student = students.find(x => x.id === target.s)?.name ?? target.s;
+    const column = columns.find(x => x.id === target.a)?.name ?? target.a;
+    setRejects(p => [{ id: crypto.randomUUID(), student, column, value, reason, at: new Date() }, ...p].slice(0, 50));
+    toast.error(`${reason} — ${student} / ${column}`);
+  };
+
   const saveGrade = async () => {
     if (!editing || !courseId) { setEditing(null); return; }
     const col = columns.find(c => c.id === editing.a);
@@ -105,17 +112,10 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
     const target = editing;
     if (raw === '') { setEditing(null); return; }
     const score = Number(raw);
-    if (!isFinite(score) || isNaN(score)) {
-      toast.error('Score must be a number');
-      return;
-    }
-    if (score < 0) {
-      toast.error('Score cannot be negative');
-      return;
-    }
+    if (!isFinite(score) || isNaN(score)) { logReject(target, raw, 'Score must be a number'); return; }
+    if (score < 0) { logReject(target, raw, 'Score cannot be negative'); return; }
     if (col && col.points > 0 && score > col.points) {
-      toast.error(`Score exceeds max (${col.points}). Enter a value between 0 and ${col.points}.`);
-      return;
+      logReject(target, raw, `Score exceeds max (${col.points})`); return;
     }
     const prev = grades[target.s]?.[target.a] ?? null;
     setGrades(p => ({ ...p, [target.s]: { ...(p[target.s] ?? {}), [target.a]: score } }));
@@ -131,12 +131,13 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
       }, { onConflict: 'assignment_id,user_id' });
       if (error) {
         setGrades(p => ({ ...p, [target.s]: { ...(p[target.s] ?? {}), [target.a]: prev } }));
-        toast.error('Could not save grade: ' + error.message);
+        logReject(target, raw, 'Save failed: ' + error.message);
       } else {
         toast.success('Grade saved');
       }
     }
   };
+
 
   const visibleCols = useMemo(
     () => columns.filter(c => filter === 'all' || c.kind === filter),
