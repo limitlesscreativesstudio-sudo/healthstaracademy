@@ -22,6 +22,9 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
   const [editVal,     setEditVal]     = useState('');
   const [filter,      setFilter]      = useState<'all'|'assignment'|'quiz'>('all');
   const [search,      setSearch]      = useState('');
+  const [rejects,     setRejects]     = useState<Array<{ id: string; student: string; column: string; value: string; reason: string; at: Date }>>([]);
+  const [showRejects, setShowRejects] = useState(false);
+
 
   const load = async () => {
     if (!courseId) { setLoading(false); return; }

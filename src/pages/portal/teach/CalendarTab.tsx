@@ -13,14 +13,27 @@ interface EvExt extends Ev { section?: string | null; }
 
 const CalendarTab: React.FC<Props> = ({ courseId }) => {
   const navigate = useNavigate();
+  const filterKey = courseId ? `hsa.calendar.filters.${courseId}` : '';
+  const initial = React.useMemo(() => {
+    if (!filterKey) return { type: 'all', section: 'all', search: '', view: 'month' } as any;
+    try { return { type:'all', section:'all', search:'', view:'month', ...JSON.parse(localStorage.getItem(filterKey) || '{}') }; }
+    catch { return { type:'all', section:'all', search:'', view:'month' }; }
+  }, [filterKey]);
   const [events, setEvents] = useState<EvExt[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'month'|'agenda'>('month');
+  const [view, setView] = useState<'month'|'agenda'>(initial.view);
   const [monthCursor, setMonthCursor] = useState(() => { const d = new Date(); d.setDate(1); return d; });
   const [selected, setSelected] = useState<EvExt | null>(null);
-  const [typeFilter, setTypeFilter] = useState<'all'|'assignment'|'quiz'|'attendance'>('all');
-  const [sectionFilter, setSectionFilter] = useState<string>('all');
-  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all'|'assignment'|'quiz'|'attendance'>(initial.type);
+  const [sectionFilter, setSectionFilter] = useState<string>(initial.section);
+  const [search, setSearch] = useState(initial.search);
+
+  // Persist filters per course
+  useEffect(() => {
+    if (!filterKey) return;
+    try { localStorage.setItem(filterKey, JSON.stringify({ type: typeFilter, section: sectionFilter, search, view })); } catch {}
+  }, [filterKey, typeFilter, sectionFilter, search, view]);
+
 
   useEffect(() => {
     if (!courseId) { setLoading(false); return; }
