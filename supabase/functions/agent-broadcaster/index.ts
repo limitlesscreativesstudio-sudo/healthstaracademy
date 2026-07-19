@@ -2,6 +2,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "npm:ai";
 import { createLovableAiGatewayProvider, corsHeaders } from "../_shared/ai-gateway.ts";
+import { notifyAdmin } from "../_shared/notify-admin.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
