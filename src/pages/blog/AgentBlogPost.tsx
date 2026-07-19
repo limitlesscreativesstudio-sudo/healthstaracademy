@@ -10,7 +10,7 @@ import { Loader2, ArrowLeft, Calendar, Clock } from "lucide-react";
 
 type Post = {
   id: string; title: string; slug: string; meta_description: string | null;
-  tldr: string | null; hero_image_url: string | null; category: string | null;
+  tldr: string | null; hero_image_url: string | null; hero_image_alt: string | null; category: string | null;
   read_time: string | null; body_markdown: string; published_at: string | null;
   target_city: string | null; target_keyword: string | null;
 };
