@@ -192,12 +192,21 @@ Facts you may reference:
       summary: `${findings.length} finding(s)${draftedSlug ? `, drafted /${draftedSlug}` : ""}`,
     }).eq("id", runId);
 
+    if (draftedSlug) {
+      await notifyAdmin(
+        "New blog draft ready to publish",
+        `<p>Scribe just drafted a new blog post targeting <b>${pick.keyword}</b>.</p>
+         <p>Review it in the <b>Agents Hub → Blog</b> tab and click Publish when ready.</p>`,
+      );
+    }
+
     return new Response(JSON.stringify({ ok: true, findings: findings.length, draft_slug: draftedSlug }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await supabase.from("agent_runs").update({ status: "error", finished_at: new Date().toISOString(), summary: msg }).eq("id", runId);
+    await notifyAdmin("Scribe agent failed", `<p>The Scribe agent errored:</p><pre>${msg}</pre>`);
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
