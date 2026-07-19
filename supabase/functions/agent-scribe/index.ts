@@ -153,6 +153,56 @@ Facts you may reference:
         n += 1;
         slug = `${baseSlug}-${n}`;
       }
+
+      // --- Generate a fresh hero image (no more recycling) ---
+      let heroImageUrl: string | null = null;
+      const heroAlt = `${parsed.title} — Health Star Academy CNA training in ${cityTitle}`.slice(0, 160);
+      try {
+        const imgPrompt = `Photorealistic editorial hero image for a healthcare training blog post titled "${parsed.title}".
+Setting: bright, modern clinical or classroom environment relevant to CNA training in ${cityTitle}, California.
+Subjects: diverse, warm, professional healthcare students and instructors (mixed genders and ethnicities, strong representation of Black, Latina, and Asian women; include men). Scrubs in teal or navy.
+Mood: empowering, compassionate, hopeful, authentic documentary photography — natural light, shallow depth of field.
+STRICT: no text, no logos, no watermarks, no visible name badges, no AI artifacts (six fingers, warped faces, distorted equipment). Landscape 16:9 composition with clear negative space in the upper third for a headline overlay.`;
+        const imgRes = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            model: "openai/gpt-image-2",
+            prompt: imgPrompt,
+            size: "1536x1024",
+            quality: "low",
+            n: 1,
+          }),
+        });
+        if (imgRes.ok) {
+          const imgJson = await imgRes.json();
+          const b64 = imgJson?.data?.[0]?.b64_json;
+          if (b64) {
+            const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+            const path = `${slug}-${Date.now()}.png`;
+            const { error: upErr } = await supabase.storage
+              .from("blog-images")
+              .upload(path, bytes, { contentType: "image/png", upsert: true });
+            if (!upErr) {
+              const { data: pub } = supabase.storage.from("blog-images").getPublicUrl(path);
+              heroImageUrl = pub?.publicUrl ?? null;
+            } else {
+              console.error("Hero image upload failed:", upErr.message);
+            }
+          }
+        } else {
+          console.error("Hero image gen failed:", imgRes.status, await imgRes.text().catch(() => ""));
+        }
+      } catch (e) {
+        console.error("Hero image error:", e);
+      }
+
+      // --- Auto-publish toggle ---
+      const { data: cfg } = await supabase.from("agent_config").select("auto_publish").eq("agent", "scribe").maybeSingle();
+      const autoPublish = !!cfg?.auto_publish;
+      const statusToUse = autoPublish ? "published" : "draft";
+      const publishedAt = autoPublish ? new Date().toISOString() : null;
+
       const { data: draft, error: draftErr } = await supabase.from("blog_drafts").insert({
         agent: "scribe",
         title: String(parsed.title).slice(0, 120),
@@ -164,16 +214,21 @@ Facts you may reference:
         target_keyword: pick.keyword,
         target_city: pick.city,
         body_markdown: parsed.body_markdown,
-        status: "draft",
+        hero_image_url: heroImageUrl,
+        hero_image_alt: heroAlt,
+        status: statusToUse,
+        published_at: publishedAt,
       }).select("id, slug").single();
 
       if (!draftErr && draft) {
         draftedSlug = draft.slug;
         findings.push({
           agent: "scribe", run_id: runId, severity: "info",
-          title: `New blog draft: ${parsed.title}`,
+          title: autoPublish ? `Auto-published: ${parsed.title}` : `New blog draft: ${parsed.title}`,
           detail: `Target: ${pick.keyword} • ${parsed.read_time ?? ""}\n\n${parsed.tldr ?? ""}`,
-          suggested_fix: "Review in the Blog tab of Agents Hub, edit if needed, then click Publish.",
+          suggested_fix: autoPublish
+            ? `Live at /blog/${draft.slug}. Unpublish from the Blog tab if you want to revise it.`
+            : "Review in the Blog tab of Agents Hub, edit if needed, then click Publish.",
           target_table: "blog_drafts", target_id: draft.id,
         });
       } else if (draftErr) {
