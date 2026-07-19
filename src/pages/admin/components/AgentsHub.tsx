@@ -56,21 +56,37 @@ const AgentsHub = () => {
   const [chatAgent, setChatAgent] = useState<"advocate" | "mentor">("mentor");
   const [editing, setEditing] = useState<BlogDraft | null>(null);
   const [saving, setSaving] = useState(false);
+  const [scribeAutoPublish, setScribeAutoPublish] = useState(false);
+  const [savingAuto, setSavingAuto] = useState(false);
 
   const load = async () => {
-    const [{ data: f }, { data: r }, { data: g }, { data: b }] = await Promise.all([
+    const [{ data: f }, { data: r }, { data: g }, { data: b }, { data: cfg }] = await Promise.all([
       supabase.from("agent_findings").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(50),
       supabase.from("agent_runs").select("*").order("started_at", { ascending: false }).limit(20),
       supabase.from("gbp_posts").select("*").order("created_at", { ascending: false }).limit(10),
       supabase.from("blog_drafts").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("agent_config").select("auto_publish").eq("agent", "scribe").maybeSingle(),
     ]);
     setFindings((f ?? []) as Finding[]);
     setRuns((r ?? []) as Run[]);
     setPosts((g ?? []) as GbpPost[]);
     setDrafts((b ?? []) as BlogDraft[]);
+    setScribeAutoPublish(!!cfg?.auto_publish);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
+  const toggleAutoPublish = async (next: boolean) => {
+    setSavingAuto(true);
+    try {
+      const { error } = await supabase.from("agent_config").upsert({ agent: "scribe", auto_publish: next, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      setScribeAutoPublish(next);
+      toast({ title: next ? "Auto-publish ON" : "Auto-publish OFF", description: next ? "New Scribe drafts will publish immediately." : "New Scribe drafts will wait for your review." });
+    } catch (e: any) {
+      toast({ title: "Save failed", description: e.message, variant: "destructive" });
+    } finally { setSavingAuto(false); }
+  };
 
   const runAgent = async (fn: string, id: string) => {
     setRunning(id);
