@@ -248,10 +248,19 @@ STRICT: no text, no logos, no watermarks, no visible name badges, no AI artifact
     }).eq("id", runId);
 
     if (draftedSlug) {
+      const { data: cfg2 } = await supabase.from("agent_config").select("auto_publish").eq("agent", "scribe").maybeSingle();
+      const live = !!cfg2?.auto_publish;
+      const liveUrl = `https://healthstaracademy.org/blog/${draftedSlug}`;
+      const adminUrl = `https://healthstaracademy.org/admin`;
       await notifyAdmin(
-        "New blog draft ready to publish",
-        `<p>Scribe just drafted a new blog post targeting <b>${pick.keyword}</b>.</p>
-         <p>Review it in the <b>Agents Hub → Blog</b> tab and click Publish when ready.</p>`,
+        live ? "New blog post auto-published" : "New blog draft ready to approve",
+        live
+          ? `<p>Scribe auto-published a new post targeting <b>${pick.keyword}</b>.</p>
+             <p><b>Live:</b> <a href="${liveUrl}">${liveUrl}</a></p>
+             <p>Unpublish or edit in <a href="${adminUrl}">Agents Hub → Blog</a>.</p>`
+          : `<p>Scribe just drafted a new post targeting <b>${pick.keyword}</b>.</p>
+             <p>Review and one-click publish in <a href="${adminUrl}">Agents Hub → Blog</a>.</p>
+             <p>Or turn on <b>Auto-publish</b> there to go fully hands-off.</p>`,
       );
     }
 
