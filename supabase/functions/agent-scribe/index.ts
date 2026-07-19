@@ -4,19 +4,33 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateText } from "npm:ai";
 import { createLovableAiGatewayProvider, corsHeaders } from "../_shared/ai-gateway.ts";
+import { notifyAdmin } from "../_shared/notify-admin.ts";
 
 const CITY_URLS = [
   "stockton","lodi","hayward","sacramento","fremont","oakland","tracy","manteca","modesto",
 ];
 
-// Rotating angle library — Scribe picks whichever city/angle combo hasn't been drafted recently.
+// Rotating angle library — mixes local commercial keywords with high-volume informational
+// and trust/differentiation queries so Scribe attacks SERPs from every direction.
 const ANGLES = [
+  // — Local commercial —
   { keyword: "CNA classes in {city}", angle: "beginner overview of hybrid CNA training for {city} residents" },
   { keyword: "CNA salary {city}", angle: "2026 wage breakdown by shift/setting for CNAs in {city} with hiring outlook" },
   { keyword: "fast CNA certification {city}", angle: "how to certify in 6 weeks from {city} with the hybrid model" },
   { keyword: "CNA state exam prep {city}", angle: "how {city} students should prepare for the 22 CDPH skills" },
   { keyword: "CNA to RN pathway {city}", angle: "career ladder from CNA to LVN/RN starting in {city}" },
   { keyword: "financing CNA training {city}", angle: "how {city} students pay for training with Denefits + payment plans" },
+  // — Informational (top-of-funnel, dominate 'what is / how does' queries) —
+  { keyword: "what does a CNA do {city}", angle: "day-in-the-life responsibilities for a {city} CNA across hospital, SNF and home-health settings" },
+  { keyword: "how to become a CNA in {city}", angle: "step-by-step guide from application to CDPH certification for {city} residents" },
+  { keyword: "how much do CNAs make in {city}", angle: "hourly + annual wage ranges by setting for {city} with overtime and shift-differential math" },
+  { keyword: "CNA vs medical assistant {city}", angle: "which credential fits {city} healthcare hiring — cost, time, ceiling and job outlook" },
+  { keyword: "is CNA training worth it {city}", angle: "honest ROI breakdown for {city} students weighing cost, time and career ceiling" },
+  // — Trust / differentiation (win against big review-farm competitors) —
+  { keyword: "best CNA schools in {city}", angle: "how {city} students should evaluate CNA schools — accreditation, pass rates, clinical placement, hidden fees" },
+  { keyword: "CNA program reviews {city}", angle: "what real {city} CNA graduates say about hybrid training vs traditional 4-week programs" },
+  { keyword: "CDPH approved CNA schools {city}", angle: "why CDPH approval matters and how to verify a {city} program on the state registry" },
+  { keyword: "affordable CNA classes {city}", angle: "true total cost of CNA training in {city} — tuition, exam, uniforms, background check, live scan" },
 ];
 
 const slugify = (s: string) =>
@@ -178,12 +192,21 @@ Facts you may reference:
       summary: `${findings.length} finding(s)${draftedSlug ? `, drafted /${draftedSlug}` : ""}`,
     }).eq("id", runId);
 
+    if (draftedSlug) {
+      await notifyAdmin(
+        "New blog draft ready to publish",
+        `<p>Scribe just drafted a new blog post targeting <b>${pick.keyword}</b>.</p>
+         <p>Review it in the <b>Agents Hub → Blog</b> tab and click Publish when ready.</p>`,
+      );
+    }
+
     return new Response(JSON.stringify({ ok: true, findings: findings.length, draft_slug: draftedSlug }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await supabase.from("agent_runs").update({ status: "error", finished_at: new Date().toISOString(), summary: msg }).eq("id", runId);
+    await notifyAdmin("Scribe agent failed", `<p>The Scribe agent errored:</p><pre>${msg}</pre>`);
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

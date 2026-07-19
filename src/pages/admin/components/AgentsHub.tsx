@@ -272,16 +272,58 @@ const AgentsHub = () => {
       )}
 
       {tab === "gbp" && (
-        <div className="space-y-2">
-          {posts.length === 0 && <div className="text-sm text-muted-foreground p-4 border rounded-lg">No GBP drafts yet.</div>}
+        <div className="space-y-3">
+          <div className="text-xs text-muted-foreground p-3 border rounded-lg bg-muted/30">
+            <strong>Hands-off mode:</strong> if a <code className="bg-background px-1 rounded">GBP_WEBHOOK_URL</code> secret is set (Zapier/Make/n8n → Google Business Profile),
+            clicking <b>Publish</b> posts to GBP automatically. Without it, use <b>Copy</b> + <b>Open GBP</b> to paste manually, then <b>Mark posted</b>.
+            You'll get an email when a new draft is ready and if a publish attempt fails.
+          </div>
+          {posts.length === 0 && <div className="text-sm text-muted-foreground p-4 border rounded-lg">No GBP drafts yet. Click Run on the Broadcaster card above.</div>}
           {posts.map(p => (
             <div key={p.id} className="border rounded-lg p-4 bg-background">
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                 <span className="font-medium">{p.title ?? "Untitled"}</span>
-                <Badge>{p.status}</Badge>
+                <Badge className={statusColor[p.status] ?? ""}>{p.status}</Badge>
               </div>
-              <div className="text-sm whitespace-pre-wrap">{p.body}</div>
-              {p.scheduled_for && <div className="text-xs text-muted-foreground mt-2">Scheduled: {p.scheduled_for}</div>}
+              <div className="text-sm whitespace-pre-wrap mb-3">{p.body}</div>
+              {p.scheduled_for && <div className="text-xs text-muted-foreground mb-2">Scheduled: {p.scheduled_for}</div>}
+              <div className="flex gap-2 flex-wrap">
+                {p.status !== "published" && p.status !== "archived" && (
+                  <Button size="sm" onClick={async () => {
+                    try {
+                      const { data, error } = await supabase.functions.invoke("publish-gbp-post", { body: { id: p.id, action: "publish" } });
+                      if (error) throw error;
+                      if (data?.mode === "manual") {
+                        toast({ title: "Manual publish", description: "No webhook configured — use Copy + Open GBP, then Mark posted." });
+                      } else {
+                        toast({ title: "Published to GBP" });
+                      }
+                      await load();
+                    } catch (e: any) { toast({ title: "Publish failed", description: e.message, variant: "destructive" }); }
+                  }}><CheckCircle2 className="h-3 w-3 mr-1" />Publish</Button>
+                )}
+                <Button size="sm" variant="outline" onClick={() => {
+                  navigator.clipboard.writeText(`${p.title ?? ""}\n\n${p.body}`);
+                  toast({ title: "Copied to clipboard" });
+                }}>Copy</Button>
+                <Button size="sm" variant="outline" asChild>
+                  <a href="https://business.google.com/" target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3 w-3 mr-1" />Open GBP</a>
+                </Button>
+                {p.status !== "published" && (
+                  <Button size="sm" variant="ghost" onClick={async () => {
+                    await supabase.functions.invoke("publish-gbp-post", { body: { id: p.id, action: "mark_posted" } });
+                    toast({ title: "Marked as posted" });
+                    await load();
+                  }}>Mark posted</Button>
+                )}
+                {p.status !== "archived" && (
+                  <Button size="sm" variant="ghost" onClick={async () => {
+                    await supabase.functions.invoke("publish-gbp-post", { body: { id: p.id, action: "discard" } });
+                    toast({ title: "Discarded" });
+                    await load();
+                  }}><X className="h-3 w-3" /></Button>
+                )}
+              </div>
             </div>
           ))}
         </div>
