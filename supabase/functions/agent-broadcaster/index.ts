@@ -49,10 +49,16 @@ Output JSON only with keys: title (max 58 chars), body (max 1500 chars), cta_lab
       target_table: "gbp_posts", target_id: post?.id ?? null,
     });
     await supabase.from("agent_runs").update({ status: "ok", finished_at: new Date().toISOString(), summary: "Drafted 1 GBP post" }).eq("id", runId);
+    await notifyAdmin(
+      "New GBP post draft ready",
+      `<p>The Broadcaster just drafted a Google Business Profile post: <b>${(parsed.title ?? "Untitled").toString().replace(/</g,"&lt;")}</b>.</p>
+       <p>Open <b>Agents Hub → GBP drafts</b> to review and click <b>Publish</b> (or Copy &amp; paste into GBP).</p>`,
+    );
     return new Response(JSON.stringify({ ok: true, post_id: post?.id }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await supabase.from("agent_runs").update({ status: "error", finished_at: new Date().toISOString(), summary: msg }).eq("id", runId);
+    await notifyAdmin("Broadcaster agent failed", `<p>The Broadcaster errored:</p><pre>${msg}</pre>`);
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
