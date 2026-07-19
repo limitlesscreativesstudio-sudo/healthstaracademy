@@ -56,21 +56,37 @@ const AgentsHub = () => {
   const [chatAgent, setChatAgent] = useState<"advocate" | "mentor">("mentor");
   const [editing, setEditing] = useState<BlogDraft | null>(null);
   const [saving, setSaving] = useState(false);
+  const [scribeAutoPublish, setScribeAutoPublish] = useState(false);
+  const [savingAuto, setSavingAuto] = useState(false);
 
   const load = async () => {
-    const [{ data: f }, { data: r }, { data: g }, { data: b }] = await Promise.all([
+    const [{ data: f }, { data: r }, { data: g }, { data: b }, { data: cfg }] = await Promise.all([
       supabase.from("agent_findings").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(50),
       supabase.from("agent_runs").select("*").order("started_at", { ascending: false }).limit(20),
       supabase.from("gbp_posts").select("*").order("created_at", { ascending: false }).limit(10),
       supabase.from("blog_drafts").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("agent_config").select("auto_publish").eq("agent", "scribe").maybeSingle(),
     ]);
     setFindings((f ?? []) as Finding[]);
     setRuns((r ?? []) as Run[]);
     setPosts((g ?? []) as GbpPost[]);
     setDrafts((b ?? []) as BlogDraft[]);
+    setScribeAutoPublish(!!cfg?.auto_publish);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
+  const toggleAutoPublish = async (next: boolean) => {
+    setSavingAuto(true);
+    try {
+      const { error } = await supabase.from("agent_config").upsert({ agent: "scribe", auto_publish: next, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      setScribeAutoPublish(next);
+      toast({ title: next ? "Auto-publish ON" : "Auto-publish OFF", description: next ? "New Scribe drafts will publish immediately." : "New Scribe drafts will wait for your review." });
+    } catch (e: any) {
+      toast({ title: "Save failed", description: e.message, variant: "destructive" });
+    } finally { setSavingAuto(false); }
+  };
 
   const runAgent = async (fn: string, id: string) => {
     setRunning(id);
@@ -179,9 +195,16 @@ const AgentsHub = () => {
 
       {tab === "blog" && (
         <div className="space-y-3">
-          <div className="text-xs text-muted-foreground flex items-center gap-2">
-            <Sparkles className="h-3 w-3" />
-            Scribe drafts one full blog post per week. Review, edit if needed, then publish — it goes live at <code className="bg-muted px-1 rounded">/blog/&lt;slug&gt;</code>.
+          <div className="flex items-start justify-between gap-3 p-3 border rounded-lg bg-muted/30 flex-wrap">
+            <div className="text-xs text-muted-foreground flex-1 min-w-[220px]">
+              <div className="flex items-center gap-2 font-medium text-foreground mb-1"><Sparkles className="h-3 w-3" />Scribe blog engine</div>
+              Drafts one full post per week with a freshly generated hero image (no recycled visuals). Posts go live at <code className="bg-background px-1 rounded">/blog/&lt;slug&gt;</code>.
+            </div>
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input type="checkbox" className="h-4 w-4 accent-primary" checked={scribeAutoPublish} disabled={savingAuto} onChange={(e) => toggleAutoPublish(e.target.checked)} />
+              <span className="font-medium">Auto-publish</span>
+              <span className="text-xs text-muted-foreground">{scribeAutoPublish ? "New posts go live automatically" : "Email me to approve"}</span>
+            </label>
           </div>
           {drafts.length === 0 && (
             <div className="text-sm text-muted-foreground p-4 border rounded-lg">

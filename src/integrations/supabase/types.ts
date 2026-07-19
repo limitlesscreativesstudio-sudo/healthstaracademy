@@ -61,6 +61,24 @@ export type Database = {
           },
         ]
       }
+      agent_config: {
+        Row: {
+          agent: string
+          auto_publish: boolean
+          updated_at: string
+        }
+        Insert: {
+          agent: string
+          auto_publish?: boolean
+          updated_at?: string
+        }
+        Update: {
+          agent?: string
+          auto_publish?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       agent_conversations: {
         Row: {
           agent: string
@@ -387,6 +405,7 @@ export type Database = {
           body_markdown: string
           category: string | null
           created_at: string
+          hero_image_alt: string | null
           hero_image_url: string | null
           id: string
           meta_description: string | null
@@ -406,6 +425,7 @@ export type Database = {
           body_markdown: string
           category?: string | null
           created_at?: string
+          hero_image_alt?: string | null
           hero_image_url?: string | null
           id?: string
           meta_description?: string | null
@@ -425,6 +445,7 @@ export type Database = {
           body_markdown?: string
           category?: string | null
           created_at?: string
+          hero_image_alt?: string | null
           hero_image_url?: string | null
           id?: string
           meta_description?: string | null
