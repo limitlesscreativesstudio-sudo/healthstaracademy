@@ -195,9 +195,16 @@ const AgentsHub = () => {
 
       {tab === "blog" && (
         <div className="space-y-3">
-          <div className="text-xs text-muted-foreground flex items-center gap-2">
-            <Sparkles className="h-3 w-3" />
-            Scribe drafts one full blog post per week. Review, edit if needed, then publish — it goes live at <code className="bg-muted px-1 rounded">/blog/&lt;slug&gt;</code>.
+          <div className="flex items-start justify-between gap-3 p-3 border rounded-lg bg-muted/30 flex-wrap">
+            <div className="text-xs text-muted-foreground flex-1 min-w-[220px]">
+              <div className="flex items-center gap-2 font-medium text-foreground mb-1"><Sparkles className="h-3 w-3" />Scribe blog engine</div>
+              Drafts one full post per week with a freshly generated hero image (no recycled visuals). Posts go live at <code className="bg-background px-1 rounded">/blog/&lt;slug&gt;</code>.
+            </div>
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input type="checkbox" className="h-4 w-4 accent-primary" checked={scribeAutoPublish} disabled={savingAuto} onChange={(e) => toggleAutoPublish(e.target.checked)} />
+              <span className="font-medium">Auto-publish</span>
+              <span className="text-xs text-muted-foreground">{scribeAutoPublish ? "New posts go live automatically" : "Email me to approve"}</span>
+            </label>
           </div>
           {drafts.length === 0 && (
             <div className="text-sm text-muted-foreground p-4 border rounded-lg">
