@@ -74,7 +74,7 @@ const AgentBlogPost = () => {
         title={post.title}
         subtitle={post.tldr ?? undefined}
         imageSrc={post.hero_image_url ?? "/placeholder.svg"}
-        imageAlt={post.title}
+        imageAlt={post.hero_image_alt ?? post.title}
       />
       <article className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
