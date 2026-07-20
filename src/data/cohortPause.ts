@@ -2,7 +2,7 @@
 // being restructured (instructor break planning, Psych Tech program rollout).
 // Flip COHORTS_PAUSED to false once new dates are confirmed.
 
-export const COHORTS_PAUSED = true;
+export const COHORTS_PAUSED = false;
 
 export const COHORT_PAUSE_HEADLINE = "New cohort dates coming soon";
 
