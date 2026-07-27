@@ -87,20 +87,27 @@ Deno.serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const GOOGLE_SERVICE_ACCOUNT_KEY = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY");
 
-    // Admin auth
-    const authHeader = req.headers.get("authorization") ?? "";
-    const jwt = authHeader.replace("Bearer ", "").trim();
-    if (!jwt) {
-      return new Response(JSON.stringify({ error: "Missing auth" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Auth: accept either admin JWT (from Admin Dashboard) OR the shared
+    // WEBHOOK_SECRET header (for one-off ops runs).
+    const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET");
+    const incomingWebhookSecret = req.headers.get("x-webhook-secret");
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { data: userData } = await supabase.auth.getUser(jwt);
-    const uid = userData?.user?.id;
-    if (!uid) return json({ error: "Not authenticated" }, 401);
-    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
-    if (!isAdmin) return json({ error: "Admin only" }, 403);
+    let authed = false;
+    if (WEBHOOK_SECRET && incomingWebhookSecret === WEBHOOK_SECRET) {
+      authed = true;
+    } else {
+      const authHeader = req.headers.get("authorization") ?? "";
+      const jwt = authHeader.replace("Bearer ", "").trim();
+      if (jwt) {
+        const { data: userData } = await supabase.auth.getUser(jwt);
+        const uid = userData?.user?.id;
+        if (uid) {
+          const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
+          if (isAdmin) authed = true;
+        }
+      }
+    }
+    if (!authed) return json({ error: "Unauthorized" }, 401);
 
     if (!GOOGLE_SERVICE_ACCOUNT_KEY) return json({ error: "GOOGLE_SERVICE_ACCOUNT_KEY not configured" }, 500);
 
