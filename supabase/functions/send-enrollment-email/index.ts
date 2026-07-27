@@ -431,6 +431,41 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
         `),
       };
 
+    case "cohort_change": {
+      const oldCohort = (data as unknown as { previous_cohort_date?: string }).previous_cohort_date;
+      const oldFormatted = oldCohort ? formatDate(oldCohort) : "";
+      const deadlineDate = data.cohort_date
+        ? (() => {
+            const d = new Date(data.cohort_date + "T00:00:00");
+            d.setDate(d.getDate() - 14);
+            return d.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+          })()
+        : "";
+      return {
+        subject: `Important: Updated Cohort Dates — New Start ${cohortFormatted}`,
+        html: getEmailWrapper(`
+          <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">Hi ${esc(firstName)},</h2>
+          <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Thanks for applying to Health Star Academy! We're reaching out because our cohort calendar has been <strong>restructured</strong> to build in instructor breaks and to fold in our upcoming Psych Tech program.</p>
+          ${oldFormatted ? `<p style=\"color:#4a4a5a;line-height:1.7;font-size:15px;\">Your originally selected start date (<strong>${oldFormatted}</strong>) has moved.</p>` : ""}
+          <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
+            <p style="color:#166534;margin:0 0 4px;font-size:14px;font-weight:600;">New Cohort Start Date:</p>
+            <p style="color:#166534;margin:0 0 8px;font-size:18px;font-weight:700;">${cohortFormatted}</p>
+            ${deadlineDate ? `<p style=\"color:#166534;margin:0;font-size:14px;\"><strong>Apply by:</strong> ${deadlineDate}</p>` : ""}
+          </div>
+          <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Everything else stays the same — same 160-hour CDPH-approved program, same $2,499 all-inclusive tuition, same clinical sites in Stockton, Lodi, and Hayward.</p>
+          <h3 style="color:#1e1b2e;margin:24px 0 12px;font-size:18px;">What to do next:</h3>
+          <ol style="color:#4a4a5a;line-height:2;font-size:15px;padding-left:20px;">
+            <li>Review the full updated cohort calendar below</li>
+            <li>Confirm the new start date works for you (or pick a later one)</li>
+            <li>Complete your enrollment application if you haven't yet</li>
+          </ol>
+          ${getButtonHtml("View Updated Cohort Dates", "https://healthstaracademy.org/programs/cohorts")}
+          <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">Questions? Reply to this email or call <strong>(209) 323-4169</strong>. We're here to help you land the seat that fits your schedule.</p>
+          <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">With gratitude,<br><strong>Health Star Academy Admissions Team 💜</strong></p>
+        `),
+      };
+    }
+
     default:
       return { subject: "Health Star Academy Update", html: getEmailWrapper(`<p>Update from Health Star Academy.</p>`) };
   }

@@ -20,6 +20,7 @@ import {
   COHORT_PAUSE_MESSAGE,
   COHORT_PAUSE_CTA_TEXT,
   COHORT_PAUSE_CTA_LINK,
+  WEEKENDS_PAUSED,
 } from "@/data/cohortPause";
 
 
@@ -355,7 +356,7 @@ const CohortsPage = () => {
             )}
 
             {/* Weekend Cohorts */}
-            {!isLoading && weekendCohorts.length > 0 && (
+            {!isLoading && !WEEKENDS_PAUSED && weekendCohorts.length > 0 && (
               <section className="py-12 bg-background">
                 <div className="container-custom">
                   <div className="text-center mb-10">
@@ -367,6 +368,24 @@ const CohortsPage = () => {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
                     {weekendCohorts.map((c, i) => renderCohortCard(c, i, true))}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {WEEKENDS_PAUSED && (
+              <section className="py-12 bg-background">
+                <div className="container-custom max-w-3xl">
+                  <div className="bg-neutral-light rounded-xl p-6 md:p-8 border border-cyan/20 text-center">
+                    <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
+                      Weekend cohorts are paused
+                    </h3>
+                    <p className="text-gray-dark text-sm md:text-base mb-4">
+                      We're restructuring the Weekend track and folding in our upcoming Psych Tech program. Daytime cohorts continue on schedule.
+                    </p>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to="/pre-qualification">Join the Weekend interest list</Link>
+                    </Button>
                   </div>
                 </div>
               </section>
@@ -384,9 +403,11 @@ const CohortsPage = () => {
                         <p className="text-charcoal text-lg md:text-xl font-bold mb-2">
                           ⚠️ Next daytime deadline: {next.deadline} ({next.startDate} start)
                         </p>
-                        <p className="text-charcoal text-lg md:text-xl font-bold mb-4">
-                          ⚠️ Next weekend deadline: {nextWeekend.deadline} ({nextWeekend.startDate} start)
-                        </p>
+                        {!WEEKENDS_PAUSED && (
+                          <p className="text-charcoal text-lg md:text-xl font-bold mb-4">
+                            ⚠️ Next weekend deadline: {nextWeekend.deadline} ({nextWeekend.startDate} start)
+                          </p>
+                        )}
                       </>
                     );
                   })()}

@@ -28,6 +28,7 @@ import {
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
+import { WEEKENDS_PAUSED } from "@/data/cohortPause";
 import diverseStudentsTraining from "@/assets/diverse-students-training.jpg";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 
@@ -351,7 +352,7 @@ const ProgramsPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-10">
+          <div className={`grid grid-cols-1 ${WEEKENDS_PAUSED ? "" : "md:grid-cols-2"} gap-6 max-w-3xl mx-auto mb-10`}>
             <div className="bg-background rounded-xl p-6 shadow-soft text-center">
               <Calendar className="h-10 w-10 text-purple mx-auto mb-4" />
               <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
@@ -361,19 +362,21 @@ const ProgramsPage = () => {
               <p className="text-gray-dark text-sm mb-1">Classroom & Clinical: 6:00 AM – 2:30 PM</p>
               <p className="text-charcoal font-semibold">6 Weeks</p>
             </div>
-            <div className="bg-background rounded-xl p-6 shadow-soft text-center border-2 border-cyan">
-              <Calendar className="h-10 w-10 text-cyan mx-auto mb-4" />
-              <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
-                Weekend Program
-              </h3>
-              <span className="inline-block bg-cyan/20 text-cyan text-xs font-bold px-2 py-0.5 rounded mb-2">NEW</span>
-              <p className="text-cyan font-medium mb-1">Saturday & Sunday</p>
-              <p className="text-gray-dark text-sm mb-1">Classroom & Clinical: 6:00 AM – 6:00 PM</p>
-              <p className="text-charcoal font-semibold mb-3">8 Weekends (16 class days)</p>
-              <div className="bg-cyan/5 border border-cyan/20 rounded-lg p-2 text-xs text-muted-foreground">
-                ⚠️ Minimum 15 students required per cohort
+            {!WEEKENDS_PAUSED && (
+              <div className="bg-background rounded-xl p-6 shadow-soft text-center border-2 border-cyan">
+                <Calendar className="h-10 w-10 text-cyan mx-auto mb-4" />
+                <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">
+                  Weekend Program
+                </h3>
+                <span className="inline-block bg-cyan/20 text-cyan text-xs font-bold px-2 py-0.5 rounded mb-2">NEW</span>
+                <p className="text-cyan font-medium mb-1">Saturday & Sunday</p>
+                <p className="text-gray-dark text-sm mb-1">Classroom & Clinical: 6:00 AM – 6:00 PM</p>
+                <p className="text-charcoal font-semibold mb-3">8 Weekends (16 class days)</p>
+                <div className="bg-cyan/5 border border-cyan/20 rounded-lg p-2 text-xs text-muted-foreground">
+                  ⚠️ Minimum 15 students required per cohort
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Daytime Start Dates */}
@@ -408,35 +411,50 @@ const ProgramsPage = () => {
           </div>
 
           {/* Weekend Start Dates */}
-          <div className="bg-background rounded-xl p-6 shadow-soft max-w-3xl mx-auto border-2 border-cyan/30">
-            <h3 className="font-heading font-semibold text-xl text-charcoal mb-2 text-center">
-              Weekend — Upcoming Class Dates
-            </h3>
-            <p className="text-gray-dark text-sm text-center mb-4">
-              Application deadline: 14 days prior to start date
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-              {weekendDates.map((item) => (
-                <div
-                  key={item.startISO}
-                  className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                >
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-cyan" />
-                    <span className="font-medium text-charcoal text-sm">{item.startDate}</span>
+          {!WEEKENDS_PAUSED && (
+            <div className="bg-background rounded-xl p-6 shadow-soft max-w-3xl mx-auto border-2 border-cyan/30">
+              <h3 className="font-heading font-semibold text-xl text-charcoal mb-2 text-center">
+                Weekend — Upcoming Class Dates
+              </h3>
+              <p className="text-gray-dark text-sm text-center mb-4">
+                Application deadline: 14 days prior to start date
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                {weekendDates.map((item) => (
+                  <div
+                    key={item.startISO}
+                    className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-cyan" />
+                      <span className="font-medium text-charcoal text-sm">{item.startDate}</span>
+                    </div>
+                    <span className="text-gray-dark text-xs">
+                      Ends: {item.endDate}
+                    </span>
                   </div>
-                  <span className="text-gray-dark text-xs">
-                    Ends: {item.endDate}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
+              <div className="text-center mt-5">
+                <Button variant="default" className="bg-cyan hover:bg-cyan/90 text-charcoal" asChild>
+                  <Link to={ENROLLMENT_LINK}>Enroll for Weekend Class</Link>
+                </Button>
+              </div>
             </div>
-            <div className="text-center mt-5">
-              <Button variant="default" className="bg-cyan hover:bg-cyan/90 text-charcoal" asChild>
-                <Link to={ENROLLMENT_LINK}>Enroll for Weekend Class</Link>
+          )}
+          {WEEKENDS_PAUSED && (
+            <div className="bg-neutral-light rounded-xl p-6 max-w-3xl mx-auto border border-cyan/20 text-center">
+              <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">
+                Weekend cohorts are paused
+              </h3>
+              <p className="text-gray-dark text-sm mb-4">
+                We're restructuring the Weekend track and folding in our upcoming Psych Tech program. Daytime cohorts continue on schedule.
+              </p>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/pre-qualification">Join the Weekend interest list</Link>
               </Button>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
