@@ -411,35 +411,50 @@ const ProgramsPage = () => {
           </div>
 
           {/* Weekend Start Dates */}
-          <div className="bg-background rounded-xl p-6 shadow-soft max-w-3xl mx-auto border-2 border-cyan/30">
-            <h3 className="font-heading font-semibold text-xl text-charcoal mb-2 text-center">
-              Weekend — Upcoming Class Dates
-            </h3>
-            <p className="text-gray-dark text-sm text-center mb-4">
-              Application deadline: 14 days prior to start date
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-              {weekendDates.map((item) => (
-                <div
-                  key={item.startISO}
-                  className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                >
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-cyan" />
-                    <span className="font-medium text-charcoal text-sm">{item.startDate}</span>
+          {!WEEKENDS_PAUSED && (
+            <div className="bg-background rounded-xl p-6 shadow-soft max-w-3xl mx-auto border-2 border-cyan/30">
+              <h3 className="font-heading font-semibold text-xl text-charcoal mb-2 text-center">
+                Weekend — Upcoming Class Dates
+              </h3>
+              <p className="text-gray-dark text-sm text-center mb-4">
+                Application deadline: 14 days prior to start date
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                {weekendDates.map((item) => (
+                  <div
+                    key={item.startISO}
+                    className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-cyan" />
+                      <span className="font-medium text-charcoal text-sm">{item.startDate}</span>
+                    </div>
+                    <span className="text-gray-dark text-xs">
+                      Ends: {item.endDate}
+                    </span>
                   </div>
-                  <span className="text-gray-dark text-xs">
-                    Ends: {item.endDate}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
+              <div className="text-center mt-5">
+                <Button variant="default" className="bg-cyan hover:bg-cyan/90 text-charcoal" asChild>
+                  <Link to={ENROLLMENT_LINK}>Enroll for Weekend Class</Link>
+                </Button>
+              </div>
             </div>
-            <div className="text-center mt-5">
-              <Button variant="default" className="bg-cyan hover:bg-cyan/90 text-charcoal" asChild>
-                <Link to={ENROLLMENT_LINK}>Enroll for Weekend Class</Link>
+          )}
+          {WEEKENDS_PAUSED && (
+            <div className="bg-neutral-light rounded-xl p-6 max-w-3xl mx-auto border border-cyan/20 text-center">
+              <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">
+                Weekend cohorts are paused
+              </h3>
+              <p className="text-gray-dark text-sm mb-4">
+                We're restructuring the Weekend track and folding in our upcoming Psych Tech program. Daytime cohorts continue on schedule.
+              </p>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/pre-qualification">Join the Weekend interest list</Link>
               </Button>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
