@@ -352,6 +352,47 @@ Deno.serve(async (req) => {
         console.warn("GOOGLE_SERVICE_ACCOUNT_KEY not configured, skipping sheet sync");
       }
 
+      // Also persist to `students` table so we can notify applicants when
+      // cohort dates change and manage them in the admin pipeline.
+      let studentId: string | null = null;
+      try {
+        const studentRow = {
+          first_name: payload.first_name,
+          last_name: payload.last_name,
+          email: payload.email.toLowerCase(),
+          phone: payload.phone || null,
+          date_of_birth: payload.date_of_birth || null,
+          shipping_address: payload.address || null,
+          is_over_18: payload.is_over_18,
+          has_diploma: payload.has_diploma,
+          has_valid_id: payload.has_valid_id,
+          has_ssn: payload.has_ssn,
+          can_pass_background: payload.can_pass_background,
+          has_health_proof: payload.has_health_proof,
+          has_transportation: payload.has_transportation,
+          selected_cohort_date: payload.selected_cohort_date,
+          orientation_date: orientationDate,
+          qualification_status: qualification.status,
+          qualification_notes: qualification.notes,
+          needs_entrance_exam: qualification.needsExam,
+          needs_parent_consent: qualification.needsConsent,
+          enrollment_status: qualification.status === "qualified" ? "pre_qualified" : "disqualified",
+          updated_at: new Date().toISOString(),
+        };
+        const { data: upserted, error: upsertErr } = await supabase
+          .from("students")
+          .upsert(studentRow, { onConflict: "email" })
+          .select("id")
+          .single();
+        if (upsertErr) {
+          console.error("Students upsert failed:", upsertErr.message);
+        } else {
+          studentId = upserted?.id ?? null;
+        }
+      } catch (dbErr) {
+        console.error("Students table insert error:", dbErr);
+      }
+
       // Trigger email via send-enrollment-email function
       const emailType = qualification.status === "disqualified" ? "disqualified" : "qualified_welcome";
       
