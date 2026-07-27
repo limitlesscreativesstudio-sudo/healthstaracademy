@@ -28,6 +28,7 @@ import {
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
+import { WEEKENDS_PAUSED } from "@/data/cohortPause";
 import diverseStudentsTraining from "@/assets/diverse-students-training.jpg";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 
