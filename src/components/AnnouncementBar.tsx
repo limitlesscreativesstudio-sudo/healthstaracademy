@@ -71,33 +71,49 @@ const AnnouncementBar = () => {
     return `${label} Starts ${c.startDate} — Apply by ${stripDay(c.deadline)}${suffix}`;
   };
 
-  const announcements = useMemo(() => [
-    {
-      id: 'cohort-daytime',
-      cohortType: 'daytime' as const,
-      icon: Calendar,
-      title: buildTitle('daytime'),
-      startDate: nextDaytime.startDate,
-      deadline: stripDay(nextDaytime.deadline),
-      ctaText: 'View Cohorts',
-      ctaLink: '/programs/cohorts',
-      hasCountdown: true,
-      accent: 'from-purple to-magenta',
-    },
-    {
-      id: 'cohort-weekend',
-      cohortType: 'weekend' as const,
-      icon: Sparkles,
-      title: buildTitle('weekend'),
-      startDate: nextWeekend.startDate,
-      deadline: stripDay(nextWeekend.deadline),
-      ctaText: 'Weekend Info',
-      ctaLink: '/programs/cohorts',
-      hasCountdown: false,
-      accent: 'from-cyan to-purple',
-    },
+  const announcements = useMemo(() => {
+    const items: Array<{
+      id: string;
+      cohortType: 'daytime' | 'weekend';
+      icon: typeof Calendar;
+      title: string;
+      startDate: string;
+      deadline: string;
+      ctaText: string;
+      ctaLink: string;
+      hasCountdown: boolean;
+      accent: string;
+    }> = [
+      {
+        id: 'cohort-daytime',
+        cohortType: 'daytime',
+        icon: Calendar,
+        title: buildTitle('daytime'),
+        startDate: nextDaytime.startDate,
+        deadline: stripDay(nextDaytime.deadline),
+        ctaText: 'View Cohorts',
+        ctaLink: '/programs/cohorts',
+        hasCountdown: true,
+        accent: 'from-purple to-magenta',
+      },
+    ];
+    if (!WEEKENDS_PAUSED) {
+      items.push({
+        id: 'cohort-weekend',
+        cohortType: 'weekend',
+        icon: Sparkles,
+        title: buildTitle('weekend'),
+        startDate: nextWeekend.startDate,
+        deadline: stripDay(nextWeekend.deadline),
+        ctaText: 'Weekend Info',
+        ctaLink: '/programs/cohorts',
+        hasCountdown: false,
+        accent: 'from-cyan to-purple',
+      });
+    }
+    return items;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [nextDaytime, nextWeekend, variant]);
+  }, [nextDaytime, nextWeekend, variant]);
 
   useEffect(() => {
     const calculateCountdown = () => {
