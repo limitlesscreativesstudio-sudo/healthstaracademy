@@ -119,6 +119,11 @@ Deno.serve(async (req) => {
     const rows = await readSheet(GOOGLE_SERVICE_ACCOUNT_KEY);
 
     // Sheet columns: A timestamp, B name, C dob, D email, E addr, F phone, ..., N cohort selected
+    // Filter logic: include applicant if their selected cohort text contains a
+    // month + year that resolves to a date >= cutoffISO (i.e. one of the dates
+    // that got shifted). Falls back to timestamp comparison if no cohort date.
+    const cutoffMs = new Date(cutoffISO + "T00:00:00").getTime();
+    const dateRegex = /(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+20\d{2}/gi;
     const seen = new Set<string>();
     const targets: Array<{ email: string; name: string; prevCohort: string; timestamp: string }> = [];
     for (const r of rows) {
@@ -126,16 +131,25 @@ Deno.serve(async (req) => {
       const name = (r[1] || "").trim();
       const email = (r[3] || "").trim().toLowerCase();
       const prevCohort = (r[13] || "").trim();
-      if (!email || !ts) continue;
-      // Parse timestamp — accept ISO or common Sheets formats
-      let tsDate: Date;
-      try { tsDate = new Date(ts); } catch { continue; }
-      if (isNaN(tsDate.getTime())) continue;
-      const tsISO = tsDate.toISOString().slice(0, 10);
-      if (tsISO < cutoffISO) continue;
+      if (!email) continue;
       if (seen.has(email)) continue;
+
+      // Try to find any real cohort date in the selection field
+      let matches = prevCohort.match(dateRegex) ?? [];
+      let hasFutureCohort = matches.some(m => {
+        const d = new Date(m).getTime();
+        return !isNaN(d) && d >= cutoffMs;
+      });
+
+      // Fallback: if no parsable cohort date, use submission timestamp
+      if (matches.length === 0 && ts) {
+        const tsMs = new Date(ts).getTime();
+        if (!isNaN(tsMs) && tsMs >= cutoffMs) hasFutureCohort = true;
+      }
+
+      if (!hasFutureCohort) continue;
       seen.add(email);
-      targets.push({ email, name, prevCohort, timestamp: tsISO });
+      targets.push({ email, name, prevCohort, timestamp: ts });
     }
 
     if (dryRun) {
