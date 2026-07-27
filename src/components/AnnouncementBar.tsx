@@ -7,6 +7,7 @@ import {
   COHORT_PAUSE_MESSAGE,
   COHORT_PAUSE_CTA_TEXT,
   COHORT_PAUSE_CTA_LINK,
+  WEEKENDS_PAUSED,
 } from '@/data/cohortPause';
 
 
