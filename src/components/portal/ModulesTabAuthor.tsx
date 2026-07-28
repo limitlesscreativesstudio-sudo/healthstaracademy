@@ -677,6 +677,10 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
   const [published, setPublished] = useState(true);
   const [indent, setIndent] = useState<number>(0);
   const [saving, setSaving] = useState(false);
+  const [fileSource, setFileSource] = useState<"existing" | "upload" | "drive" | "url">("existing");
+  const [driveUrl, setDriveUrl] = useState("");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadPct, setUploadPct] = useState(0);
 
   // pickers
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -690,11 +694,12 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
       supabase.from("assignments").select("id, title").eq("course_id", courseId).order("title"),
       supabase.from("quizzes").select("id, title").eq("course_id", courseId).order("title"),
       supabase.from("lms_pages").select("id, title").eq("course_id", courseId).order("title"),
-      supabase.from("lms_files").select("id, name").eq("course_id", courseId).order("name"),
+      supabase.from("lms_files").select("id, name, file_name").eq("course_id", courseId).order("created_at", { ascending: false }),
       supabase.from("discussions").select("id, title").eq("course_id", courseId).order("title"),
     ]);
     setAssignments(a.data ?? []); setQuizzes(q.data ?? []);
-    setPages(p.data ?? []); setFiles(f.data ?? []);
+    setPages(p.data ?? []);
+    setFiles((f.data ?? []).map((row: any) => ({ id: row.id, name: row.name || row.file_name || "Untitled file" })));
     setDiscussions(d.data ?? []);
   };
 
@@ -707,6 +712,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     } else {
       setType("assignment"); setTitle(""); setContentRef(""); setUrl(""); setPublished(true); setIndent(0);
     }
+    setFileSource("existing"); setDriveUrl(""); setUploadFile(null); setUploadPct(0);
     reloadPickers();
   }, [open, item, courseId]);
 
@@ -716,6 +722,59 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     if (!title) setTitle(label);
   };
 
+  // Extract a Google Drive file id from typical share URLs
+  const parseDriveId = (u: string): string | null => {
+    const m1 = u.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (m1) return m1[1];
+    const m2 = u.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (m2) return m2[1];
+    return null;
+  };
+
+  // Create an lms_files row for Google Drive / external URL, return its id
+  const createExternalFile = async (): Promise<string | null> => {
+    const displayName = title.trim() || (fileSource === "drive" ? "Google Drive file" : "External file");
+    if (fileSource === "drive") {
+      const driveId = parseDriveId(driveUrl);
+      const previewUrl = driveId
+        ? `https://drive.google.com/file/d/${driveId}/preview`
+        : driveUrl;
+      const { data, error } = await supabase.from("lms_files").insert({
+        course_id: courseId, name: displayName, file_name: displayName,
+        storage_provider: "google_drive", drive_file_id: driveId,
+        external_url: driveUrl, file_url: previewUrl, file_type: "gdrive",
+      }).select().single();
+      if (error) { toast({ title: "Could not attach Drive file", description: error.message, variant: "destructive" }); return null; }
+      return data.id;
+    }
+    if (fileSource === "url") {
+      const { data, error } = await supabase.from("lms_files").insert({
+        course_id: courseId, name: displayName, file_name: displayName,
+        storage_provider: "external", external_url: driveUrl, file_url: driveUrl,
+        file_type: (driveUrl.split(".").pop() || "url").toLowerCase(),
+      }).select().single();
+      if (error) { toast({ title: "Could not attach URL", description: error.message, variant: "destructive" }); return null; }
+      return data.id;
+    }
+    if (fileSource === "upload" && uploadFile) {
+      const { uploadViaXhr } = await import("@/pages/portal/teach/uploadViaXhr");
+      const ext = uploadFile.name.split(".").pop() ?? "";
+      const path = `${courseId}/${Date.now()}_${uploadFile.name}`;
+      const { error: upErr } = await uploadViaXhr("course-files", path, uploadFile, { onProgress: setUploadPct });
+      if (upErr) { toast({ title: "Upload failed", description: upErr.message, variant: "destructive" }); return null; }
+      const { data: { publicUrl } } = supabase.storage.from("course-files").getPublicUrl(path);
+      const { data, error } = await supabase.from("lms_files").insert({
+        course_id: courseId, name: uploadFile.name, file_name: uploadFile.name,
+        storage_provider: "supabase", storage_path: path, file_url: publicUrl,
+        file_type: ext, file_size: uploadFile.size, size_bytes: uploadFile.size,
+        mime_type: uploadFile.type, folder: "Uploaded Media",
+      }).select().single();
+      if (error) { toast({ title: "Could not save file record", description: error.message, variant: "destructive" }); return null; }
+      return data.id;
+    }
+    return null;
+  };
+
   // inline create for assignment/quiz/page
   const createNewAndAttach = async (): Promise<string | null> => {
     const displayTitle = title.trim() || `New ${type}`;
@@ -723,21 +782,21 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
       const { data, error } = await supabase.from("assignments")
         .insert({ course_id: courseId, title: displayTitle, submission_type: "assignment", group_name: "Assignments", points: 100, published: false })
         .select().single();
-      if (error) { toast({ title: "Could not create assignment", variant: "destructive" }); return null; }
+      if (error) { toast({ title: "Could not create assignment", description: error.message, variant: "destructive" }); return null; }
       return data.id;
     }
     if (type === "quiz") {
       const { data, error } = await supabase.from("quizzes")
         .insert({ course_id: courseId, title: displayTitle, published: false })
         .select().single();
-      if (error) { toast({ title: "Could not create quiz", variant: "destructive" }); return null; }
+      if (error) { toast({ title: "Could not create quiz", description: error.message, variant: "destructive" }); return null; }
       return data.id;
     }
     if (type === "page") {
       const { data, error } = await supabase.from("lms_pages")
         .insert({ course_id: courseId, title: displayTitle, body_html: "", published: false })
         .select().single();
-      if (error) { toast({ title: "Could not create page", variant: "destructive" }); return null; }
+      if (error) { toast({ title: "Could not create page", description: error.message, variant: "destructive" }); return null; }
       return data.id;
     }
     if (type === "discussion") {
@@ -747,7 +806,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
       const { data, error } = await supabase.from("discussions")
         .insert({ course_id: courseId, title: displayTitle, body: "", author_id: authorId })
         .select().single();
-      if (error) { toast({ title: "Could not create discussion", variant: "destructive" }); return null; }
+      if (error) { toast({ title: "Could not create discussion", description: error.message, variant: "destructive" }); return null; }
       return data.id;
     }
     return null;
@@ -759,13 +818,21 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     setSaving(true);
 
     let finalContentRef: string | null = null;
-    if (["assignment", "quiz", "page", "file", "discussion"].includes(type)) {
+    if (["assignment", "quiz", "page", "discussion"].includes(type)) {
       if (contentRef === CREATE_NEW) {
         const newId = await createNewAndAttach();
         if (!newId) { setSaving(false); return; }
         finalContentRef = newId;
       } else {
         finalContentRef = contentRef || null;
+      }
+    } else if (type === "file") {
+      if (fileSource === "existing") {
+        finalContentRef = contentRef || null;
+      } else {
+        const newId = await createExternalFile();
+        if (!newId) { setSaving(false); return; }
+        finalContentRef = newId;
       }
     }
 
@@ -774,28 +841,33 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
       content_ref: finalContentRef,
       url: ["link", "video", "external_tool"].includes(type) ? (url || null) : null,
     };
-    if (item) {
-      await supabase.from("module_items").update(payload).eq("id", item.id);
-    } else {
-      payload.position = nextPosition;
-      await supabase.from("module_items").insert(payload);
-    }
+    const { error } = item
+      ? await supabase.from("module_items").update(payload).eq("id", item.id)
+      : await supabase.from("module_items").insert({ ...payload, position: nextPosition });
     setSaving(false);
+    if (error) {
+      toast({ title: "Could not save item", description: error.message, variant: "destructive" });
+      return;
+    }
     toast({ title: item ? "Item updated" : "Item added" });
     onSaved();
     onClose();
   };
 
-  const needsPicker = ["assignment", "quiz", "page", "file", "discussion"].includes(type);
+  const needsPicker = ["assignment", "quiz", "page", "discussion"].includes(type);
   const pickerOptions =
     type === "assignment" ? assignments.map(a => ({ id: a.id, label: a.title })) :
     type === "quiz"       ? quizzes.map(q => ({ id: q.id, label: q.title })) :
     type === "page"       ? pages.map(p => ({ id: p.id, label: p.title })) :
-    type === "discussion" ? discussions.map(d => ({ id: d.id, label: d.title })) :
-    type === "file"       ? files.map(f => ({ id: f.id, label: f.name })) : [];
+    type === "discussion" ? discussions.map(d => ({ id: d.id, label: d.title })) : [];
   const canCreateInline = ["assignment", "quiz", "page", "discussion"].includes(type);
   const selectedType = ITEM_TYPES.find(t => t.value === type);
   const typeLabel = selectedType?.label ?? "Item";
+  const fileReady =
+    type !== "file" ||
+    (fileSource === "existing" && !!contentRef) ||
+    (fileSource === "upload" && !!uploadFile) ||
+    ((fileSource === "drive" || fileSource === "url") && !!driveUrl.trim());
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -837,6 +909,90 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
             </div>
           )}
 
+          {type === "file" && (
+            <div className="space-y-2">
+              <Label>File Source</Label>
+              <div className="flex flex-wrap gap-1 border rounded p-1 bg-muted/30">
+                {[
+                  { k: "existing", l: "📁 Course Files" },
+                  { k: "upload",   l: "⬆️ Upload from Computer" },
+                  { k: "drive",    l: "🟢 Google Drive Link" },
+                  { k: "url",      l: "🔗 External URL" },
+                ].map(o => (
+                  <button
+                    key={o.k}
+                    type="button"
+                    onClick={() => { setFileSource(o.k as any); setContentRef(""); setDriveUrl(""); setUploadFile(null); }}
+                    className={`text-xs px-2 py-1 rounded ${fileSource === o.k ? "bg-purple text-white" : "hover:bg-muted"}`}
+                  >
+                    {o.l}
+                  </button>
+                ))}
+              </div>
+
+              {fileSource === "existing" && (
+                <PickerSelect
+                  label="File"
+                  value={contentRef}
+                  options={files.map(f => ({ id: f.id, label: f.name }))}
+                  onChange={onPickContent}
+                  canCreate={false}
+                  createLabel=""
+                />
+              )}
+
+              {fileSource === "upload" && (
+                <div className="space-y-1">
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null;
+                      setUploadFile(f);
+                      if (f && !title) setTitle(f.name);
+                    }}
+                  />
+                  {uploadFile && (
+                    <div className="text-xs text-muted-foreground">
+                      {uploadFile.name} · {(uploadFile.size / 1024).toFixed(0)} KB
+                    </div>
+                  )}
+                  {saving && uploadPct > 0 && uploadPct < 100 && (
+                    <div className="h-1 bg-muted rounded overflow-hidden">
+                      <div className="h-full bg-purple" style={{ width: `${uploadPct}%` }} />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {fileSource === "drive" && (
+                <div className="space-y-1">
+                  <Input
+                    value={driveUrl}
+                    onChange={(e) => setDriveUrl(e.target.value)}
+                    placeholder="https://drive.google.com/file/d/…/view"
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    Paste a Google Drive share link. Make sure sharing is set to <b>Anyone with the link</b> so students can view it.
+                  </div>
+                </div>
+              )}
+
+              {fileSource === "url" && (
+                <div className="space-y-1">
+                  <Input
+                    value={driveUrl}
+                    onChange={(e) => setDriveUrl(e.target.value)}
+                    placeholder="https://example.com/handout.pdf"
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    Any public URL — PDF, image, video, or webpage.
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+
           {(type === "link" || type === "video" || type === "external_tool") && (
             <div>
               <Label>{type === "external_tool" ? "External Tool URL" : "URL"}</Label>
@@ -871,7 +1027,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={save} disabled={saving || !title.trim()}>{saving ? "Saving…" : item ? "Save" : "Add Item"}</Button>
+          <Button onClick={save} disabled={saving || !title.trim() || !fileReady}>{saving ? "Saving…" : item ? "Save" : "Add Item"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
