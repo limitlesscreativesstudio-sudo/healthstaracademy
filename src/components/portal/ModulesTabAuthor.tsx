@@ -535,7 +535,7 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, 
       className={`flex items-center gap-2 px-3 py-2 border-b border-border last:border-0 hover:bg-muted/30 ${!i.published ? "opacity-60" : ""}`}
     >
       {isInstructor && (
-        <button {...attributes} {...listeners} className="cursor-grab p-1 hover:bg-muted rounded">
+        <button type="button" {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing touch-none p-1 hover:bg-muted rounded" title="Drag to reorder item">
           <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
       )}
