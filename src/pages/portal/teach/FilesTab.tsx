@@ -103,12 +103,18 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
 
   const deleteFolder = async (id: string, name: string) => {
     if (!confirm(`Delete folder “${name}”? Files inside it will move back to ${rootName}.`)) return;
-    const { error: fileErr } = await supabase
+    const { error: fileIdErr } = await supabase
       .from('lms_files')
       .update({ folder_id: null, folder: rootName })
       .eq('course_id', courseId)
-      .or(`folder_id.eq.${id},folder.eq.${name}`);
-    if (fileErr) return setError(fileErr.message);
+      .eq('folder_id', id);
+    if (fileIdErr) return setError(fileIdErr.message);
+    const { error: fileNameErr } = await supabase
+      .from('lms_files')
+      .update({ folder_id: null, folder: rootName })
+      .eq('course_id', courseId)
+      .eq('folder', name);
+    if (fileNameErr) return setError(fileNameErr.message);
     const { error: delErr } = await supabase.from('lms_folders').delete().eq('id', id).eq('course_id', courseId);
     if (delErr) return setError(delErr.message);
     setFiles(p => p.map(f => (f.folder_id === id || f.folder === name) ? { ...f, folder_id: null, folder: rootName } : f));
