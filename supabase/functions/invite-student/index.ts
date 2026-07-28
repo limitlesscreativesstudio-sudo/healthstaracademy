@@ -117,37 +117,49 @@ Deno.serve(async (req) => {
         existingUserId = inviteData.user.id;
       }
 
-      // Record pending_enrollment for tracking
-      const { error: peErr } = await admin
-        .from("pending_enrollments")
-        .upsert(
-          {
-            course_id: courseId,
-            email,
-            section: section ?? null,
-            invited_by: invitedBy,
-            status: userAlreadyExists ? "accepted" : "pending",
-            accepted_at: userAlreadyExists ? new Date().toISOString() : null,
-          },
-          { onConflict: "course_id,email" },
-        );
-      if (peErr) {
-        // non-fatal — continue
-        console.error("pending_enrollments upsert error", peErr);
+      // Record pending_enrollment for tracking — one row per target course.
+      for (const cid of targetCourseIds) {
+        const { error: peErr } = await admin
+          .from("pending_enrollments")
+          .upsert(
+            {
+              course_id: cid,
+              email,
+              section: section ?? null,
+              invited_by: invitedBy,
+              status: userAlreadyExists ? "accepted" : "pending",
+              accepted_at: userAlreadyExists ? new Date().toISOString() : null,
+            },
+            { onConflict: "course_id,email" },
+          );
+        if (peErr) console.error("pending_enrollments upsert error", peErr);
       }
 
-      // If user already exists, enroll them directly right now
+      // If user already exists, enroll them directly right now — across every
+      // target course. Also stamp cohort_id on the students record when we know it.
       if (userAlreadyExists && existingUserId) {
-        const { error: enrErr } = await admin
-          .from("enrollments")
-          .insert({ course_id: courseId, user_id: existingUserId, role: "student" });
-        if (enrErr && enrErr.code !== "23505") {
-          results.push({ email, ok: false, message: enrErr.message });
-          continue;
+        let enrolledCount = 0;
+        for (const cid of targetCourseIds) {
+          const { error: enrErr } = await admin
+            .from("enrollments")
+            .insert({ course_id: cid, user_id: existingUserId, role: "student" });
+          if (!enrErr || enrErr.code === "23505") enrolledCount++;
         }
-        results.push({ email, ok: true, message: "Already had an account — enrolled directly." });
+        if (cohortId) {
+          await admin.from("students").update({ cohort_id: cohortId })
+            .eq("email", email);
+        }
+        results.push({
+          email, ok: true,
+          message: `Already had an account — enrolled in ${enrolledCount} course${enrolledCount === 1 ? "" : "s"}.`,
+        });
       } else {
-        results.push({ email, ok: true, message: "Invitation email sent." });
+        results.push({
+          email, ok: true,
+          message: targetCourseIds.length > 1
+            ? `Invitation sent — will be enrolled in ${targetCourseIds.length} cohort courses on signup.`
+            : "Invitation email sent.",
+        });
       }
     }
 
