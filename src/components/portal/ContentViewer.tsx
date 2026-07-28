@@ -338,4 +338,20 @@ const FallbackDownload: React.FC<{ url: string; fileName?: string }> = ({ url, f
   </div>
 );
 
+const FrameBlockedCard: React.FC<{ url: string }> = ({ url }) => (
+  <div className="m-auto max-w-md text-center text-white p-8 rounded-lg bg-neutral-900 border border-white/10">
+    <AlertCircle className="h-10 w-10 text-amber-400 mx-auto mb-3" />
+    <div className="font-semibold mb-1">This site blocks embedding</div>
+    <div className="text-sm text-white/70 mb-4">
+      The external site refused to load inside a frame (X-Frame-Options / CSP).
+      Open it in a new tab to view it.
+    </div>
+    <Button asChild>
+      <a href={url} target="_blank" rel="noreferrer">
+        <ExternalLink className="h-4 w-4 mr-2" /> Open in new tab
+      </a>
+    </Button>
+  </div>
+);
+
 export default ContentViewer;
