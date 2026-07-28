@@ -716,7 +716,7 @@ const CourseView: React.FC = () => {
 
   const handleCourseAction = (action: string) => {
     switch (action) {
-      case 'home-page':       alert('Choose Home Page: keep Modules as your home, or pick Announcements/Syllabus/Pages.\n\n(Hooking this to a saved setting is the next step.)'); break;
+      case 'home-page':       setHomePageDlgOpen(true); break;
       case 'stream':          setActiveTab('announcements'); break;
       case 'new-announcement': setActiveTab('announcements'); setTimeout(() => { (window as any).__hsaOpenAnn?.(); }, 50); break;
       case 'analytics':       setActiveTab('analytics'); break;
