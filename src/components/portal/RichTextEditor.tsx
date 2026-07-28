@@ -58,6 +58,7 @@ const ToolbarBtn = ({
 const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [mode, setMode] = useState<"rich" | "html">("rich");
   const [htmlDraft, setHtmlDraft] = useState(value);
