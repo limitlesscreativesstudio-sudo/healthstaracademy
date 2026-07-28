@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Loader2, Play, CheckCircle2, X, Activity, Shield, MessageSquare, Megaphone, Search, GraduationCap, Users, FileText, ExternalLink, Sparkles } from "lucide-react";
+import { Loader2, Play, CheckCircle2, X, Activity, Shield, MessageSquare, Megaphone, Search, GraduationCap, Users, FileText, ExternalLink, Sparkles, Scale } from "lucide-react";
 import AgentChat from "@/components/agents/AgentChat";
 import { Link } from "react-router-dom";
 
@@ -21,6 +21,13 @@ type BlogDraft = {
   target_keyword: string | null; target_city: string | null; body_markdown: string;
   status: string; published_at: string | null; created_at: string;
 };
+type CompetitorPage = {
+  id: string; slug: string; title: string; meta_description: string | null;
+  tldr: string | null; body_markdown: string; status: string;
+  published_at: string | null; created_at: string;
+  competitor_id: string;
+};
+type CompetitorSchool = { id: string; slug: string; name: string; is_hsa: boolean };
 
 const AGENTS = [
   { id: "sentinel", name: "Sentinel", desc: "Site health & pipeline monitor", icon: Shield, fn: "agent-sentinel" },
@@ -29,6 +36,7 @@ const AGENTS = [
   { id: "mentor", name: "Mentor", desc: "Instructor LMS copilot", icon: GraduationCap, fn: null },
   { id: "scribe", name: "Scribe", desc: "Content, SEO & blog drafts", icon: Search, fn: "agent-scribe" },
   { id: "broadcaster", name: "Broadcaster", desc: "Weekly GBP post drafts", icon: Megaphone, fn: "agent-broadcaster" },
+  { id: "scout", name: "Scout", desc: "Competitor research & compare pages", icon: Scale, fn: "agent-scout" },
 ];
 
 const sevColor: Record<string, string> = {
