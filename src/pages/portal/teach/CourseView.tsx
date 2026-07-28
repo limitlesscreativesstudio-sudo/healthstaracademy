@@ -605,12 +605,19 @@ const Placeholder: React.FC<{ title: string }> = ({ title }) => (
 );
 
 // ── Nav items ─────────────────────────────────────────────────────────────────
+// Health Star-specific order: daily-used tabs first, then a divider, then
+// planning / administration / infrequently-used tabs.
 const NAV_ITEMS = [
   { id:'home',          label:'Home',               icon:'🏠' },
+  { id:'modules',       label:'Modules',            icon:'📦' },
   { id:'announcements', label:'Announcements',      icon:'📢' },
   { id:'assignments',   label:'Assignments',        icon:'✅' },
+  { id:'quizzes',       label:'Quizzes',            icon:'❓' },
   { id:'discussions',   label:'Discussions',        icon:'💬' },
   { id:'grades',        label:'Grades',             icon:'📊' },
+  { id:'calendar',      label:'Calendar',           icon:'📅' },
+  { id:'attendance',    label:'Attendance',         icon:'✔️' },
+  { type:'divider' },
   { id:'progress',      label:'Progress',           icon:'📈' },
   { id:'people',        label:'People',             icon:'👥' },
   { id:'pages',         label:'Pages',              icon:'📄' },
@@ -618,16 +625,12 @@ const NAV_ITEMS = [
   { id:'syllabus',      label:'Syllabus',           icon:'📋' },
   { id:'outcomes',      label:'Outcomes',           icon:'🎯' },
   { id:'rubrics',       label:'Rubrics',            icon:'📏' },
-  { id:'quizzes',       label:'Quizzes',            icon:'❓' },
-  { id:'modules',       label:'Modules',            icon:'📦' },
-  { id:'attendance',    label:'Attendance',         icon:'✔️' },
   { id:'clinical',      label:'Clinical Skills',    icon:'🩺' },
   { id:'readiness',     label:'Exam Readiness',     icon:'🏆' },
   { id:'required',      label:'Required Work',      icon:'📌' },
   { id:'career',        label:'Career Portal',      icon:'💼' },
   { id:'analytics',     label:'New Analytics',      icon:'📈' },
   { id:'lucid',         label:'Lucid (Whiteboard)', icon:'✏️' },
-  { id:'calendar',      label:'Calendar',           icon:'📅' },
   { id:'settings',      label:'Settings',           icon:'⚙️' },
 ];
 
