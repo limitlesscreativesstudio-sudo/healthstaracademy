@@ -91,14 +91,36 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
     const sortedMods = (mods ?? []).sort((a, b) => a.position - b.position);
     setModules(sortedMods);
     const ids = (mods ?? []).map(m => m.id);
+    let allItems: ModuleItem[] = [];
     if (ids.length) {
       let itQuery = supabase.from("module_items").select("*").in("module_id", ids).order("position");
       if (!isInstructor) itQuery = itQuery.eq("published", true);
       const { data: its } = await itQuery;
-      setItems((its ?? []).sort((a, b) => a.position - b.position));
+      allItems = ((its ?? []) as any[]).sort((a, b) => a.position - b.position);
+      setItems(allItems);
     } else {
       setItems([]);
     }
+
+    // Preload lookup maps for smart routing (files, pages, discussions)
+    const fileRefs = Array.from(new Set(allItems.filter(i => i.item_type === "file" && i.content_ref).map(i => i.content_ref!)));
+    const pageRefs = Array.from(new Set(allItems.filter(i => i.item_type === "page" && i.content_ref).map(i => i.content_ref!)));
+    const discRefs = Array.from(new Set(allItems.filter(i => i.item_type === "discussion" && i.content_ref).map(i => i.content_ref!)));
+    const [fRes, pRes, dRes] = await Promise.all([
+      fileRefs.length ? supabase.from("lms_files").select("id, file_url, file_name, name, file_type").in("id", fileRefs) : Promise.resolve({ data: [] as any[] }),
+      pageRefs.length ? supabase.from("lms_pages").select("id, title, body_html").in("id", pageRefs) : Promise.resolve({ data: [] as any[] }),
+      discRefs.length ? supabase.from("discussions").select("id, title, body").in("id", discRefs) : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const fMap: Record<string, { url: string; name: string; type: string }> = {};
+    ((fRes as any).data ?? []).forEach((r: any) => { fMap[r.id] = { url: r.file_url, name: r.name || r.file_name || "File", type: r.file_type || "" }; });
+    setFileMap(fMap);
+    const pMap: Record<string, { title: string; body: string }> = {};
+    ((pRes as any).data ?? []).forEach((r: any) => { pMap[r.id] = { title: r.title, body: r.body_html || "" }; });
+    setPageMap(pMap);
+    const dMap: Record<string, { title: string; body: string }> = {};
+    ((dRes as any).data ?? []).forEach((r: any) => { dMap[r.id] = { title: r.title, body: r.body || "" }; });
+    setDiscussionMap(dMap);
+
     setLoading(false);
   };
 
