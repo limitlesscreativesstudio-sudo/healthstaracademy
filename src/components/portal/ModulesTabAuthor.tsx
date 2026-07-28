@@ -963,7 +963,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {item ? "Edit Item" : `Add Item to ${moduleTitle || "Module"}`}
