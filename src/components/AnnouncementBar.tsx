@@ -109,7 +109,7 @@ const AnnouncementBar = () => {
         icon: Sparkles,
         title: buildTitle('weekend'),
         startDate: nextWeekend.startDate,
-        deadline: stripDay(nextWeekend.deadline),
+        deadline: stripDay(weekendDeadlines.applyBy),
         ctaText: 'Weekend Info',
         ctaLink: '/programs/cohorts',
         hasCountdown: false,
