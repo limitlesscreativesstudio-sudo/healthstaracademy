@@ -39,8 +39,15 @@ const PortalLayout = ({ children }: { children: React.ReactNode }) => {
     <div className="min-h-screen bg-muted flex">
       {/* Canvas-style icon rail */}
       <aside className="w-[72px] bg-charcoal text-primary-foreground flex flex-col items-center py-3 shrink-0">
-        <Link to="/portal" className="mb-4 p-2 rounded hover:bg-white/10">
+        <Link to="/portal" className="mb-2 p-2 rounded hover:bg-white/10" title="Health Star Academy">
           <GraduationCap className="h-7 w-7 text-cyan" />
+        </Link>
+        <Link
+          to="/portal"
+          className="mb-3 w-10 h-10 flex items-center justify-center rounded-lg bg-cyan text-charcoal hover:bg-cyan/90"
+          title="Back to Dashboard"
+        >
+          <LayoutDashboard className="h-5 w-5" />
         </Link>
         <nav className="flex-1 flex flex-col items-center gap-1 w-full px-2">
           <RailItem to="/portal/account" icon={User} label="Account" />
