@@ -524,8 +524,10 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onToggleP
       )}
       {isInstructor && (
         <>
-          <button onClick={onTogglePublish} className="p-1 hover:bg-muted rounded" title={i.published ? "Unpublish" : "Publish"}>
-            {i.published ? <Eye className="h-3.5 w-3.5 text-green-600" /> : <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />}
+          <button onClick={onTogglePublish} className="p-1 hover:bg-muted rounded" title={i.published ? "Published — click to unpublish" : "Unpublished — click to publish"}>
+            {i.published
+              ? <CheckCircle2 className="h-4 w-4 text-green-600 fill-green-600/10" />
+              : <EyeOff className="h-4 w-4 text-muted-foreground" />}
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -533,10 +535,11 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onToggleP
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="max-h-80 overflow-auto">
               <DropdownMenuItem onClick={onEdit}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
+              <DropdownMenuItem onClick={onDuplicate}><Copy className="h-4 w-4 mr-2" /> Duplicate</DropdownMenuItem>
               {otherModules && otherModules.length > 0 && (
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
-                    <ArrowRightLeft className="h-4 w-4 mr-2" /> Move to module
+                    <ArrowRightLeft className="h-4 w-4 mr-2" /> Move to…
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="max-h-72 overflow-auto">
                     {otherModules.map((mod: Module) => (
