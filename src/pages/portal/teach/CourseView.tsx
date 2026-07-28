@@ -731,7 +731,14 @@ const CourseView: React.FC = () => {
   // Build sections map inside component so canEdit is available
   const cid = activeCourse?.uuid;
   const SECTIONS: Record<string, React.ReactNode> = {
-    home:          <ModulesHome    canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
+    home:          <HomeRouter
+                      type={homePageType}
+                      courseId={cid}
+                      modules={<ModulesHome canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />}
+                      syllabus={<SyllabusTab courseUuid={cid} canEdit={canEdit} />}
+                      assignments={<AssignmentView courseId={cid} canEdit={canEdit} />}
+                      activity={<AnnouncementsPanel canEdit={canEdit} courseId={cid} />}
+                   />,
     modules:       <ModulesHome    canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
     announcements: <AnnouncementsPanel canEdit={canEdit} courseId={cid} />,
     assignments:   <AssignmentView courseId={cid} canEdit={canEdit} />,
