@@ -132,7 +132,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
         <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', marginBottom:10 }}>
           {courseId ? 'Course Files' : 'Select a course'}
         </div>
-        {allFolders.map(f => (
+        {sidebarFolders.map(f => (
           <div key={f} onClick={() => setFolder(f)}
             style={{ padding:'7px 10px', borderRadius:5, cursor:'pointer', fontSize:12, fontFamily:'sans-serif',
               background: folder === f ? '#EDE8F7' : 'transparent',
@@ -142,6 +142,12 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
             <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f}</span>
           </div>
         ))}
+        {canEdit && courseId && (
+          <button onClick={createFolder}
+            style={{ marginTop:6, width:'100%', padding:'6px 8px', border:`1px dashed ${C.border}`, borderRadius:5, background:'transparent', color:C.primary, fontSize:11, cursor:'pointer', fontFamily:'sans-serif' }}>
+            + New Folder
+          </button>
+        )}
         <div style={{ marginTop:16, paddingTop:12, borderTop:`1px solid ${C.border}` }}>
           <div style={{ height:6, background:C.border, borderRadius:3, overflow:'hidden', marginBottom:4 }}>
             <div style={{ height:'100%', width:`${Math.min((usedMB / 500) * 100, 100)}%`, background:C.primary, borderRadius:3 }}/>
