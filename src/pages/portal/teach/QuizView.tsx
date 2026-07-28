@@ -500,20 +500,29 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
           </aside>
         )}
 
-        {!results && attemptQs.length > 0 && (
-          <div style={{ position:'fixed', left:0, right:0, bottom:0, background:C.white, borderTop:`1px solid ${C.border}`, padding:'10px 20px', display:'flex', justifyContent:'flex-end', alignItems:'center', gap:12, boxShadow:'0 -2px 8px rgba(0,0,0,.05)', zIndex:20 }}>
-            <span style={{ fontSize:12, color: saveState === 'error' ? C.error : C.muted }}>
-              {saveState === 'saving'
-                ? 'Saving…'
-                : saveState === 'error'
-                ? '⚠ Save failed — retrying on next change'
-                : lastSavedAt
-                ? `No new data to save. Last checked at ${lastSavedAt.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })}`
-                : 'Autosave ready — your progress will be saved as you answer'}
-            </span>
-            <button onClick={submitAttempt} style={{ padding:'8px 22px', border:'none', borderRadius:4, background:C.primary, color:'white', fontSize:13, fontWeight:600, cursor:'pointer' }}>Submit Quiz</button>
-          </div>
-        )}
+        {!results && attemptQs.length > 0 && (() => {
+          const pill = saveState === 'saving'
+            ? { bg:'#F1EEF9', fg:C.primary, dot:'●', label:'Saving…' }
+            : saveState === 'error'
+            ? { bg:'#FDECEA', fg:C.error, dot:'⚠', label:`Save failed — retrying${retryAttempt.current>0?` (attempt ${retryAttempt.current})`:''}` }
+            : lastSavedAt
+            ? { bg:'#E8F5E9', fg:C.success, dot:'✓', label:`Saved ${lastSavedAt.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })}` }
+            : { bg:'#F1EEF9', fg:C.muted, dot:'○', label:'Autosave ready' };
+          return (
+            <div style={{ position:'fixed', left:0, right:0, bottom:0, background:C.white, borderTop:`1px solid ${C.border}`, padding:'10px 20px', display:'flex', justifyContent:'flex-end', alignItems:'center', gap:12, boxShadow:'0 -2px 8px rgba(0,0,0,.05)', zIndex:20 }}>
+              <span style={{ fontSize:12, padding:'4px 10px', borderRadius:20, background:pill.bg, color:pill.fg, fontWeight:600, display:'inline-flex', alignItems:'center', gap:6 }}>
+                <span>{pill.dot}</span>{pill.label}
+              </span>
+              {saveState === 'error' && (
+                <button onClick={() => { retryAttempt.current = 0; flushSave(); }}
+                  style={{ padding:'6px 12px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>
+                  Retry now
+                </button>
+              )}
+              <button onClick={submitAttempt} style={{ padding:'8px 22px', border:'none', borderRadius:4, background:C.primary, color:'white', fontSize:13, fontWeight:600, cursor:'pointer' }}>Submit Quiz</button>
+            </div>
+          );
+        })()}
       </div>
     );
   }
