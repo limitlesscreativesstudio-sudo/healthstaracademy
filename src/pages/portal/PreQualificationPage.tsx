@@ -781,38 +781,43 @@ const PreQualificationPage = () => {
                       {programTrack === "daytime" ? (
                         daytimeCohortDates
                           .filter((d) => {
-                            // Hide cohorts whose 14-day enrollment deadline has passed
-                            const deadline = new Date(d.deadlineISO + "T23:59:59");
-                            if (deadline < new Date()) return false;
-                            // Hide if the matching DB row is explicitly closed
+                            // Hide cohorts past the priority "Apply by" (21 days) — creates urgency
+                            const applyBy = new Date(getApplyByISO(d.startISO) + "T23:59:59");
+                            if (applyBy < new Date()) return false;
                             const dbRow = cohorts.find(c => c.start_date === d.startISO);
                             if (dbRow && dbRow.status === "closed") return false;
                             return true;
                           })
-                          .map((d) => (
-                            <label
-                              key={d.startISO}
-                              htmlFor={`cohort-${d.startISO}`}
-                              className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all ${
-                                selectedCohort === d.startISO
-                                  ? "border-purple bg-purple/5"
-                                  : "border-border bg-background hover:border-purple/40"
-                              }`}
-                            >
-                              <RadioGroupItem value={d.startISO} id={`cohort-${d.startISO}`} />
-                              <div>
-                                <p className="font-semibold text-charcoal">
-                                  {formatShortDate(d.startISO)} — {formatCohortDate(d.startISO)}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  Ends {getEndDate(d.startISO)} · 6 weeks · Mon–Thu
-                                </p>
-                                <p className="text-xs text-purple font-medium mt-1">
-                                  ⏰ Apply by: {d.deadline}
-                                </p>
-                              </div>
-                            </label>
-                          ))
+                          .map((d) => {
+                            const dl = getCohortDeadlines(d);
+                            return (
+                              <label
+                                key={d.startISO}
+                                htmlFor={`cohort-${d.startISO}`}
+                                className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                                  selectedCohort === d.startISO
+                                    ? "border-purple bg-purple/5"
+                                    : "border-border bg-background hover:border-purple/40"
+                                }`}
+                              >
+                                <RadioGroupItem value={d.startISO} id={`cohort-${d.startISO}`} />
+                                <div>
+                                  <p className="font-semibold text-charcoal">
+                                    {formatShortDate(d.startISO)} — {formatCohortDate(d.startISO)}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Ends {getEndDate(d.startISO)} · 6 weeks · Mon–Thu
+                                  </p>
+                                  <p className="text-xs text-purple font-bold mt-1">
+                                    ⏰ Apply by: {dl.applyBy}
+                                  </p>
+                                  <p className="text-[11px] text-muted-foreground">
+                                    Final enrollment cutoff: {dl.finalCutoff}
+                                  </p>
+                                </div>
+                              </label>
+                            );
+                          })
                       ) : (
                         weekendCohortDates
                           .filter((w) => new Date(w.deadlineISO + "T23:59:59") >= new Date())
