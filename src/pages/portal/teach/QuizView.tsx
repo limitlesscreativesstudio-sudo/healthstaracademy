@@ -37,7 +37,16 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
   const [attemptedIds, setAttemptedIds] = useState<Set<string>>(new Set());
   const [saveState, setSaveState] = useState<'idle'|'saving'|'saved'>('idle');
   const [stats, setStats] = useState<Record<string, Stats>>({});
+  const [viewing, setViewing] = useState<Quiz & { attempts_allowed?: number; time_limit_minutes?: number | null } | null>(null);
+  const [viewQCount, setViewQCount] = useState(0);
   const saveTimer = useRef<any>(null);
+
+  const openDetails = async (q: Quiz) => {
+    const { data: full } = await supabase.from('quizzes').select('*').eq('id', q.id).maybeSingle();
+    setViewing(full ?? q as any);
+    const { count } = await supabase.from('quiz_questions').select('id', { count:'exact', head:true }).eq('quiz_id', q.id);
+    setViewQCount(count ?? 0);
+  };
 
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
