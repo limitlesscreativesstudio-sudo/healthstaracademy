@@ -20,11 +20,11 @@ import {
   ChevronRight, ChevronDown, Eye, EyeOff, MoreVertical, Plus, GripVertical,
   FileText, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap,
   Trash2, Pencil, BarChart3, X, ArrowRightLeft, ArrowUp, ArrowDown,
-  ChevronsUp, ChevronsDown, Type, CheckCircle2, Copy,
+  ChevronsUp, ChevronsDown, Type, CheckCircle2, Copy, MessageSquare, Plug,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
-  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  DndContext, pointerWithin, PointerSensor, useSensor, useSensors,
   DragEndEvent, useDroppable,
 } from "@dnd-kit/core";
 import {
@@ -37,16 +37,19 @@ type Module = { id: string; title: string; position: number; published: boolean 
 type ModuleItem = {
   id: string; module_id: string; title: string; item_type: string;
   content_ref: string | null; url: string | null; position: number; published: boolean;
+  indent?: number | null;
 };
 
 const ITEM_TYPES = [
   { value: "assignment", label: "Assignment", icon: ClipboardList },
   { value: "quiz",       label: "Quiz",       icon: GraduationCap },
-  { value: "page",       label: "Page",       icon: FileText },
   { value: "file",       label: "File",       icon: FileIcon },
+  { value: "page",       label: "Page",       icon: FileText },
+  { value: "discussion", label: "Discussion", icon: MessageSquare },
+  { value: "header",     label: "Text Header", icon: Type },
   { value: "link",       label: "External URL", icon: LinkIcon },
-  { value: "video",      label: "Video URL",  icon: Video },
-  { value: "header",     label: "Text Header (non-clickable title)", icon: Type },
+  { value: "video",      label: "Video",      icon: Video },
+  { value: "external_tool", label: "External Tool", icon: Plug },
 ];
 
 const itemIcon = (t: string) => {
@@ -55,7 +58,7 @@ const itemIcon = (t: string) => {
   return <I className="h-4 w-4 text-purple" />;
 };
 
-const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInstructor: boolean }) => {
+const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId: string; isInstructor: boolean; openAddOnMount?: number }) => {
   const [modules, setModules] = useState<Module[]>([]);
   const [items, setItems] = useState<ModuleItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,18 +72,23 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
+  useEffect(() => {
+    if (openAddOnMount && isInstructor) setModuleDlg({ open: true });
+  }, [openAddOnMount, isInstructor]);
+
   const load = async () => {
     setLoading(true);
     let modQuery = supabase.from("modules").select("*").eq("course_id", courseId).order("position");
     if (!isInstructor) modQuery = modQuery.eq("published", true);
     const { data: mods } = await modQuery;
-    setModules(mods ?? []);
+    const sortedMods = (mods ?? []).sort((a, b) => a.position - b.position);
+    setModules(sortedMods);
     const ids = (mods ?? []).map(m => m.id);
     if (ids.length) {
       let itQuery = supabase.from("module_items").select("*").in("module_id", ids).order("position");
       if (!isInstructor) itQuery = itQuery.eq("published", true);
       const { data: its } = await itQuery;
-      setItems(its ?? []);
+      setItems((its ?? []).sort((a, b) => a.position - b.position));
     } else {
       setItems([]);
     }
@@ -185,9 +193,10 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
       const target = items.filter(i => i.module_id === targetModuleId);
       const moved = items.find(i => i.id === active.id);
       if (!moved) return;
-      const insertIdx = targetItemId
+      const rawInsertIdx = targetItemId
         ? target.findIndex(i => i.id === targetItemId)
         : target.length;
+      const insertIdx = rawInsertIdx < 0 ? target.length : rawInsertIdx;
       const nextTarget = [...target.slice(0, insertIdx), { ...moved, module_id: targetModuleId }, ...target.slice(insertIdx)];
       const others = items.filter(i => i.module_id !== sourceModuleId && i.module_id !== targetModuleId);
       setItems([...others, ...source.map((i, idx) => ({ ...i, position: idx })), ...nextTarget.map((i, idx) => ({ ...i, position: idx }))]);
@@ -339,13 +348,13 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
           </CardContent>
         </Card>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={onDragEnd}>
           <SortableContext items={modules.map(m => m.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-3">
               {modules.map(m => (
                 <SortableModule
                   key={m.id} module={m}
-                  items={items.filter(i => i.module_id === m.id)}
+                   items={items.filter(i => i.module_id === m.id).sort((a, b) => a.position - b.position)}
                   allModules={modules}
                   collapsed={collapsed.has(m.id)}
                   isInstructor={isInstructor}
@@ -432,7 +441,7 @@ const SortableModule = ({
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </button>
         )}
-        <button onClick={onToggleCollapse} className="p-1 hover:bg-muted rounded" aria-label="Toggle module">
+            <button type="button" onClick={onToggleCollapse} className="p-1 hover:bg-muted rounded" aria-label="Toggle module">
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
         <div className="font-semibold flex-1 truncate">{m.title}</div>
@@ -446,9 +455,12 @@ const SortableModule = ({
                 ? <CheckCircle2 className="h-4 w-4 text-green-600 fill-green-600/10" />
                 : <EyeOff className="h-4 w-4 text-muted-foreground" />}
             </button>
+            <button type="button" onClick={onAddItem} className="p-1.5 hover:bg-muted rounded" title={`Add item to ${m.title}`} aria-label={`Add item to ${m.title}`}>
+              <Plus className="h-4 w-4 text-muted-foreground" />
+            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-1.5 hover:bg-muted rounded" aria-label="Module options">
+                <button type="button" className="p-1.5 hover:bg-muted rounded" aria-label="Module options">
                   <MoreVertical className="h-4 w-4" />
                 </button>
               </DropdownMenuTrigger>
@@ -480,7 +492,7 @@ const SortableModule = ({
 
       {!collapsed && (
         <CardContent className="p-0">
-          <div ref={setDropRef} className={isOver ? "bg-purple/5 ring-2 ring-purple/40 ring-inset" : ""}>
+          <div ref={setDropRef} className={`min-h-10 ${isOver ? "bg-purple/5 ring-2 ring-purple/40 ring-inset" : ""}`}>
             <SortableContext items={items.map((i: ModuleItem) => i.id)} strategy={verticalListSortingStrategy}>
               {items.length === 0 ? (
                 <div className="p-4 text-sm text-muted-foreground italic">
@@ -552,14 +564,14 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, 
       )}
       {isInstructor && (
         <>
-          <button onClick={onTogglePublish} className="p-1 hover:bg-muted rounded" title={i.published ? "Published — click to unpublish" : "Unpublished — click to publish"}>
+          <button type="button" onClick={onTogglePublish} className="p-1 hover:bg-muted rounded" title={i.published ? "Published — click to unpublish" : "Unpublished — click to publish"}>
             {i.published
               ? <CheckCircle2 className="h-4 w-4 text-green-600 fill-green-600/10" />
               : <EyeOff className="h-4 w-4 text-muted-foreground" />}
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-1 hover:bg-muted rounded"><MoreVertical className="h-3.5 w-3.5" /></button>
+              <button type="button" className="p-1 hover:bg-muted rounded" aria-label={`Options for ${i.title}`}><MoreVertical className="h-3.5 w-3.5" /></button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="max-h-80 overflow-auto">
               <DropdownMenuItem onClick={onEdit}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
@@ -667,16 +679,19 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [pages, setPages] = useState<any[]>([]);
   const [files, setFiles] = useState<any[]>([]);
+  const [discussions, setDiscussions] = useState<any[]>([]);
 
   const reloadPickers = async () => {
-    const [a, q, p, f] = await Promise.all([
+    const [a, q, p, f, d] = await Promise.all([
       supabase.from("assignments").select("id, title").eq("course_id", courseId).order("title"),
       supabase.from("quizzes").select("id, title").eq("course_id", courseId).order("title"),
       supabase.from("lms_pages").select("id, title").eq("course_id", courseId).order("title"),
       supabase.from("lms_files").select("id, name").eq("course_id", courseId).order("name"),
+      supabase.from("discussions").select("id, title").eq("course_id", courseId).order("title"),
     ]);
     setAssignments(a.data ?? []); setQuizzes(q.data ?? []);
     setPages(p.data ?? []); setFiles(f.data ?? []);
+    setDiscussions(d.data ?? []);
   };
 
   useEffect(() => {
@@ -721,6 +736,16 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
       if (error) { toast({ title: "Could not create page", variant: "destructive" }); return null; }
       return data.id;
     }
+    if (type === "discussion") {
+      const { data: userRes } = await supabase.auth.getUser();
+      const authorId = userRes.user?.id;
+      if (!authorId) { toast({ title: "Sign in required", description: "Please sign in again before creating a discussion.", variant: "destructive" }); return null; }
+      const { data, error } = await supabase.from("discussions")
+        .insert({ course_id: courseId, title: displayTitle, body: "", author_id: authorId })
+        .select().single();
+      if (error) { toast({ title: "Could not create discussion", variant: "destructive" }); return null; }
+      return data.id;
+    }
     return null;
   };
 
@@ -730,7 +755,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     setSaving(true);
 
     let finalContentRef: string | null = null;
-    if (["assignment", "quiz", "page", "file"].includes(type)) {
+    if (["assignment", "quiz", "page", "file", "discussion"].includes(type)) {
       if (contentRef === CREATE_NEW) {
         const newId = await createNewAndAttach();
         if (!newId) { setSaving(false); return; }
@@ -743,7 +768,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     const payload: any = {
       module_id: moduleId, title: title.trim(), item_type: type, published, indent,
       content_ref: finalContentRef,
-      url: ["link", "video"].includes(type) ? (url || null) : null,
+      url: ["link", "video", "external_tool"].includes(type) ? (url || null) : null,
     };
     if (item) {
       await supabase.from("module_items").update(payload).eq("id", item.id);
@@ -757,13 +782,16 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     onClose();
   };
 
-  const needsPicker = ["assignment", "quiz", "page", "file"].includes(type);
+  const needsPicker = ["assignment", "quiz", "page", "file", "discussion"].includes(type);
   const pickerOptions =
     type === "assignment" ? assignments.map(a => ({ id: a.id, label: a.title })) :
     type === "quiz"       ? quizzes.map(q => ({ id: q.id, label: q.title })) :
     type === "page"       ? pages.map(p => ({ id: p.id, label: p.title })) :
+    type === "discussion" ? discussions.map(d => ({ id: d.id, label: d.title })) :
     type === "file"       ? files.map(f => ({ id: f.id, label: f.name })) : [];
-  const canCreateInline = ["assignment", "quiz", "page"].includes(type);
+  const canCreateInline = ["assignment", "quiz", "page", "discussion"].includes(type);
+  const selectedType = ITEM_TYPES.find(t => t.value === type);
+  const typeLabel = selectedType?.label ?? "Item";
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -792,22 +820,22 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
           {needsPicker && (
             <div>
               <div className="text-xs text-muted-foreground mb-1">
-                Select the {type} you want to associate with this module{canCreateInline ? `, or add a new one by selecting "Create ${type[0].toUpperCase()+type.slice(1)}"` : ""}.
+                Select the {typeLabel.toLowerCase()} you want to associate with {moduleTitle || "this module"}{canCreateInline ? `, or add a new one by selecting "Create ${typeLabel}"` : ""}.
               </div>
               <PickerSelect
-                label={type[0].toUpperCase() + type.slice(1)}
+                label={typeLabel}
                 value={contentRef}
                 options={pickerOptions}
                 onChange={onPickContent}
                 canCreate={canCreateInline}
-                createLabel={`[ Create ${type[0].toUpperCase()+type.slice(1)} ]`}
+                createLabel={`[ Create ${typeLabel} ]`}
               />
             </div>
           )}
 
-          {(type === "link" || type === "video") && (
+          {(type === "link" || type === "video" || type === "external_tool") && (
             <div>
-              <Label>URL</Label>
+              <Label>{type === "external_tool" ? "External Tool URL" : "URL"}</Label>
               <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" />
             </div>
           )}
@@ -839,7 +867,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={save} disabled={saving || !title.trim()}>{saving ? "Saving…" : "Add Item"}</Button>
+          <Button onClick={save} disabled={saving || !title.trim()}>{saving ? "Saving…" : item ? "Save" : "Add Item"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
