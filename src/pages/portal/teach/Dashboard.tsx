@@ -440,7 +440,77 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
     <div style={{ display:'flex', minHeight:'100vh', background:C.bg }}>
 
       {/* ── Main area ─────────────────────────────────────────────────────── */}
-      <aside style={{ width:220, flexShrink:0, background:C.nav, minHeight:'100vh', display:'flex', flexDirection:'column', padding:'20px 0', position:'sticky', top:0, alignSelf:'flex-start' }}><div style={{ display:'flex', flexDirection:'column', alignItems:'center', padding:'0 16px 18px', borderBottom:'1px solid rgba(255,255,255,0.15)', marginBottom:12 }}><img src="/hsa-logo.png" alt="Health Star Academy" style={{ width:56, height:56, borderRadius:'50%', objectFit:'cover', marginBottom:10 }}/><div style={{ color:'#fff', fontSize:13, fontWeight:700, fontFamily:'sans-serif', textAlign:'center' }}>Health Star Academy</div><div style={{ color:'rgba(255,255,255,0.7)', fontSize:11, fontFamily:'sans-serif', marginTop:2 }}>Instructor Portal</div></div><a href="/portal/teach" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>🏠 Dashboard</a><a href="/portal/account" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>👤 Account</a><a href="/portal/career" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>💼 Career</a><div style={{ flex:1 }} />{user?.email && <div style={{ color:'rgba(255,255,255,0.6)', fontSize:10, fontFamily:'sans-serif', padding:'0 22px 8px', wordBreak:'break-all' }}>{user.email}</div>}<button onClick={() => logout()} style={{ margin:'0 16px', padding:'10px', background:'rgba(255,255,255,0.12)', color:'#fff', border:'1px solid rgba(255,255,255,0.25)', borderRadius:6, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer' }}>↩ Sign out</button></aside><div style={{ flex:1, padding:'28px 28px 40px', overflowY:'auto', maxWidth:'calc(100% - 280px)' }}>
+      <aside style={{ width:220, flexShrink:0, background:C.nav, minHeight:'100vh', display:'flex', flexDirection:'column', padding:'20px 0', position:'sticky', top:0, alignSelf:'flex-start', zIndex:20 }}>
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', padding:'0 16px 18px', borderBottom:'1px solid rgba(255,255,255,0.15)', marginBottom:12 }}>
+          <img src="/hsa-logo.png" alt="Health Star Academy" style={{ width:56, height:56, borderRadius:'50%', objectFit:'cover', marginBottom:10 }}/>
+          <div style={{ color:'#fff', fontSize:13, fontWeight:700, fontFamily:'sans-serif', textAlign:'center' }}>Health Star Academy</div>
+          <div style={{ color:'rgba(255,255,255,0.7)', fontSize:11, fontFamily:'sans-serif', marginTop:2 }}>Instructor Portal</div>
+        </div>
+        <a href="/portal/account" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>👤 Account</a>
+        <a href="/portal/teach" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>🏠 Dashboard</a>
+        <button onClick={() => setCoursesFlyout(v => !v)}
+          style={{ textAlign:'left', color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px',
+            background: coursesFlyout ? 'rgba(255,255,255,0.12)' : 'transparent', border:'none', cursor:'pointer' }}>
+          📚 Courses ▸
+        </button>
+        <a href="/portal/career" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>💼 Career</a>
+        <a href="/portal/calendar" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>📅 Calendar</a>
+        <a href="/portal/inbox" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>📥 Inbox</a>
+        <a href="/portal/history" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>🕘 History</a>
+        <a href="/portal/help" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>❔ Help</a>
+        <div style={{ flex:1 }} />
+        {user?.email && <div style={{ color:'rgba(255,255,255,0.6)', fontSize:10, fontFamily:'sans-serif', padding:'0 22px 8px', wordBreak:'break-all' }}>{user.email}</div>}
+        <button onClick={() => logout()} style={{ margin:'0 16px', padding:'10px', background:'rgba(255,255,255,0.12)', color:'#fff', border:'1px solid rgba(255,255,255,0.25)', borderRadius:6, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer' }}>↩ Sign out</button>
+      </aside>
+
+      {/* ── Courses Flyout (Canvas-style) ─────────────────────────────────── */}
+      {coursesFlyout && (
+        <>
+          <div onClick={() => setCoursesFlyout(false)}
+            style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.25)', zIndex:30 }}/>
+          <div style={{ position:'fixed', top:0, left:220, bottom:0, width:320, background:C.white,
+            borderRight:`1px solid ${C.border}`, boxShadow:'6px 0 24px rgba(0,0,0,0.12)', zIndex:40,
+            overflowY:'auto', padding:'20px 0' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0 20px 14px', borderBottom:`1px solid ${C.border}` }}>
+              <h3 style={{ margin:0, fontSize:16, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Courses</h3>
+              <button onClick={() => setCoursesFlyout(false)} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:C.muted }}>×</button>
+            </div>
+            <a href="/portal/teach" onClick={() => setCoursesFlyout(false)}
+              style={{ display:'block', padding:'12px 20px', color:C.primary, fontSize:13, fontWeight:700,
+                fontFamily:'sans-serif', textDecoration:'none', borderBottom:`1px solid ${C.border}` }}>
+              All Courses
+            </a>
+            {[
+              { label:'Published Courses', list: published },
+              { label:'Unpublished Courses', list: unpublished },
+            ].map(section => section.list.length > 0 && (
+              <div key={section.label} style={{ padding:'12px 0 4px' }}>
+                <div style={{ padding:'6px 20px', fontSize:11, fontWeight:700, color:C.muted,
+                  fontFamily:'sans-serif', textTransform:'uppercase', letterSpacing:0.5 }}>
+                  {section.label}
+                </div>
+                {section.list.map(c => (
+                  <div key={c.id} onClick={() => { onEnterCourse(c); setCoursesFlyout(false); }}
+                    style={{ display:'flex', gap:10, padding:'10px 20px', cursor:'pointer', alignItems:'flex-start' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.bg}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                    <div style={{ width:6, borderRadius:2, background: colorFor(c), alignSelf:'stretch', flexShrink:0 }}/>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:13, fontWeight:600, color:C.primary, fontFamily:'sans-serif',
+                        lineHeight:1.3, marginBottom:2, wordBreak:'break-word' }}>{c.name}</div>
+                      {c.term && <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>{c.term}</div>}
+                      {c.code && <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>{c.code}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div style={{ flex:1, padding:'28px 28px 40px', overflowY:'auto', maxWidth:'calc(100% - 280px)' }}>
+
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
           <h1 style={{ margin:0, fontSize:24, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>
             Dashboard
