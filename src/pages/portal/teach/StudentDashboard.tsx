@@ -97,6 +97,21 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
 
   useEffect(() => { load(); }, [courseId]);
 
+  // Look up the cohort for the current course + how many courses are linked to it.
+  useEffect(() => {
+    if (!courseId) { setCohortInfo(null); return; }
+    (async () => {
+      const { data: course } = await supabase
+        .from('courses').select('cohort_id').eq('id', courseId).maybeSingle();
+      if (!course?.cohort_id) { setCohortInfo(null); return; }
+      const [{ data: cohort }, { count }] = await Promise.all([
+        supabase.from('cohorts').select('id, name').eq('id', course.cohort_id).maybeSingle(),
+        supabase.from('courses').select('*', { count: 'exact', head: true }).eq('cohort_id', course.cohort_id),
+      ]);
+      if (cohort) setCohortInfo({ id: cohort.id, name: cohort.name, courseCount: count ?? 1 });
+    })();
+  }, [courseId]);
+
   // ── Add people by email (sends invitation email) ───────────────────────────
   const addPeople = async () => {
     if (!emails.trim() || !courseId) return;
