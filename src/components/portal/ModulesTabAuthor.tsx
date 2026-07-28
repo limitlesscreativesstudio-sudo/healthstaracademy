@@ -294,7 +294,16 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
       {/* Header */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h2 className="font-heading text-2xl font-bold">Modules</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {isInstructor && (
+            <Button
+              size="sm"
+              onClick={() => setModuleDlg({ open: true })}
+              className="bg-purple text-white hover:bg-purple/90"
+            >
+              <Plus className="h-4 w-4 mr-1" /> Module
+            </Button>
+          )}
           {!empty && (
             <Button size="sm" variant="outline" onClick={toggleAll}>
               {allCollapsed ? "Expand All" : "Collapse All"}
@@ -313,18 +322,13 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
                 load();
               }}
             >
-              <Eye className="h-4 w-4" /> Publish All
+              <Eye className="h-4 w-4 mr-1" /> Publish All
             </Button>
           )}
           {isInstructor && (
-            <>
-              <Button size="sm" variant="outline" onClick={() => setProgressOpen(true)}>
-                <BarChart3 className="h-4 w-4" /> View Progress
-              </Button>
-              <Button size="sm" onClick={() => setModuleDlg({ open: true })}>
-                <Plus className="h-4 w-4" /> Module
-              </Button>
-            </>
+            <Button size="sm" variant="outline" onClick={() => setProgressOpen(true)}>
+              <BarChart3 className="h-4 w-4 mr-1" /> View Progress
+            </Button>
           )}
         </div>
       </div>
