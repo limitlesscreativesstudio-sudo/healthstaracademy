@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 import PortalLayout from "@/components/portal/PortalLayout";
 import { Button } from "@/components/ui/button";
-import { Star, Plus, ArrowUpDown } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Star, Plus, ArrowUpDown, Info, BookOpen, Users, Calendar as CalIcon, FileText, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 type CourseRow = {
