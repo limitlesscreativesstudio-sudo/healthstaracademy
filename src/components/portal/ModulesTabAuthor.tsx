@@ -562,6 +562,19 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, 
             <DropdownMenuContent align="end" className="max-h-80 overflow-auto">
               <DropdownMenuItem onClick={onEdit}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
               <DropdownMenuItem onClick={onDuplicate}><Copy className="h-4 w-4 mr-2" /> Duplicate</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled={isFirst} onClick={() => onMoveWithin("top")}>
+                <ChevronsUp className="h-4 w-4 mr-2" /> Move to top
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={isFirst} onClick={() => onMoveWithin("up")}>
+                <ArrowUp className="h-4 w-4 mr-2" /> Move up
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={isLast} onClick={() => onMoveWithin("down")}>
+                <ArrowDown className="h-4 w-4 mr-2" /> Move down
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={isLast} onClick={() => onMoveWithin("bottom")}>
+                <ChevronsDown className="h-4 w-4 mr-2" /> Move to bottom
+              </DropdownMenuItem>
               {otherModules && otherModules.length > 0 && (
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
