@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, LogOut, BookOpen, Users, LayoutDashboard, Calendar, Inbox, History, HelpCircle, User, ClipboardCheck } from "lucide-react";
+import { GraduationCap, LogOut, BookOpen, Users, LayoutDashboard, Calendar, Inbox, History, HelpCircle, User, TrendingUp } from "lucide-react";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 import NotificationBell from "./NotificationBell";
 
