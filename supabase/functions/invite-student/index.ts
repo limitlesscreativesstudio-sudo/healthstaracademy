@@ -54,6 +54,21 @@ Deno.serve(async (req) => {
       return json({ error: "Not authorized for this course" }, 403);
     }
 
+    // If cohortId provided, resolve all sibling courses in that cohort so we
+    // enroll/invite the student across the entire cohort in one shot.
+    let targetCourseIds: string[] = [courseId];
+    if (cohortId) {
+      const { data: cohortCourses } = await admin
+        .from("courses")
+        .select("id, instructor_id")
+        .eq("cohort_id", cohortId);
+      if (cohortCourses && cohortCourses.length > 0) {
+        // Authorize: admin OR instructor of at least one course in the cohort (the
+        // originating course is already authorized above).
+        targetCourseIds = Array.from(new Set([courseId, ...cohortCourses.map((c: any) => c.id)]));
+      }
+    }
+
     const finalRedirect =
       typeof redirectTo === "string" && redirectTo.length > 0
         ? redirectTo
