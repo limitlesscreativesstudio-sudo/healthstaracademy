@@ -82,10 +82,12 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     const { error: upErr } = await uploadViaXhr('course-files', path, blob as any);
     if (upErr) return setError(upErr.message);
     const { data: { publicUrl } } = supabase.storage.from('course-files').getPublicUrl(path);
-    const { data: row } = await supabase.from('lms_files').insert({
-      course_id: courseId, file_name: filename, file_url: publicUrl,
+    const { data: row, error: insErr } = await supabase.from('lms_files').insert({
+      course_id: courseId, name: filename, file_name: filename, file_url: publicUrl,
       file_type: 'txt', file_size: blob.size, folder: selFolder,
+      mime_type: 'text/plain', size_bytes: blob.size, storage_path: path,
     }).select().single();
+    if (insErr) { setError(insErr.message); return; }
     if (row) setFiles(p => [row as any, ...p]);
   };
 
@@ -102,10 +104,12 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
       const { error: upErr } = await uploadViaXhr('course-files', path, file, { onProgress: (p) => setUploadPct(p) });
       if (upErr) { setError(`Failed to upload ${file.name}: ${upErr.message}`); continue; }
       const { data: { publicUrl } } = supabase.storage.from('course-files').getPublicUrl(path);
-      const { data: row } = await supabase.from('lms_files').insert({
-        course_id: courseId, file_name: file.name, file_url: publicUrl,
+      const { data: row, error: insErr } = await supabase.from('lms_files').insert({
+        course_id: courseId, name: file.name, file_name: file.name, file_url: publicUrl,
         file_type: ext, file_size: file.size, folder: selFolder,
+        mime_type: file.type || null, size_bytes: file.size, storage_path: path,
       }).select().single();
+      if (insErr) { setError(`Saved to storage but DB insert failed for ${file.name}: ${insErr.message}`); continue; }
       if (row) newFiles.push(row);
     }
     setFiles(p => [...newFiles, ...p]);
