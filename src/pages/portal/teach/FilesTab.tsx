@@ -63,6 +63,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   ], [folders, rootName]);
 
   const selectedFolder = folderChoices.find(f => f.id === selFolder) ?? folderChoices[0];
+  const activeFolderName = folder === 'root' ? rootName : folders.find(f => f.id === folder)?.name ?? rootName;
 
   const createFolder = async () => {
     if (!courseId) return;
@@ -137,6 +138,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     }).select().single();
     if (insErr) { setError(insErr.message); return; }
     if (row) setFiles(p => [row as any, ...p]);
+    setFolder(targetFolder?.id ?? 'root');
   };
 
   const uploadFiles = async (fileList: FileList | null) => {
@@ -162,7 +164,9 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
       if (row) newFiles.push(row);
     }
     setFiles(p => [...newFiles, ...p]);
+    if (newFiles.length > 0) setFolder(selectedFolder?.id ?? 'root');
     setUploading(false); setUploadPct(0);
+    if (fileRef.current) fileRef.current.value = '';
   };
 
   const deleteFile = async (id: string, fileUrl: string) => {
@@ -231,7 +235,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
       <div style={{ flex:1, padding:20, overflowY:'auto' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
           <h2 style={{ margin:0, fontSize:18, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>
-            Files {folder !== 'All' && `— ${folder}`}
+            Files — {activeFolderName}
           </h2>
           {canEdit && (
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
@@ -287,7 +291,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
         ) : visible.length === 0 ? (
           <div style={{ padding:40, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>
             <div style={{ fontSize:36, marginBottom:10 }}>📭</div>
-              <div style={{ fontSize:14 }}>No files in {folder === 'root' ? rootName : folders.find(f => f.id === folder)?.name} yet.</div>
+              <div style={{ fontSize:14 }}>No files in {activeFolderName} yet.</div>
           </div>
         ) : (
           <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, overflow:'hidden' }}>
