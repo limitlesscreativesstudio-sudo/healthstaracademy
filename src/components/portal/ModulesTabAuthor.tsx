@@ -360,6 +360,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
                   onToggleItemPublish={togglePublishItem}
                   onDuplicateItem={duplicateItem}
                   onMoveItem={moveItemToModule}
+                  onMoveItemWithin={moveItemWithin}
                   onMoveModule={(where: "up" | "down" | "top" | "bottom") => moveModule(m, where)}
                 />
               ))}
