@@ -1010,6 +1010,16 @@ const CourseView: React.FC = () => {
         )}
       </div>
 
+      {cid && (
+        <ChooseHomePageDialog
+          courseId={cid}
+          current={homePageType}
+          hasFrontPage={hasFrontPage}
+          open={homePageDlgOpen}
+          onOpenChange={setHomePageDlgOpen}
+          onChanged={(next) => setHomePageType(next)}
+        />
+      )}
       <Toaster position="bottom-right" richColors />
       <style>{`@keyframes hsa-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
     </div>
