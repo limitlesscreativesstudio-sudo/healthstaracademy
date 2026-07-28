@@ -64,6 +64,7 @@ import QuizView from "./pages/portal/teach/QuizView";
 import Account from "./pages/portal/teach/Account";
 import CareerPortal from "./pages/portal/teach/CareerPortal";
 import RequiredWork from "./pages/portal/teach/RequiredWork";
+import AllCoursesPage from "./pages/portal/teach/AllCoursesPage";
 import PrivacyPolicyPage from "./pages/portal/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/portal/TermsOfServicePage";
 import RefundPolicyPage from "./pages/portal/RefundPolicyPage";
