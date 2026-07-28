@@ -221,6 +221,26 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
     load();
   };
 
+  // ----- Reorder item within its module (menu fallback for drag) -----
+  const moveItemWithin = async (item: ModuleItem, where: "up" | "down" | "top" | "bottom") => {
+    const within = items.filter(i => i.module_id === item.module_id).sort((a, b) => a.position - b.position);
+    const idx = within.findIndex(x => x.id === item.id);
+    if (idx < 0) return;
+    let newIdx = idx;
+    if (where === "up") newIdx = Math.max(0, idx - 1);
+    if (where === "down") newIdx = Math.min(within.length - 1, idx + 1);
+    if (where === "top") newIdx = 0;
+    if (where === "bottom") newIdx = within.length - 1;
+    if (newIdx === idx) return;
+    const reordered = arrayMove(within, idx, newIdx);
+    const others = items.filter(i => i.module_id !== item.module_id);
+    setItems([...others, ...reordered.map((x, i2) => ({ ...x, position: i2 }))]);
+    await Promise.all(reordered.map((x, i2) =>
+      supabase.from("module_items").update({ position: i2 }).eq("id", x.id)
+    ));
+    toast({ title: "Item moved" });
+  };
+
   // ----- Duplicate item -----
   const duplicateItem = async (item: ModuleItem) => {
     const sameModuleCount = items.filter(i => i.module_id === item.module_id).length;
