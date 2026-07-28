@@ -37,6 +37,7 @@ type Module = { id: string; title: string; position: number; published: boolean 
 type ModuleItem = {
   id: string; module_id: string; title: string; item_type: string;
   content_ref: string | null; url: string | null; position: number; published: boolean;
+  indent?: number | null;
 };
 
 const ITEM_TYPES = [
@@ -866,7 +867,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={save} disabled={saving || !title.trim()}>{saving ? "Saving…" : "Add Item"}</Button>
+          <Button onClick={save} disabled={saving || !title.trim()}>{saving ? "Saving…" : item ? "Save" : "Add Item"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
