@@ -29,6 +29,7 @@ const toDrivePreviewUrl = (raw: string): string | null => {
 };
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadViaXhr } from "@/pages/portal/teach/uploadViaXhr";
 import { toast } from "@/hooks/use-toast";
 
 type Props = {
