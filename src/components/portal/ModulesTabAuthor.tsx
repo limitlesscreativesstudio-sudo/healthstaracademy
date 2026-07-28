@@ -797,8 +797,10 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
       setType(item.item_type); setTitle(item.title);
       setContentRef(item.content_ref ?? ""); setUrl(item.url ?? "");
       setPublished(item.published); setIndent(Number(item.indent ?? 0));
+      setDescription(item.description ?? "");
     } else {
       setType("assignment"); setTitle(""); setContentRef(""); setUrl(""); setPublished(true); setIndent(0);
+      setDescription("");
     }
     setFileSource("existing"); setDriveUrl(""); setUploadFile(null); setUploadPct(0);
     reloadPickers();
