@@ -479,7 +479,7 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
                 <div style={{ display:'flex', flexWrap:'wrap', gap:16 }}>
                   {unpublished.map(c => (
                     <CourseCard key={c.id} course={c}
-                      onEnter={() => onEnterCourse(c)}
+                      onEnter={(tab) => onEnterCourse(c, tab)}
                       onPublishToggle={handlePublishToggle}
                       onDelete={handleDelete}
                       onDuplicate={handleDuplicate}
