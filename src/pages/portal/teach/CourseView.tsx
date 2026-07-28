@@ -602,6 +602,26 @@ const CourseView: React.FC = () => {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifs, setNotifs] = useState<{ id:string; title:string; sub:string; link?:string }[]>([]);
   const [notifsSeen, setNotifsSeen] = useState(false);
+  const [homePageType, setHomePageType] = useState<string>('modules');
+  const [hasFrontPage, setHasFrontPage] = useState(false);
+  const [homePageDlgOpen, setHomePageDlgOpen] = useState(false);
+
+  // Load per-course home_page_type + front-page availability
+  useEffect(() => {
+    const cid = activeCourse?.uuid;
+    if (!cid) return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: c }, { data: fp }] = await Promise.all([
+        supabase.from('courses').select('home_page_type').eq('id', cid).maybeSingle(),
+        supabase.from('lms_pages').select('id').eq('course_id', cid).eq('front_page', true).eq('published', true).limit(1),
+      ]);
+      if (cancelled) return;
+      setHomePageType((c as any)?.home_page_type || 'modules');
+      setHasFrontPage((fp?.length ?? 0) > 0);
+    })();
+    return () => { cancelled = true; };
+  }, [activeCourse?.uuid]);
 
   // Load notifications: recent submissions (instructor) + upcoming due-in-48h
   useEffect(() => {
