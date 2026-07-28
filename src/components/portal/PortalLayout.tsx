@@ -42,10 +42,6 @@ const PortalLayout = ({ children }: { children: React.ReactNode }) => {
             <LogOut className="h-5 w-5" />
             <span className="text-[10px] leading-tight">Logout</span>
           </button>
-          <Link to="/portal/help" className="group relative w-full flex flex-col items-center gap-0.5 py-2 rounded hover:bg-white/10">
-            <HelpCircle className="h-5 w-5" />
-            <span className="text-[10px] leading-tight">Help</span>
-          </Link>
         </div>
       </aside>
 
