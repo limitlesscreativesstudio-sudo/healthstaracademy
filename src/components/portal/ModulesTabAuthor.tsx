@@ -470,6 +470,7 @@ const SortableModule = ({
                     onTogglePublish={() => onToggleItemPublish(i)}
                     onEdit={() => onEditItem(i)}
                     onDelete={() => onDeleteItem(i)}
+                    onDuplicate={() => onDuplicateItem(i)}
                     onMoveTo={(targetId: string) => onMoveItem(i, targetId)}
                   />
                 ))
