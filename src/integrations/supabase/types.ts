@@ -1710,6 +1710,7 @@ export type Database = {
           file_type: string | null
           file_url: string | null
           id: string
+          indent: number
           item_type: string
           module_id: string
           position: number
@@ -1725,6 +1726,7 @@ export type Database = {
           file_type?: string | null
           file_url?: string | null
           id?: string
+          indent?: number
           item_type: string
           module_id: string
           position?: number
@@ -1740,6 +1742,7 @@ export type Database = {
           file_type?: string | null
           file_url?: string | null
           id?: string
+          indent?: number
           item_type?: string
           module_id?: string
           position?: number
