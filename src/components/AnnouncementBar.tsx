@@ -57,19 +57,23 @@ const AnnouncementBar = () => {
 
   const nextDaytime = useMemo(() => getNextUpcomingCohort("daytime"), []);
   const nextWeekend = useMemo(() => getNextUpcomingCohort("weekend"), []);
-  const deadlineDate = useMemo(() => new Date(nextDaytime.deadlineISO + 'T23:59:59'), [nextDaytime]);
+  const daytimeDeadlines = useMemo(() => getCohortDeadlines(nextDaytime), [nextDaytime]);
+  const weekendDeadlines = useMemo(() => getCohortDeadlines(nextWeekend), [nextWeekend]);
+  // Countdown targets the "Apply by" (21-day) date for urgency, not final cutoff.
+  const deadlineDate = useMemo(() => new Date(daytimeDeadlines.applyByISO + 'T23:59:59'), [daytimeDeadlines]);
 
   const stripDay = (d: string) => d.replace(/^Monday, |^Tuesday, |^Wednesday, |^Thursday, |^Friday, |^Saturday, |^Sunday, /, '');
 
   // Variant A: action-led ("Starts X — Apply by Y"). Variant B: deadline-led ("Apply by Y — Starts X").
   const buildTitle = (kind: 'daytime' | 'weekend') => {
     const c = kind === 'daytime' ? nextDaytime : nextWeekend;
+    const dl = kind === 'daytime' ? daytimeDeadlines : weekendDeadlines;
     const label = kind === 'daytime' ? 'Daytime Cohort' : 'Weekend Cohort';
     const suffix = kind === 'weekend' ? ' (8 Weekends, Sat & Sun)' : '';
     if (variant === 'B') {
-      return `${label}: Apply by ${stripDay(c.deadline)} — Starts ${c.startDate}${suffix}`;
+      return `${label}: Apply by ${stripDay(dl.applyBy)} — Starts ${c.startDate}${suffix}`;
     }
-    return `${label} Starts ${c.startDate} — Apply by ${stripDay(c.deadline)}${suffix}`;
+    return `${label} Starts ${c.startDate} — Apply by ${stripDay(dl.applyBy)}${suffix}`;
   };
 
   const announcements = useMemo(() => {
