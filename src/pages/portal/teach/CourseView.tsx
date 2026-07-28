@@ -1027,7 +1027,10 @@ const CourseView: React.FC = () => {
                   <span style={{ fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Course Menu</span>
                   <button onClick={() => setMobileNavOpen(false)} style={{ background:'none', border:'none', fontSize:18, cursor:'pointer' }}>✕</button>
                 </div>
-                {NAV_ITEMS.map(item => {
+                {NAV_ITEMS.map((item, idx) => {
+                  if (item.type === 'divider') {
+                    return <div key={`m-divider-${idx}`} style={{ height:12, margin:'4px 16px', borderTop:`1px solid ${C.border}` }} />;
+                  }
                   const active = activeTab === item.id || (item.id === 'modules' && activeTab === 'home');
                   return (
                     <div key={item.id} onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }}
