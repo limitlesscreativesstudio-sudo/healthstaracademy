@@ -164,7 +164,9 @@ const CareerPortal: React.FC = () => {
         </div>
       )}
     </div>
+    </PortalLayout>
   );
 };
+
 
 export default CareerPortal;
