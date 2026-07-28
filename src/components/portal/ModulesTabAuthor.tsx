@@ -534,7 +534,7 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, 
   return (
     <div
       ref={setNodeRef} style={style}
-      className={`flex items-center gap-2 px-3 py-2 border-b border-border last:border-0 hover:bg-muted/30 ${!i.published ? "opacity-60" : ""}`}
+      className={`flex items-center gap-2 pr-3 py-2 border-b border-border last:border-0 hover:bg-muted/30 ${!i.published ? "opacity-60" : ""}`}
     >
       {isInstructor && (
         <button type="button" {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing touch-none p-1 hover:bg-muted rounded" title="Drag to reorder item">
