@@ -64,6 +64,8 @@ import PrivacyPolicyPage from "./pages/portal/PrivacyPolicyPage";
 import TermsOfServicePage from "./pages/portal/TermsOfServicePage";
 import RefundPolicyPage from "./pages/portal/RefundPolicyPage";
 import NotFound from "./pages/portal/NotFound";
+import ComparePage from "./pages/portal/ComparePage";
+import CompetitorPage from "./pages/portal/CompetitorPage";
 import ConciergeBubble from "./components/agents/ConciergeBubble";
 
 const queryClient = new QueryClient();
@@ -107,6 +109,8 @@ const AppShell = () => {
           <Route path="/blog/cna-programs-fremont-east-bay" element={<CnaProgramsFremontEastBay />} />
           <Route path="/blog/cna-to-rn-california" element={<CnaToRnCalifornia />} />
           <Route path="/blog/:slug" element={<AgentBlogPost />} />
+          <Route path="/compare" element={<ComparePage />} />
+          <Route path="/compare/:slug" element={<CompetitorPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/refund-policy" element={<RefundPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
