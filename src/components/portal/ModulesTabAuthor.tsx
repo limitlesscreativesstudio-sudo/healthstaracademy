@@ -524,7 +524,8 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, 
     id: i.id,
     data: { type: "item", moduleId: i.module_id },
   });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const indent = Math.max(0, Math.min(5, Number(i.indent ?? 0)));
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, paddingLeft: `${12 + indent * 24}px` };
 
 
   const isHeader = i.item_type === "header";
