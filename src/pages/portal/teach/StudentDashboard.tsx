@@ -436,6 +436,24 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
               </div>
             </div>
 
+            {cohortInfo && (
+              <label style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'12px 14px',
+                background:'#EDE8F7', border:`1px solid ${C.border}`, borderRadius:6,
+                marginBottom:16, cursor:'pointer', fontFamily:'sans-serif' }}>
+                <input type="checkbox" checked={enrollInCohort}
+                  onChange={e => setEnrollInCohort(e.target.checked)}
+                  style={{ marginTop:2 }}/>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:600, color:C.text }}>
+                    Enroll in the entire {cohortInfo.name} cohort
+                  </div>
+                  <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>
+                    Student will be added to all {cohortInfo.courseCount} course{cohortInfo.courseCount === 1 ? '' : 's'} in this cohort, not just this one.
+                  </div>
+                </div>
+              </label>
+            )}
+
             <div style={{ display:'flex', justifyContent:'flex-end', gap:10 }}>
               <button onClick={() => setShowModal(false)}
                 style={{ padding:'9px 22px', border:`1px solid ${C.border}`, borderRadius:5,
