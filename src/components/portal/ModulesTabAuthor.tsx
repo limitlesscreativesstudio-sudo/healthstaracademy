@@ -392,6 +392,11 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
                   collapsed={collapsed.has(m.id)}
                   isInstructor={isInstructor}
                   courseId={courseId}
+                  fileMap={fileMap}
+                  pageMap={pageMap}
+                  discussionMap={discussionMap}
+                  onOpenFile={(src, name, type) => setViewer({ src, name, type })}
+                  onOpenPage={(p) => setPageView(p)}
                   onToggleCollapse={() => toggleCollapse(m.id)}
                   onTogglePublish={() => togglePublishModule(m)}
                   onEdit={() => setModuleDlg({ open: true, module: m })}
@@ -405,6 +410,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
                   onMoveItemWithin={moveItemWithin}
                   onMoveModule={(where: "up" | "down" | "top" | "bottom") => moveModule(m, where)}
                 />
+
               ))}
             </div>
           </SortableContext>
