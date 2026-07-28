@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { X, Calendar, ChevronLeft, ChevronRight, Clock, Sparkles, Pause } from 'lucide-react';
-import { getNextUpcomingCohort } from '@/data/cohortSchedule';
+import { getNextUpcomingCohort, getCohortDeadlines } from '@/data/cohortSchedule';
 import {
   COHORTS_PAUSED,
   COHORT_PAUSE_HEADLINE,
