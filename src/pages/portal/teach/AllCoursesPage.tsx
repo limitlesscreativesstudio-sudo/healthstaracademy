@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 import PortalLayout from "@/components/portal/PortalLayout";
 import { Button } from "@/components/ui/button";
-import { Star, Plus, ArrowUpDown } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Star, Plus, ArrowUpDown, Info, BookOpen, Users, Calendar as CalIcon, FileText, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 type CourseRow = {
@@ -48,6 +49,27 @@ export default function AllCoursesPage() {
   const [nicks, setNicks] = useState<Record<string, string>>(() => readMap(NICK_KEY));
   const [editingNick, setEditingNick] = useState<string | null>(null);
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: "favorite", dir: "desc" });
+  const [detail, setDetail] = useState<CourseRow | null>(null);
+  const [detailData, setDetailData] = useState<{ syllabus:string; enrollmentCount:number; assignments:number; discussions:number; startAt?:string|null; endAt?:string|null } | null>(null);
+
+  const openDetail = async (c: CourseRow) => {
+    setDetail(c);
+    setDetailData(null);
+    const [{ data: full }, { count: enrCount }, { count: asgnCount }, { count: discCount }] = await Promise.all([
+      supabase.from("courses").select("syllabus_html,start_at,end_at").eq("id", c.id).maybeSingle(),
+      supabase.from("enrollments").select("*", { count:"exact", head:true }).eq("course_id", c.id),
+      supabase.from("assignments").select("*", { count:"exact", head:true }).eq("course_id", c.id),
+      supabase.from("discussions").select("*", { count:"exact", head:true }).eq("course_id", c.id),
+    ]);
+    setDetailData({
+      syllabus: (full as any)?.syllabus_html ?? "",
+      enrollmentCount: enrCount ?? 0,
+      assignments: asgnCount ?? 0,
+      discussions: discCount ?? 0,
+      startAt: (full as any)?.start_at,
+      endAt: (full as any)?.end_at,
+    });
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -246,9 +268,19 @@ export default function AllCoursesPage() {
                     <td className="py-3 px-4 text-muted-foreground">{c.term || "—"}</td>
                     <td className="py-3 px-4">{enrolledAs(c)}</td>
                     <td className="py-3 px-4">
-                      <span className={pub ? "text-green-700 font-medium" : "text-muted-foreground"}>
-                        {pub ? "Yes" : "No"}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={pub ? "text-green-700 font-medium" : "text-muted-foreground"}>
+                          {pub ? "Yes" : "No"}
+                        </span>
+                        <button
+                          onClick={() => openDetail(c)}
+                          className="ml-2 text-muted-foreground hover:text-cyan"
+                          aria-label="Course details"
+                          title="Course details"
+                        >
+                          <Info className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -258,9 +290,82 @@ export default function AllCoursesPage() {
         </div>
 
         <p className="text-xs text-muted-foreground mt-4">
-          Star a course to add it to your Dashboard. Click a nickname to rename it just for you.
+          Star a course to add it to your Dashboard. Click a nickname to rename it just for you. Click the ⓘ for a details drawer.
         </p>
       </div>
+
+      <Sheet open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          {detail && (
+            <>
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 rounded-sm" style={{ background: dotColor(detail.color, detail.id) }} />
+                  {nicks[detail.id] || detail.title}
+                </SheetTitle>
+                <SheetDescription>
+                  {detail.code ? `${detail.code} • ` : ""}{detail.term || "No term set"} • {detail.status === "published" ? "Published" : "Unpublished"}
+                </SheetDescription>
+              </SheetHeader>
+
+              <div className="mt-6 space-y-6">
+                <section>
+                  <h3 className="text-sm font-semibold text-charcoal mb-2 flex items-center gap-2"><Users className="h-4 w-4" /> Enrollment</h3>
+                  {detailData ? (
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="rounded-md border border-border p-2">
+                        <div className="text-xl font-semibold">{detailData.enrollmentCount}</div>
+                        <div className="text-xs text-muted-foreground">Students</div>
+                      </div>
+                      <div className="rounded-md border border-border p-2">
+                        <div className="text-xl font-semibold">{detailData.assignments}</div>
+                        <div className="text-xs text-muted-foreground">Assignments</div>
+                      </div>
+                      <div className="rounded-md border border-border p-2">
+                        <div className="text-xl font-semibold">{detailData.discussions}</div>
+                        <div className="text-xs text-muted-foreground">Discussions</div>
+                      </div>
+                    </div>
+                  ) : <p className="text-xs text-muted-foreground">Loading…</p>}
+                  <p className="text-xs text-muted-foreground mt-2">You are enrolled as <strong>{enrolledAs(detail)}</strong>.</p>
+                  {detailData?.startAt && (
+                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                      <CalIcon className="h-3 w-3" /> {new Date(detailData.startAt).toLocaleDateString()} – {detailData.endAt ? new Date(detailData.endAt).toLocaleDateString() : "ongoing"}
+                    </p>
+                  )}
+                </section>
+
+                <section>
+                  <h3 className="text-sm font-semibold text-charcoal mb-2 flex items-center gap-2"><BookOpen className="h-4 w-4" /> Syllabus</h3>
+                  {detailData ? (
+                    detailData.syllabus ? (
+                      <div
+                        className="prose prose-sm max-w-none border border-border rounded-md p-3 max-h-64 overflow-y-auto"
+                        dangerouslySetInnerHTML={{ __html: detailData.syllabus }}
+                      />
+                    ) : <p className="text-xs text-muted-foreground italic">No syllabus posted yet.</p>
+                  ) : <p className="text-xs text-muted-foreground">Loading…</p>}
+                </section>
+
+                <section>
+                  <h3 className="text-sm font-semibold text-charcoal mb-2">Quick actions</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button asChild variant="outline" size="sm"><Link to={courseHref(detail.id)}>Open course</Link></Button>
+                    <Button asChild variant="outline" size="sm"><Link to={`${courseHref(detail.id)}#modules`}><BookOpen className="h-3 w-3 mr-1" /> Modules</Link></Button>
+                    <Button asChild variant="outline" size="sm"><Link to={`${courseHref(detail.id)}#assignments`}><FileText className="h-3 w-3 mr-1" /> Assignments</Link></Button>
+                    <Button asChild variant="outline" size="sm"><Link to={`${courseHref(detail.id)}#discussions`}><MessageSquare className="h-3 w-3 mr-1" /> Discussions</Link></Button>
+                    <Button variant="outline" size="sm" onClick={() => toggleFav(detail.id)}>
+                      <Star className={`h-3 w-3 mr-1 ${favs.has(detail.id) ? "fill-yellow-400 text-yellow-500" : ""}`} />
+                      {favs.has(detail.id) ? "Unfavorite" : "Favorite"}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setEditingNick(detail.id); setDetail(null); }}>Edit nickname</Button>
+                  </div>
+                </section>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </PortalLayout>
   );
 }

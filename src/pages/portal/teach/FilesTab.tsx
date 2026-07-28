@@ -6,7 +6,7 @@ import ContentViewer, { type ContentSource } from '@/components/portal/ContentVi
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
-const FOLDERS = ['CA NATP ALS Power Point Presentations','CA State Curriculum Learning Resources','CDPH & School contact information','Uploaded Media','Uploaded Media 2'];
+const DEFAULT_FOLDERS = ['Course Files','Handouts','Presentations','Recordings','Uploaded Media'];
 const fileIcon = (t: string) => ({ pdf:'📄', pptx:'📊', ppt:'📊', docx:'📝', doc:'📝', mp4:'🎥', mov:'🎥', jpg:'🖼️', png:'🖼️', xlsx:'📈' }[t.toLowerCase()] ?? '📎');
 const fmtSize  = (b: number) => b > 1048576 ? `${(b/1048576).toFixed(1)} MB` : `${(b/1024).toFixed(0)} KB`;
 
@@ -15,12 +15,13 @@ interface Props { courseId?: string; canEdit?: boolean; }
 
 const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [files,      setFiles]      = useState<CourseFile[]>([]);
+  const [customFolders, setCustomFolders] = useState<string[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [folder,     setFolder]     = useState('All');
   const [dragging,   setDragging]   = useState(false);
   const [uploading,  setUploading]  = useState(false);
   const [uploadPct,  setUploadPct]  = useState(0);
-  const [selFolder,  setSelFolder]  = useState(FOLDERS[0]);
+  const [selFolder,  setSelFolder]  = useState(DEFAULT_FOLDERS[0]);
   const [error,      setError]      = useState('');
   const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -38,13 +39,55 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
     setLoading(true);
-    const { data } = await supabase.from('lms_files')
-      .select('*').eq('course_id', courseId).order('created_at', { ascending:false });
+    const [{ data }, { data: folders }] = await Promise.all([
+      supabase.from('lms_files').select('*').eq('course_id', courseId).order('created_at', { ascending:false }),
+      supabase.from('lms_folders').select('name').eq('course_id', courseId).is('parent_id', null),
+    ]);
     if (data) setFiles(data);
+    setCustomFolders((folders ?? []).map((f:any) => f.name));
     setLoading(false);
   };
 
   useEffect(() => { load(); }, [courseId]);
+
+  const allFolders = React.useMemo(() => {
+    const set = new Set<string>([...DEFAULT_FOLDERS, ...customFolders]);
+    // include folders referenced by existing files so nothing gets orphaned
+    files.forEach(f => f.folder && set.add(f.folder));
+    return Array.from(set);
+  }, [customFolders, files]);
+
+  const createFolder = async () => {
+    if (!courseId) return;
+    const name = prompt('New folder name');
+    if (!name?.trim()) return;
+    const clean = name.trim();
+    if (allFolders.includes(clean)) return setError('Folder already exists');
+    const { error: err } = await supabase.from('lms_folders').insert({ course_id: courseId, name: clean });
+    if (err) return setError(err.message);
+    setCustomFolders(p => [...p, clean]);
+    setSelFolder(clean);
+    setFolder(clean);
+  };
+
+  const createDoc = async () => {
+    if (!courseId) return;
+    const name = prompt('Document name (e.g. "Session notes")');
+    if (!name?.trim()) return;
+    const body = prompt('Document content (leave blank to fill in later)') ?? '';
+    const safe = name.trim().replace(/[^\w.\-]+/g, '_');
+    const filename = safe.endsWith('.txt') ? safe : `${safe}.txt`;
+    const path = `${courseId}/${Date.now()}_${filename}`;
+    const blob = new Blob([body], { type:'text/plain' });
+    const { error: upErr } = await uploadViaXhr('course-files', path, blob as any);
+    if (upErr) return setError(upErr.message);
+    const { data: { publicUrl } } = supabase.storage.from('course-files').getPublicUrl(path);
+    const { data: row } = await supabase.from('lms_files').insert({
+      course_id: courseId, file_name: filename, file_url: publicUrl,
+      file_type: 'txt', file_size: blob.size, folder: selFolder,
+    }).select().single();
+    if (row) setFiles(p => [row as any, ...p]);
+  };
 
   const uploadFiles = async (fileList: FileList | null) => {
     if (!fileList || !courseId) return;
@@ -79,7 +122,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   };
 
   const visible = folder === 'All' ? files : files.filter(f => f.folder === folder);
-  const allFolders = ['All', ...FOLDERS];
+  const sidebarFolders = ['All', ...allFolders];
   const usedMB = files.reduce((s, f) => s + (f.file_size ?? 0), 0) / 1048576;
 
   return (
@@ -89,7 +132,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
         <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', marginBottom:10 }}>
           {courseId ? 'Course Files' : 'Select a course'}
         </div>
-        {allFolders.map(f => (
+        {sidebarFolders.map(f => (
           <div key={f} onClick={() => setFolder(f)}
             style={{ padding:'7px 10px', borderRadius:5, cursor:'pointer', fontSize:12, fontFamily:'sans-serif',
               background: folder === f ? '#EDE8F7' : 'transparent',
@@ -99,6 +142,12 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
             <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f}</span>
           </div>
         ))}
+        {canEdit && courseId && (
+          <button onClick={createFolder}
+            style={{ marginTop:6, width:'100%', padding:'6px 8px', border:`1px dashed ${C.border}`, borderRadius:5, background:'transparent', color:C.primary, fontSize:11, cursor:'pointer', fontFamily:'sans-serif' }}>
+            + New Folder
+          </button>
+        )}
         <div style={{ marginTop:16, paddingTop:12, borderTop:`1px solid ${C.border}` }}>
           <div style={{ height:6, background:C.border, borderRadius:3, overflow:'hidden', marginBottom:4 }}>
             <div style={{ height:'100%', width:`${Math.min((usedMB / 500) * 100, 100)}%`, background:C.primary, borderRadius:3 }}/>
@@ -119,8 +168,12 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
               <select value={selFolder} onChange={e => setSelFolder(e.target.value)}
                 style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'6px 8px', fontSize:12, fontFamily:'sans-serif', maxWidth:200 }}>
-                {FOLDERS.map(f => <option key={f}>{f}</option>)}
+                {allFolders.map(f => <option key={f}>{f}</option>)}
               </select>
+              <button onClick={createDoc}
+                style={{ padding:'7px 12px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
+                📝 New Doc
+              </button>
               <button onClick={() => fileRef.current?.click()}
                 style={{ padding:'7px 14px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
                 📤 Upload
