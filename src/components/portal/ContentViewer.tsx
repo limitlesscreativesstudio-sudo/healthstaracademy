@@ -289,8 +289,17 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
               />
             )}
 
-            {kind === "html" && (
-              <iframe src={resolvedUrl} className="w-full h-full border-0 bg-white" title={displayName} />
+            {kind === "html" && !frameBlocked && (
+              <iframe
+                src={resolvedUrl}
+                className="w-full h-full border-0 bg-white"
+                title={displayName}
+                onLoad={() => setFrameBlocked(false)}
+              />
+            )}
+
+            {kind === "html" && frameBlocked && (
+              <FrameBlockedCard url={resolvedUrl} />
             )}
 
             {kind === "other" && <FallbackDownload url={resolvedUrl} fileName={fileName} />}
