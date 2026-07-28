@@ -366,50 +366,240 @@ const FilesPanel: React.FC = () => {
   );
 };
 
-// ─── Settings panel (contacts + feature flags) ────────────────────────────────
+// ─── Settings panel (Canvas-style: profile summary + contacts + integrations + feature options) ─
 const FLAGS: { key:string; label:string; hint:string }[] = [
-  { key:'high_contrast',    label:'Use High Contrast UI',   hint:'Higher contrast between text and background.' },
-  { key:'dyslexia_font',    label:'Use a dyslexia-friendly font', hint:'Applies OpenDyslexic where possible.' },
-  { key:'underline_links',  label:'Underline Links',        hint:'Underline every link for easier scanning.' },
-  { key:'auto_captions',    label:'Auto show closed captions', hint:'Turn captions on for embedded video by default.' },
-  { key:'open_todo_new_tab',label:'Open to-do items in a new tab', hint:'Keeps your current page open.' },
-  { key:'no_celebrate',     label:'Disable Celebration Animations', hint:'No confetti or fanfare on submissions.' },
-  { key:'disable_shortcuts',label:'Disable Keyboard Shortcuts', hint:'Turn off portal-wide keyboard shortcuts.' },
+  { key:'auto_captions',     label:'Auto Show Closed Captions',                    hint:'Turn captions on for embedded video by default.' },
+  { key:'autodetect_sep',    label:'Autodetect field separators in CSV exports',   hint:'Detect comma vs semicolon on export.' },
+  { key:'course_setup_tut',  label:'Course Set-up Tutorial',                       hint:'Show setup tips when opening a new course.' },
+  { key:'disable_alert_to',  label:'Disable Alert Notification Timeouts',          hint:'Keep in-app alerts visible until dismissed.' },
+  { key:'no_celebrate',      label:'Disable Celebration Animations',               hint:'No confetti or fanfare on submissions.' },
+  { key:'disable_shortcuts', label:'Disable Keyboard Shortcuts',                   hint:'Turn off portal-wide keyboard shortcuts.' },
+  { key:'high_contrast',     label:'High Contrast UI',                             hint:'Higher contrast between text and background.' },
+  { key:'include_bom',       label:'Include Byte-Order Mark in CSV exports',       hint:'Improves Excel compatibility.' },
+  { key:'immersive_reader',  label:'Microsoft Immersive Reader',                   hint:'Read pages aloud with focus tools.' },
+  { key:'open_todo_new_tab', label:'Open to-do items in a new tab',                hint:'Keeps your current page open.' },
+  { key:'underline_links',   label:'Underline Links',                              hint:'Underline every link for easier scanning.' },
+  { key:'dyslexia_font',     label:'Use a dyslexia friendly font',                 hint:'Applies OpenDyslexic where possible.' },
+  { key:'csv_semicolons',    label:'Use semicolons to separate fields in CSV exports', hint:'For locales that use comma as decimal.' },
 ];
 
-const SettingsPanel: React.FC<{ flags:Record<string,boolean>; setFlags:(f:Record<string,boolean>)=>void; contacts:{ altEmail:string; phone:string; smsOptIn:boolean }; setContacts:(c:any)=>void; save:()=>void; msg:{type:'success'|'error';text:string}|null; }> =
-({ flags, setFlags, contacts, setContacts, save, msg }) => (
-  <>
-    <Section title="Ways to Contact" subtitle="Add backup email and SMS so we can reach you if your primary email bounces.">
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 20px' }}>
-        <Field label="Alternate Email" value={contacts.altEmail} onChange={v=>setContacts({...contacts, altEmail:v})} placeholder="you@backup.com"/>
-        <Field label="Mobile Phone" value={contacts.phone} onChange={v=>setContacts({...contacts, phone:v})} placeholder="(555) 555-1234"/>
+const ProfileSummary: React.FC = () => {
+  const { user } = useAuth();
+  const [p, setP] = useState<{ full_name:string; display_name:string; sortable:string; pronouns:string; language:string; timezone:string }>({
+    full_name:'', display_name:'', sortable:'', pronouns:'', language:'English (United States)', timezone:'Pacific Time (US & Canada)'
+  });
+  useEffect(() => { if(!user?.id) return; (async () => {
+    const { data } = await supabase.from('profiles').select('full_name,display_name,pronouns,language,timezone').eq('user_id', user.id).maybeSingle();
+    if (data) setP(s => ({
+      ...s,
+      full_name: (data as any).full_name ?? user.name ?? '',
+      display_name: (data as any).display_name ?? (data as any).full_name ?? user.name ?? '',
+      pronouns: (data as any).pronouns ?? '',
+      language: (data as any).language ?? s.language,
+      timezone: (data as any).timezone ?? s.timezone,
+      sortable: ((data as any).full_name ?? user.name ?? '').split(' ').reverse().join(', '),
+    }));
+  })(); }, [user?.id]);
+  const row = (label:string, value:React.ReactNode, sub?:string) => (
+    <tr>
+      <td style={{ padding:'8px 14px 8px 0', color:C.text, fontWeight:600, fontSize:13, verticalAlign:'top', width:130 }}>{label}</td>
+      <td style={{ padding:'8px 0', fontSize:13, color:C.text }}>
+        <div>{value}</div>
+        {sub && <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{sub}</div>}
+      </td>
+    </tr>
+  );
+  return (
+    <div style={{ display:'flex', gap:16, alignItems:'flex-start' }}>
+      <div style={{ width:56, height:56, borderRadius:'50%', background:C.headerBar, display:'flex', alignItems:'center', justifyContent:'center', color:C.primary, fontWeight:700, fontSize:20, flexShrink:0 }}>
+        {(p.full_name || user?.email || '?').slice(0,1).toUpperCase()}
       </div>
-      <label style={{ display:'flex', gap:8, alignItems:'center', fontSize:13, color:C.text, marginBottom:14, cursor:'pointer' }}>
-        <input type="checkbox" checked={contacts.smsOptIn} onChange={e=>setContacts({...contacts, smsOptIn:e.target.checked})}/>
-        Send urgent alerts (clinical no-shows, exam failures) by SMS
-      </label>
-    </Section>
-    <Section title="Feature Options" subtitle="Turn features on or off for your account.">
-      {msg && <Toast type={msg.type} message={msg.text}/>}
-      <div style={{ border:`1px solid ${C.border}`, borderRadius:6, overflow:'hidden' }}>
-        {FLAGS.map((f, i) => (
-          <div key={f.key} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 16px', borderTop: i===0?'none':`1px solid ${C.border}` }}>
-            <div>
-              <div style={{ fontSize:13, fontWeight:600, color:C.text }}>{f.label}</div>
-              <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{f.hint}</div>
-            </div>
-            <button onClick={()=>setFlags({ ...flags, [f.key]: !flags[f.key] })}
-              style={{ width:44, height:24, borderRadius:12, border:'none', cursor:'pointer', background: flags[f.key] ? C.primary : '#D0D0D0', position:'relative', transition:'background .15s' }}>
-              <span style={{ position:'absolute', top:2, left: flags[f.key] ? 22 : 2, width:20, height:20, borderRadius:'50%', background:'white', transition:'left .15s' }}/>
-            </button>
+      <table style={{ borderCollapse:'collapse', flex:1 }}>
+        <tbody>
+          {row('Full Name:', p.full_name || '—', 'This name will be used for grading.')}
+          {row('Display Name:', p.display_name || p.full_name || '—', 'People will see this name in discussions, messages and comments.')}
+          {row('Sortable Name:', p.sortable || '—', 'This name appears in sorted lists.')}
+          {row('Pronouns:', p.pronouns || 'None', 'This pronoun will appear after your name when enabled.')}
+          {row('Language:', p.language)}
+          {row('Time Zone:', p.timezone)}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const ContactSidebar: React.FC<{ contacts:{ altEmail:string; phone:string; smsOptIn:boolean }; setContacts:(c:any)=>void; }> = ({ contacts, setContacts }) => {
+  const { user } = useAuth();
+  return (
+    <aside style={{ width:260, flexShrink:0 }}>
+      <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, overflow:'hidden', marginBottom:16 }}>
+        <div style={{ padding:'10px 14px', background:C.headerBar, fontSize:12, fontWeight:700, color:C.text }}>Ways to Contact</div>
+        <div style={{ padding:'12px 14px' }}>
+          <div style={{ fontSize:11, textTransform:'uppercase', letterSpacing:0.5, color:C.muted, fontWeight:700, marginBottom:6 }}>Email Addresses</div>
+          <div style={{ fontSize:13, color:C.text, display:'flex', alignItems:'center', gap:6 }}>
+            <span style={{ color:'#E6A700' }}>★</span>{user?.email ?? '—'}
+          </div>
+          <div style={{ marginTop:10 }}>
+            <input value={contacts.altEmail} onChange={e=>setContacts({...contacts, altEmail:e.target.value})} placeholder="+ Alternate email"
+              style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'7px 10px', fontSize:12, boxSizing:'border-box' }}/>
+          </div>
+          <div style={{ height:1, background:C.border, margin:'14px 0' }}/>
+          <div style={{ fontSize:11, textTransform:'uppercase', letterSpacing:0.5, color:C.muted, fontWeight:700, marginBottom:6 }}>Other Contacts</div>
+          <input value={contacts.phone} onChange={e=>setContacts({...contacts, phone:e.target.value})} placeholder="Mobile phone"
+            style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'7px 10px', fontSize:12, boxSizing:'border-box' }}/>
+          <label style={{ display:'flex', gap:8, alignItems:'center', fontSize:12, color:C.text, marginTop:8, cursor:'pointer' }}>
+            <input type="checkbox" checked={contacts.smsOptIn} onChange={e=>setContacts({...contacts, smsOptIn:e.target.checked})}/>
+            Send urgent alerts by SMS
+          </label>
+        </div>
+      </div>
+      <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, padding:12 }}>
+        <div style={{ fontSize:12, fontWeight:700, color:C.text, marginBottom:10 }}>Quick actions</div>
+        {[
+          ['⬇️','Download Submissions'],
+          ['📁','Download Course Files'],
+          ['⚙️','Edit Profile Settings'],
+        ].map(([i,l]) => (
+          <div key={l} style={{ display:'flex', gap:8, padding:'7px 0', fontSize:13, color:C.primary, cursor:'pointer', borderBottom:`1px solid ${C.border}` }}>
+            <span>{i}</span>{l}
           </div>
         ))}
       </div>
-      <div style={{ marginTop:16 }}><PrimaryBtn onClick={save}>Save Settings</PrimaryBtn></div>
-    </Section>
-  </>
-);
+    </aside>
+  );
+};
+
+const IntegrationsPanel: React.FC = () => {
+  const rows = [
+    { app:'Google Drive', status:'active', purpose:'File attachments', last:'Last used: today' },
+    { app:'Zoom (LTI)',    status:'active', purpose:'Live classes',      last:'Last used: this week' },
+    { app:'Rollcall',      status:'active', purpose:'Attendance sync',   last:'Last used: this month' },
+  ];
+  return (
+    <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, overflow:'hidden', marginBottom:20 }}>
+      <div style={{ padding:'12px 16px', borderBottom:`1px solid ${C.border}`, fontSize:14, fontWeight:700, color:C.text }}>Approved Integrations</div>
+      <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+        <thead>
+          <tr style={{ background:C.bg, color:C.muted, textAlign:'left' }}>
+            <th style={{ padding:'8px 14px', fontWeight:600 }}>App</th>
+            <th style={{ padding:'8px 14px', fontWeight:600 }}>Status</th>
+            <th style={{ padding:'8px 14px', fontWeight:600 }}>Purpose</th>
+            <th style={{ padding:'8px 14px', fontWeight:600 }}>Last Activity</th>
+            <th style={{ padding:'8px 14px', fontWeight:600, width:60 }}></th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.app} style={{ borderTop:`1px solid ${C.border}` }}>
+              <td style={{ padding:'10px 14px', color:C.text, fontWeight:600 }}>{r.app}</td>
+              <td style={{ padding:'10px 14px', color:C.success }}>● {r.status}</td>
+              <td style={{ padding:'10px 14px', color:C.text }}>{r.purpose}</td>
+              <td style={{ padding:'10px 14px', color:C.muted }}>{r.last}</td>
+              <td style={{ padding:'10px 14px' }}><button style={{ border:'none', background:'transparent', color:C.muted, cursor:'pointer' }} title="Revoke"><Trash2 size={14}/></button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const FeatureOptionsTable: React.FC<{ flags:Record<string,boolean>; setFlags:(f:Record<string,boolean>)=>void }> = ({ flags, setFlags }) => {
+  const [query, setQuery] = useState('');
+  const [expanded, setExpanded] = useState<string|null>(null);
+  const [filter, setFilter] = useState<'All'|'On'|'Off'>('All');
+  const rows = FLAGS.filter(f => {
+    const on = !!flags[f.key];
+    if (filter === 'On' && !on) return false;
+    if (filter === 'Off' && on) return false;
+    return !query || f.label.toLowerCase().includes(query.toLowerCase());
+  });
+  return (
+    <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, overflow:'hidden' }}>
+      <div style={{ padding:'12px 16px', borderBottom:`1px solid ${C.border}`, display:'flex', gap:10, alignItems:'center', justifyContent:'space-between', flexWrap:'wrap' }}>
+        <div style={{ fontSize:14, fontWeight:700, color:C.text }}>Feature Options</div>
+        <div style={{ display:'flex', gap:8 }}>
+          <select value={filter} onChange={e=>setFilter(e.target.value as any)} style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'6px 10px', fontSize:12, background:C.white }}>
+            <option>All</option><option>On</option><option>Off</option>
+          </select>
+          <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search by name"
+            style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'6px 10px', fontSize:12, minWidth:180 }}/>
+          {(query || filter!=='All') && <button onClick={()=>{ setQuery(''); setFilter('All'); }} style={{ border:'none', background:C.primary, color:'white', borderRadius:5, padding:'6px 12px', fontSize:12, cursor:'pointer' }}>Clear</button>}
+        </div>
+      </div>
+      <div style={{ padding:'8px 16px', background:C.bg, fontSize:11, textTransform:'uppercase', letterSpacing:0.5, color:C.muted, fontWeight:700 }}>User</div>
+      <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+        <thead>
+          <tr style={{ color:C.muted, textAlign:'left', borderBottom:`1px solid ${C.border}` }}>
+            <th style={{ padding:'8px 16px', fontWeight:600 }}>Feature ▲</th>
+            <th style={{ padding:'8px 16px', fontWeight:600 }}>Status</th>
+            <th style={{ padding:'8px 16px', fontWeight:600, width:80, textAlign:'right' }}>State</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(f => {
+            const on = !!flags[f.key];
+            const open = expanded === f.key;
+            return (
+              <React.Fragment key={f.key}>
+                <tr style={{ borderTop:`1px solid ${C.border}`, cursor:'pointer' }} onClick={()=>setExpanded(open ? null : f.key)}>
+                  <td style={{ padding:'10px 16px', color:C.text }}>
+                    <span style={{ display:'inline-block', width:14, color:C.muted }}>{open ? '▾' : '▸'}</span>
+                    {f.label}
+                  </td>
+                  <td style={{ padding:'10px 16px', color:C.muted }}>{on ? 'Enabled' : ''}</td>
+                  <td style={{ padding:'10px 16px', textAlign:'right' }}>
+                    <button onClick={e=>{ e.stopPropagation(); setFlags({ ...flags, [f.key]: !on }); }}
+                      title={on ? 'On' : 'Off'}
+                      style={{ border:'none', background:'transparent', cursor:'pointer', fontSize:16, color: on ? C.success : C.error }}>
+                      {on ? '✅' : '❌'}
+                    </button>
+                  </td>
+                </tr>
+                {open && (
+                  <tr style={{ background:C.bg }}>
+                    <td colSpan={3} style={{ padding:'10px 40px', color:C.muted, fontSize:12 }}>{f.hint}</td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
+          {rows.length === 0 && (
+            <tr><td colSpan={3} style={{ padding:20, textAlign:'center', color:C.muted, fontSize:13 }}>No matching features.</td></tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const SettingsPanel: React.FC<{ flags:Record<string,boolean>; setFlags:(f:Record<string,boolean>)=>void; contacts:{ altEmail:string; phone:string; smsOptIn:boolean }; setContacts:(c:any)=>void; save:()=>void; msg:{type:'success'|'error';text:string}|null; }> =
+({ flags, setFlags, contacts, setContacts, save, msg }) => {
+  const { user } = useAuth();
+  return (
+    <div style={{ display:'flex', gap:20, alignItems:'flex-start', flexWrap:'wrap' }}>
+      <div style={{ flex:1, minWidth:400 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14, flexWrap:'wrap', gap:10 }}>
+          <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text }}>{user?.name ?? user?.email}'s Settings</h2>
+          <PrimaryBtn onClick={save}>Save Settings</PrimaryBtn>
+        </div>
+        {msg && <Toast type={msg.type} message={msg.text}/>}
+
+        <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, padding:20, marginBottom:20 }}>
+          <ProfileSummary/>
+        </div>
+
+        <IntegrationsPanel/>
+
+        <FeatureOptionsTable flags={flags} setFlags={setFlags}/>
+
+        <div style={{ marginTop:16, textAlign:'right' }}><PrimaryBtn onClick={save}>Save Settings</PrimaryBtn></div>
+      </div>
+      <ContactSidebar contacts={contacts} setContacts={setContacts}/>
+    </div>
+  );
+};
+
 
 // ─── Shared content ───────────────────────────────────────────────────────────
 const SharedPanel: React.FC = () => (
