@@ -95,7 +95,11 @@ const CareerPortal: React.FC = () => {
         <>
           <div style={{ background:'#EDE8F7', border:`1px solid ${C.primary}22`, borderLeft:`3px solid ${C.primary}`, borderRadius:6, padding:'10px 14px', marginBottom:14, fontSize:12, color:C.text, fontFamily:'sans-serif', lineHeight:1.5 }}>
             <strong style={{ color:C.primary }}>HSA Partner Sites</strong> — CNA openings sourced from our clinical rotation partners in Stockton, Lodi, Hayward and Sacramento. Listings are verified against each facility's careers page; wages reflect regional posted ranges. Click any listing to apply directly.
+            <div style={{ marginTop:6, fontSize:11, color:C.muted }}>
+              🔄 Auto-refreshes every Monday. {lastRefreshed ? `Last updated ${new Date(lastRefreshed).toLocaleDateString('en-US',{ month:'short', day:'numeric', year:'numeric' })}.` : loading ? 'Loading latest listings…' : 'Showing cached listings.'}
+            </div>
           </div>
+
           <div style={{ display:'flex', gap:6, marginBottom:16, flexWrap:'wrap', alignItems:'center' }}>
             {types.map(t => (
               <button key={t} onClick={() => setFilter(t)}
