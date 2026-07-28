@@ -19,14 +19,19 @@ const OPTIONS: { value: HomeType; label: string; help: string }[] = [
 
 export default function ChooseHomePageDialog({
   courseId, current, hasFrontPage, onChanged, trigger,
+  open: openProp, onOpenChange: onOpenChangeProp,
 }: {
   courseId: string;
   current: string;
   hasFrontPage: boolean;
   onChanged: (next: HomeType) => void;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (o: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = openProp ?? internalOpen;
+  const setOpen = (o: boolean) => { onOpenChangeProp ? onOpenChangeProp(o) : setInternalOpen(o); };
   const [value, setValue] = useState<HomeType>((current as HomeType) || "modules");
   const [saving, setSaving] = useState(false);
 
@@ -56,13 +61,15 @@ export default function ChooseHomePageDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button variant="outline" size="sm" className="gap-2">
-            <HomeIcon className="h-4 w-4" /> Choose Home Page
-          </Button>
-        )}
-      </DialogTrigger>
+      {openProp === undefined && (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button variant="outline" size="sm" className="gap-2">
+              <HomeIcon className="h-4 w-4" /> Choose Home Page
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-md">
         <DialogHeader>
           <div className="flex items-center justify-between gap-3 pr-6">

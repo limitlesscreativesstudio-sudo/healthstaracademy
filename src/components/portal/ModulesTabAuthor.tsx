@@ -20,7 +20,7 @@ import {
   ChevronRight, ChevronDown, Eye, EyeOff, MoreVertical, Plus, GripVertical,
   FileText, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap,
   Trash2, Pencil, BarChart3, X, ArrowRightLeft, ArrowUp, ArrowDown,
-  ChevronsUp, ChevronsDown, Type,
+  ChevronsUp, ChevronsDown, Type, CheckCircle2, Copy,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -221,6 +221,23 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
     load();
   };
 
+  // ----- Duplicate item -----
+  const duplicateItem = async (item: ModuleItem) => {
+    const sameModuleCount = items.filter(i => i.module_id === item.module_id).length;
+    const { error } = await supabase.from("module_items").insert({
+      module_id: item.module_id,
+      title: `${item.title} (copy)`,
+      item_type: item.item_type,
+      content_ref: item.content_ref,
+      url: item.url,
+      published: false,
+      position: sameModuleCount,
+    });
+    if (error) { toast({ title: "Duplicate failed", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Item duplicated" });
+    load();
+  };
+
   // ----- Move module up/down/top/bottom -----
   const moveModule = async (m: Module, where: "up" | "down" | "top" | "bottom") => {
     const idx = modules.findIndex(x => x.id === m.id);
@@ -321,6 +338,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
                   onEditItem={(it: ModuleItem) => setItemDlg({ open: true, moduleId: m.id, item: it })}
                   onDeleteItem={deleteItem}
                   onToggleItemPublish={togglePublishItem}
+                  onDuplicateItem={duplicateItem}
                   onMoveItem={moveItemToModule}
                   onMoveModule={(where: "up" | "down" | "top" | "bottom") => moveModule(m, where)}
                 />
@@ -365,7 +383,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
 const SortableModule = ({
   module: m, items, allModules, collapsed, isInstructor, courseId,
   onToggleCollapse, onTogglePublish, onEdit, onDelete, onAddItem,
-  onEditItem, onDeleteItem, onToggleItemPublish, onMoveItem, onMoveModule,
+  onEditItem, onDeleteItem, onToggleItemPublish, onDuplicateItem, onMoveItem, onMoveModule,
 }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: m.id,
@@ -401,8 +419,10 @@ const SortableModule = ({
         )}
         {isInstructor && (
           <>
-            <button onClick={onTogglePublish} className="p-1.5 hover:bg-muted rounded" title={m.published ? "Unpublish" : "Publish"}>
-              {m.published ? <Eye className="h-4 w-4 text-green-600" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+            <button onClick={onTogglePublish} className="p-1.5 hover:bg-muted rounded" title={m.published ? "Published — click to unpublish" : "Unpublished — click to publish"}>
+              {m.published
+                ? <CheckCircle2 className="h-4 w-4 text-green-600 fill-green-600/10" />
+                : <EyeOff className="h-4 w-4 text-muted-foreground" />}
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -452,6 +472,7 @@ const SortableModule = ({
                     onTogglePublish={() => onToggleItemPublish(i)}
                     onEdit={() => onEditItem(i)}
                     onDelete={() => onDeleteItem(i)}
+                    onDuplicate={() => onDuplicateItem(i)}
                     onMoveTo={(targetId: string) => onMoveItem(i, targetId)}
                   />
                 ))
@@ -473,7 +494,7 @@ const SortableModule = ({
 
 
 // ============ Sortable Item ============
-const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onTogglePublish, onEdit, onDelete, onMoveTo }: any) => {
+const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: i.id,
     data: { type: "item", moduleId: i.module_id },
@@ -505,8 +526,10 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onToggleP
       )}
       {isInstructor && (
         <>
-          <button onClick={onTogglePublish} className="p-1 hover:bg-muted rounded" title={i.published ? "Unpublish" : "Publish"}>
-            {i.published ? <Eye className="h-3.5 w-3.5 text-green-600" /> : <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />}
+          <button onClick={onTogglePublish} className="p-1 hover:bg-muted rounded" title={i.published ? "Published — click to unpublish" : "Unpublished — click to publish"}>
+            {i.published
+              ? <CheckCircle2 className="h-4 w-4 text-green-600 fill-green-600/10" />
+              : <EyeOff className="h-4 w-4 text-muted-foreground" />}
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -514,10 +537,11 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onToggleP
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="max-h-80 overflow-auto">
               <DropdownMenuItem onClick={onEdit}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
+              <DropdownMenuItem onClick={onDuplicate}><Copy className="h-4 w-4 mr-2" /> Duplicate</DropdownMenuItem>
               {otherModules && otherModules.length > 0 && (
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
-                    <ArrowRightLeft className="h-4 w-4 mr-2" /> Move to module
+                    <ArrowRightLeft className="h-4 w-4 mr-2" /> Move to…
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="max-h-72 overflow-auto">
                     {otherModules.map((mod: Module) => (

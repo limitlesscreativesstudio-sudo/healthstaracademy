@@ -21,6 +21,8 @@ import StudentProgress   from './StudentProgress';
 import Account           from './Account';
 import { useAuth, supabase } from './AuthContext';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
+import ChooseHomePageDialog from '@/components/portal/ChooseHomePageDialog';
+import HomeRouter from '@/components/portal/HomeRouter';
 import { toast, Toaster } from 'sonner';
 
 const useIsMobile = () => {
@@ -600,6 +602,26 @@ const CourseView: React.FC = () => {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifs, setNotifs] = useState<{ id:string; title:string; sub:string; link?:string }[]>([]);
   const [notifsSeen, setNotifsSeen] = useState(false);
+  const [homePageType, setHomePageType] = useState<string>('modules');
+  const [hasFrontPage, setHasFrontPage] = useState(false);
+  const [homePageDlgOpen, setHomePageDlgOpen] = useState(false);
+
+  // Load per-course home_page_type + front-page availability
+  useEffect(() => {
+    const cid = activeCourse?.uuid;
+    if (!cid) return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: c }, { data: fp }] = await Promise.all([
+        supabase.from('courses').select('home_page_type').eq('id', cid).maybeSingle(),
+        supabase.from('lms_pages').select('id').eq('course_id', cid).eq('front_page', true).eq('published', true).limit(1),
+      ]);
+      if (cancelled) return;
+      setHomePageType((c as any)?.home_page_type || 'modules');
+      setHasFrontPage((fp?.length ?? 0) > 0);
+    })();
+    return () => { cancelled = true; };
+  }, [activeCourse?.uuid]);
 
   // Load notifications: recent submissions (instructor) + upcoming due-in-48h
   useEffect(() => {
@@ -694,7 +716,7 @@ const CourseView: React.FC = () => {
 
   const handleCourseAction = (action: string) => {
     switch (action) {
-      case 'home-page':       alert('Choose Home Page: keep Modules as your home, or pick Announcements/Syllabus/Pages.\n\n(Hooking this to a saved setting is the next step.)'); break;
+      case 'home-page':       setHomePageDlgOpen(true); break;
       case 'stream':          setActiveTab('announcements'); break;
       case 'new-announcement': setActiveTab('announcements'); setTimeout(() => { (window as any).__hsaOpenAnn?.(); }, 50); break;
       case 'analytics':       setActiveTab('analytics'); break;
@@ -709,7 +731,14 @@ const CourseView: React.FC = () => {
   // Build sections map inside component so canEdit is available
   const cid = activeCourse?.uuid;
   const SECTIONS: Record<string, React.ReactNode> = {
-    home:          <ModulesHome    canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
+    home:          <HomeRouter
+                      type={homePageType}
+                      courseId={cid}
+                      modules={<ModulesHome canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />}
+                      syllabus={<SyllabusTab courseUuid={cid} canEdit={canEdit} />}
+                      assignments={<AssignmentView courseId={cid} canEdit={canEdit} />}
+                      activity={<AnnouncementsPanel canEdit={canEdit} courseId={cid} />}
+                   />,
     modules:       <ModulesHome    canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
     announcements: <AnnouncementsPanel canEdit={canEdit} courseId={cid} />,
     assignments:   <AssignmentView courseId={cid} canEdit={canEdit} />,
@@ -981,6 +1010,16 @@ const CourseView: React.FC = () => {
         )}
       </div>
 
+      {cid && (
+        <ChooseHomePageDialog
+          courseId={cid}
+          current={homePageType}
+          hasFrontPage={hasFrontPage}
+          open={homePageDlgOpen}
+          onOpenChange={setHomePageDlgOpen}
+          onChanged={(next) => setHomePageType(next)}
+        />
+      )}
       <Toaster position="bottom-right" richColors />
       <style>{`@keyframes hsa-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
     </div>
