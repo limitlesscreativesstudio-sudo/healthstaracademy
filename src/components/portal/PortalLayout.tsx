@@ -50,12 +50,13 @@ const PortalLayout = ({ children }: { children: React.ReactNode }) => {
           <LayoutDashboard className="h-5 w-5" />
         </Link>
         <nav className="flex-1 flex flex-col items-center gap-1 w-full px-2">
-          <RailItem to="/portal/account" icon={User} label="Account" />
           <RailItem to="/portal" icon={LayoutDashboard} label="Dashboard" exact />
           <RailItem to="/portal/courses" icon={BookOpen} label="Courses" />
-          <RailItem to="/portal/career" icon={TrendingUp} label="Career" />
           <RailItem to="/portal/calendar" icon={Calendar} label="Calendar" />
+          <RailItem to="/portal/career" icon={TrendingUp} label="Career" />
           <RailItem to="/portal/inbox" icon={Inbox} label="Inbox" />
+          <div className="h-4" />
+          <RailItem to="/portal/account" icon={User} label="Account" />
           <RailItem to="/portal/history" icon={History} label="History" />
           <RailItem to="/portal/help" icon={HelpCircle} label="Help" />
           {isInstructor && <RailItem to="/portal/teach" icon={Users} label="Teach" />}
