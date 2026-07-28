@@ -929,6 +929,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
 
     const payload: any = {
       module_id: moduleId, title: title.trim(), item_type: type, published, indent,
+      description: description.trim() || null,
       content_ref: finalContentRef,
       url: ["link", "video", "external_tool"].includes(type) ? (url || null) : null,
     };
