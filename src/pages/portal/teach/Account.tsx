@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Bell, CalendarDays, CalendarRange, BellOff, User as UserIcon, FileText, Settings as SettingsIcon, Share2, QrCode, Megaphone, Upload, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import PortalLayout from '@/components/portal/PortalLayout';
+import { Bell, CalendarDays, CalendarRange, BellOff, User as UserIcon, FileText, Settings as SettingsIcon, Share2, QrCode, Megaphone, Upload, Plus, Trash2, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 const C = {
   primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF',
@@ -723,9 +725,13 @@ const Account: React.FC<{ onBackToDashboard?:()=>void }> = () => {
   };
 
   return (
+    <PortalLayout>
     <div style={{ display:'flex', minHeight:'calc(100vh - 64px)', background:C.bg }}>
       {/* Sub-nav rail */}
       <aside style={{ width:230, background:C.white, borderRight:`1px solid ${C.border}`, padding:'20px 0', flexShrink:0 }}>
+        <Link to="/portal" style={{ display:'flex', alignItems:'center', gap:8, margin:'0 16px 14px', padding:'10px 12px', background:C.primary, color:'#fff', borderRadius:6, fontSize:13, fontWeight:600, textDecoration:'none' }}>
+          <ArrowLeft size={16}/> Back to Dashboard
+        </Link>
         <div style={{ padding:'0 20px 14px', fontSize:11, textTransform:'uppercase', letterSpacing:0.6, color:C.muted, fontWeight:700 }}>Account</div>
         {TABS.map(t => (
           <button key={t.key} onClick={()=>setTab(t.key)}
@@ -752,6 +758,7 @@ const Account: React.FC<{ onBackToDashboard?:()=>void }> = () => {
         {tab==='announcements' && <AnnouncementsPanel/>}
       </main>
     </div>
+    </PortalLayout>
   );
 };
 
