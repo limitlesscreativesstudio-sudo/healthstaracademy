@@ -486,15 +486,18 @@ const SortableModule = ({
                   {isInstructor ? "No items — drag an item here or click Add item." : "No items in this module."}
                 </div>
               ) : (
-                items.map((i: ModuleItem) => (
+                items.map((i: ModuleItem, idx2: number) => (
                   <SortableItem
                     key={i.id} item={i} courseId={courseId} isInstructor={isInstructor}
                     otherModules={otherModules}
+                    isFirst={idx2 === 0}
+                    isLast={idx2 === items.length - 1}
                     onTogglePublish={() => onToggleItemPublish(i)}
                     onEdit={() => onEditItem(i)}
                     onDelete={() => onDeleteItem(i)}
                     onDuplicate={() => onDuplicateItem(i)}
                     onMoveTo={(targetId: string) => onMoveItem(i, targetId)}
+                    onMoveWithin={(where: "up" | "down" | "top" | "bottom") => onMoveItemWithin(i, where)}
                   />
                 ))
               )}
