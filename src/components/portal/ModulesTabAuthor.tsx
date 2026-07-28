@@ -383,7 +383,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
 const SortableModule = ({
   module: m, items, allModules, collapsed, isInstructor, courseId,
   onToggleCollapse, onTogglePublish, onEdit, onDelete, onAddItem,
-  onEditItem, onDeleteItem, onToggleItemPublish, onMoveItem, onMoveModule,
+  onEditItem, onDeleteItem, onToggleItemPublish, onDuplicateItem, onMoveItem, onMoveModule,
 }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: m.id,
