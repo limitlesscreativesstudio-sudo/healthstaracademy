@@ -25,12 +25,13 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
-  DragEndEvent,
+  DragEndEvent, useDroppable,
 } from "@dnd-kit/core";
 import {
   SortableContext, useSortable, verticalListSortingStrategy, arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+
 
 type Module = { id: string; title: string; position: number; published: boolean };
 type ModuleItem = {
@@ -124,34 +125,86 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
     load();
   };
 
-  // ----- Drag handlers -----
-  const onDragModules = async (e: DragEndEvent) => {
+  // ----- Unified drag handler (modules + cross-module items) -----
+  const onDragEnd = async (e: DragEndEvent) => {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
-    const oldIdx = modules.findIndex(m => m.id === active.id);
-    const newIdx = modules.findIndex(m => m.id === over.id);
-    const next = arrayMove(modules, oldIdx, newIdx);
-    setModules(next);
-    await Promise.all(next.map((m, i) =>
-      supabase.from("modules").update({ position: i }).eq("id", m.id)
-    ));
+
+    const activeData: any = active.data.current;
+    const overData: any = over.data.current;
+    const activeType = activeData?.type;
+
+    // --- Module reorder ---
+    if (activeType === "module") {
+      const oldIdx = modules.findIndex(m => m.id === active.id);
+      const newIdx = modules.findIndex(m => m.id === over.id);
+      if (oldIdx < 0 || newIdx < 0) return;
+      const next = arrayMove(modules, oldIdx, newIdx);
+      setModules(next);
+      await Promise.all(next.map((m, i) =>
+        supabase.from("modules").update({ position: i }).eq("id", m.id)
+      ));
+      return;
+    }
+
+    // --- Item drag (within or across modules) ---
+    if (activeType === "item") {
+      const sourceModuleId = activeData.moduleId as string;
+      // Determine target module: either dropped on another item, on a module header, or on a module drop zone
+      let targetModuleId: string | undefined;
+      let targetItemId: string | undefined;
+      if (overData?.type === "item") {
+        targetModuleId = overData.moduleId;
+        targetItemId = over.id as string;
+      } else if (overData?.type === "module" || overData?.type === "module-dropzone") {
+        targetModuleId = (overData.moduleId as string) ?? (over.id as string);
+      } else {
+        return;
+      }
+      if (!targetModuleId) return;
+
+      // Same module → reorder
+      if (sourceModuleId === targetModuleId) {
+        const within = items.filter(i => i.module_id === sourceModuleId);
+        const oldIdx = within.findIndex(i => i.id === active.id);
+        const newIdx = targetItemId
+          ? within.findIndex(i => i.id === targetItemId)
+          : within.length - 1;
+        if (oldIdx < 0 || newIdx < 0 || oldIdx === newIdx) return;
+        const reordered = arrayMove(within, oldIdx, newIdx);
+        const others = items.filter(i => i.module_id !== sourceModuleId);
+        setItems([...others, ...reordered]);
+        await Promise.all(reordered.map((i, idx) =>
+          supabase.from("module_items").update({ position: idx }).eq("id", i.id)
+        ));
+        return;
+      }
+
+      // Cross-module move
+      const source = items.filter(i => i.module_id === sourceModuleId && i.id !== active.id);
+      const target = items.filter(i => i.module_id === targetModuleId);
+      const moved = items.find(i => i.id === active.id);
+      if (!moved) return;
+      const insertIdx = targetItemId
+        ? target.findIndex(i => i.id === targetItemId)
+        : target.length;
+      const nextTarget = [...target.slice(0, insertIdx), { ...moved, module_id: targetModuleId }, ...target.slice(insertIdx)];
+      const others = items.filter(i => i.module_id !== sourceModuleId && i.module_id !== targetModuleId);
+      setItems([...others, ...source.map((i, idx) => ({ ...i, position: idx })), ...nextTarget.map((i, idx) => ({ ...i, position: idx }))]);
+
+      // Persist: update moved row's module_id, then rewrite positions in both modules
+      await supabase.from("module_items").update({ module_id: targetModuleId }).eq("id", moved.id);
+      await Promise.all([
+        ...source.map((i, idx) => supabase.from("module_items").update({ position: idx }).eq("id", i.id)),
+        ...nextTarget.map((i, idx) => supabase.from("module_items").update({ position: idx }).eq("id", i.id)),
+      ]);
+      const targetTitle = modules.find(m => m.id === targetModuleId)?.title ?? "module";
+      toast({ title: "Item moved", description: `Moved to "${targetTitle}".` });
+      load();
+    }
   };
 
-  const onDragItems = async (moduleId: string, e: DragEndEvent) => {
-    const { active, over } = e;
-    if (!over || active.id === over.id) return;
-    const within = items.filter(i => i.module_id === moduleId);
-    const oldIdx = within.findIndex(i => i.id === active.id);
-    const newIdx = within.findIndex(i => i.id === over.id);
-    const reordered = arrayMove(within, oldIdx, newIdx);
-    const others = items.filter(i => i.module_id !== moduleId);
-    setItems([...others, ...reordered]);
-    await Promise.all(reordered.map((i, idx) =>
-      supabase.from("module_items").update({ position: idx }).eq("id", i.id)
-    ));
-  };
-
-  // ----- Move item to another module -----
+  // ----- Move item to another module (dropdown fallback) -----
   const moveItemToModule = async (item: ModuleItem, targetModuleId: string) => {
     if (item.module_id === targetModuleId) return;
     const targetCount = items.filter(i => i.module_id === targetModuleId).length;
@@ -184,6 +237,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
       supabase.from("modules").update({ position: i }).eq("id", mm.id)
     ));
   };
+
 
   if (loading) return <div className="text-sm text-muted-foreground p-4">Loading modules…</div>;
 
@@ -248,7 +302,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
           </CardContent>
         </Card>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragModules}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={modules.map(m => m.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-3">
               {modules.map(m => (
@@ -269,14 +323,13 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
                   onToggleItemPublish={togglePublishItem}
                   onMoveItem={moveItemToModule}
                   onMoveModule={(where: "up" | "down" | "top" | "bottom") => moveModule(m, where)}
-                  onDragItems={(e: DragEndEvent) => onDragItems(m.id, e)}
-                  sensors={sensors}
                 />
               ))}
             </div>
           </SortableContext>
         </DndContext>
       )}
+
 
       <ModuleDialog
         open={moduleDlg.open}
@@ -313,10 +366,18 @@ const SortableModule = ({
   module: m, items, allModules, collapsed, isInstructor, courseId,
   onToggleCollapse, onTogglePublish, onEdit, onDelete, onAddItem,
   onEditItem, onDeleteItem, onToggleItemPublish, onMoveItem, onMoveModule,
-  onDragItems, sensors,
 }: any) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: m.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: m.id,
+    data: { type: "module", moduleId: m.id },
+  });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  // Droppable zone for the module body — receives cross-module item drops (empty modules + end of list)
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: `module-drop-${m.id}`,
+    data: { type: "module-dropzone", moduleId: m.id },
+  });
 
   const otherModules = (allModules as Module[]).filter(x => x.id !== m.id);
   const idx = (allModules as Module[]).findIndex(x => x.id === m.id);
@@ -327,7 +388,7 @@ const SortableModule = ({
     <Card ref={setNodeRef} style={style}>
       <div className="px-3 py-2 border-b border-border bg-muted/40 flex items-center gap-2">
         {isInstructor && (
-          <button {...attributes} {...listeners} className="cursor-grab p-1 hover:bg-muted rounded" title="Drag to reorder">
+          <button {...attributes} {...listeners} className="cursor-grab p-1 hover:bg-muted rounded" title="Drag to reorder module">
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </button>
         )}
@@ -377,12 +438,14 @@ const SortableModule = ({
 
       {!collapsed && (
         <CardContent className="p-0">
-          {items.length === 0 ? (
-            <div className="p-4 text-sm text-muted-foreground italic">No items in this module.</div>
-          ) : (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragItems}>
-              <SortableContext items={items.map((i: ModuleItem) => i.id)} strategy={verticalListSortingStrategy}>
-                {items.map((i: ModuleItem) => (
+          <div ref={setDropRef} className={isOver ? "bg-purple/5 ring-2 ring-purple/40 ring-inset" : ""}>
+            <SortableContext items={items.map((i: ModuleItem) => i.id)} strategy={verticalListSortingStrategy}>
+              {items.length === 0 ? (
+                <div className="p-4 text-sm text-muted-foreground italic">
+                  {isInstructor ? "No items — drag an item here or click Add item." : "No items in this module."}
+                </div>
+              ) : (
+                items.map((i: ModuleItem) => (
                   <SortableItem
                     key={i.id} item={i} courseId={courseId} isInstructor={isInstructor}
                     otherModules={otherModules}
@@ -391,10 +454,10 @@ const SortableModule = ({
                     onDelete={() => onDeleteItem(i)}
                     onMoveTo={(targetId: string) => onMoveItem(i, targetId)}
                   />
-                ))}
-              </SortableContext>
-            </DndContext>
-          )}
+                ))
+              )}
+            </SortableContext>
+          </div>
           {isInstructor && (
             <div className="border-t border-border bg-muted/20 px-3 py-2 flex gap-2">
               <Button size="sm" variant="ghost" onClick={onAddItem}>
@@ -408,10 +471,15 @@ const SortableModule = ({
   );
 };
 
+
 // ============ Sortable Item ============
 const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onTogglePublish, onEdit, onDelete, onMoveTo }: any) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: i.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: i.id,
+    data: { type: "item", moduleId: i.module_id },
+  });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
 
   const isHeader = i.item_type === "header";
   const to = `/portal/courses/${courseId}/modules/${i.id}`;
