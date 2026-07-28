@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import ContentViewer, { type ContentSource } from "@/components/portal/ContentViewer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,7 @@ type ModuleItem = {
   id: string; module_id: string; title: string; item_type: string;
   content_ref: string | null; url: string | null; position: number; published: boolean;
   indent?: number | null;
+  description?: string | null;
 };
 
 const ITEM_TYPES = [
@@ -64,6 +66,11 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [allCollapsed, setAllCollapsed] = useState(false);
+  const [fileMap, setFileMap] = useState<Record<string, { url: string; name: string; type: string }>>({});
+  const [pageMap, setPageMap] = useState<Record<string, { title: string; body: string }>>({});
+  const [discussionMap, setDiscussionMap] = useState<Record<string, { title: string; body: string }>>({});
+  const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type?: string } | null>(null);
+  const [pageView, setPageView] = useState<{ title: string; body: string } | null>(null);
 
   // dialogs
   const [moduleDlg, setModuleDlg] = useState<{ open: boolean; module?: Module }>({ open: false });
@@ -84,14 +91,36 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
     const sortedMods = (mods ?? []).sort((a, b) => a.position - b.position);
     setModules(sortedMods);
     const ids = (mods ?? []).map(m => m.id);
+    let allItems: ModuleItem[] = [];
     if (ids.length) {
       let itQuery = supabase.from("module_items").select("*").in("module_id", ids).order("position");
       if (!isInstructor) itQuery = itQuery.eq("published", true);
       const { data: its } = await itQuery;
-      setItems((its ?? []).sort((a, b) => a.position - b.position));
+      allItems = ((its ?? []) as any[]).sort((a, b) => a.position - b.position);
+      setItems(allItems);
     } else {
       setItems([]);
     }
+
+    // Preload lookup maps for smart routing (files, pages, discussions)
+    const fileRefs = Array.from(new Set(allItems.filter(i => i.item_type === "file" && i.content_ref).map(i => i.content_ref!)));
+    const pageRefs = Array.from(new Set(allItems.filter(i => i.item_type === "page" && i.content_ref).map(i => i.content_ref!)));
+    const discRefs = Array.from(new Set(allItems.filter(i => i.item_type === "discussion" && i.content_ref).map(i => i.content_ref!)));
+    const [fRes, pRes, dRes] = await Promise.all([
+      fileRefs.length ? supabase.from("lms_files").select("id, file_url, file_name, name, file_type").in("id", fileRefs) : Promise.resolve({ data: [] as any[] }),
+      pageRefs.length ? supabase.from("lms_pages").select("id, title, body_html").in("id", pageRefs) : Promise.resolve({ data: [] as any[] }),
+      discRefs.length ? supabase.from("discussions").select("id, title, body").in("id", discRefs) : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const fMap: Record<string, { url: string; name: string; type: string }> = {};
+    ((fRes as any).data ?? []).forEach((r: any) => { fMap[r.id] = { url: r.file_url, name: r.name || r.file_name || "File", type: r.file_type || "" }; });
+    setFileMap(fMap);
+    const pMap: Record<string, { title: string; body: string }> = {};
+    ((pRes as any).data ?? []).forEach((r: any) => { pMap[r.id] = { title: r.title, body: r.body_html || "" }; });
+    setPageMap(pMap);
+    const dMap: Record<string, { title: string; body: string }> = {};
+    ((dRes as any).data ?? []).forEach((r: any) => { dMap[r.id] = { title: r.title, body: r.body || "" }; });
+    setDiscussionMap(dMap);
+
     setLoading(false);
   };
 
@@ -363,6 +392,11 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
                   collapsed={collapsed.has(m.id)}
                   isInstructor={isInstructor}
                   courseId={courseId}
+                  fileMap={fileMap}
+                  pageMap={pageMap}
+                  discussionMap={discussionMap}
+                  onOpenFile={(src, name, type) => setViewer({ src, name, type })}
+                  onOpenPage={(p) => setPageView(p)}
                   onToggleCollapse={() => toggleCollapse(m.id)}
                   onTogglePublish={() => togglePublishModule(m)}
                   onEdit={() => setModuleDlg({ open: true, module: m })}
@@ -376,6 +410,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
                   onMoveItemWithin={moveItemWithin}
                   onMoveModule={(where: "up" | "down" | "top" | "bottom") => moveModule(m, where)}
                 />
+
               ))}
             </div>
           </SortableContext>
@@ -410,6 +445,21 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
           onClose={() => setProgressOpen(false)}
         />
       )}
+      <ContentViewer
+        open={!!viewer}
+        onClose={() => setViewer(null)}
+        source={viewer?.src ?? null}
+        fileName={viewer?.name}
+        fileType={viewer?.type}
+      />
+      <Dialog open={!!pageView} onOpenChange={(o) => !o && setPageView(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{pageView?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: pageView?.body || "<p class='text-muted-foreground'>Empty page.</p>" }} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -417,6 +467,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
 // ============ Sortable Module ============
 const SortableModule = ({
   module: m, items, allModules, collapsed, isInstructor, courseId,
+  fileMap, pageMap, discussionMap, onOpenFile, onOpenPage,
   onToggleCollapse, onTogglePublish, onEdit, onDelete, onAddItem,
   onEditItem, onDeleteItem, onToggleItemPublish, onDuplicateItem, onMoveItem, onMoveItemWithin, onMoveModule,
 }: any) => {
@@ -507,6 +558,11 @@ const SortableModule = ({
                   <SortableItem
                     key={i.id} item={i} courseId={courseId} isInstructor={isInstructor}
                     otherModules={otherModules}
+                    fileMap={fileMap}
+                    pageMap={pageMap}
+                    discussionMap={discussionMap}
+                    onOpenFile={onOpenFile}
+                    onOpenPage={onOpenPage}
                     isFirst={idx2 === 0}
                     isLast={idx2 === items.length - 1}
                     onTogglePublish={() => onToggleItemPublish(i)}
@@ -516,6 +572,7 @@ const SortableModule = ({
                     onMoveTo={(targetId: string) => onMoveItem(i, targetId)}
                     onMoveWithin={(where: "up" | "down" | "top" | "bottom") => onMoveItemWithin(i, where)}
                   />
+
                 ))
               )}
             </SortableContext>
@@ -535,7 +592,8 @@ const SortableModule = ({
 
 
 // ============ Sortable Item ============
-const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin }: any) => {
+const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, pageMap, discussionMap, onOpenFile, onOpenPage, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin }: any) => {
+  const navigate = useNavigate();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: i.id,
     data: { type: "item", moduleId: i.module_id },
@@ -543,9 +601,35 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, 
   const indent = Math.max(0, Math.min(5, Number(i.indent ?? 0)));
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, paddingLeft: `${12 + indent * 24}px` };
 
-
   const isHeader = i.item_type === "header";
-  const to = `/portal/courses/${courseId}/modules/${i.id}`;
+
+  const openItem = () => {
+    const t = i.item_type;
+    if (t === "assignment" && i.content_ref) return navigate(`/portal/courses/${courseId}/assignments/${i.content_ref}`);
+    if (t === "quiz" && i.content_ref) return navigate(`/portal/courses/${courseId}/quizzes/${i.content_ref}`);
+    if ((t === "link" || t === "video" || t === "external_tool") && i.url) return window.open(i.url, "_blank", "noopener,noreferrer");
+    if (t === "file") {
+      const f = fileMap?.[i.content_ref];
+      const fileUrl = f?.url || i.url || i.file_url;
+      if (!fileUrl) return toast({ title: "File not found", variant: "destructive" });
+      // Try inline viewer via storage path if pointing to course-files bucket, else new tab
+      const parts = fileUrl.split("/course-files/");
+      if (parts.length === 2) {
+        return onOpenFile?.({ bucket: "course-files", path: decodeURIComponent(parts[1].split("?")[0]) }, f?.name || i.title, f?.type || "");
+      }
+      return onOpenFile?.({ url: fileUrl }, f?.name || i.title, f?.type || "");
+    }
+    if (t === "page") {
+      const p = pageMap?.[i.content_ref];
+      return onOpenPage?.(p ?? { title: i.title, body: "" });
+    }
+    if (t === "discussion") {
+      const d = discussionMap?.[i.content_ref];
+      return onOpenPage?.(d ?? { title: i.title, body: "" });
+    }
+    if (i.url) return window.open(i.url, "_blank", "noopener,noreferrer");
+    toast({ title: "Nothing to open for this item" });
+  };
 
   return (
     <div
@@ -561,7 +645,10 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, 
       {isHeader ? (
         <div className="flex-1 text-sm font-bold uppercase tracking-wide text-muted-foreground select-none">{i.title}</div>
       ) : (
-        <Link to={to} className="flex-1 text-sm hover:underline">{i.title}</Link>
+        <button type="button" onClick={openItem} className="flex-1 text-left text-sm hover:underline">
+          {i.title}
+          {i.description ? <div className="text-xs text-muted-foreground font-normal mt-0.5 line-clamp-1">{i.description}</div> : null}
+        </button>
       )}
       {isInstructor && !i.published && (
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1 py-0.5">Hidden</span>
@@ -676,6 +763,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
   const [url, setUrl] = useState("");
   const [published, setPublished] = useState(true);
   const [indent, setIndent] = useState<number>(0);
+  const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [fileSource, setFileSource] = useState<"existing" | "upload" | "drive" | "url">("existing");
   const [driveUrl, setDriveUrl] = useState("");
@@ -709,8 +797,10 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
       setType(item.item_type); setTitle(item.title);
       setContentRef(item.content_ref ?? ""); setUrl(item.url ?? "");
       setPublished(item.published); setIndent(Number(item.indent ?? 0));
+      setDescription(item.description ?? "");
     } else {
       setType("assignment"); setTitle(""); setContentRef(""); setUrl(""); setPublished(true); setIndent(0);
+      setDescription("");
     }
     setFileSource("existing"); setDriveUrl(""); setUploadFile(null); setUploadPct(0);
     reloadPickers();
@@ -839,6 +929,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
 
     const payload: any = {
       module_id: moduleId, title: title.trim(), item_type: type, published, indent,
+      description: description.trim() || null,
       content_ref: finalContentRef,
       url: ["link", "video", "external_tool"].includes(type) ? (url || null) : null,
     };
@@ -872,7 +963,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {item ? "Edit Item" : `Add Item to ${moduleTitle || "Module"}`}
@@ -1019,6 +1110,17 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
                 <SelectItem value="5">Indent 5 Levels</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label>Description / Notes (optional)</Label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Add context, instructions, or notes that appear under the item title…"
+              rows={5}
+              className="min-h-[120px] resize-y"
+            />
           </div>
 
           <label className="flex items-center gap-2 text-sm">
