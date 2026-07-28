@@ -124,34 +124,86 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
     load();
   };
 
-  // ----- Drag handlers -----
-  const onDragModules = async (e: DragEndEvent) => {
+  // ----- Unified drag handler (modules + cross-module items) -----
+  const onDragEnd = async (e: DragEndEvent) => {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
-    const oldIdx = modules.findIndex(m => m.id === active.id);
-    const newIdx = modules.findIndex(m => m.id === over.id);
-    const next = arrayMove(modules, oldIdx, newIdx);
-    setModules(next);
-    await Promise.all(next.map((m, i) =>
-      supabase.from("modules").update({ position: i }).eq("id", m.id)
-    ));
+
+    const activeData: any = active.data.current;
+    const overData: any = over.data.current;
+    const activeType = activeData?.type;
+
+    // --- Module reorder ---
+    if (activeType === "module") {
+      const oldIdx = modules.findIndex(m => m.id === active.id);
+      const newIdx = modules.findIndex(m => m.id === over.id);
+      if (oldIdx < 0 || newIdx < 0) return;
+      const next = arrayMove(modules, oldIdx, newIdx);
+      setModules(next);
+      await Promise.all(next.map((m, i) =>
+        supabase.from("modules").update({ position: i }).eq("id", m.id)
+      ));
+      return;
+    }
+
+    // --- Item drag (within or across modules) ---
+    if (activeType === "item") {
+      const sourceModuleId = activeData.moduleId as string;
+      // Determine target module: either dropped on another item, on a module header, or on a module drop zone
+      let targetModuleId: string | undefined;
+      let targetItemId: string | undefined;
+      if (overData?.type === "item") {
+        targetModuleId = overData.moduleId;
+        targetItemId = over.id as string;
+      } else if (overData?.type === "module" || overData?.type === "module-dropzone") {
+        targetModuleId = (overData.moduleId as string) ?? (over.id as string);
+      } else {
+        return;
+      }
+      if (!targetModuleId) return;
+
+      // Same module → reorder
+      if (sourceModuleId === targetModuleId) {
+        const within = items.filter(i => i.module_id === sourceModuleId);
+        const oldIdx = within.findIndex(i => i.id === active.id);
+        const newIdx = targetItemId
+          ? within.findIndex(i => i.id === targetItemId)
+          : within.length - 1;
+        if (oldIdx < 0 || newIdx < 0 || oldIdx === newIdx) return;
+        const reordered = arrayMove(within, oldIdx, newIdx);
+        const others = items.filter(i => i.module_id !== sourceModuleId);
+        setItems([...others, ...reordered]);
+        await Promise.all(reordered.map((i, idx) =>
+          supabase.from("module_items").update({ position: idx }).eq("id", i.id)
+        ));
+        return;
+      }
+
+      // Cross-module move
+      const source = items.filter(i => i.module_id === sourceModuleId && i.id !== active.id);
+      const target = items.filter(i => i.module_id === targetModuleId);
+      const moved = items.find(i => i.id === active.id);
+      if (!moved) return;
+      const insertIdx = targetItemId
+        ? target.findIndex(i => i.id === targetItemId)
+        : target.length;
+      const nextTarget = [...target.slice(0, insertIdx), { ...moved, module_id: targetModuleId }, ...target.slice(insertIdx)];
+      const others = items.filter(i => i.module_id !== sourceModuleId && i.module_id !== targetModuleId);
+      setItems([...others, ...source.map((i, idx) => ({ ...i, position: idx })), ...nextTarget.map((i, idx) => ({ ...i, position: idx }))]);
+
+      // Persist: update moved row's module_id, then rewrite positions in both modules
+      await supabase.from("module_items").update({ module_id: targetModuleId }).eq("id", moved.id);
+      await Promise.all([
+        ...source.map((i, idx) => supabase.from("module_items").update({ position: idx }).eq("id", i.id)),
+        ...nextTarget.map((i, idx) => supabase.from("module_items").update({ position: idx }).eq("id", i.id)),
+      ]);
+      const targetTitle = modules.find(m => m.id === targetModuleId)?.title ?? "module";
+      toast({ title: "Item moved", description: `Moved to "${targetTitle}".` });
+      load();
+    }
   };
 
-  const onDragItems = async (moduleId: string, e: DragEndEvent) => {
-    const { active, over } = e;
-    if (!over || active.id === over.id) return;
-    const within = items.filter(i => i.module_id === moduleId);
-    const oldIdx = within.findIndex(i => i.id === active.id);
-    const newIdx = within.findIndex(i => i.id === over.id);
-    const reordered = arrayMove(within, oldIdx, newIdx);
-    const others = items.filter(i => i.module_id !== moduleId);
-    setItems([...others, ...reordered]);
-    await Promise.all(reordered.map((i, idx) =>
-      supabase.from("module_items").update({ position: idx }).eq("id", i.id)
-    ));
-  };
-
-  // ----- Move item to another module -----
+  // ----- Move item to another module (dropdown fallback) -----
   const moveItemToModule = async (item: ModuleItem, targetModuleId: string) => {
     if (item.module_id === targetModuleId) return;
     const targetCount = items.filter(i => i.module_id === targetModuleId).length;
@@ -184,6 +236,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
       supabase.from("modules").update({ position: i }).eq("id", mm.id)
     ));
   };
+
 
   if (loading) return <div className="text-sm text-muted-foreground p-4">Loading modules…</div>;
 
