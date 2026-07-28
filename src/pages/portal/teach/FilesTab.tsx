@@ -82,10 +82,12 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     const { error: upErr } = await uploadViaXhr('course-files', path, blob as any);
     if (upErr) return setError(upErr.message);
     const { data: { publicUrl } } = supabase.storage.from('course-files').getPublicUrl(path);
-    const { data: row } = await supabase.from('lms_files').insert({
-      course_id: courseId, file_name: filename, file_url: publicUrl,
+    const { data: row, error: insErr } = await supabase.from('lms_files').insert({
+      course_id: courseId, name: filename, file_name: filename, file_url: publicUrl,
       file_type: 'txt', file_size: blob.size, folder: selFolder,
+      mime_type: 'text/plain', size_bytes: blob.size, storage_path: path,
     }).select().single();
+    if (insErr) { setError(insErr.message); return; }
     if (row) setFiles(p => [row as any, ...p]);
   };
 
