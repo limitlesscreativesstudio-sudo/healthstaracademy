@@ -58,28 +58,37 @@ const AgentsHub = () => {
   const [runs, setRuns] = useState<Run[]>([]);
   const [posts, setPosts] = useState<GbpPost[]>([]);
   const [drafts, setDrafts] = useState<BlogDraft[]>([]);
+  const [comparePages, setComparePages] = useState<CompetitorPage[]>([]);
+  const [schools, setSchools] = useState<CompetitorSchool[]>([]);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState<string | null>(null);
-  const [tab, setTab] = useState<"findings" | "runs" | "chat" | "gbp" | "blog">("blog");
+  const [tab, setTab] = useState<"findings" | "runs" | "chat" | "gbp" | "blog" | "compare">("blog");
   const [chatAgent, setChatAgent] = useState<"advocate" | "mentor">("mentor");
   const [editing, setEditing] = useState<BlogDraft | null>(null);
   const [saving, setSaving] = useState(false);
   const [scribeAutoPublish, setScribeAutoPublish] = useState(false);
+  const [scoutAutoPublish, setScoutAutoPublish] = useState(false);
   const [savingAuto, setSavingAuto] = useState(false);
 
   const load = async () => {
-    const [{ data: f }, { data: r }, { data: g }, { data: b }, { data: cfg }] = await Promise.all([
+    const [{ data: f }, { data: r }, { data: g }, { data: b }, { data: cfg }, { data: cfg2 }, { data: cp }, { data: sc }] = await Promise.all([
       supabase.from("agent_findings").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(50),
       supabase.from("agent_runs").select("*").order("started_at", { ascending: false }).limit(20),
       supabase.from("gbp_posts").select("*").order("created_at", { ascending: false }).limit(10),
       supabase.from("blog_drafts").select("*").order("created_at", { ascending: false }).limit(50),
       supabase.from("agent_config").select("auto_publish").eq("agent", "scribe").maybeSingle(),
+      supabase.from("agent_config").select("auto_publish").eq("agent", "scout").maybeSingle(),
+      (supabase as any).from("competitor_pages").select("*").order("created_at", { ascending: false }).limit(50),
+      (supabase as any).from("competitor_schools").select("id,slug,name,is_hsa").order("name"),
     ]);
     setFindings((f ?? []) as Finding[]);
     setRuns((r ?? []) as Run[]);
     setPosts((g ?? []) as GbpPost[]);
     setDrafts((b ?? []) as BlogDraft[]);
+    setComparePages((cp ?? []) as CompetitorPage[]);
+    setSchools((sc ?? []) as CompetitorSchool[]);
     setScribeAutoPublish(!!cfg?.auto_publish);
+    setScoutAutoPublish(!!cfg2?.auto_publish);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
