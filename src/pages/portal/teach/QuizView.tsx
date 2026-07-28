@@ -41,6 +41,23 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
   const [viewing, setViewing] = useState<Quiz & { attempts_allowed?: number; time_limit_minutes?: number | null } | null>(null);
   const [viewQCount, setViewQCount] = useState(0);
   const saveTimer = useRef<any>(null);
+  const retryTimer = useRef<any>(null);
+  const retryAttempt = useRef<number>(0);
+  const inFlight = useRef<boolean>(false);
+  const answersRef = useRef<Record<string, any>>({});
+  const draftKey = (quizId?: string) => (user?.id && quizId ? `hsa_quiz_draft_${quizId}_${user.id}` : null);
+  const loadLocalDraft = (quizId: string): Record<string, any> | null => {
+    const k = draftKey(quizId); if (!k) return null;
+    try { const raw = localStorage.getItem(k); return raw ? JSON.parse(raw) : null; } catch { return null; }
+  };
+  const writeLocalDraft = (quizId: string, val: Record<string, any>) => {
+    const k = draftKey(quizId); if (!k) return;
+    try { localStorage.setItem(k, JSON.stringify(val)); } catch { /* quota */ }
+  };
+  const clearLocalDraft = (quizId: string) => {
+    const k = draftKey(quizId); if (!k) return;
+    try { localStorage.removeItem(k); } catch { /* ignore */ }
+  };
 
   const openDetails = async (q: Quiz) => {
     const { data: full } = await supabase.from('quizzes').select('*').eq('id', q.id).maybeSingle();
@@ -104,8 +121,13 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
   const startTake = async (q: Quiz) => {
     setTaking(q);
     setResults(null);
-    setAnswers({});
     setAttemptId(null);
+    setSaveState('idle');
+    setLastSavedAt(null);
+    retryAttempt.current = 0;
+    const local = loadLocalDraft(q.id) ?? {};
+    setAnswers(local);
+    answersRef.current = local;
     const qs = await loadQuestions(q.id);
     setAttemptQs(qs);
     if (!user?.id) return;
@@ -115,33 +137,61 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
       .order('started_at', { ascending:false }).limit(1).maybeSingle();
     if (open) {
       setAttemptId(open.id);
-      setAnswers((open.answers as any) ?? {});
+      // Merge server + local, preferring the most recently edited (local) values.
+      const merged = { ...(open.answers as any || {}), ...local };
+      setAnswers(merged);
+      answersRef.current = merged;
+      writeLocalDraft(q.id, merged);
       toast.info('Resumed your in-progress attempt');
     } else {
       const { data: made } = await supabase.from('quiz_attempts').insert({
-        quiz_id: q.id, user_id: user.id, answers: {}, started_at: new Date().toISOString(),
+        quiz_id: q.id, user_id: user.id, answers: local, started_at: new Date().toISOString(),
       }).select('id').single();
       if (made) setAttemptId(made.id);
     }
   };
 
-  // Debounced autosave of in-progress answers
-  useEffect(() => {
-    if (!attemptId || !taking || results) return;
+  const flushSave = async () => {
+    if (!attemptId || inFlight.current) return;
+    const snapshot = answersRef.current;
+    inFlight.current = true;
     setSaveState('saving');
+    const { error } = await supabase.from('quiz_attempts').update({ answers: snapshot }).eq('id', attemptId);
+    inFlight.current = false;
+    if (error) {
+      setSaveState('error');
+      retryAttempt.current += 1;
+      // Exponential backoff: 2s, 4s, 8s, capped at 30s.
+      const delay = Math.min(30000, 2000 * Math.pow(2, retryAttempt.current - 1));
+      if (retryTimer.current) clearTimeout(retryTimer.current);
+      retryTimer.current = setTimeout(flushSave, delay);
+    } else {
+      retryAttempt.current = 0;
+      setSaveState('saved');
+      setLastSavedAt(new Date());
+    }
+  };
+
+  // Persist to localStorage immediately and debounce the server save.
+  useEffect(() => {
+    if (!taking || results) return;
+    answersRef.current = answers;
+    writeLocalDraft(taking.id, answers);
+    if (!attemptId) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      const { error } = await supabase.from('quiz_attempts').update({ answers }).eq('id', attemptId);
-      if (error) {
-        setSaveState('error');
-        toast.error('Could not save your progress — check your connection.');
-      } else {
-        setSaveState('saved');
-        setLastSavedAt(new Date());
-      }
-    }, 700);
+    saveTimer.current = setTimeout(flushSave, 700);
     return () => saveTimer.current && clearTimeout(saveTimer.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answers, attemptId, taking, results]);
+
+  // Retry pending saves when the browser comes back online.
+  useEffect(() => {
+    if (!taking || results) return;
+    const onOnline = () => { if (saveState === 'error') flushSave(); };
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taking, results, saveState, attemptId]);
 
   const createQuiz = async () => {
     if (!createForm.title.trim() || !courseId) return;
@@ -215,6 +265,7 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
       answers, score, max_score: max, submitted_at: new Date().toISOString(),
     }).eq('id', attemptId);
     if (error) return toast.error('Could not submit');
+    clearLocalDraft(taking.id);
     setResults({ score, max, perQ });
     setAttemptedIds(s => new Set(s).add(taking.id));
     toast.success('Quiz submitted');
@@ -449,20 +500,29 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
           </aside>
         )}
 
-        {!results && attemptQs.length > 0 && (
-          <div style={{ position:'fixed', left:0, right:0, bottom:0, background:C.white, borderTop:`1px solid ${C.border}`, padding:'10px 20px', display:'flex', justifyContent:'flex-end', alignItems:'center', gap:12, boxShadow:'0 -2px 8px rgba(0,0,0,.05)', zIndex:20 }}>
-            <span style={{ fontSize:12, color: saveState === 'error' ? C.error : C.muted }}>
-              {saveState === 'saving'
-                ? 'Saving…'
-                : saveState === 'error'
-                ? '⚠ Save failed — retrying on next change'
-                : lastSavedAt
-                ? `No new data to save. Last checked at ${lastSavedAt.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })}`
-                : 'Autosave ready — your progress will be saved as you answer'}
-            </span>
-            <button onClick={submitAttempt} style={{ padding:'8px 22px', border:'none', borderRadius:4, background:C.primary, color:'white', fontSize:13, fontWeight:600, cursor:'pointer' }}>Submit Quiz</button>
-          </div>
-        )}
+        {!results && attemptQs.length > 0 && (() => {
+          const pill = saveState === 'saving'
+            ? { bg:'#F1EEF9', fg:C.primary, dot:'●', label:'Saving…' }
+            : saveState === 'error'
+            ? { bg:'#FDECEA', fg:C.error, dot:'⚠', label:`Save failed — retrying${retryAttempt.current>0?` (attempt ${retryAttempt.current})`:''}` }
+            : lastSavedAt
+            ? { bg:'#E8F5E9', fg:C.success, dot:'✓', label:`Saved ${lastSavedAt.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })}` }
+            : { bg:'#F1EEF9', fg:C.muted, dot:'○', label:'Autosave ready' };
+          return (
+            <div style={{ position:'fixed', left:0, right:0, bottom:0, background:C.white, borderTop:`1px solid ${C.border}`, padding:'10px 20px', display:'flex', justifyContent:'flex-end', alignItems:'center', gap:12, boxShadow:'0 -2px 8px rgba(0,0,0,.05)', zIndex:20 }}>
+              <span style={{ fontSize:12, padding:'4px 10px', borderRadius:20, background:pill.bg, color:pill.fg, fontWeight:600, display:'inline-flex', alignItems:'center', gap:6 }}>
+                <span>{pill.dot}</span>{pill.label}
+              </span>
+              {saveState === 'error' && (
+                <button onClick={() => { retryAttempt.current = 0; flushSave(); }}
+                  style={{ padding:'6px 12px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>
+                  Retry now
+                </button>
+              )}
+              <button onClick={submitAttempt} style={{ padding:'8px 22px', border:'none', borderRadius:4, background:C.primary, color:'white', fontSize:13, fontWeight:600, cursor:'pointer' }}>Submit Quiz</button>
+            </div>
+          );
+        })()}
       </div>
     );
   }
