@@ -54,7 +54,8 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
       const file = fileList[i];
       setUploadPct(Math.round(((i) / fileList.length) * 100));
       const ext  = file.name.split('.').pop() ?? '';
-      const path = `${courseId}/${Date.now()}_${file.name}`;
+      const safeName = file.name.replace(/[^\w.\-]+/g, '_').replace(/_+/g, '_');
+      const path = `${courseId}/${Date.now()}_${safeName}`;
       const { error: upErr } = await uploadViaXhr('course-files', path, file, { onProgress: (p) => setUploadPct(p) });
       if (upErr) { setError(`Failed to upload ${file.name}: ${upErr.message}`); continue; }
       const { data: { publicUrl } } = supabase.storage.from('course-files').getPublicUrl(path);
