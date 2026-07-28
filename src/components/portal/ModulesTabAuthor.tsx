@@ -690,11 +690,12 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
       supabase.from("assignments").select("id, title").eq("course_id", courseId).order("title"),
       supabase.from("quizzes").select("id, title").eq("course_id", courseId).order("title"),
       supabase.from("lms_pages").select("id, title").eq("course_id", courseId).order("title"),
-      supabase.from("lms_files").select("id, name").eq("course_id", courseId).order("name"),
+      supabase.from("lms_files").select("id, name, file_name").eq("course_id", courseId).order("created_at", { ascending: false }),
       supabase.from("discussions").select("id, title").eq("course_id", courseId).order("title"),
     ]);
     setAssignments(a.data ?? []); setQuizzes(q.data ?? []);
-    setPages(p.data ?? []); setFiles(f.data ?? []);
+    setPages(p.data ?? []);
+    setFiles((f.data ?? []).map((row: any) => ({ id: row.id, name: row.name || row.file_name || "Untitled file" })));
     setDiscussions(d.data ?? []);
   };
 
