@@ -33,7 +33,7 @@ interface AuthContextValue {
   login: (email: string, password: string, chosenRole?: UserRole) => Promise<LoginResult>;
   logout: () => void;
   isAuthenticated: boolean;
-  updateProfile: (name: string) => Promise<UpdateProfileResult>;
+  updateProfile: (fields: { name: string; jobTitle?: string; phone?: string; bio?: string }) => Promise<UpdateProfileResult>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<UpdateProfileResult>;
 }
 
