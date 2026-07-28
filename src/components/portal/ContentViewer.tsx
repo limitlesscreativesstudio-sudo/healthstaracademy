@@ -34,6 +34,32 @@ type Kind = "pdf" | "office" | "video" | "audio" | "image" | "youtube" | "vimeo"
 
 const extOf = (s: string) => (s.split(/[?#]/)[0].split(".").pop() ?? "").toLowerCase();
 
+/**
+ * Rewrite common share URLs to their embeddable equivalents so they render
+ * inline instead of being blocked by X-Frame-Options.
+ *   - Google Drive  /view | /edit  →  /preview
+ *   - Google Docs/Sheets/Slides    →  /preview
+ *   - Dropbox        ?dl=0          →  ?raw=1 (via dl.dropboxusercontent.com)
+ */
+const rewriteEmbeddable = (url: string): string => {
+  try {
+    if (/drive\.google\.com\/file\/d\//.test(url)) {
+      return url.replace(/\/(view|edit)(\?.*)?$/, "/preview");
+    }
+    if (/docs\.google\.com\/(document|spreadsheets|presentation)\//.test(url)) {
+      return url.replace(/\/(edit|view)(\?.*)?$/, "/preview");
+    }
+    if (/dropbox\.com/.test(url)) {
+      return url
+        .replace("www.dropbox.com", "dl.dropboxusercontent.com")
+        .replace(/([?&])dl=0/, "$1raw=1");
+    }
+  } catch {
+    /* noop */
+  }
+  return url;
+};
+
 const detectKind = (url: string, fileName?: string, fileType?: string): Kind => {
   const ft = (fileType ?? "").toLowerCase();
   const ext = extOf(fileName || url);
@@ -64,13 +90,15 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [officeFailed, setOfficeFailed] = useState(false);
+  const [frameBlocked, setFrameBlocked] = useState(false);
 
   useEffect(() => {
     if (!open || !source) return;
     setErr(null);
     setOfficeFailed(false);
+    setFrameBlocked(false);
     if ("url" in source && source.url) {
-      setResolvedUrl(source.url);
+      setResolvedUrl(rewriteEmbeddable(source.url));
       return;
     }
     if ("bucket" in source && source.bucket && source.path) {
@@ -83,12 +111,31 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
             setErr(error?.message ?? "Could not generate viewing link");
             setResolvedUrl(null);
           } else {
-            setResolvedUrl(data.signedUrl);
+            setResolvedUrl(rewriteEmbeddable(data.signedUrl));
           }
         })
         .finally(() => setLoading(false));
     }
   }, [open, source]);
+
+  // Detect frame-block failures for external iframe embeds. Browsers give us
+  // no direct signal when X-Frame-Options / CSP frame-ancestors kills the
+  // load, so we set a soft timer: if `onLoad` never fires within 5s for an
+  // external URL, assume the site refused to embed and show a fallback card.
+  useEffect(() => {
+    if (!open || !resolvedUrl) return;
+    if (!/^https?:\/\//.test(resolvedUrl)) return;
+    try {
+      const host = new URL(resolvedUrl).host;
+      if (host === window.location.host) return;
+    } catch {
+      return;
+    }
+    // Skip providers that we know embed cleanly.
+    if (/(youtu\.?be|vimeo|officeapps\.live|docs\.google|drive\.google|dropboxusercontent)/.test(resolvedUrl)) return;
+    const t = window.setTimeout(() => setFrameBlocked(true), 5000);
+    return () => window.clearTimeout(t);
+  }, [open, resolvedUrl]);
 
   // ESC to close
   useEffect(() => {
@@ -242,8 +289,17 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
               />
             )}
 
-            {kind === "html" && (
-              <iframe src={resolvedUrl} className="w-full h-full border-0 bg-white" title={displayName} />
+            {kind === "html" && !frameBlocked && (
+              <iframe
+                src={resolvedUrl}
+                className="w-full h-full border-0 bg-white"
+                title={displayName}
+                onLoad={() => setFrameBlocked(false)}
+              />
+            )}
+
+            {kind === "html" && frameBlocked && (
+              <FrameBlockedCard url={resolvedUrl} />
             )}
 
             {kind === "other" && <FallbackDownload url={resolvedUrl} fileName={fileName} />}
@@ -277,6 +333,22 @@ const FallbackDownload: React.FC<{ url: string; fileName?: string }> = ({ url, f
     <Button asChild>
       <a href={url} download={fileName} target="_blank" rel="noreferrer">
         <Download className="h-4 w-4 mr-2" /> Download {fileName ?? "file"}
+      </a>
+    </Button>
+  </div>
+);
+
+const FrameBlockedCard: React.FC<{ url: string }> = ({ url }) => (
+  <div className="m-auto max-w-md text-center text-white p-8 rounded-lg bg-neutral-900 border border-white/10">
+    <AlertCircle className="h-10 w-10 text-amber-400 mx-auto mb-3" />
+    <div className="font-semibold mb-1">This site blocks embedding</div>
+    <div className="text-sm text-white/70 mb-4">
+      The external site refused to load inside a frame (X-Frame-Options / CSP).
+      Open it in a new tab to view it.
+    </div>
+    <Button asChild>
+      <a href={url} target="_blank" rel="noreferrer">
+        <ExternalLink className="h-4 w-4 mr-2" /> Open in new tab
       </a>
     </Button>
   </div>
