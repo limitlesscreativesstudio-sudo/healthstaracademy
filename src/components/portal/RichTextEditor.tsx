@@ -239,9 +239,8 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
     try {
       const ext = file.name.split(".").pop() || "png";
       const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error } = await supabase.storage.from("page-images").upload(path, file, {
-        contentType: file.type, upsert: false,
-      });
+      // Use XHR to bypass the Lovable preview fetch proxy that can swallow POST bodies.
+      const { error } = await uploadViaXhr("page-images", path, file);
       if (error) throw error;
       const { data } = supabase.storage.from("page-images").getPublicUrl(path);
       // restore focus so insertImage targets the editor
