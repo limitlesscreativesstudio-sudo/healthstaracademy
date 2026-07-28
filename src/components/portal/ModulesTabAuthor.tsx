@@ -558,6 +558,11 @@ const SortableModule = ({
                   <SortableItem
                     key={i.id} item={i} courseId={courseId} isInstructor={isInstructor}
                     otherModules={otherModules}
+                    fileMap={fileMap}
+                    pageMap={pageMap}
+                    discussionMap={discussionMap}
+                    onOpenFile={onOpenFile}
+                    onOpenPage={onOpenPage}
                     isFirst={idx2 === 0}
                     isLast={idx2 === items.length - 1}
                     onTogglePublish={() => onToggleItemPublish(i)}
@@ -567,6 +572,7 @@ const SortableModule = ({
                     onMoveTo={(targetId: string) => onMoveItem(i, targetId)}
                     onMoveWithin={(where: "up" | "down" | "top" | "bottom") => onMoveItemWithin(i, where)}
                   />
+
                 ))
               )}
             </SortableContext>
