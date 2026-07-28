@@ -451,6 +451,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
         source={viewer?.src ?? null}
         fileName={viewer?.name}
         fileType={viewer?.type}
+        title={viewer?.title}
       />
       <Dialog open={!!pageView} onOpenChange={(o) => !o && setPageView(null)}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
