@@ -1000,7 +1000,10 @@ const CourseView: React.FC = () => {
           {/* Course sidebar nav (desktop) or drawer (mobile) */}
           {!isMobile && (
             <div style={{ width:200, background:C.white, borderRight:`1px solid ${C.border}`, flexShrink:0, minHeight:'calc(100vh - 76px)', overflowY:'auto' }}>
-              {NAV_ITEMS.map(item => {
+              {NAV_ITEMS.map((item, idx) => {
+                if (item.type === 'divider') {
+                  return <div key={`divider-${idx}`} style={{ height:12, margin:'4px 14px', borderTop:`1px solid ${C.border}` }} />;
+                }
                 const active = activeTab === item.id || (item.id === 'modules' && activeTab === 'home');
                 return (
                   <div key={item.id} onClick={() => setActiveTab(item.id)}
