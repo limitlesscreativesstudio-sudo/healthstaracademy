@@ -69,7 +69,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
   const [fileMap, setFileMap] = useState<Record<string, { url: string; name: string; type: string }>>({});
   const [pageMap, setPageMap] = useState<Record<string, { title: string; body: string }>>({});
   const [discussionMap, setDiscussionMap] = useState<Record<string, { title: string; body: string }>>({});
-  const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type?: string } | null>(null);
+  const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type?: string; title?: string } | null>(null);
   const [pageView, setPageView] = useState<{ title: string; body: string } | null>(null);
 
   // dialogs
@@ -395,7 +395,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
                   fileMap={fileMap}
                   pageMap={pageMap}
                   discussionMap={discussionMap}
-                  onOpenFile={(src, name, type) => setViewer({ src, name, type })}
+                  onOpenFile={(src, name, type, title) => setViewer({ src, name, type, title })}
                   onOpenPage={(p) => setPageView(p)}
                   onToggleCollapse={() => toggleCollapse(m.id)}
                   onTogglePublish={() => togglePublishModule(m)}
@@ -451,6 +451,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
         source={viewer?.src ?? null}
         fileName={viewer?.name}
         fileType={viewer?.type}
+        title={viewer?.title}
       />
       <Dialog open={!!pageView} onOpenChange={(o) => !o && setPageView(null)}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
@@ -607,17 +608,15 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, 
     const t = i.item_type;
     if (t === "assignment" && i.content_ref) return navigate(`/portal/courses/${courseId}/assignments/${i.content_ref}`);
     if (t === "quiz" && i.content_ref) return navigate(`/portal/courses/${courseId}/quizzes/${i.content_ref}`);
-    if ((t === "link" || t === "video" || t === "external_tool") && i.url) return window.open(i.url, "_blank", "noopener,noreferrer");
     if (t === "file") {
       const f = fileMap?.[i.content_ref];
       const fileUrl = f?.url || i.url || i.file_url;
       if (!fileUrl) return toast({ title: "File not found", variant: "destructive" });
-      // Try inline viewer via storage path if pointing to course-files bucket, else new tab
       const parts = fileUrl.split("/course-files/");
       if (parts.length === 2) {
-        return onOpenFile?.({ bucket: "course-files", path: decodeURIComponent(parts[1].split("?")[0]) }, f?.name || i.title, f?.type || "");
+        return onOpenFile?.({ bucket: "course-files", path: decodeURIComponent(parts[1].split("?")[0]) }, f?.name || i.title, f?.type || "", i.title);
       }
-      return onOpenFile?.({ url: fileUrl }, f?.name || i.title, f?.type || "");
+      return onOpenFile?.({ url: fileUrl }, f?.name || i.title, f?.type || "", i.title);
     }
     if (t === "page") {
       const p = pageMap?.[i.content_ref];
@@ -627,7 +626,17 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, 
       const d = discussionMap?.[i.content_ref];
       return onOpenPage?.(d ?? { title: i.title, body: "" });
     }
-    if (i.url) return window.open(i.url, "_blank", "noopener,noreferrer");
+    // link / video / external_tool / anything with a url — preview inline when we can
+    const url: string | undefined = i.url;
+    if (url) {
+      const lower = url.toLowerCase().split(/[?#]/)[0];
+      const previewable = /\.(pdf|pptx?|docx?|xlsx?|mp4|mov|webm|m4v|ogg|mp3|wav|m4a|jpe?g|png|gif|webp|svg)$/i.test(lower)
+        || /youtu\.?be|vimeo\.com|view\.officeapps\.live\.com/.test(url);
+      if (previewable) {
+        return onOpenFile?.({ url }, i.title, "", i.title);
+      }
+      return window.open(url, "_blank", "noopener,noreferrer");
+    }
     toast({ title: "Nothing to open for this item" });
   };
 
