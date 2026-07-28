@@ -15,12 +15,13 @@ interface Props { courseId?: string; canEdit?: boolean; }
 
 const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [files,      setFiles]      = useState<CourseFile[]>([]);
+  const [customFolders, setCustomFolders] = useState<string[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [folder,     setFolder]     = useState('All');
   const [dragging,   setDragging]   = useState(false);
   const [uploading,  setUploading]  = useState(false);
   const [uploadPct,  setUploadPct]  = useState(0);
-  const [selFolder,  setSelFolder]  = useState(FOLDERS[0]);
+  const [selFolder,  setSelFolder]  = useState(DEFAULT_FOLDERS[0]);
   const [error,      setError]      = useState('');
   const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -38,13 +39,55 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
     setLoading(true);
-    const { data } = await supabase.from('lms_files')
-      .select('*').eq('course_id', courseId).order('created_at', { ascending:false });
+    const [{ data }, { data: folders }] = await Promise.all([
+      supabase.from('lms_files').select('*').eq('course_id', courseId).order('created_at', { ascending:false }),
+      supabase.from('lms_folders').select('name').eq('course_id', courseId).is('parent_id', null),
+    ]);
     if (data) setFiles(data);
+    setCustomFolders((folders ?? []).map((f:any) => f.name));
     setLoading(false);
   };
 
   useEffect(() => { load(); }, [courseId]);
+
+  const allFolders = React.useMemo(() => {
+    const set = new Set<string>([...DEFAULT_FOLDERS, ...customFolders]);
+    // include folders referenced by existing files so nothing gets orphaned
+    files.forEach(f => f.folder && set.add(f.folder));
+    return Array.from(set);
+  }, [customFolders, files]);
+
+  const createFolder = async () => {
+    if (!courseId) return;
+    const name = prompt('New folder name');
+    if (!name?.trim()) return;
+    const clean = name.trim();
+    if (allFolders.includes(clean)) return setError('Folder already exists');
+    const { error: err } = await supabase.from('lms_folders').insert({ course_id: courseId, name: clean });
+    if (err) return setError(err.message);
+    setCustomFolders(p => [...p, clean]);
+    setSelFolder(clean);
+    setFolder(clean);
+  };
+
+  const createDoc = async () => {
+    if (!courseId) return;
+    const name = prompt('Document name (e.g. "Session notes")');
+    if (!name?.trim()) return;
+    const body = prompt('Document content (leave blank to fill in later)') ?? '';
+    const safe = name.trim().replace(/[^\w.\-]+/g, '_');
+    const filename = safe.endsWith('.txt') ? safe : `${safe}.txt`;
+    const path = `${courseId}/${Date.now()}_${filename}`;
+    const blob = new Blob([body], { type:'text/plain' });
+    const { error: upErr } = await uploadViaXhr('course-files', path, blob as any);
+    if (upErr) return setError(upErr.message);
+    const { data: { publicUrl } } = supabase.storage.from('course-files').getPublicUrl(path);
+    const { data: row } = await supabase.from('lms_files').insert({
+      course_id: courseId, file_name: filename, file_url: publicUrl,
+      file_type: 'txt', file_size: blob.size, folder: selFolder,
+    }).select().single();
+    if (row) setFiles(p => [row as any, ...p]);
+  };
 
   const uploadFiles = async (fileList: FileList | null) => {
     if (!fileList || !courseId) return;
