@@ -427,7 +427,7 @@ const SortableModule = ({
     <Card ref={setNodeRef} style={style}>
       <div className="px-3 py-2 border-b border-border bg-muted/40 flex items-center gap-2">
         {isInstructor && (
-          <button {...attributes} {...listeners} className="cursor-grab p-1 hover:bg-muted rounded" title="Drag to reorder module">
+          <button type="button" {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing touch-none p-1 hover:bg-muted rounded" title="Drag to reorder module">
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </button>
         )}
