@@ -46,13 +46,21 @@ interface Props {
 // ── Course Card ───────────────────────────────────────────────────────────────
 const CourseCard: React.FC<{
   course: DBCourse;
-  onEnter: () => void;
+  onEnter: (tab?: EnterTab) => void;
   onPublishToggle: (id: string, current: boolean) => void;
   onDelete: (id: string) => void;
   onDuplicate: (course: DBCourse) => Promise<void>;
   canEdit: boolean;
 }> = ({ course, onEnter, onPublishToggle, onDelete, onDuplicate, canEdit }) => {
   const [menu, setMenu] = useState(false);
+  const bandColor = colorFor(course);
+
+  const quickActions: { icon: string; tab: EnterTab; label: string }[] = [
+    { icon: '📣', tab: 'announcements', label: 'Announcements' },
+    { icon: '📝', tab: 'assignments',   label: 'Assignments' },
+    { icon: '💬', tab: 'discussions',   label: 'Discussions' },
+    { icon: '📁', tab: 'files',         label: 'Files' },
+  ];
 
   return (
     <div style={{ border:`1px solid ${C.border}`, borderRadius:8, overflow:'hidden', background:C.white,
@@ -61,12 +69,12 @@ const CourseCard: React.FC<{
       onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = 'none'}>
 
       {/* Course cover — image if present, colored band otherwise */}
-      <div onClick={onEnter}
+      <div onClick={() => onEnter()}
         style={{
           height:130,
           background: course.image_url
-            ? `${course.color} url("${course.image_url}") center/cover no-repeat`
-            : course.color,
+            ? `${bandColor} url("${course.image_url}") center/cover no-repeat`
+            : bandColor,
           display:'flex', alignItems:'center', justifyContent:'center', position:'relative',
         }}>
         {!course.image_url && (
@@ -124,7 +132,7 @@ const CourseCard: React.FC<{
       </div>
 
       {/* Card body */}
-      <div onClick={onEnter} style={{ padding:'12px 12px 8px' }}>
+      <div onClick={() => onEnter()} style={{ padding:'12px 12px 8px' }}>
         <div style={{ fontSize:13, fontWeight:700, color:C.primary, fontFamily:'sans-serif',
           lineHeight:1.35, marginBottom:3 }}>{course.name}</div>
         <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif', marginBottom:4 }}>
@@ -135,19 +143,22 @@ const CourseCard: React.FC<{
         )}
       </div>
 
-      {/* Footer icons */}
-      <div style={{ padding:'7px 12px', borderTop:`1px solid ${C.border}`, display:'flex', gap:10 }}>
-        {['📝','💬','👥','📁'].map((icon,i) => (
-          <span key={i} style={{ fontSize:15, cursor:'pointer', opacity:0.55 }}
+      {/* Footer quick-actions (Canvas-style) */}
+      <div style={{ padding:'7px 12px', borderTop:`1px solid ${C.border}`, display:'flex', gap:14 }}>
+        {quickActions.map(qa => (
+          <span key={qa.tab} title={qa.label}
+            onClick={e => { e.stopPropagation(); onEnter(qa.tab); }}
+            style={{ fontSize:15, cursor:'pointer', opacity:0.55, transition:'opacity .15s' }}
             onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '1'}
             onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '0.55'}>
-            {icon}
+            {qa.icon}
           </span>
         ))}
       </div>
     </div>
   );
 };
+
 
 // ── Create Course Modal ───────────────────────────────────────────────────────
 const CreateCourseModal: React.FC<{
