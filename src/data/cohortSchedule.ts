@@ -1,11 +1,37 @@
 export interface CohortSchedule {
   startDate: string; // e.g. "May 4, 2026"
   endDate: string;
-  deadline: string; // e.g. "Monday, April 20, 2026"
-  deadlineISO: string; // e.g. "2026-04-20" for date comparison
+  deadline: string; // FINAL cutoff (14 days before start) — e.g. "Monday, April 20, 2026"
+  deadlineISO: string; // final cutoff ISO
   startISO: string; // e.g. "2026-05-04"
   programType?: "daytime" | "weekend"; // defaults to "daytime"
 }
+
+/**
+ * Priority "Apply by" date = 21 days before start (7 days earlier than final cutoff).
+ * Creates a first urgency spike; final cutoff at 14 days is the hard stop.
+ */
+export function getApplyByISO(startISO: string): string {
+  const d = new Date(startISO + "T00:00:00");
+  d.setDate(d.getDate() - 21);
+  return d.toISOString().slice(0, 10);
+}
+
+export function formatFriendlyDate(iso: string): string {
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+}
+
+export function getCohortDeadlines(cohort: { startISO: string; deadline: string; deadlineISO: string }) {
+  const applyByISO = getApplyByISO(cohort.startISO);
+  return {
+    applyByISO,
+    applyBy: formatFriendlyDate(applyByISO),
+    finalCutoffISO: cohort.deadlineISO,
+    finalCutoff: cohort.deadline,
+  };
+}
+
 
 export const cohortSchedule: CohortSchedule[] = [
   // 2026 — Daytime (6 weeks each, 1 week gap)
