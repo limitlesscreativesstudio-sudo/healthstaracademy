@@ -1112,6 +1112,17 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
             </Select>
           </div>
 
+          <div>
+            <Label>Description / Notes (optional)</Label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Add context, instructions, or notes that appear under the item title…"
+              rows={5}
+              className="min-h-[120px] resize-y"
+            />
+          </div>
+
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
             Published
