@@ -712,6 +712,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     } else {
       setType("assignment"); setTitle(""); setContentRef(""); setUrl(""); setPublished(true); setIndent(0);
     }
+    setFileSource("existing"); setDriveUrl(""); setUploadFile(null); setUploadPct(0);
     reloadPickers();
   }, [open, item, courseId]);
 
@@ -721,6 +722,59 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     if (!title) setTitle(label);
   };
 
+  // Extract a Google Drive file id from typical share URLs
+  const parseDriveId = (u: string): string | null => {
+    const m1 = u.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (m1) return m1[1];
+    const m2 = u.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (m2) return m2[1];
+    return null;
+  };
+
+  // Create an lms_files row for Google Drive / external URL, return its id
+  const createExternalFile = async (): Promise<string | null> => {
+    const displayName = title.trim() || (fileSource === "drive" ? "Google Drive file" : "External file");
+    if (fileSource === "drive") {
+      const driveId = parseDriveId(driveUrl);
+      const previewUrl = driveId
+        ? `https://drive.google.com/file/d/${driveId}/preview`
+        : driveUrl;
+      const { data, error } = await supabase.from("lms_files").insert({
+        course_id: courseId, name: displayName, file_name: displayName,
+        storage_provider: "google_drive", drive_file_id: driveId,
+        external_url: driveUrl, file_url: previewUrl, file_type: "gdrive",
+      }).select().single();
+      if (error) { toast({ title: "Could not attach Drive file", description: error.message, variant: "destructive" }); return null; }
+      return data.id;
+    }
+    if (fileSource === "url") {
+      const { data, error } = await supabase.from("lms_files").insert({
+        course_id: courseId, name: displayName, file_name: displayName,
+        storage_provider: "external", external_url: driveUrl, file_url: driveUrl,
+        file_type: (driveUrl.split(".").pop() || "url").toLowerCase(),
+      }).select().single();
+      if (error) { toast({ title: "Could not attach URL", description: error.message, variant: "destructive" }); return null; }
+      return data.id;
+    }
+    if (fileSource === "upload" && uploadFile) {
+      const { uploadViaXhr } = await import("@/pages/portal/teach/uploadViaXhr");
+      const ext = uploadFile.name.split(".").pop() ?? "";
+      const path = `${courseId}/${Date.now()}_${uploadFile.name}`;
+      const { error: upErr } = await uploadViaXhr("course-files", path, uploadFile, { onProgress: setUploadPct });
+      if (upErr) { toast({ title: "Upload failed", description: upErr.message, variant: "destructive" }); return null; }
+      const { data: { publicUrl } } = supabase.storage.from("course-files").getPublicUrl(path);
+      const { data, error } = await supabase.from("lms_files").insert({
+        course_id: courseId, name: uploadFile.name, file_name: uploadFile.name,
+        storage_provider: "supabase", storage_path: path, file_url: publicUrl,
+        file_type: ext, file_size: uploadFile.size, size_bytes: uploadFile.size,
+        mime_type: uploadFile.type, folder: "Uploaded Media",
+      }).select().single();
+      if (error) { toast({ title: "Could not save file record", description: error.message, variant: "destructive" }); return null; }
+      return data.id;
+    }
+    return null;
+  };
+
   // inline create for assignment/quiz/page
   const createNewAndAttach = async (): Promise<string | null> => {
     const displayTitle = title.trim() || `New ${type}`;
@@ -728,21 +782,21 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
       const { data, error } = await supabase.from("assignments")
         .insert({ course_id: courseId, title: displayTitle, submission_type: "assignment", group_name: "Assignments", points: 100, published: false })
         .select().single();
-      if (error) { toast({ title: "Could not create assignment", variant: "destructive" }); return null; }
+      if (error) { toast({ title: "Could not create assignment", description: error.message, variant: "destructive" }); return null; }
       return data.id;
     }
     if (type === "quiz") {
       const { data, error } = await supabase.from("quizzes")
         .insert({ course_id: courseId, title: displayTitle, published: false })
         .select().single();
-      if (error) { toast({ title: "Could not create quiz", variant: "destructive" }); return null; }
+      if (error) { toast({ title: "Could not create quiz", description: error.message, variant: "destructive" }); return null; }
       return data.id;
     }
     if (type === "page") {
       const { data, error } = await supabase.from("lms_pages")
         .insert({ course_id: courseId, title: displayTitle, body_html: "", published: false })
         .select().single();
-      if (error) { toast({ title: "Could not create page", variant: "destructive" }); return null; }
+      if (error) { toast({ title: "Could not create page", description: error.message, variant: "destructive" }); return null; }
       return data.id;
     }
     if (type === "discussion") {
@@ -752,7 +806,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
       const { data, error } = await supabase.from("discussions")
         .insert({ course_id: courseId, title: displayTitle, body: "", author_id: authorId })
         .select().single();
-      if (error) { toast({ title: "Could not create discussion", variant: "destructive" }); return null; }
+      if (error) { toast({ title: "Could not create discussion", description: error.message, variant: "destructive" }); return null; }
       return data.id;
     }
     return null;
@@ -764,13 +818,21 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     setSaving(true);
 
     let finalContentRef: string | null = null;
-    if (["assignment", "quiz", "page", "file", "discussion"].includes(type)) {
+    if (["assignment", "quiz", "page", "discussion"].includes(type)) {
       if (contentRef === CREATE_NEW) {
         const newId = await createNewAndAttach();
         if (!newId) { setSaving(false); return; }
         finalContentRef = newId;
       } else {
         finalContentRef = contentRef || null;
+      }
+    } else if (type === "file") {
+      if (fileSource === "existing") {
+        finalContentRef = contentRef || null;
+      } else {
+        const newId = await createExternalFile();
+        if (!newId) { setSaving(false); return; }
+        finalContentRef = newId;
       }
     }
 
@@ -779,13 +841,14 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
       content_ref: finalContentRef,
       url: ["link", "video", "external_tool"].includes(type) ? (url || null) : null,
     };
-    if (item) {
-      await supabase.from("module_items").update(payload).eq("id", item.id);
-    } else {
-      payload.position = nextPosition;
-      await supabase.from("module_items").insert(payload);
-    }
+    const { error } = item
+      ? await supabase.from("module_items").update(payload).eq("id", item.id)
+      : await supabase.from("module_items").insert({ ...payload, position: nextPosition });
     setSaving(false);
+    if (error) {
+      toast({ title: "Could not save item", description: error.message, variant: "destructive" });
+      return;
+    }
     toast({ title: item ? "Item updated" : "Item added" });
     onSaved();
     onClose();
