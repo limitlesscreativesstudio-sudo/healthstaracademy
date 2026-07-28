@@ -675,15 +675,16 @@ const CourseView: React.FC = () => {
 
   if (pageLoading) return <CourseViewSkeleton />;
   if (showDashboard) return (
-    <Dashboard onEnterCourse={(course) => {
+    <Dashboard onEnterCourse={(course, tab) => {
       const selected = { id: 1, uuid: course.id, name: course.name, code: course.code,
         color: course.color || C.primary, term: course.term, students: 0, published: course.published };
       setActiveCourse(selected);
       setCourseOptions(prev => prev.some(c => c.uuid === selected.uuid) ? prev : [selected, ...prev]);
       setShowDashboard(false);
-      setActiveTab('home');
+      setActiveTab(tab || 'home');
     }}/>
   );
+
   if (pageError)   return (
     <CourseViewError
       message={pageError}

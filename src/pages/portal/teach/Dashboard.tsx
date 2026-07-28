@@ -15,6 +15,15 @@ const COLORS = [
   '#C0392B','#E67E22',
 ];
 
+// Stable auto-color from course id/title (Canvas-style varied cards)
+const autoColor = (seed: string): string => {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
+  return COLORS[Math.abs(h) % COLORS.length];
+};
+const colorFor = (c: { id: string; color?: string | null; name?: string }) =>
+  c.color && c.color.trim() ? c.color : autoColor((c.id || '') + (c.name || ''));
+
 interface DBCourse {
   id: string;          // real Supabase UUID
   name: string;
@@ -27,21 +36,31 @@ interface DBCourse {
   created_at: string;
 }
 
+type EnterTab = 'home' | 'announcements' | 'assignments' | 'discussions' | 'files' | 'grades' | 'people';
 
 interface Props {
-  onEnterCourse: (course: DBCourse) => void;
+  onEnterCourse: (course: DBCourse, tab?: EnterTab) => void;
 }
+
 
 // ── Course Card ───────────────────────────────────────────────────────────────
 const CourseCard: React.FC<{
   course: DBCourse;
-  onEnter: () => void;
+  onEnter: (tab?: EnterTab) => void;
   onPublishToggle: (id: string, current: boolean) => void;
   onDelete: (id: string) => void;
   onDuplicate: (course: DBCourse) => Promise<void>;
   canEdit: boolean;
 }> = ({ course, onEnter, onPublishToggle, onDelete, onDuplicate, canEdit }) => {
   const [menu, setMenu] = useState(false);
+  const bandColor = colorFor(course);
+
+  const quickActions: { icon: string; tab: EnterTab; label: string }[] = [
+    { icon: '📣', tab: 'announcements', label: 'Announcements' },
+    { icon: '📝', tab: 'assignments',   label: 'Assignments' },
+    { icon: '💬', tab: 'discussions',   label: 'Discussions' },
+    { icon: '📁', tab: 'files',         label: 'Files' },
+  ];
 
   return (
     <div style={{ border:`1px solid ${C.border}`, borderRadius:8, overflow:'hidden', background:C.white,
@@ -50,12 +69,12 @@ const CourseCard: React.FC<{
       onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = 'none'}>
 
       {/* Course cover — image if present, colored band otherwise */}
-      <div onClick={onEnter}
+      <div onClick={() => onEnter()}
         style={{
           height:130,
           background: course.image_url
-            ? `${course.color} url("${course.image_url}") center/cover no-repeat`
-            : course.color,
+            ? `${bandColor} url("${course.image_url}") center/cover no-repeat`
+            : bandColor,
           display:'flex', alignItems:'center', justifyContent:'center', position:'relative',
         }}>
         {!course.image_url && (
@@ -113,7 +132,7 @@ const CourseCard: React.FC<{
       </div>
 
       {/* Card body */}
-      <div onClick={onEnter} style={{ padding:'12px 12px 8px' }}>
+      <div onClick={() => onEnter()} style={{ padding:'12px 12px 8px' }}>
         <div style={{ fontSize:13, fontWeight:700, color:C.primary, fontFamily:'sans-serif',
           lineHeight:1.35, marginBottom:3 }}>{course.name}</div>
         <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif', marginBottom:4 }}>
@@ -124,19 +143,22 @@ const CourseCard: React.FC<{
         )}
       </div>
 
-      {/* Footer icons */}
-      <div style={{ padding:'7px 12px', borderTop:`1px solid ${C.border}`, display:'flex', gap:10 }}>
-        {['📝','💬','👥','📁'].map((icon,i) => (
-          <span key={i} style={{ fontSize:15, cursor:'pointer', opacity:0.55 }}
+      {/* Footer quick-actions (Canvas-style) */}
+      <div style={{ padding:'7px 12px', borderTop:`1px solid ${C.border}`, display:'flex', gap:14 }}>
+        {quickActions.map(qa => (
+          <span key={qa.tab} title={qa.label}
+            onClick={e => { e.stopPropagation(); onEnter(qa.tab); }}
+            style={{ fontSize:15, cursor:'pointer', opacity:0.55, transition:'opacity .15s' }}
             onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '1'}
             onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '0.55'}>
-            {icon}
+            {qa.icon}
           </span>
         ))}
       </div>
     </div>
   );
 };
+
 
 // ── Create Course Modal ───────────────────────────────────────────────────────
 const CreateCourseModal: React.FC<{
@@ -309,12 +331,15 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
   const [loading,     setLoading]     = useState(true);
   const [showCreate,  setShowCreate]  = useState(false);
   const [dismissed,   setDismissed]   = useState<number[]>([]);
+  const [coursesFlyout, setCoursesFlyout] = useState(false);
+  const [recentFeedback, setRecentFeedback] = useState<Array<{ id: string; course: string; assignment: string; score: number; max: number; when: string; courseObj: DBCourse }>>([]);
 
   const TODO_ITEMS = [
     { id:1, text:'Grade attendance records',      course:'Check each course', pts:'', due:'Today',         color:C.primary },
     { id:2, text:'Review submitted assignments',  course:'Check gradebook',   pts:'', due:'This week',     color:C.accent  },
     { id:3, text:'Update course materials',       course:'Modules tab',       pts:'', due:'As needed',     color:C.warn    },
   ];
+
 
   // ── Load courses from Supabase ─────────────────────────────────────────────
   const loadCourses = async () => {
@@ -330,6 +355,34 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
   };
 
   useEffect(() => { loadCourses(); }, []);
+
+  // ── Load recent graded feedback (last 5) ───────────────────────────────────
+  useEffect(() => {
+    if (!user?.id || courses.length === 0) return;
+    (async () => {
+      const { data } = await supabase
+        .from('grades')
+        .select('id, course_id, assignment_id, score, max_score, graded_at, assignments(title)')
+        .order('graded_at', { ascending: false })
+        .limit(5);
+      if (!data) return;
+      const byId = new Map(courses.map(c => [c.id, c]));
+      setRecentFeedback(
+        (data as any[])
+          .filter(g => byId.has(g.course_id))
+          .map(g => ({
+            id: g.id,
+            course: byId.get(g.course_id)!.name,
+            courseObj: byId.get(g.course_id)!,
+            assignment: g.assignments?.title || 'Graded work',
+            score: Number(g.score || 0),
+            max: Number(g.max_score || 0),
+            when: g.graded_at ? new Date(g.graded_at).toLocaleDateString() : '',
+          }))
+      );
+    })();
+  }, [courses, user?.id]);
+
 
   // ── Publish toggle ─────────────────────────────────────────────────────────
   const handlePublishToggle = async (id: string, current: boolean) => {
@@ -387,7 +440,77 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
     <div style={{ display:'flex', minHeight:'100vh', background:C.bg }}>
 
       {/* ── Main area ─────────────────────────────────────────────────────── */}
-      <aside style={{ width:220, flexShrink:0, background:C.nav, minHeight:'100vh', display:'flex', flexDirection:'column', padding:'20px 0', position:'sticky', top:0, alignSelf:'flex-start' }}><div style={{ display:'flex', flexDirection:'column', alignItems:'center', padding:'0 16px 18px', borderBottom:'1px solid rgba(255,255,255,0.15)', marginBottom:12 }}><img src="/hsa-logo.png" alt="Health Star Academy" style={{ width:56, height:56, borderRadius:'50%', objectFit:'cover', marginBottom:10 }}/><div style={{ color:'#fff', fontSize:13, fontWeight:700, fontFamily:'sans-serif', textAlign:'center' }}>Health Star Academy</div><div style={{ color:'rgba(255,255,255,0.7)', fontSize:11, fontFamily:'sans-serif', marginTop:2 }}>Instructor Portal</div></div><a href="/portal/teach" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>🏠 Dashboard</a><a href="/portal/account" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>👤 Account</a><a href="/portal/career" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>💼 Career</a><div style={{ flex:1 }} />{user?.email && <div style={{ color:'rgba(255,255,255,0.6)', fontSize:10, fontFamily:'sans-serif', padding:'0 22px 8px', wordBreak:'break-all' }}>{user.email}</div>}<button onClick={() => logout()} style={{ margin:'0 16px', padding:'10px', background:'rgba(255,255,255,0.12)', color:'#fff', border:'1px solid rgba(255,255,255,0.25)', borderRadius:6, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer' }}>↩ Sign out</button></aside><div style={{ flex:1, padding:'28px 28px 40px', overflowY:'auto', maxWidth:'calc(100% - 280px)' }}>
+      <aside style={{ width:220, flexShrink:0, background:C.nav, minHeight:'100vh', display:'flex', flexDirection:'column', padding:'20px 0', position:'sticky', top:0, alignSelf:'flex-start', zIndex:20 }}>
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', padding:'0 16px 18px', borderBottom:'1px solid rgba(255,255,255,0.15)', marginBottom:12 }}>
+          <img src="/hsa-logo.png" alt="Health Star Academy" style={{ width:56, height:56, borderRadius:'50%', objectFit:'cover', marginBottom:10 }}/>
+          <div style={{ color:'#fff', fontSize:13, fontWeight:700, fontFamily:'sans-serif', textAlign:'center' }}>Health Star Academy</div>
+          <div style={{ color:'rgba(255,255,255,0.7)', fontSize:11, fontFamily:'sans-serif', marginTop:2 }}>Instructor Portal</div>
+        </div>
+        <a href="/portal/account" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>👤 Account</a>
+        <a href="/portal/teach" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>🏠 Dashboard</a>
+        <button onClick={() => setCoursesFlyout(v => !v)}
+          style={{ textAlign:'left', color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px',
+            background: coursesFlyout ? 'rgba(255,255,255,0.12)' : 'transparent', border:'none', cursor:'pointer' }}>
+          📚 Courses ▸
+        </button>
+        <a href="/portal/career" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>💼 Career</a>
+        <a href="/portal/calendar" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>📅 Calendar</a>
+        <a href="/portal/inbox" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>📥 Inbox</a>
+        <a href="/portal/history" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>🕘 History</a>
+        <a href="/portal/help" style={{ color:'#fff', fontSize:13, fontFamily:'sans-serif', padding:'11px 22px', textDecoration:'none' }}>❔ Help</a>
+        <div style={{ flex:1 }} />
+        {user?.email && <div style={{ color:'rgba(255,255,255,0.6)', fontSize:10, fontFamily:'sans-serif', padding:'0 22px 8px', wordBreak:'break-all' }}>{user.email}</div>}
+        <button onClick={() => logout()} style={{ margin:'0 16px', padding:'10px', background:'rgba(255,255,255,0.12)', color:'#fff', border:'1px solid rgba(255,255,255,0.25)', borderRadius:6, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer' }}>↩ Sign out</button>
+      </aside>
+
+      {/* ── Courses Flyout (Canvas-style) ─────────────────────────────────── */}
+      {coursesFlyout && (
+        <>
+          <div onClick={() => setCoursesFlyout(false)}
+            style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.25)', zIndex:30 }}/>
+          <div style={{ position:'fixed', top:0, left:220, bottom:0, width:320, background:C.white,
+            borderRight:`1px solid ${C.border}`, boxShadow:'6px 0 24px rgba(0,0,0,0.12)', zIndex:40,
+            overflowY:'auto', padding:'20px 0' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0 20px 14px', borderBottom:`1px solid ${C.border}` }}>
+              <h3 style={{ margin:0, fontSize:16, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Courses</h3>
+              <button onClick={() => setCoursesFlyout(false)} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:C.muted }}>×</button>
+            </div>
+            <a href="/portal/teach" onClick={() => setCoursesFlyout(false)}
+              style={{ display:'block', padding:'12px 20px', color:C.primary, fontSize:13, fontWeight:700,
+                fontFamily:'sans-serif', textDecoration:'none', borderBottom:`1px solid ${C.border}` }}>
+              All Courses
+            </a>
+            {[
+              { label:'Published Courses', list: published },
+              { label:'Unpublished Courses', list: unpublished },
+            ].map(section => section.list.length > 0 && (
+              <div key={section.label} style={{ padding:'12px 0 4px' }}>
+                <div style={{ padding:'6px 20px', fontSize:11, fontWeight:700, color:C.muted,
+                  fontFamily:'sans-serif', textTransform:'uppercase', letterSpacing:0.5 }}>
+                  {section.label}
+                </div>
+                {section.list.map(c => (
+                  <div key={c.id} onClick={() => { onEnterCourse(c); setCoursesFlyout(false); }}
+                    style={{ display:'flex', gap:10, padding:'10px 20px', cursor:'pointer', alignItems:'flex-start' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = C.bg}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                    <div style={{ width:6, borderRadius:2, background: colorFor(c), alignSelf:'stretch', flexShrink:0 }}/>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:13, fontWeight:600, color:C.primary, fontFamily:'sans-serif',
+                        lineHeight:1.3, marginBottom:2, wordBreak:'break-word' }}>{c.name}</div>
+                      {c.term && <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>{c.term}</div>}
+                      {c.code && <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>{c.code}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div style={{ flex:1, padding:'28px 28px 40px', overflowY:'auto', maxWidth:'calc(100% - 280px)' }}>
+
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
           <h1 style={{ margin:0, fontSize:24, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>
             Dashboard
@@ -437,7 +560,8 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
                 <div style={{ display:'flex', flexWrap:'wrap', gap:16 }}>
                   {published.map(c => (
                     <CourseCard key={c.id} course={c}
-                      onEnter={() => onEnterCourse(c)}
+                      onEnter={(tab) => onEnterCourse(c, tab)}
+
                       onPublishToggle={handlePublishToggle}
                       onDelete={handleDelete}
                       onDuplicate={handleDuplicate}
@@ -456,7 +580,7 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
                 <div style={{ display:'flex', flexWrap:'wrap', gap:16 }}>
                   {unpublished.map(c => (
                     <CourseCard key={c.id} course={c}
-                      onEnter={() => onEnterCourse(c)}
+                      onEnter={(tab) => onEnterCourse(c, tab)}
                       onPublishToggle={handlePublishToggle}
                       onDelete={handleDelete}
                       onDuplicate={handleDuplicate}
@@ -511,6 +635,47 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
             Nothing for the next week
           </p>
         </div>
+
+        {/* Recent Feedback (Canvas parity) */}
+        <div style={{ marginBottom:24 }}>
+          <h3 style={{ fontSize:14, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 10px' }}>
+            Recent Feedback
+          </h3>
+          {recentFeedback.length === 0 ? (
+            <p style={{ fontSize:13, color:C.muted, fontFamily:'sans-serif', margin:0 }}>Nothing for now</p>
+          ) : recentFeedback.map(fb => (
+            <div key={fb.id} onClick={() => onEnterCourse(fb.courseObj, 'grades')}
+              style={{ padding:'8px 0', borderBottom:`1px solid ${C.border}`, cursor:'pointer', display:'flex', gap:8 }}>
+              <div style={{ width:4, borderRadius:2, background: colorFor(fb.courseObj), flexShrink:0, alignSelf:'stretch' }}/>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:12, fontWeight:600, color:C.primary, fontFamily:'sans-serif', lineHeight:1.3 }}>{fb.assignment}</div>
+                <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif', wordBreak:'break-word' }}>{fb.course}</div>
+                <div style={{ fontSize:11, color:C.text, fontFamily:'sans-serif' }}>
+                  {fb.score}/{fb.max} • {fb.when}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Quick actions (Canvas parity) */}
+        <div style={{ marginBottom:24, display:'flex', flexDirection:'column', gap:8 }}>
+          {canEdit && (
+            <button onClick={() => setShowCreate(true)}
+              style={{ padding:'10px 12px', border:`1px solid ${C.border}`, borderRadius:6, background:C.white,
+                color:C.text, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer', textAlign:'left' }}>
+              + Start a New Course
+            </button>
+          )}
+          <a href="/portal/teach#grades"
+            style={{ padding:'10px 12px', border:`1px solid ${C.border}`, borderRadius:6, background:C.white,
+              color:C.text, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer',
+              textDecoration:'none', display:'block' }}>
+            View Grades
+          </a>
+        </div>
+
+
 
         {/* Stats */}
         <div style={{ background:C.bg, borderRadius:8, padding:14 }}>
