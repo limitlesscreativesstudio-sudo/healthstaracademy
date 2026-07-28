@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, LogOut, BookOpen, Users, LayoutDashboard, Calendar, Inbox, History, HelpCircle, User, ClipboardCheck } from "lucide-react";
+import { GraduationCap, LogOut, BookOpen, Users, LayoutDashboard, Calendar, Inbox, History, HelpCircle, User, TrendingUp } from "lucide-react";
 import { usePortalAuth } from "@/hooks/usePortalAuth";
 import NotificationBell from "./NotificationBell";
 
@@ -30,10 +30,11 @@ const PortalLayout = ({ children }: { children: React.ReactNode }) => {
           <RailItem to="/portal/account" icon={User} label="Account" />
           <RailItem to="/portal" icon={LayoutDashboard} label="Dashboard" exact />
           <RailItem to="/portal/courses" icon={BookOpen} label="Courses" />
-          <RailItem to="/portal/required" icon={ClipboardCheck} label="Required" />
+          <RailItem to="/portal/career" icon={TrendingUp} label="Career" />
           <RailItem to="/portal/calendar" icon={Calendar} label="Calendar" />
           <RailItem to="/portal/inbox" icon={Inbox} label="Inbox" />
           <RailItem to="/portal/history" icon={History} label="History" />
+          <RailItem to="/portal/help" icon={HelpCircle} label="Help" />
           {isInstructor && <RailItem to="/portal/teach" icon={Users} label="Teach" />}
         </nav>
         <div className="flex flex-col items-center gap-1 w-full px-2">
@@ -41,10 +42,6 @@ const PortalLayout = ({ children }: { children: React.ReactNode }) => {
             <LogOut className="h-5 w-5" />
             <span className="text-[10px] leading-tight">Logout</span>
           </button>
-          <Link to="/portal/help" className="group relative w-full flex flex-col items-center gap-0.5 py-2 rounded hover:bg-white/10">
-            <HelpCircle className="h-5 w-5" />
-            <span className="text-[10px] leading-tight">Help</span>
-          </Link>
         </div>
       </aside>
 
