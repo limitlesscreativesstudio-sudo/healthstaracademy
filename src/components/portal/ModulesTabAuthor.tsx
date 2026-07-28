@@ -39,6 +39,7 @@ type ModuleItem = {
   id: string; module_id: string; title: string; item_type: string;
   content_ref: string | null; url: string | null; position: number; published: boolean;
   indent?: number | null;
+  description?: string | null;
 };
 
 const ITEM_TYPES = [
