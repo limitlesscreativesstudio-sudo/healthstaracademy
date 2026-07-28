@@ -366,10 +366,18 @@ const SortableModule = ({
   module: m, items, allModules, collapsed, isInstructor, courseId,
   onToggleCollapse, onTogglePublish, onEdit, onDelete, onAddItem,
   onEditItem, onDeleteItem, onToggleItemPublish, onMoveItem, onMoveModule,
-  onDragItems, sensors,
 }: any) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: m.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: m.id,
+    data: { type: "module", moduleId: m.id },
+  });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
+  // Droppable zone for the module body — receives cross-module item drops (empty modules + end of list)
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: `module-drop-${m.id}`,
+    data: { type: "module-dropzone", moduleId: m.id },
+  });
 
   const otherModules = (allModules as Module[]).filter(x => x.id !== m.id);
   const idx = (allModules as Module[]).findIndex(x => x.id === m.id);
@@ -380,7 +388,7 @@ const SortableModule = ({
     <Card ref={setNodeRef} style={style}>
       <div className="px-3 py-2 border-b border-border bg-muted/40 flex items-center gap-2">
         {isInstructor && (
-          <button {...attributes} {...listeners} className="cursor-grab p-1 hover:bg-muted rounded" title="Drag to reorder">
+          <button {...attributes} {...listeners} className="cursor-grab p-1 hover:bg-muted rounded" title="Drag to reorder module">
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </button>
         )}
@@ -430,12 +438,14 @@ const SortableModule = ({
 
       {!collapsed && (
         <CardContent className="p-0">
-          {items.length === 0 ? (
-            <div className="p-4 text-sm text-muted-foreground italic">No items in this module.</div>
-          ) : (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragItems}>
-              <SortableContext items={items.map((i: ModuleItem) => i.id)} strategy={verticalListSortingStrategy}>
-                {items.map((i: ModuleItem) => (
+          <div ref={setDropRef} className={isOver ? "bg-purple/5 ring-2 ring-purple/40 ring-inset" : ""}>
+            <SortableContext items={items.map((i: ModuleItem) => i.id)} strategy={verticalListSortingStrategy}>
+              {items.length === 0 ? (
+                <div className="p-4 text-sm text-muted-foreground italic">
+                  {isInstructor ? "No items — drag an item here or click Add item." : "No items in this module."}
+                </div>
+              ) : (
+                items.map((i: ModuleItem) => (
                   <SortableItem
                     key={i.id} item={i} courseId={courseId} isInstructor={isInstructor}
                     otherModules={otherModules}
@@ -444,10 +454,10 @@ const SortableModule = ({
                     onDelete={() => onDeleteItem(i)}
                     onMoveTo={(targetId: string) => onMoveItem(i, targetId)}
                   />
-                ))}
-              </SortableContext>
-            </DndContext>
-          )}
+                ))
+              )}
+            </SortableContext>
+          </div>
           {isInstructor && (
             <div className="border-t border-border bg-muted/20 px-3 py-2 flex gap-2">
               <Button size="sm" variant="ghost" onClick={onAddItem}>
@@ -460,6 +470,7 @@ const SortableModule = ({
     </Card>
   );
 };
+
 
 // ============ Sortable Item ============
 const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onTogglePublish, onEdit, onDelete, onMoveTo }: any) => {
