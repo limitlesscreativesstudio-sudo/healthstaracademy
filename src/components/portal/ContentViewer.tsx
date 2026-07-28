@@ -90,13 +90,15 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [officeFailed, setOfficeFailed] = useState(false);
+  const [frameBlocked, setFrameBlocked] = useState(false);
 
   useEffect(() => {
     if (!open || !source) return;
     setErr(null);
     setOfficeFailed(false);
+    setFrameBlocked(false);
     if ("url" in source && source.url) {
-      setResolvedUrl(source.url);
+      setResolvedUrl(rewriteEmbeddable(source.url));
       return;
     }
     if ("bucket" in source && source.bucket && source.path) {
@@ -109,12 +111,31 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
             setErr(error?.message ?? "Could not generate viewing link");
             setResolvedUrl(null);
           } else {
-            setResolvedUrl(data.signedUrl);
+            setResolvedUrl(rewriteEmbeddable(data.signedUrl));
           }
         })
         .finally(() => setLoading(false));
     }
   }, [open, source]);
+
+  // Detect frame-block failures for external iframe embeds. Browsers give us
+  // no direct signal when X-Frame-Options / CSP frame-ancestors kills the
+  // load, so we set a soft timer: if `onLoad` never fires within 5s for an
+  // external URL, assume the site refused to embed and show a fallback card.
+  useEffect(() => {
+    if (!open || !resolvedUrl) return;
+    if (!/^https?:\/\//.test(resolvedUrl)) return;
+    try {
+      const host = new URL(resolvedUrl).host;
+      if (host === window.location.host) return;
+    } catch {
+      return;
+    }
+    // Skip providers that we know embed cleanly.
+    if (/(youtu\.?be|vimeo|officeapps\.live|docs\.google|drive\.google|dropboxusercontent)/.test(resolvedUrl)) return;
+    const t = window.setTimeout(() => setFrameBlocked(true), 5000);
+    return () => window.clearTimeout(t);
+  }, [open, resolvedUrl]);
 
   // ESC to close
   useEffect(() => {
