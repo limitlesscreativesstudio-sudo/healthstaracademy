@@ -1706,6 +1706,7 @@ export type Database = {
         Row: {
           content_ref: string | null
           created_at: string
+          description: string | null
           file_name: string | null
           file_type: string | null
           file_url: string | null
@@ -1722,6 +1723,7 @@ export type Database = {
         Insert: {
           content_ref?: string | null
           created_at?: string
+          description?: string | null
           file_name?: string | null
           file_type?: string | null
           file_url?: string | null
@@ -1738,6 +1740,7 @@ export type Database = {
         Update: {
           content_ref?: string | null
           created_at?: string
+          description?: string | null
           file_name?: string | null
           file_type?: string | null
           file_url?: string | null
