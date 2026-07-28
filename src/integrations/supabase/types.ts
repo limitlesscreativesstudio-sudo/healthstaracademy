@@ -2439,6 +2439,30 @@ export type Database = {
           },
         ]
       }
+      user_account_settings: {
+        Row: {
+          contact_methods: Json
+          feature_flags: Json
+          notification_prefs: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_methods?: Json
+          feature_flags?: Json
+          notification_prefs?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_methods?: Json
+          feature_flags?: Json
+          notification_prefs?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
