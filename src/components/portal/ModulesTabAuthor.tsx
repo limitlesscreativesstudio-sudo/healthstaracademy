@@ -381,6 +381,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
       <ItemDialog
         open={itemDlg.open}
         moduleId={itemDlg.moduleId}
+        moduleTitle={modules.find(m => m.id === itemDlg.moduleId)?.title}
         item={itemDlg.item}
         courseId={courseId}
         nextPosition={itemDlg.moduleId ? items.filter(i => i.module_id === itemDlg.moduleId).length : 0}
