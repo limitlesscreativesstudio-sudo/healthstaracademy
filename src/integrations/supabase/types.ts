@@ -462,6 +462,57 @@ export type Database = {
         }
         Relationships: []
       }
+      career_jobs: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          is_partner: boolean
+          last_refreshed_at: string
+          location: string
+          org: string
+          posted: string | null
+          source: string
+          tags: Json
+          title: string
+          type: string
+          url: string
+          wage: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_partner?: boolean
+          last_refreshed_at?: string
+          location: string
+          org: string
+          posted?: string | null
+          source?: string
+          tags?: Json
+          title: string
+          type: string
+          url: string
+          wage?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          is_partner?: boolean
+          last_refreshed_at?: string
+          location?: string
+          org?: string
+          posted?: string | null
+          source?: string
+          tags?: Json
+          title?: string
+          type?: string
+          url?: string
+          wage?: string | null
+        }
+        Relationships: []
+      }
       clinical_attendance: {
         Row: {
           clinical_site: string
