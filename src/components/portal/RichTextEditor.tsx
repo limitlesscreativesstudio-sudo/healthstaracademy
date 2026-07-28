@@ -436,12 +436,25 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
         >
           <Upload className={cn("h-4 w-4", uploading && "animate-pulse")} />
         </ToolbarBtn>
+        <ToolbarBtn
+          title={uploading ? "Uploading…" : "Upload document (PDF, Word, PowerPoint, etc.)"}
+          onClick={() => docInputRef.current?.click()}
+        >
+          <FileText className={cn("h-4 w-4", uploading && "animate-pulse")} />
+        </ToolbarBtn>
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
           className="hidden"
           onChange={onFileChosen}
+        />
+        <input
+          ref={docInputRef}
+          type="file"
+          accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip"
+          className="hidden"
+          onChange={onDocChosen}
         />
 
         <Separator orientation="vertical" className="mx-1 h-6" />
