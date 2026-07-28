@@ -70,7 +70,17 @@ const PortalLayout = ({ children }: { children: React.ReactNode }) => {
 
       <main className="flex-1 flex flex-col overflow-x-hidden min-w-0">
         <header className="h-12 bg-background border-b border-border flex items-center justify-between px-4 md:px-6 shrink-0">
-          <div className="text-sm text-muted-foreground truncate">{user.email}</div>
+          <div className="flex items-center gap-3 min-w-0">
+            <Button
+              size="sm"
+              onClick={() => navigate('/portal')}
+              className="gap-1.5 bg-cyan text-charcoal hover:bg-cyan/90 h-8"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              <span>Dashboard</span>
+            </Button>
+            <div className="text-sm text-muted-foreground truncate hidden sm:block">{user.email}</div>
+          </div>
           <div className="flex items-center gap-1">
             <NotificationBell userId={user.id} />
             <Button size="sm" variant="ghost" onClick={logout} className="gap-1">
@@ -79,6 +89,7 @@ const PortalLayout = ({ children }: { children: React.ReactNode }) => {
             </Button>
           </div>
         </header>
+
         <div className="flex-1 overflow-y-auto bg-background">{children}</div>
       </main>
     </div>

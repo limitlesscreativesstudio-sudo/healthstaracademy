@@ -1,8 +1,10 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import PortalLayout from '@/components/portal/PortalLayout';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B' } as const;
+
 
 
 const JOBS = [
@@ -75,7 +77,9 @@ const CareerPortal: React.FC = () => {
 
 
   return (
+    <PortalLayout>
     <div style={{ padding:24 }}>
+
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Career Portal</h2>
         <span style={{ fontSize:13, color:C.muted, fontFamily:'sans-serif' }}>Help your students land their first CNA role</span>
@@ -160,7 +164,9 @@ const CareerPortal: React.FC = () => {
         </div>
       )}
     </div>
+    </PortalLayout>
   );
 };
+
 
 export default CareerPortal;
