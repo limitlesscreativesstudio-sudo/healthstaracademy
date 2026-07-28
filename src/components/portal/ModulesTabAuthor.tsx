@@ -338,6 +338,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
                   onEditItem={(it: ModuleItem) => setItemDlg({ open: true, moduleId: m.id, item: it })}
                   onDeleteItem={deleteItem}
                   onToggleItemPublish={togglePublishItem}
+                  onDuplicateItem={duplicateItem}
                   onMoveItem={moveItemToModule}
                   onMoveModule={(where: "up" | "down" | "top" | "bottom") => moveModule(m, where)}
                 />
