@@ -168,8 +168,12 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
               <select value={selFolder} onChange={e => setSelFolder(e.target.value)}
                 style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'6px 8px', fontSize:12, fontFamily:'sans-serif', maxWidth:200 }}>
-                {FOLDERS.map(f => <option key={f}>{f}</option>)}
+                {allFolders.map(f => <option key={f}>{f}</option>)}
               </select>
+              <button onClick={createDoc}
+                style={{ padding:'7px 12px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
+                📝 New Doc
+              </button>
               <button onClick={() => fileRef.current?.click()}
                 style={{ padding:'7px 14px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
                 📤 Upload
