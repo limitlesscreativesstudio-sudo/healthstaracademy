@@ -35,7 +35,8 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [results, setResults] = useState<{ score:number; max:number; perQ:{qid:string; correct:boolean; user:any; expected:any; auto:boolean}[] } | null>(null);
   const [attemptedIds, setAttemptedIds] = useState<Set<string>>(new Set());
-  const [saveState, setSaveState] = useState<'idle'|'saving'|'saved'>('idle');
+  const [saveState, setSaveState] = useState<'idle'|'saving'|'saved'|'error'>('idle');
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [stats, setStats] = useState<Record<string, Stats>>({});
   const [viewing, setViewing] = useState<Quiz & { attempts_allowed?: number; time_limit_minutes?: number | null } | null>(null);
   const [viewQCount, setViewQCount] = useState(0);
@@ -130,8 +131,14 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
     setSaveState('saving');
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
-      await supabase.from('quiz_attempts').update({ answers }).eq('id', attemptId);
-      setSaveState('saved');
+      const { error } = await supabase.from('quiz_attempts').update({ answers }).eq('id', attemptId);
+      if (error) {
+        setSaveState('error');
+        toast.error('Could not save your progress — check your connection.');
+      } else {
+        setSaveState('saved');
+        setLastSavedAt(new Date());
+      }
     }, 700);
     return () => saveTimer.current && clearTimeout(saveTimer.current);
   }, [answers, attemptId, taking, results]);
@@ -444,8 +451,14 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
 
         {!results && attemptQs.length > 0 && (
           <div style={{ position:'fixed', left:0, right:0, bottom:0, background:C.white, borderTop:`1px solid ${C.border}`, padding:'10px 20px', display:'flex', justifyContent:'flex-end', alignItems:'center', gap:12, boxShadow:'0 -2px 8px rgba(0,0,0,.05)', zIndex:20 }}>
-            <span style={{ fontSize:12, color:C.muted }}>
-              {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? '✓ Progress saved — safe to refresh' : 'Autosave ready'}
+            <span style={{ fontSize:12, color: saveState === 'error' ? C.error : C.muted }}>
+              {saveState === 'saving'
+                ? 'Saving…'
+                : saveState === 'error'
+                ? '⚠ Save failed — retrying on next change'
+                : lastSavedAt
+                ? `No new data to save. Last checked at ${lastSavedAt.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })}`
+                : 'Autosave ready — your progress will be saved as you answer'}
             </span>
             <button onClick={submitAttempt} style={{ padding:'8px 22px', border:'none', borderRadius:4, background:C.primary, color:'white', fontSize:13, fontWeight:600, cursor:'pointer' }}>Submit Quiz</button>
           </div>
