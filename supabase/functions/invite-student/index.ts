@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     const invitedBy = userData.user.id;
 
     const body = await req.json().catch(() => ({}));
-    const { courseId, emails, section, redirectTo } = body ?? {};
+    const { courseId, emails, section, redirectTo, cohortId } = body ?? {};
 
     if (!courseId || !Array.isArray(emails) || emails.length === 0) {
       return json({ error: "courseId and emails[] are required" }, 400);
