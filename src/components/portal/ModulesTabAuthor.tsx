@@ -419,8 +419,10 @@ const SortableModule = ({
         )}
         {isInstructor && (
           <>
-            <button onClick={onTogglePublish} className="p-1.5 hover:bg-muted rounded" title={m.published ? "Unpublish" : "Publish"}>
-              {m.published ? <Eye className="h-4 w-4 text-green-600" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+            <button onClick={onTogglePublish} className="p-1.5 hover:bg-muted rounded" title={m.published ? "Published — click to unpublish" : "Unpublished — click to publish"}>
+              {m.published
+                ? <CheckCircle2 className="h-4 w-4 text-green-600 fill-green-600/10" />
+                : <EyeOff className="h-4 w-4 text-muted-foreground" />}
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
