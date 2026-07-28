@@ -786,12 +786,12 @@ const CourseView: React.FC = () => {
     home:          <HomeRouter
                       type={homePageType}
                       courseId={cid}
-                      modules={<ModulesHome canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />}
+                      modules={cid ? <ModulesTabAuthor courseId={cid} isInstructor={canEdit} openAddOnMount={openAddModule} /> : <ModulesHome canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />}
                       syllabus={<SyllabusTab courseUuid={cid} canEdit={canEdit} />}
                       assignments={<AssignmentView courseId={cid} canEdit={canEdit} />}
                       activity={<AnnouncementsPanel canEdit={canEdit} courseId={cid} />}
                    />,
-    modules:       <ModulesHome    canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
+    modules:       cid ? <ModulesTabAuthor courseId={cid} isInstructor={canEdit} openAddOnMount={openAddModule} /> : <ModulesHome canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
     announcements: <AnnouncementsPanel canEdit={canEdit} courseId={cid} />,
     assignments:   <AssignmentView courseId={cid} canEdit={canEdit} />,
     quizzes:       <QuizView courseId={cid} canEdit={canEdit} />,
