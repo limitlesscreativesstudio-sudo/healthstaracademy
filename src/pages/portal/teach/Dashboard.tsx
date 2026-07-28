@@ -356,6 +356,34 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
 
   useEffect(() => { loadCourses(); }, []);
 
+  // ── Load recent graded feedback (last 5) ───────────────────────────────────
+  useEffect(() => {
+    if (!user?.id || courses.length === 0) return;
+    (async () => {
+      const { data } = await supabase
+        .from('grades')
+        .select('id, course_id, assignment_id, score, max_score, graded_at, assignments(title)')
+        .order('graded_at', { ascending: false })
+        .limit(5);
+      if (!data) return;
+      const byId = new Map(courses.map(c => [c.id, c]));
+      setRecentFeedback(
+        (data as any[])
+          .filter(g => byId.has(g.course_id))
+          .map(g => ({
+            id: g.id,
+            course: byId.get(g.course_id)!.name,
+            courseObj: byId.get(g.course_id)!,
+            assignment: g.assignments?.title || 'Graded work',
+            score: Number(g.score || 0),
+            max: Number(g.max_score || 0),
+            when: g.graded_at ? new Date(g.graded_at).toLocaleDateString() : '',
+          }))
+      );
+    })();
+  }, [courses, user?.id]);
+
+
   // ── Publish toggle ─────────────────────────────────────────────────────────
   const handlePublishToggle = async (id: string, current: boolean) => {
     const nextStatus = !current ? 'published' : 'draft';
