@@ -34,6 +34,32 @@ type Kind = "pdf" | "office" | "video" | "audio" | "image" | "youtube" | "vimeo"
 
 const extOf = (s: string) => (s.split(/[?#]/)[0].split(".").pop() ?? "").toLowerCase();
 
+/**
+ * Rewrite common share URLs to their embeddable equivalents so they render
+ * inline instead of being blocked by X-Frame-Options.
+ *   - Google Drive  /view | /edit  →  /preview
+ *   - Google Docs/Sheets/Slides    →  /preview
+ *   - Dropbox        ?dl=0          →  ?raw=1 (via dl.dropboxusercontent.com)
+ */
+const rewriteEmbeddable = (url: string): string => {
+  try {
+    if (/drive\.google\.com\/file\/d\//.test(url)) {
+      return url.replace(/\/(view|edit)(\?.*)?$/, "/preview");
+    }
+    if (/docs\.google\.com\/(document|spreadsheets|presentation)\//.test(url)) {
+      return url.replace(/\/(edit|view)(\?.*)?$/, "/preview");
+    }
+    if (/dropbox\.com/.test(url)) {
+      return url
+        .replace("www.dropbox.com", "dl.dropboxusercontent.com")
+        .replace(/([?&])dl=0/, "$1raw=1");
+    }
+  } catch {
+    /* noop */
+  }
+  return url;
+};
+
 const detectKind = (url: string, fileName?: string, fileType?: string): Kind => {
   const ft = (fileType ?? "").toLowerCase();
   const ext = extOf(fileName || url);
