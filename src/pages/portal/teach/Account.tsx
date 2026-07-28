@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Bell, CalendarDays, CalendarRange, BellOff, User as UserIcon, FileText, Settings as SettingsIcon, Share2, QrCode, Megaphone, Upload, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import PortalLayout from '@/components/portal/PortalLayout';
+import { Bell, CalendarDays, CalendarRange, BellOff, User as UserIcon, FileText, Settings as SettingsIcon, Share2, QrCode, Megaphone, Upload, Plus, Trash2, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 const C = {
   primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF',
