@@ -854,16 +854,20 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     onClose();
   };
 
-  const needsPicker = ["assignment", "quiz", "page", "file", "discussion"].includes(type);
+  const needsPicker = ["assignment", "quiz", "page", "discussion"].includes(type);
   const pickerOptions =
     type === "assignment" ? assignments.map(a => ({ id: a.id, label: a.title })) :
     type === "quiz"       ? quizzes.map(q => ({ id: q.id, label: q.title })) :
     type === "page"       ? pages.map(p => ({ id: p.id, label: p.title })) :
-    type === "discussion" ? discussions.map(d => ({ id: d.id, label: d.title })) :
-    type === "file"       ? files.map(f => ({ id: f.id, label: f.name })) : [];
+    type === "discussion" ? discussions.map(d => ({ id: d.id, label: d.title })) : [];
   const canCreateInline = ["assignment", "quiz", "page", "discussion"].includes(type);
   const selectedType = ITEM_TYPES.find(t => t.value === type);
   const typeLabel = selectedType?.label ?? "Item";
+  const fileReady =
+    type !== "file" ||
+    (fileSource === "existing" && !!contentRef) ||
+    (fileSource === "upload" && !!uploadFile) ||
+    ((fileSource === "drive" || fileSource === "url") && !!driveUrl.trim());
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -904,6 +908,90 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
               />
             </div>
           )}
+
+          {type === "file" && (
+            <div className="space-y-2">
+              <Label>File Source</Label>
+              <div className="flex flex-wrap gap-1 border rounded p-1 bg-muted/30">
+                {[
+                  { k: "existing", l: "📁 Course Files" },
+                  { k: "upload",   l: "⬆️ Upload from Computer" },
+                  { k: "drive",    l: "🟢 Google Drive Link" },
+                  { k: "url",      l: "🔗 External URL" },
+                ].map(o => (
+                  <button
+                    key={o.k}
+                    type="button"
+                    onClick={() => { setFileSource(o.k as any); setContentRef(""); setDriveUrl(""); setUploadFile(null); }}
+                    className={`text-xs px-2 py-1 rounded ${fileSource === o.k ? "bg-purple text-white" : "hover:bg-muted"}`}
+                  >
+                    {o.l}
+                  </button>
+                ))}
+              </div>
+
+              {fileSource === "existing" && (
+                <PickerSelect
+                  label="File"
+                  value={contentRef}
+                  options={files.map(f => ({ id: f.id, label: f.name }))}
+                  onChange={onPickContent}
+                  canCreate={false}
+                  createLabel=""
+                />
+              )}
+
+              {fileSource === "upload" && (
+                <div className="space-y-1">
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null;
+                      setUploadFile(f);
+                      if (f && !title) setTitle(f.name);
+                    }}
+                  />
+                  {uploadFile && (
+                    <div className="text-xs text-muted-foreground">
+                      {uploadFile.name} · {(uploadFile.size / 1024).toFixed(0)} KB
+                    </div>
+                  )}
+                  {saving && uploadPct > 0 && uploadPct < 100 && (
+                    <div className="h-1 bg-muted rounded overflow-hidden">
+                      <div className="h-full bg-purple" style={{ width: `${uploadPct}%` }} />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {fileSource === "drive" && (
+                <div className="space-y-1">
+                  <Input
+                    value={driveUrl}
+                    onChange={(e) => setDriveUrl(e.target.value)}
+                    placeholder="https://drive.google.com/file/d/…/view"
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    Paste a Google Drive share link. Make sure sharing is set to <b>Anyone with the link</b> so students can view it.
+                  </div>
+                </div>
+              )}
+
+              {fileSource === "url" && (
+                <div className="space-y-1">
+                  <Input
+                    value={driveUrl}
+                    onChange={(e) => setDriveUrl(e.target.value)}
+                    placeholder="https://example.com/handout.pdf"
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    Any public URL — PDF, image, video, or webpage.
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
 
           {(type === "link" || type === "video" || type === "external_tool") && (
             <div>
