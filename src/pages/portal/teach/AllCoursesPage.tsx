@@ -49,6 +49,27 @@ export default function AllCoursesPage() {
   const [nicks, setNicks] = useState<Record<string, string>>(() => readMap(NICK_KEY));
   const [editingNick, setEditingNick] = useState<string | null>(null);
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: "favorite", dir: "desc" });
+  const [detail, setDetail] = useState<CourseRow | null>(null);
+  const [detailData, setDetailData] = useState<{ syllabus:string; enrollmentCount:number; assignments:number; discussions:number; startAt?:string|null; endAt?:string|null } | null>(null);
+
+  const openDetail = async (c: CourseRow) => {
+    setDetail(c);
+    setDetailData(null);
+    const [{ data: full }, { count: enrCount }, { count: asgnCount }, { count: discCount }] = await Promise.all([
+      supabase.from("courses").select("syllabus_html,start_at,end_at").eq("id", c.id).maybeSingle(),
+      supabase.from("enrollments").select("*", { count:"exact", head:true }).eq("course_id", c.id),
+      supabase.from("assignments").select("*", { count:"exact", head:true }).eq("course_id", c.id),
+      supabase.from("discussions").select("*", { count:"exact", head:true }).eq("course_id", c.id),
+    ]);
+    setDetailData({
+      syllabus: (full as any)?.syllabus_html ?? "",
+      enrollmentCount: enrCount ?? 0,
+      assignments: asgnCount ?? 0,
+      discussions: discCount ?? 0,
+      startAt: (full as any)?.start_at,
+      endAt: (full as any)?.end_at,
+    });
+  };
 
   useEffect(() => {
     if (!user) return;
