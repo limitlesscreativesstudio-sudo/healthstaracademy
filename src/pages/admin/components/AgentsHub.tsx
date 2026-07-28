@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Loader2, Play, CheckCircle2, X, Activity, Shield, MessageSquare, Megaphone, Search, GraduationCap, Users, FileText, ExternalLink, Sparkles } from "lucide-react";
+import { Loader2, Play, CheckCircle2, X, Activity, Shield, MessageSquare, Megaphone, Search, GraduationCap, Users, FileText, ExternalLink, Sparkles, Scale } from "lucide-react";
 import AgentChat from "@/components/agents/AgentChat";
 import { Link } from "react-router-dom";
 
@@ -21,6 +21,13 @@ type BlogDraft = {
   target_keyword: string | null; target_city: string | null; body_markdown: string;
   status: string; published_at: string | null; created_at: string;
 };
+type CompetitorPage = {
+  id: string; slug: string; title: string; meta_description: string | null;
+  tldr: string | null; body_markdown: string; status: string;
+  published_at: string | null; created_at: string;
+  competitor_id: string;
+};
+type CompetitorSchool = { id: string; slug: string; name: string; is_hsa: boolean };
 
 const AGENTS = [
   { id: "sentinel", name: "Sentinel", desc: "Site health & pipeline monitor", icon: Shield, fn: "agent-sentinel" },
@@ -29,6 +36,7 @@ const AGENTS = [
   { id: "mentor", name: "Mentor", desc: "Instructor LMS copilot", icon: GraduationCap, fn: null },
   { id: "scribe", name: "Scribe", desc: "Content, SEO & blog drafts", icon: Search, fn: "agent-scribe" },
   { id: "broadcaster", name: "Broadcaster", desc: "Weekly GBP post drafts", icon: Megaphone, fn: "agent-broadcaster" },
+  { id: "scout", name: "Scout", desc: "Competitor research & compare pages", icon: Scale, fn: "agent-scout" },
 ];
 
 const sevColor: Record<string, string> = {
@@ -50,42 +58,56 @@ const AgentsHub = () => {
   const [runs, setRuns] = useState<Run[]>([]);
   const [posts, setPosts] = useState<GbpPost[]>([]);
   const [drafts, setDrafts] = useState<BlogDraft[]>([]);
+  const [comparePages, setComparePages] = useState<CompetitorPage[]>([]);
+  const [schools, setSchools] = useState<CompetitorSchool[]>([]);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState<string | null>(null);
-  const [tab, setTab] = useState<"findings" | "runs" | "chat" | "gbp" | "blog">("blog");
+  const [tab, setTab] = useState<"findings" | "runs" | "chat" | "gbp" | "blog" | "compare">("blog");
   const [chatAgent, setChatAgent] = useState<"advocate" | "mentor">("mentor");
   const [editing, setEditing] = useState<BlogDraft | null>(null);
   const [saving, setSaving] = useState(false);
   const [scribeAutoPublish, setScribeAutoPublish] = useState(false);
+  const [scoutAutoPublish, setScoutAutoPublish] = useState(false);
   const [savingAuto, setSavingAuto] = useState(false);
 
   const load = async () => {
-    const [{ data: f }, { data: r }, { data: g }, { data: b }, { data: cfg }] = await Promise.all([
+    const [{ data: f }, { data: r }, { data: g }, { data: b }, { data: cfg }, { data: cfg2 }, { data: cp }, { data: sc }] = await Promise.all([
       supabase.from("agent_findings").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(50),
       supabase.from("agent_runs").select("*").order("started_at", { ascending: false }).limit(20),
       supabase.from("gbp_posts").select("*").order("created_at", { ascending: false }).limit(10),
       supabase.from("blog_drafts").select("*").order("created_at", { ascending: false }).limit(50),
       supabase.from("agent_config").select("auto_publish").eq("agent", "scribe").maybeSingle(),
+      supabase.from("agent_config").select("auto_publish").eq("agent", "scout").maybeSingle(),
+      (supabase as any).from("competitor_pages").select("*").order("created_at", { ascending: false }).limit(50),
+      (supabase as any).from("competitor_schools").select("id,slug,name,is_hsa").order("name"),
     ]);
     setFindings((f ?? []) as Finding[]);
     setRuns((r ?? []) as Run[]);
     setPosts((g ?? []) as GbpPost[]);
     setDrafts((b ?? []) as BlogDraft[]);
+    setComparePages((cp ?? []) as CompetitorPage[]);
+    setSchools((sc ?? []) as CompetitorSchool[]);
     setScribeAutoPublish(!!cfg?.auto_publish);
+    setScoutAutoPublish(!!cfg2?.auto_publish);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
 
-  const toggleAutoPublish = async (next: boolean) => {
+  const toggleAutoPublish = async (agent: "scribe" | "scout", next: boolean) => {
     setSavingAuto(true);
     try {
-      const { error } = await supabase.from("agent_config").upsert({ agent: "scribe", auto_publish: next, updated_at: new Date().toISOString() });
+      const { error } = await supabase.from("agent_config").upsert({ agent, auto_publish: next, updated_at: new Date().toISOString() });
       if (error) throw error;
-      setScribeAutoPublish(next);
-      toast({ title: next ? "Auto-publish ON" : "Auto-publish OFF", description: next ? "New Scribe drafts will publish immediately." : "New Scribe drafts will wait for your review." });
+      if (agent === "scribe") setScribeAutoPublish(next); else setScoutAutoPublish(next);
+      toast({ title: next ? "Auto-publish ON" : "Auto-publish OFF", description: next ? `New ${agent} drafts will publish immediately.` : `New ${agent} drafts will wait for your review.` });
     } catch (e: any) {
       toast({ title: "Save failed", description: e.message, variant: "destructive" });
     } finally { setSavingAuto(false); }
+  };
+
+  const callComparePublish = async (id: string, action: "publish" | "unpublish" | "archive" | "update", patch?: Record<string, unknown>) => {
+    const { error } = await supabase.functions.invoke("publish-competitor-page", { body: { id, action, patch } });
+    if (error) throw error;
   };
 
   const runAgent = async (fn: string, id: string) => {
@@ -182,9 +204,10 @@ const AgentsHub = () => {
       </div>
 
       <div className="flex gap-1 border-b flex-wrap">
-        {(["blog","findings","runs","chat","gbp"] as const).map(t => (
+        {(["blog","compare","findings","runs","chat","gbp"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 text-sm font-medium border-b-2 ${tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}>
             {t === "blog" && <><FileText className="inline h-3 w-3 mr-1" />Blog ({drafts.length})</>}
+            {t === "compare" && <><Scale className="inline h-3 w-3 mr-1" />Compare ({comparePages.length})</>}
             {t === "findings" && `Findings (${findings.length})`}
             {t === "runs" && "Recent runs"}
             {t === "chat" && "Chat with an agent"}
@@ -201,7 +224,7 @@ const AgentsHub = () => {
               Drafts one full post per week with a freshly generated hero image (no recycled visuals). Posts go live at <code className="bg-background px-1 rounded">/blog/&lt;slug&gt;</code>.
             </div>
             <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-              <input type="checkbox" className="h-4 w-4 accent-primary" checked={scribeAutoPublish} disabled={savingAuto} onChange={(e) => toggleAutoPublish(e.target.checked)} />
+              <input type="checkbox" className="h-4 w-4 accent-primary" checked={scribeAutoPublish} disabled={savingAuto} onChange={(e) => toggleAutoPublish("scribe", e.target.checked)} />
               <span className="font-medium">Auto-publish</span>
               <span className="text-xs text-muted-foreground">{scribeAutoPublish ? "New posts go live automatically" : "Email me to approve"}</span>
             </label>
@@ -243,6 +266,65 @@ const AgentsHub = () => {
           ))}
         </div>
       )}
+
+      {tab === "compare" && (
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-3 p-3 border rounded-lg bg-muted/30 flex-wrap">
+            <div className="text-xs text-muted-foreground flex-1 min-w-[220px]">
+              <div className="flex items-center gap-2 font-medium text-foreground mb-1"><Scale className="h-3 w-3" />Scout — competitor comparison engine</div>
+              Researches CA CNA schools ({schools.filter(s => !s.is_hsa).length} tracked) and drafts "HSA vs [school]" landing pages. Public compare hub: <Link to="/compare" target="_blank" className="underline">/compare</Link>. Click <strong>Run now</strong> on the Scout card above to refresh.
+            </div>
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input type="checkbox" className="h-4 w-4 accent-primary" checked={scoutAutoPublish} disabled={savingAuto} onChange={(e) => toggleAutoPublish("scout", e.target.checked)} />
+              <span className="font-medium">Auto-publish</span>
+              <span className="text-xs text-muted-foreground">{scoutAutoPublish ? "Compare pages go live automatically" : "Review before going live"}</span>
+            </label>
+          </div>
+          {comparePages.length === 0 && (
+            <div className="text-sm text-muted-foreground p-4 border rounded-lg">
+              No compare pages yet. Click <strong>Run now</strong> on the Scout card above to generate the first batch.
+            </div>
+          )}
+          {comparePages.map(p => (
+            <div key={p.id} className="border rounded-lg p-4 bg-background">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <Badge className={statusColor[p.status] ?? ""}>{p.status}</Badge>
+                  </div>
+                  <div className="font-semibold text-base">{p.title}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">/compare/{p.slug} · drafted {new Date(p.created_at).toLocaleDateString()}</div>
+                  {p.tldr && <div className="text-sm mt-2 text-muted-foreground">{p.tldr}</div>}
+                </div>
+                <div className="flex flex-col gap-1 shrink-0">
+                  {p.status !== "published" ? (
+                    <Button size="sm" onClick={async () => {
+                      try { await callComparePublish(p.id, "publish"); toast({ title: "Published", description: `/compare/${p.slug} is live.` }); await load(); }
+                      catch (e: any) { toast({ title: "Publish failed", description: e.message, variant: "destructive" }); }
+                    }}><CheckCircle2 className="h-3 w-3 mr-1" />Publish</Button>
+                  ) : (
+                    <>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link to={`/compare/${p.slug}`} target="_blank"><ExternalLink className="h-3 w-3 mr-1" />View</Link>
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={async () => {
+                        try { await callComparePublish(p.id, "unpublish"); toast({ title: "Unpublished" }); await load(); }
+                        catch (e: any) { toast({ title: "Failed", description: e.message, variant: "destructive" }); }
+                      }}>Unpublish</Button>
+                    </>
+                  )}
+                  <Button size="sm" variant="ghost" onClick={async () => {
+                    try { await callComparePublish(p.id, "archive"); toast({ title: "Archived" }); await load(); }
+                    catch (e: any) { toast({ title: "Failed", description: e.message, variant: "destructive" }); }
+                  }}><X className="h-3 w-3" /></Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+
 
       {tab === "findings" && (
         <div className="space-y-2">

@@ -693,6 +693,157 @@ export type Database = {
           },
         ]
       }
+      competitor_facts: {
+        Row: {
+          attribute: string
+          confidence: string
+          created_at: string
+          id: string
+          last_verified_at: string
+          school_id: string
+          source_url: string | null
+          updated_at: string
+          value_numeric: number | null
+          value_text: string | null
+        }
+        Insert: {
+          attribute: string
+          confidence?: string
+          created_at?: string
+          id?: string
+          last_verified_at?: string
+          school_id: string
+          source_url?: string | null
+          updated_at?: string
+          value_numeric?: number | null
+          value_text?: string | null
+        }
+        Update: {
+          attribute?: string
+          confidence?: string
+          created_at?: string
+          id?: string
+          last_verified_at?: string
+          school_id?: string
+          source_url?: string | null
+          updated_at?: string
+          value_numeric?: number | null
+          value_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_facts_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "competitor_schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitor_pages: {
+        Row: {
+          body_markdown: string
+          competitor_id: string
+          created_at: string
+          faq: Json | null
+          hero_image_alt: string | null
+          hero_image_url: string | null
+          id: string
+          meta_description: string | null
+          published_at: string | null
+          slug: string
+          status: string
+          title: string
+          tldr: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_markdown: string
+          competitor_id: string
+          created_at?: string
+          faq?: Json | null
+          hero_image_alt?: string | null
+          hero_image_url?: string | null
+          id?: string
+          meta_description?: string | null
+          published_at?: string | null
+          slug: string
+          status?: string
+          title: string
+          tldr?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_markdown?: string
+          competitor_id?: string
+          created_at?: string
+          faq?: Json | null
+          hero_image_alt?: string | null
+          hero_image_url?: string | null
+          id?: string
+          meta_description?: string | null
+          published_at?: string | null
+          slug?: string
+          status?: string
+          title?: string
+          tldr?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_pages_competitor_id_fkey"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "competitor_schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitor_schools: {
+        Row: {
+          active: boolean
+          city: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_hsa: boolean
+          logo_url: string | null
+          name: string
+          slug: string
+          state: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          active?: boolean
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_hsa?: boolean
+          logo_url?: string | null
+          name: string
+          slug: string
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          active?: boolean
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_hsa?: boolean
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          state?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       course_invites: {
         Row: {
           accepted_at: string | null
