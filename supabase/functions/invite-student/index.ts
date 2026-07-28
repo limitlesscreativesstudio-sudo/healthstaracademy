@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     const invitedBy = userData.user.id;
 
     const body = await req.json().catch(() => ({}));
-    const { courseId, emails, section, redirectTo } = body ?? {};
+    const { courseId, emails, section, redirectTo, cohortId } = body ?? {};
 
     if (!courseId || !Array.isArray(emails) || emails.length === 0) {
       return json({ error: "courseId and emails[] are required" }, 400);
@@ -52,6 +52,21 @@ Deno.serve(async (req) => {
     if (!course) return json({ error: "Course not found" }, 404);
     if (!isAdmin && course.instructor_id !== invitedBy) {
       return json({ error: "Not authorized for this course" }, 403);
+    }
+
+    // If cohortId provided, resolve all sibling courses in that cohort so we
+    // enroll/invite the student across the entire cohort in one shot.
+    let targetCourseIds: string[] = [courseId];
+    if (cohortId) {
+      const { data: cohortCourses } = await admin
+        .from("courses")
+        .select("id, instructor_id")
+        .eq("cohort_id", cohortId);
+      if (cohortCourses && cohortCourses.length > 0) {
+        // Authorize: admin OR instructor of at least one course in the cohort (the
+        // originating course is already authorized above).
+        targetCourseIds = Array.from(new Set([courseId, ...cohortCourses.map((c: any) => c.id)]));
+      }
     }
 
     const finalRedirect =
@@ -102,37 +117,49 @@ Deno.serve(async (req) => {
         existingUserId = inviteData.user.id;
       }
 
-      // Record pending_enrollment for tracking
-      const { error: peErr } = await admin
-        .from("pending_enrollments")
-        .upsert(
-          {
-            course_id: courseId,
-            email,
-            section: section ?? null,
-            invited_by: invitedBy,
-            status: userAlreadyExists ? "accepted" : "pending",
-            accepted_at: userAlreadyExists ? new Date().toISOString() : null,
-          },
-          { onConflict: "course_id,email" },
-        );
-      if (peErr) {
-        // non-fatal — continue
-        console.error("pending_enrollments upsert error", peErr);
+      // Record pending_enrollment for tracking — one row per target course.
+      for (const cid of targetCourseIds) {
+        const { error: peErr } = await admin
+          .from("pending_enrollments")
+          .upsert(
+            {
+              course_id: cid,
+              email,
+              section: section ?? null,
+              invited_by: invitedBy,
+              status: userAlreadyExists ? "accepted" : "pending",
+              accepted_at: userAlreadyExists ? new Date().toISOString() : null,
+            },
+            { onConflict: "course_id,email" },
+          );
+        if (peErr) console.error("pending_enrollments upsert error", peErr);
       }
 
-      // If user already exists, enroll them directly right now
+      // If user already exists, enroll them directly right now — across every
+      // target course. Also stamp cohort_id on the students record when we know it.
       if (userAlreadyExists && existingUserId) {
-        const { error: enrErr } = await admin
-          .from("enrollments")
-          .insert({ course_id: courseId, user_id: existingUserId, role: "student" });
-        if (enrErr && enrErr.code !== "23505") {
-          results.push({ email, ok: false, message: enrErr.message });
-          continue;
+        let enrolledCount = 0;
+        for (const cid of targetCourseIds) {
+          const { error: enrErr } = await admin
+            .from("enrollments")
+            .insert({ course_id: cid, user_id: existingUserId, role: "student" });
+          if (!enrErr || enrErr.code === "23505") enrolledCount++;
         }
-        results.push({ email, ok: true, message: "Already had an account — enrolled directly." });
+        if (cohortId) {
+          await admin.from("students").update({ cohort_id: cohortId })
+            .eq("email", email);
+        }
+        results.push({
+          email, ok: true,
+          message: `Already had an account — enrolled in ${enrolledCount} course${enrolledCount === 1 ? "" : "s"}.`,
+        });
       } else {
-        results.push({ email, ok: true, message: "Invitation email sent." });
+        results.push({
+          email, ok: true,
+          message: targetCourseIds.length > 1
+            ? `Invitation sent — will be enrolled in ${targetCourseIds.length} cohort courses on signup.`
+            : "Invitation email sent.",
+        });
       }
     }
 

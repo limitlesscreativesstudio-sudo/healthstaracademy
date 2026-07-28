@@ -39,6 +39,8 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   const [addingPeople, setAddingPeople] = useState(false);
   const [addError,     setAddError]     = useState('');
   const [selected,     setSelected]     = useState<string[]>([]);
+  const [cohortInfo,   setCohortInfo]   = useState<{ id: string; name: string; courseCount: number } | null>(null);
+  const [enrollInCohort, setEnrollInCohort] = useState(true);
 
   // ── Load enrollments + pending invites ─────────────────────────────────────
   const load = async () => {
@@ -95,6 +97,21 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
 
   useEffect(() => { load(); }, [courseId]);
 
+  // Look up the cohort for the current course + how many courses are linked to it.
+  useEffect(() => {
+    if (!courseId) { setCohortInfo(null); return; }
+    (async () => {
+      const { data: course } = await supabase
+        .from('courses').select('cohort_id').eq('id', courseId).maybeSingle();
+      if (!course?.cohort_id) { setCohortInfo(null); return; }
+      const [{ data: cohort }, { count }] = await Promise.all([
+        supabase.from('cohorts').select('id, name').eq('id', course.cohort_id).maybeSingle(),
+        supabase.from('courses').select('*', { count: 'exact', head: true }).eq('cohort_id', course.cohort_id),
+      ]);
+      if (cohort) setCohortInfo({ id: cohort.id, name: cohort.name, courseCount: count ?? 1 });
+    })();
+  }, [courseId]);
+
   // ── Add people by email (sends invitation email) ───────────────────────────
   const addPeople = async () => {
     if (!emails.trim() || !courseId) return;
@@ -108,6 +125,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
         courseId,
         emails: list,
         section: addSection,
+        cohortId: enrollInCohort && cohortInfo ? cohortInfo.id : null,
         redirectTo: `${window.location.origin}/portal/teach/login`,
       },
     });
@@ -417,6 +435,24 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
                 </select>
               </div>
             </div>
+
+            {cohortInfo && (
+              <label style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'12px 14px',
+                background:'#EDE8F7', border:`1px solid ${C.border}`, borderRadius:6,
+                marginBottom:16, cursor:'pointer', fontFamily:'sans-serif' }}>
+                <input type="checkbox" checked={enrollInCohort}
+                  onChange={e => setEnrollInCohort(e.target.checked)}
+                  style={{ marginTop:2 }}/>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:600, color:C.text }}>
+                    Enroll in the entire {cohortInfo.name} cohort
+                  </div>
+                  <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>
+                    Student will be added to all {cohortInfo.courseCount} course{cohortInfo.courseCount === 1 ? '' : 's'} in this cohort, not just this one.
+                  </div>
+                </div>
+              </label>
+            )}
 
             <div style={{ display:'flex', justifyContent:'flex-end', gap:10 }}>
               <button onClick={() => setShowModal(false)}
