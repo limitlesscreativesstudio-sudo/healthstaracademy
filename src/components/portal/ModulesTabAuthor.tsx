@@ -20,7 +20,7 @@ import {
   ChevronRight, ChevronDown, Eye, EyeOff, MoreVertical, Plus, GripVertical,
   FileText, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap,
   Trash2, Pencil, BarChart3, X, ArrowRightLeft, ArrowUp, ArrowDown,
-  ChevronsUp, ChevronsDown, Type,
+  ChevronsUp, ChevronsDown, Type, CheckCircle2, Copy,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
