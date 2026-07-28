@@ -267,6 +267,65 @@ const AgentsHub = () => {
         </div>
       )}
 
+      {tab === "compare" && (
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-3 p-3 border rounded-lg bg-muted/30 flex-wrap">
+            <div className="text-xs text-muted-foreground flex-1 min-w-[220px]">
+              <div className="flex items-center gap-2 font-medium text-foreground mb-1"><Scale className="h-3 w-3" />Scout — competitor comparison engine</div>
+              Researches CA CNA schools ({schools.filter(s => !s.is_hsa).length} tracked) and drafts "HSA vs [school]" landing pages. Public compare hub: <Link to="/compare" target="_blank" className="underline">/compare</Link>. Click <strong>Run now</strong> on the Scout card above to refresh.
+            </div>
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input type="checkbox" className="h-4 w-4 accent-primary" checked={scoutAutoPublish} disabled={savingAuto} onChange={(e) => toggleAutoPublish("scout", e.target.checked)} />
+              <span className="font-medium">Auto-publish</span>
+              <span className="text-xs text-muted-foreground">{scoutAutoPublish ? "Compare pages go live automatically" : "Review before going live"}</span>
+            </label>
+          </div>
+          {comparePages.length === 0 && (
+            <div className="text-sm text-muted-foreground p-4 border rounded-lg">
+              No compare pages yet. Click <strong>Run now</strong> on the Scout card above to generate the first batch.
+            </div>
+          )}
+          {comparePages.map(p => (
+            <div key={p.id} className="border rounded-lg p-4 bg-background">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <Badge className={statusColor[p.status] ?? ""}>{p.status}</Badge>
+                  </div>
+                  <div className="font-semibold text-base">{p.title}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">/compare/{p.slug} · drafted {new Date(p.created_at).toLocaleDateString()}</div>
+                  {p.tldr && <div className="text-sm mt-2 text-muted-foreground">{p.tldr}</div>}
+                </div>
+                <div className="flex flex-col gap-1 shrink-0">
+                  {p.status !== "published" ? (
+                    <Button size="sm" onClick={async () => {
+                      try { await callComparePublish(p.id, "publish"); toast({ title: "Published", description: `/compare/${p.slug} is live.` }); await load(); }
+                      catch (e: any) { toast({ title: "Publish failed", description: e.message, variant: "destructive" }); }
+                    }}><CheckCircle2 className="h-3 w-3 mr-1" />Publish</Button>
+                  ) : (
+                    <>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link to={`/compare/${p.slug}`} target="_blank"><ExternalLink className="h-3 w-3 mr-1" />View</Link>
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={async () => {
+                        try { await callComparePublish(p.id, "unpublish"); toast({ title: "Unpublished" }); await load(); }
+                        catch (e: any) { toast({ title: "Failed", description: e.message, variant: "destructive" }); }
+                      }}>Unpublish</Button>
+                    </>
+                  )}
+                  <Button size="sm" variant="ghost" onClick={async () => {
+                    try { await callComparePublish(p.id, "archive"); toast({ title: "Archived" }); await load(); }
+                    catch (e: any) { toast({ title: "Failed", description: e.message, variant: "destructive" }); }
+                  }}><X className="h-3 w-3" /></Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+
+
       {tab === "findings" && (
         <div className="space-y-2">
           {findings.length === 0 && <div className="text-sm text-muted-foreground p-4 border rounded-lg">No open findings.</div>}
