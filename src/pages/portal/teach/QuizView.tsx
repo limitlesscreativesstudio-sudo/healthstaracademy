@@ -121,8 +121,13 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
   const startTake = async (q: Quiz) => {
     setTaking(q);
     setResults(null);
-    setAnswers({});
     setAttemptId(null);
+    setSaveState('idle');
+    setLastSavedAt(null);
+    retryAttempt.current = 0;
+    const local = loadLocalDraft(q.id) ?? {};
+    setAnswers(local);
+    answersRef.current = local;
     const qs = await loadQuestions(q.id);
     setAttemptQs(qs);
     if (!user?.id) return;
@@ -132,33 +137,61 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
       .order('started_at', { ascending:false }).limit(1).maybeSingle();
     if (open) {
       setAttemptId(open.id);
-      setAnswers((open.answers as any) ?? {});
+      // Merge server + local, preferring the most recently edited (local) values.
+      const merged = { ...(open.answers as any || {}), ...local };
+      setAnswers(merged);
+      answersRef.current = merged;
+      writeLocalDraft(q.id, merged);
       toast.info('Resumed your in-progress attempt');
     } else {
       const { data: made } = await supabase.from('quiz_attempts').insert({
-        quiz_id: q.id, user_id: user.id, answers: {}, started_at: new Date().toISOString(),
+        quiz_id: q.id, user_id: user.id, answers: local, started_at: new Date().toISOString(),
       }).select('id').single();
       if (made) setAttemptId(made.id);
     }
   };
 
-  // Debounced autosave of in-progress answers
-  useEffect(() => {
-    if (!attemptId || !taking || results) return;
+  const flushSave = async () => {
+    if (!attemptId || inFlight.current) return;
+    const snapshot = answersRef.current;
+    inFlight.current = true;
     setSaveState('saving');
+    const { error } = await supabase.from('quiz_attempts').update({ answers: snapshot }).eq('id', attemptId);
+    inFlight.current = false;
+    if (error) {
+      setSaveState('error');
+      retryAttempt.current += 1;
+      // Exponential backoff: 2s, 4s, 8s, capped at 30s.
+      const delay = Math.min(30000, 2000 * Math.pow(2, retryAttempt.current - 1));
+      if (retryTimer.current) clearTimeout(retryTimer.current);
+      retryTimer.current = setTimeout(flushSave, delay);
+    } else {
+      retryAttempt.current = 0;
+      setSaveState('saved');
+      setLastSavedAt(new Date());
+    }
+  };
+
+  // Persist to localStorage immediately and debounce the server save.
+  useEffect(() => {
+    if (!taking || results) return;
+    answersRef.current = answers;
+    writeLocalDraft(taking.id, answers);
+    if (!attemptId) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      const { error } = await supabase.from('quiz_attempts').update({ answers }).eq('id', attemptId);
-      if (error) {
-        setSaveState('error');
-        toast.error('Could not save your progress — check your connection.');
-      } else {
-        setSaveState('saved');
-        setLastSavedAt(new Date());
-      }
-    }, 700);
+    saveTimer.current = setTimeout(flushSave, 700);
     return () => saveTimer.current && clearTimeout(saveTimer.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answers, attemptId, taking, results]);
+
+  // Retry pending saves when the browser comes back online.
+  useEffect(() => {
+    if (!taking || results) return;
+    const onOnline = () => { if (saveState === 'error') flushSave(); };
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taking, results, saveState, attemptId]);
 
   const createQuiz = async () => {
     if (!createForm.title.trim() || !courseId) return;
