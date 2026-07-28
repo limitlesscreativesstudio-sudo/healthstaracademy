@@ -21,6 +21,9 @@ import StudentProgress   from './StudentProgress';
 import Account           from './Account';
 import { useAuth, supabase } from './AuthContext';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
+import ChooseHomePageDialog from '@/components/portal/ChooseHomePageDialog';
+import HomeRouter from '@/components/portal/HomeRouter';
+import AnnouncementsPanel from './AnnouncementsPanel';
 import { toast, Toaster } from 'sonner';
 
 const useIsMobile = () => {
