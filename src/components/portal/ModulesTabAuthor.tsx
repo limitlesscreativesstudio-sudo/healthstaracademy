@@ -474,8 +474,12 @@ const SortableModule = ({
 
 // ============ Sortable Item ============
 const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onTogglePublish, onEdit, onDelete, onMoveTo }: any) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: i.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: i.id,
+    data: { type: "item", moduleId: i.module_id },
+  });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+
 
   const isHeader = i.item_type === "header";
   const to = `/portal/courses/${courseId}/modules/${i.id}`;
