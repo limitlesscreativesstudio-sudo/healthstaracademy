@@ -678,16 +678,19 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [pages, setPages] = useState<any[]>([]);
   const [files, setFiles] = useState<any[]>([]);
+  const [discussions, setDiscussions] = useState<any[]>([]);
 
   const reloadPickers = async () => {
-    const [a, q, p, f] = await Promise.all([
+    const [a, q, p, f, d] = await Promise.all([
       supabase.from("assignments").select("id, title").eq("course_id", courseId).order("title"),
       supabase.from("quizzes").select("id, title").eq("course_id", courseId).order("title"),
       supabase.from("lms_pages").select("id, title").eq("course_id", courseId).order("title"),
       supabase.from("lms_files").select("id, name").eq("course_id", courseId).order("name"),
+      supabase.from("discussions").select("id, title").eq("course_id", courseId).order("title"),
     ]);
     setAssignments(a.data ?? []); setQuizzes(q.data ?? []);
     setPages(p.data ?? []); setFiles(f.data ?? []);
+    setDiscussions(d.data ?? []);
   };
 
   useEffect(() => {
@@ -732,6 +735,16 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
       if (error) { toast({ title: "Could not create page", variant: "destructive" }); return null; }
       return data.id;
     }
+    if (type === "discussion") {
+      const { data: userRes } = await supabase.auth.getUser();
+      const authorId = userRes.user?.id;
+      if (!authorId) { toast({ title: "Sign in required", description: "Please sign in again before creating a discussion.", variant: "destructive" }); return null; }
+      const { data, error } = await supabase.from("discussions")
+        .insert({ course_id: courseId, title: displayTitle, body: "", author_id: authorId })
+        .select().single();
+      if (error) { toast({ title: "Could not create discussion", variant: "destructive" }); return null; }
+      return data.id;
+    }
     return null;
   };
 
@@ -741,7 +754,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     setSaving(true);
 
     let finalContentRef: string | null = null;
-    if (["assignment", "quiz", "page", "file"].includes(type)) {
+    if (["assignment", "quiz", "page", "file", "discussion"].includes(type)) {
       if (contentRef === CREATE_NEW) {
         const newId = await createNewAndAttach();
         if (!newId) { setSaving(false); return; }
@@ -754,7 +767,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     const payload: any = {
       module_id: moduleId, title: title.trim(), item_type: type, published, indent,
       content_ref: finalContentRef,
-      url: ["link", "video"].includes(type) ? (url || null) : null,
+      url: ["link", "video", "external_tool"].includes(type) ? (url || null) : null,
     };
     if (item) {
       await supabase.from("module_items").update(payload).eq("id", item.id);
@@ -768,13 +781,16 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     onClose();
   };
 
-  const needsPicker = ["assignment", "quiz", "page", "file"].includes(type);
+  const needsPicker = ["assignment", "quiz", "page", "file", "discussion"].includes(type);
   const pickerOptions =
     type === "assignment" ? assignments.map(a => ({ id: a.id, label: a.title })) :
     type === "quiz"       ? quizzes.map(q => ({ id: q.id, label: q.title })) :
     type === "page"       ? pages.map(p => ({ id: p.id, label: p.title })) :
+    type === "discussion" ? discussions.map(d => ({ id: d.id, label: d.title })) :
     type === "file"       ? files.map(f => ({ id: f.id, label: f.name })) : [];
-  const canCreateInline = ["assignment", "quiz", "page"].includes(type);
+  const canCreateInline = ["assignment", "quiz", "page", "discussion"].includes(type);
+  const selectedType = ITEM_TYPES.find(t => t.value === type);
+  const typeLabel = selectedType?.label ?? "Item";
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -803,22 +819,22 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
           {needsPicker && (
             <div>
               <div className="text-xs text-muted-foreground mb-1">
-                Select the {type} you want to associate with this module{canCreateInline ? `, or add a new one by selecting "Create ${type[0].toUpperCase()+type.slice(1)}"` : ""}.
+                Select the {typeLabel.toLowerCase()} you want to associate with {moduleTitle || "this module"}{canCreateInline ? `, or add a new one by selecting "Create ${typeLabel}"` : ""}.
               </div>
               <PickerSelect
-                label={type[0].toUpperCase() + type.slice(1)}
+                label={typeLabel}
                 value={contentRef}
                 options={pickerOptions}
                 onChange={onPickContent}
                 canCreate={canCreateInline}
-                createLabel={`[ Create ${type[0].toUpperCase()+type.slice(1)} ]`}
+                createLabel={`[ Create ${typeLabel} ]`}
               />
             </div>
           )}
 
-          {(type === "link" || type === "video") && (
+          {(type === "link" || type === "video" || type === "external_tool") && (
             <div>
-              <Label>URL</Label>
+              <Label>{type === "external_tool" ? "External Tool URL" : "URL"}</Label>
               <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" />
             </div>
           )}
