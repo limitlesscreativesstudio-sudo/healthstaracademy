@@ -31,16 +31,48 @@ const RESOURCES = [
   { icon:'💰', title:'Salary Comparison', desc:'Compare CNA wages by facility type and region in California.', action:'View Data', url:'https://www.bls.gov/oes/current/oes311131.htm' },
 ];
 
+const FALLBACK_JOBS = JOBS;
+
 const CareerPortal: React.FC = () => {
   const [tab, setTab] = useState<'jobs'|'resources'>('jobs');
   const [filter, setFilter] = useState('All');
   const [partnersOnly, setPartnersOnly] = useState(false);
+  const [jobs, setJobs] = useState<any[]>(FALLBACK_JOBS);
+  const [lastRefreshed, setLastRefreshed] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from('career_jobs')
+        .select('*')
+        .eq('active', true)
+        .order('is_partner', { ascending: false })
+        .order('last_refreshed_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        setJobs(data.map((j: any) => ({
+          id: j.id,
+          title: j.title,
+          org: j.org,
+          location: j.location,
+          type: j.type,
+          wage: j.wage,
+          posted: j.posted,
+          tags: Array.isArray(j.tags) ? j.tags : [],
+          url: j.url,
+        })));
+        setLastRefreshed(data[0].last_refreshed_at);
+      }
+      setLoading(false);
+    })();
+  }, []);
 
   const types = ['All','Full-Time','Part-Time','Per Diem'];
-  const filtered = JOBS.filter(j =>
+  const filtered = jobs.filter(j =>
     (filter === 'All' || j.type === filter) &&
-    (!partnersOnly || j.tags.includes('Partner Site'))
+    (!partnersOnly || (j.tags || []).includes('Partner Site') || /Partner Site/i.test(j.location || ''))
   );
+
 
   return (
     <div style={{ padding:24 }}>
