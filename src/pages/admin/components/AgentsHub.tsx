@@ -204,9 +204,10 @@ const AgentsHub = () => {
       </div>
 
       <div className="flex gap-1 border-b flex-wrap">
-        {(["blog","findings","runs","chat","gbp"] as const).map(t => (
+        {(["blog","compare","findings","runs","chat","gbp"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 text-sm font-medium border-b-2 ${tab === t ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}>
             {t === "blog" && <><FileText className="inline h-3 w-3 mr-1" />Blog ({drafts.length})</>}
+            {t === "compare" && <><Scale className="inline h-3 w-3 mr-1" />Compare ({comparePages.length})</>}
             {t === "findings" && `Findings (${findings.length})`}
             {t === "runs" && "Recent runs"}
             {t === "chat" && "Chat with an agent"}
@@ -223,7 +224,7 @@ const AgentsHub = () => {
               Drafts one full post per week with a freshly generated hero image (no recycled visuals). Posts go live at <code className="bg-background px-1 rounded">/blog/&lt;slug&gt;</code>.
             </div>
             <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-              <input type="checkbox" className="h-4 w-4 accent-primary" checked={scribeAutoPublish} disabled={savingAuto} onChange={(e) => toggleAutoPublish(e.target.checked)} />
+              <input type="checkbox" className="h-4 w-4 accent-primary" checked={scribeAutoPublish} disabled={savingAuto} onChange={(e) => toggleAutoPublish("scribe", e.target.checked)} />
               <span className="font-medium">Auto-publish</span>
               <span className="text-xs text-muted-foreground">{scribeAutoPublish ? "New posts go live automatically" : "Email me to approve"}</span>
             </label>
