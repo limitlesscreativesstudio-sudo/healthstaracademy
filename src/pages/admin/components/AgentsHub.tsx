@@ -93,16 +93,21 @@ const AgentsHub = () => {
   };
   useEffect(() => { load(); }, []);
 
-  const toggleAutoPublish = async (next: boolean) => {
+  const toggleAutoPublish = async (agent: "scribe" | "scout", next: boolean) => {
     setSavingAuto(true);
     try {
-      const { error } = await supabase.from("agent_config").upsert({ agent: "scribe", auto_publish: next, updated_at: new Date().toISOString() });
+      const { error } = await supabase.from("agent_config").upsert({ agent, auto_publish: next, updated_at: new Date().toISOString() });
       if (error) throw error;
-      setScribeAutoPublish(next);
-      toast({ title: next ? "Auto-publish ON" : "Auto-publish OFF", description: next ? "New Scribe drafts will publish immediately." : "New Scribe drafts will wait for your review." });
+      if (agent === "scribe") setScribeAutoPublish(next); else setScoutAutoPublish(next);
+      toast({ title: next ? "Auto-publish ON" : "Auto-publish OFF", description: next ? `New ${agent} drafts will publish immediately.` : `New ${agent} drafts will wait for your review.` });
     } catch (e: any) {
       toast({ title: "Save failed", description: e.message, variant: "destructive" });
     } finally { setSavingAuto(false); }
+  };
+
+  const callComparePublish = async (id: string, action: "publish" | "unpublish" | "archive" | "update", patch?: Record<string, unknown>) => {
+    const { error } = await supabase.functions.invoke("publish-competitor-page", { body: { id, action, patch } });
+    if (error) throw error;
   };
 
   const runAgent = async (fn: string, id: string) => {
