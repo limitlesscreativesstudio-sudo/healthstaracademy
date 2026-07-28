@@ -23,6 +23,7 @@ import { useAuth, supabase } from './AuthContext';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
 import ChooseHomePageDialog from '@/components/portal/ChooseHomePageDialog';
 import HomeRouter from '@/components/portal/HomeRouter';
+import ModulesTabAuthor from '@/components/portal/ModulesTabAuthor';
 import { toast, Toaster } from 'sonner';
 
 const useIsMobile = () => {
@@ -342,6 +343,57 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
   };
 
   if (dbLoading) return <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Loading modules...</div>;
+
+  return (
+    <div style={{ display:'flex' }}>
+      <div style={{ flex:1, padding:24 }}>
+        {!courseUuid ? (
+          <div style={{ marginBottom:16, padding:'10px 14px', background:'#FFF8E1', border:'1px solid #FFE082', borderRadius:6, fontSize:13, color:'#7B4DB5', fontFamily:'sans-serif' }}>
+            Open a saved course from the Dashboard before adding modules.
+          </div>
+        ) : (
+          <ModulesTabAuthor courseId={courseUuid} isInstructor={canEdit} openAddOnMount={openAddOnMount} />
+        )}
+      </div>
+      <div style={{ width:200, flexShrink:0, padding:'24px 12px', borderLeft:`1px solid ${C.border}` }}>
+        <div style={{ marginBottom:16 }}>
+          <h3 style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 10px', textTransform:'uppercase', letterSpacing:0.5 }}>Course Status</h3>
+          <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:10 }}>
+            <div style={{ width:10, height:10, borderRadius:'50%', background:C.success }}/>
+            <span style={{ fontSize:13, fontFamily:'sans-serif', color:C.text, fontWeight:600 }}>Published</span>
+            <span style={{ fontSize:11, color:C.muted }}>▾</span>
+          </div>
+        </div>
+        <div style={{ marginBottom:16 }}>
+          <h3 style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 10px', textTransform:'uppercase', letterSpacing:0.5 }}>Course Actions</h3>
+          {([
+            ['📥','Import Existing Content','import'],
+            ['🔄','Import from Commons','commons'],
+            ['🏠','Choose Home Page','home-page'],
+            ['📊','View Course Stream','stream'],
+            ['📢','New Announcement','new-announcement'],
+            ['📈','New Analytics','analytics'],
+            ['🔔','View Notifications','notifications'],
+          ] as const).map(([icon, label, action]) => (
+            <div key={label} onClick={() => onCourseAction?.(action)}
+              style={{ display:'flex', alignItems:'center', gap:7, padding:'6px 0', borderBottom:`1px solid ${C.border}`, cursor:'pointer', fontSize:12, fontFamily:'sans-serif', color:C.primary }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = C.text}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = C.primary}>
+              <span>{icon}</span>{label}
+            </div>
+          ))}
+        </div>
+        <div>
+          <h3 style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 8px', textTransform:'uppercase', letterSpacing:0.5 }}>Coming Up</h3>
+          <p style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', margin:0 }}>Nothing for the next week</p>
+          <button type="button" onClick={() => onCourseAction?.('calendar')}
+            style={{ background:'none', border:'none', padding:0, fontSize:11, color:C.primary, fontFamily:'sans-serif', cursor:'pointer', marginTop:6 }}>
+            View Calendar →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
