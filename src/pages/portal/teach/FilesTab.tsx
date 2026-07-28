@@ -25,6 +25,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [uploading,  setUploading]  = useState(false);
   const [uploadPct,  setUploadPct]  = useState(0);
   const [selFolder,  setSelFolder]  = useState('root');
+  const [dragFolderId, setDragFolderId] = useState<string | null>(null);
   const [error,      setError]      = useState('');
   const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -98,6 +99,19 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     if (idx < 0 || target < 0 || target >= folders.length) return;
     const next = [...folders];
     [next[idx], next[target]] = [next[target], next[idx]];
+    persistFolderOrder(next);
+  };
+
+  const dropFolder = (targetId: string) => {
+    if (!dragFolderId || dragFolderId === targetId) { setDragFolderId(null); return; }
+    const from = folders.findIndex(f => f.id === dragFolderId);
+    const to = folders.findIndex(f => f.id === targetId);
+    if (from < 0 || to < 0) { setDragFolderId(null); return; }
+    const next = [...folders];
+    const [moved] = next.splice(from, 1);
+    if (!moved) { setDragFolderId(null); return; }
+    next.splice(to, 0, moved);
+    setDragFolderId(null);
     persistFolderOrder(next);
   };
 
@@ -204,11 +218,17 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
         </div>
         {folders.map((f, idx) => (
           <div key={f.id}
+            draggable={!!canEdit}
+            onDragStart={() => setDragFolderId(f.id)}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => dropFolder(f.id)}
+            onDragEnd={() => setDragFolderId(null)}
             style={{ padding:'7px 10px', borderRadius:5, cursor:'pointer', fontSize:12, fontFamily:'sans-serif',
-              background: folder === f.id ? '#EDE8F7' : 'transparent',
+              background: dragFolderId === f.id ? C.bg : folder === f.id ? '#EDE8F7' : 'transparent',
               color: folder === f.id ? C.primary : C.text, fontWeight: folder === f.id ? 600 : 400,
               marginBottom:2, display:'flex', alignItems:'center', gap:6 }}>
             <span onClick={() => setFolder(f.id)} style={{ flex:1, display:'flex', alignItems:'center', gap:6, minWidth:0 }}>
+              {canEdit && <span title="Drag to reorder" style={{ color:C.muted, cursor:'grab' }}>⋮⋮</span>}
               <span>📂</span>
               <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.name}</span>
             </span>
