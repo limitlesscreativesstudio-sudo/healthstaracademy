@@ -301,7 +301,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
           </CardContent>
         </Card>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragModules}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={modules.map(m => m.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-3">
               {modules.map(m => (
@@ -322,14 +322,13 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
                   onToggleItemPublish={togglePublishItem}
                   onMoveItem={moveItemToModule}
                   onMoveModule={(where: "up" | "down" | "top" | "bottom") => moveModule(m, where)}
-                  onDragItems={(e: DragEndEvent) => onDragItems(m.id, e)}
-                  sensors={sensors}
                 />
               ))}
             </div>
           </SortableContext>
         </DndContext>
       )}
+
 
       <ModuleDialog
         open={moduleDlg.open}
