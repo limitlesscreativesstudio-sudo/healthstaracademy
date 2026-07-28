@@ -1,27 +1,30 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from './AuthContext';
+import { supabase, useAuth } from './AuthContext';
 import { uploadViaXhr } from './uploadViaXhr';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
-const DEFAULT_FOLDERS = ['Course Files','Handouts','Presentations','Recordings','Uploaded Media'];
+const ROOT_FOLDER_NAME = 'Health Star Academy Hybrid NATP Sandbox';
 const fileIcon = (t: string) => ({ pdf:'📄', pptx:'📊', ppt:'📊', docx:'📝', doc:'📝', mp4:'🎥', mov:'🎥', jpg:'🖼️', png:'🖼️', xlsx:'📈' }[t.toLowerCase()] ?? '📎');
 const fmtSize  = (b: number) => b > 1048576 ? `${(b/1048576).toFixed(1)} MB` : `${(b/1024).toFixed(0)} KB`;
 
-interface CourseFile { id: string; file_name: string; file_url: string; file_type: string; file_size: number; folder: string; created_at: string; }
+interface CourseFile { id: string; file_name: string; file_url: string; file_type: string; file_size: number; folder: string | null; folder_id?: string | null; created_at: string; }
+interface CourseFolder { id: string; name: string; position?: number | null; created_at?: string; }
 interface Props { courseId?: string; canEdit?: boolean; }
 
 const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
+  const { user } = useAuth();
   const [files,      setFiles]      = useState<CourseFile[]>([]);
-  const [customFolders, setCustomFolders] = useState<string[]>([]);
+  const [folders, setFolders] = useState<CourseFolder[]>([]);
+  const [rootName, setRootName] = useState(ROOT_FOLDER_NAME);
   const [loading,    setLoading]    = useState(true);
-  const [folder,     setFolder]     = useState('All');
+  const [folder,     setFolder]     = useState('root');
   const [dragging,   setDragging]   = useState(false);
   const [uploading,  setUploading]  = useState(false);
   const [uploadPct,  setUploadPct]  = useState(0);
-  const [selFolder,  setSelFolder]  = useState(DEFAULT_FOLDERS[0]);
+  const [selFolder,  setSelFolder]  = useState('root');
   const [error,      setError]      = useState('');
   const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -39,35 +42,79 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
     setLoading(true);
-    const [{ data }, { data: folders }] = await Promise.all([
+    setError('');
+    const [{ data, error: fileErr }, { data: folderRows, error: folderErr }, { data: course }] = await Promise.all([
       supabase.from('lms_files').select('*').eq('course_id', courseId).order('created_at', { ascending:false }),
-      supabase.from('lms_folders').select('name').eq('course_id', courseId).is('parent_id', null),
+      supabase.from('lms_folders').select('id,name,position,created_at').eq('course_id', courseId).is('parent_id', null).order('position', { ascending:true }).order('created_at', { ascending:true }),
+      supabase.from('courses').select('title').eq('id', courseId).maybeSingle(),
     ]);
+    if (fileErr || folderErr) setError(fileErr?.message || folderErr?.message || 'Unable to load files.');
+    if (course?.title) setRootName(course.title.replace(/\s+(Day|Weekend)\s+/i, ' ').replace(/\s+/g, ' ').trim());
     if (data) setFiles(data);
-    setCustomFolders((folders ?? []).map((f:any) => f.name));
+    setFolders((folderRows ?? []).filter((f:any) => f.name !== ROOT_FOLDER_NAME));
     setLoading(false);
   };
 
   useEffect(() => { load(); }, [courseId]);
 
-  const allFolders = React.useMemo(() => {
-    const set = new Set<string>([...DEFAULT_FOLDERS, ...customFolders]);
-    // include folders referenced by existing files so nothing gets orphaned
-    files.forEach(f => f.folder && set.add(f.folder));
-    return Array.from(set);
-  }, [customFolders, files]);
+  const folderChoices = React.useMemo(() => [
+    { id: 'root', name: rootName },
+    ...folders.map(f => ({ id: f.id, name: f.name })),
+  ], [folders, rootName]);
+
+  const selectedFolder = folderChoices.find(f => f.id === selFolder) ?? folderChoices[0];
 
   const createFolder = async () => {
     if (!courseId) return;
     const name = prompt('New folder name');
     if (!name?.trim()) return;
     const clean = name.trim();
-    if (allFolders.includes(clean)) return setError('Folder already exists');
-    const { error: err } = await supabase.from('lms_folders').insert({ course_id: courseId, name: clean });
+    if (clean.toLowerCase() === rootName.toLowerCase() || folders.some(f => f.name.toLowerCase() === clean.toLowerCase())) return setError('Folder already exists');
+    const position = folders.length + 1;
+    const { data: row, error: err } = await supabase.from('lms_folders').insert({ course_id: courseId, name: clean, position, created_by: user?.id ?? null }).select('id,name,position,created_at').single();
     if (err) return setError(err.message);
-    setCustomFolders(p => [...p, clean]);
-    setSelFolder(clean);
-    setFolder(clean);
+    if (row) {
+      setFolders(p => [...p, row as any]);
+      setSelFolder(row.id);
+      setFolder(row.id);
+    }
+  };
+
+  const persistFolderOrder = async (next: CourseFolder[]) => {
+    setFolders(next);
+    if (!courseId) return;
+    const updates = next.map((f, idx) =>
+      supabase.from('lms_folders').update({ position: idx + 1 }).eq('id', f.id).eq('course_id', courseId)
+    );
+    const results = await Promise.all(updates);
+    const err = results.find(r => r.error)?.error;
+    if (err) { setError(`Folder order was not saved: ${err.message}`); load(); }
+  };
+
+  const moveFolder = (id: string, dir: -1 | 1) => {
+    const idx = folders.findIndex(f => f.id === id);
+    const target = idx + dir;
+    if (idx < 0 || target < 0 || target >= folders.length) return;
+    const next = [...folders];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    persistFolderOrder(next);
+  };
+
+  const deleteFolder = async (id: string, name: string) => {
+    if (!confirm(`Delete folder “${name}”? Files inside it will move back to ${rootName}.`)) return;
+    const { error: fileErr } = await supabase
+      .from('lms_files')
+      .update({ folder_id: null, folder: rootName })
+      .eq('course_id', courseId)
+      .or(`folder_id.eq.${id},folder.eq.${name}`);
+    if (fileErr) return setError(fileErr.message);
+    const { error: delErr } = await supabase.from('lms_folders').delete().eq('id', id).eq('course_id', courseId);
+    if (delErr) return setError(delErr.message);
+    setFiles(p => p.map(f => (f.folder_id === id || f.folder === name) ? { ...f, folder_id: null, folder: rootName } : f));
+    const next = folders.filter(f => f.id !== id);
+    if (folder === id) setFolder('root');
+    if (selFolder === id) setSelFolder('root');
+    persistFolderOrder(next);
   };
 
   const createDoc = async () => {
@@ -82,10 +129,11 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     const { error: upErr } = await uploadViaXhr('course-files', path, blob as any);
     if (upErr) return setError(upErr.message);
     const { data: { publicUrl } } = supabase.storage.from('course-files').getPublicUrl(path);
+    const targetFolder = selectedFolder?.id === 'root' ? null : selectedFolder;
     const { data: row, error: insErr } = await supabase.from('lms_files').insert({
       course_id: courseId, name: filename, file_name: filename, file_url: publicUrl,
-      file_type: 'txt', file_size: blob.size, folder: selFolder,
-      mime_type: 'text/plain', size_bytes: blob.size, storage_path: path,
+      file_type: 'txt', file_size: blob.size, folder: targetFolder?.name ?? rootName, folder_id: targetFolder?.id ?? null,
+      mime_type: 'text/plain', size_bytes: blob.size, storage_path: path, uploaded_by: user?.id ?? null,
     }).select().single();
     if (insErr) { setError(insErr.message); return; }
     if (row) setFiles(p => [row as any, ...p]);
@@ -97,6 +145,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     const newFiles: CourseFile[] = [];
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
+      const targetFolder = selectedFolder?.id === 'root' ? null : selectedFolder;
       setUploadPct(Math.round(((i) / fileList.length) * 100));
       const ext  = file.name.split('.').pop() ?? '';
       const safeName = file.name.replace(/[^\w.\-]+/g, '_').replace(/_+/g, '_');
@@ -106,8 +155,8 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
       const { data: { publicUrl } } = supabase.storage.from('course-files').getPublicUrl(path);
       const { data: row, error: insErr } = await supabase.from('lms_files').insert({
         course_id: courseId, name: file.name, file_name: file.name, file_url: publicUrl,
-        file_type: ext, file_size: file.size, folder: selFolder,
-        mime_type: file.type || null, size_bytes: file.size, storage_path: path,
+        file_type: ext, file_size: file.size, folder: targetFolder?.name ?? rootName, folder_id: targetFolder?.id ?? null,
+        mime_type: file.type || null, size_bytes: file.size, storage_path: path, uploaded_by: user?.id ?? null,
       }).select().single();
       if (insErr) { setError(`Saved to storage but DB insert failed for ${file.name}: ${insErr.message}`); continue; }
       if (row) newFiles.push(row);
@@ -125,8 +174,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     if (path) await supabase.storage.from('course-files').remove([decodeURIComponent(path)]);
   };
 
-  const visible = folder === 'All' ? files : files.filter(f => f.folder === folder);
-  const sidebarFolders = ['All', ...allFolders];
+  const visible = folder === 'root' ? files : files.filter(f => f.folder_id === folder || folders.find(x => x.id === folder)?.name === f.folder);
   const usedMB = files.reduce((s, f) => s + (f.file_size ?? 0), 0) / 1048576;
 
   return (
@@ -136,14 +184,31 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
         <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', marginBottom:10 }}>
           {courseId ? 'Course Files' : 'Select a course'}
         </div>
-        {sidebarFolders.map(f => (
-          <div key={f} onClick={() => setFolder(f)}
+        <div onClick={() => setFolder('root')}
+          style={{ padding:'7px 10px', borderRadius:5, cursor:'pointer', fontSize:12, fontFamily:'sans-serif',
+            background: folder === 'root' ? '#EDE8F7' : 'transparent',
+            color: folder === 'root' ? C.primary : C.text, fontWeight: folder === 'root' ? 600 : 400,
+            marginBottom:8, display:'flex', alignItems:'center', gap:6 }}>
+          <span>🏫</span>
+          <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{rootName}</span>
+        </div>
+        {folders.map((f, idx) => (
+          <div key={f.id}
             style={{ padding:'7px 10px', borderRadius:5, cursor:'pointer', fontSize:12, fontFamily:'sans-serif',
-              background: folder === f ? '#EDE8F7' : 'transparent',
-              color: folder === f ? C.primary : C.text, fontWeight: folder === f ? 600 : 400,
+              background: folder === f.id ? '#EDE8F7' : 'transparent',
+              color: folder === f.id ? C.primary : C.text, fontWeight: folder === f.id ? 600 : 400,
               marginBottom:2, display:'flex', alignItems:'center', gap:6 }}>
-            <span>{f === 'All' ? '📁' : '📂'}</span>
-            <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f}</span>
+            <span onClick={() => setFolder(f.id)} style={{ flex:1, display:'flex', alignItems:'center', gap:6, minWidth:0 }}>
+              <span>📂</span>
+              <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.name}</span>
+            </span>
+            {canEdit && (
+              <span style={{ display:'flex', gap:2 }}>
+                <button title="Move folder up" disabled={idx === 0} onClick={(e) => { e.stopPropagation(); moveFolder(f.id, -1); }} style={{ border:'none', background:'transparent', cursor: idx === 0 ? 'not-allowed' : 'pointer', color:C.muted, padding:1 }}>↑</button>
+                <button title="Move folder down" disabled={idx === folders.length - 1} onClick={(e) => { e.stopPropagation(); moveFolder(f.id, 1); }} style={{ border:'none', background:'transparent', cursor: idx === folders.length - 1 ? 'not-allowed' : 'pointer', color:C.muted, padding:1 }}>↓</button>
+                <button title="Delete folder" onClick={(e) => { e.stopPropagation(); deleteFolder(f.id, f.name); }} style={{ border:'none', background:'transparent', cursor:'pointer', color:C.error, padding:1 }}>×</button>
+              </span>
+            )}
           </div>
         ))}
         {canEdit && courseId && (
@@ -172,7 +237,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
               <select value={selFolder} onChange={e => setSelFolder(e.target.value)}
                 style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'6px 8px', fontSize:12, fontFamily:'sans-serif', maxWidth:200 }}>
-                {allFolders.map(f => <option key={f}>{f}</option>)}
+                {folderChoices.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
               <button onClick={createDoc}
                 style={{ padding:'7px 12px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
@@ -222,7 +287,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
         ) : visible.length === 0 ? (
           <div style={{ padding:40, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>
             <div style={{ fontSize:36, marginBottom:10 }}>📭</div>
-            <div style={{ fontSize:14 }}>No files in {folder === 'All' ? 'this course' : folder} yet.</div>
+              <div style={{ fontSize:14 }}>No files in {folder === 'root' ? rootName : folders.find(f => f.id === folder)?.name} yet.</div>
           </div>
         ) : (
           <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, overflow:'hidden' }}>
