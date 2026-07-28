@@ -20,11 +20,11 @@ import {
   ChevronRight, ChevronDown, Eye, EyeOff, MoreVertical, Plus, GripVertical,
   FileText, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap,
   Trash2, Pencil, BarChart3, X, ArrowRightLeft, ArrowUp, ArrowDown,
-  ChevronsUp, ChevronsDown, Type, CheckCircle2, Copy,
+  ChevronsUp, ChevronsDown, Type, CheckCircle2, Copy, MessageSquare, Plug,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
-  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  DndContext, pointerWithin, PointerSensor, useSensor, useSensors,
   DragEndEvent, useDroppable,
 } from "@dnd-kit/core";
 import {
@@ -42,11 +42,13 @@ type ModuleItem = {
 const ITEM_TYPES = [
   { value: "assignment", label: "Assignment", icon: ClipboardList },
   { value: "quiz",       label: "Quiz",       icon: GraduationCap },
-  { value: "page",       label: "Page",       icon: FileText },
   { value: "file",       label: "File",       icon: FileIcon },
+  { value: "page",       label: "Page",       icon: FileText },
+  { value: "discussion", label: "Discussion", icon: MessageSquare },
+  { value: "header",     label: "Text Header", icon: Type },
   { value: "link",       label: "External URL", icon: LinkIcon },
-  { value: "video",      label: "Video URL",  icon: Video },
-  { value: "header",     label: "Text Header (non-clickable title)", icon: Type },
+  { value: "video",      label: "Video",      icon: Video },
+  { value: "external_tool", label: "External Tool", icon: Plug },
 ];
 
 const itemIcon = (t: string) => {
@@ -55,7 +57,7 @@ const itemIcon = (t: string) => {
   return <I className="h-4 w-4 text-purple" />;
 };
 
-const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInstructor: boolean }) => {
+const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId: string; isInstructor: boolean; openAddOnMount?: number }) => {
   const [modules, setModules] = useState<Module[]>([]);
   const [items, setItems] = useState<ModuleItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,18 +71,23 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
+  useEffect(() => {
+    if (openAddOnMount && isInstructor) setModuleDlg({ open: true });
+  }, [openAddOnMount, isInstructor]);
+
   const load = async () => {
     setLoading(true);
     let modQuery = supabase.from("modules").select("*").eq("course_id", courseId).order("position");
     if (!isInstructor) modQuery = modQuery.eq("published", true);
     const { data: mods } = await modQuery;
-    setModules(mods ?? []);
+    const sortedMods = (mods ?? []).sort((a, b) => a.position - b.position);
+    setModules(sortedMods);
     const ids = (mods ?? []).map(m => m.id);
     if (ids.length) {
       let itQuery = supabase.from("module_items").select("*").in("module_id", ids).order("position");
       if (!isInstructor) itQuery = itQuery.eq("published", true);
       const { data: its } = await itQuery;
-      setItems(its ?? []);
+      setItems((its ?? []).sort((a, b) => a.position - b.position));
     } else {
       setItems([]);
     }
@@ -185,9 +192,10 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
       const target = items.filter(i => i.module_id === targetModuleId);
       const moved = items.find(i => i.id === active.id);
       if (!moved) return;
-      const insertIdx = targetItemId
+      const rawInsertIdx = targetItemId
         ? target.findIndex(i => i.id === targetItemId)
         : target.length;
+      const insertIdx = rawInsertIdx < 0 ? target.length : rawInsertIdx;
       const nextTarget = [...target.slice(0, insertIdx), { ...moved, module_id: targetModuleId }, ...target.slice(insertIdx)];
       const others = items.filter(i => i.module_id !== sourceModuleId && i.module_id !== targetModuleId);
       setItems([...others, ...source.map((i, idx) => ({ ...i, position: idx })), ...nextTarget.map((i, idx) => ({ ...i, position: idx }))]);
@@ -339,13 +347,13 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
           </CardContent>
         </Card>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={onDragEnd}>
           <SortableContext items={modules.map(m => m.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-3">
               {modules.map(m => (
                 <SortableModule
                   key={m.id} module={m}
-                  items={items.filter(i => i.module_id === m.id)}
+                   items={items.filter(i => i.module_id === m.id).sort((a, b) => a.position - b.position)}
                   allModules={modules}
                   collapsed={collapsed.has(m.id)}
                   isInstructor={isInstructor}
