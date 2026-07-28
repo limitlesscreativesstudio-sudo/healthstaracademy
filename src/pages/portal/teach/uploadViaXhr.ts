@@ -17,7 +17,9 @@ export async function uploadViaXhr(
 
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
-    const url = `${SUPABASE_URL}/storage/v1/object/${bucket}/${encodeURI(path)}`;
+    // Encode each path segment so filenames with spaces, #, ?, &, etc. don't break the URL
+    const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+    const url = `${SUPABASE_URL}/storage/v1/object/${bucket}/${encodedPath}`;
     xhr.open('POST', url, true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.setRequestHeader('apikey', import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string);
