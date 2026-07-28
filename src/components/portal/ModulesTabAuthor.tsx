@@ -592,7 +592,8 @@ const SortableModule = ({
 
 
 // ============ Sortable Item ============
-const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin }: any) => {
+const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, pageMap, discussionMap, onOpenFile, onOpenPage, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin }: any) => {
+  const navigate = useNavigate();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: i.id,
     data: { type: "item", moduleId: i.module_id },
@@ -600,9 +601,35 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, 
   const indent = Math.max(0, Math.min(5, Number(i.indent ?? 0)));
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, paddingLeft: `${12 + indent * 24}px` };
 
-
   const isHeader = i.item_type === "header";
-  const to = `/portal/courses/${courseId}/modules/${i.id}`;
+
+  const openItem = () => {
+    const t = i.item_type;
+    if (t === "assignment" && i.content_ref) return navigate(`/portal/courses/${courseId}/assignments/${i.content_ref}`);
+    if (t === "quiz" && i.content_ref) return navigate(`/portal/courses/${courseId}/quizzes/${i.content_ref}`);
+    if ((t === "link" || t === "video" || t === "external_tool") && i.url) return window.open(i.url, "_blank", "noopener,noreferrer");
+    if (t === "file") {
+      const f = fileMap?.[i.content_ref];
+      const fileUrl = f?.url || i.url || i.file_url;
+      if (!fileUrl) return toast({ title: "File not found", variant: "destructive" });
+      // Try inline viewer via storage path if pointing to course-files bucket, else new tab
+      const parts = fileUrl.split("/course-files/");
+      if (parts.length === 2) {
+        return onOpenFile?.({ bucket: "course-files", path: decodeURIComponent(parts[1].split("?")[0]) }, f?.name || i.title, f?.type || "");
+      }
+      return onOpenFile?.({ url: fileUrl }, f?.name || i.title, f?.type || "");
+    }
+    if (t === "page") {
+      const p = pageMap?.[i.content_ref];
+      return onOpenPage?.(p ?? { title: i.title, body: "" });
+    }
+    if (t === "discussion") {
+      const d = discussionMap?.[i.content_ref];
+      return onOpenPage?.(d ?? { title: i.title, body: "" });
+    }
+    if (i.url) return window.open(i.url, "_blank", "noopener,noreferrer");
+    toast({ title: "Nothing to open for this item" });
+  };
 
   return (
     <div
@@ -618,7 +645,10 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, 
       {isHeader ? (
         <div className="flex-1 text-sm font-bold uppercase tracking-wide text-muted-foreground select-none">{i.title}</div>
       ) : (
-        <Link to={to} className="flex-1 text-sm hover:underline">{i.title}</Link>
+        <button type="button" onClick={openItem} className="flex-1 text-left text-sm hover:underline">
+          {i.title}
+          {i.description ? <div className="text-xs text-muted-foreground font-normal mt-0.5 line-clamp-1">{i.description}</div> : null}
+        </button>
       )}
       {isInstructor && !i.published && (
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1 py-0.5">Hidden</span>
