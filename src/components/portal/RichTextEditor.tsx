@@ -260,6 +260,61 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
     e.target.value = "";
   };
 
+  const uploadDocumentAndInsert = async (file: File) => {
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Max 50MB.", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "").toLowerCase();
+      const safe = file.name.replace(/[^\w.\-]+/g, "_").replace(/_+/g, "_");
+      const path = `docs/${Date.now()}_${safe}`;
+      const { error } = await uploadViaXhr("page-images", path, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from("page-images").getPublicUrl(path);
+      const url = data.publicUrl;
+      focusEditorWithRange();
+
+      let html = "";
+      if (ext === "pdf") {
+        html = `
+          <div class="my-4 border border-border rounded-md overflow-hidden bg-muted/20" style="width:100%;">
+            <iframe src="${url.replace(/"/g, "&quot;")}" style="width:100%; height:780px; border:0; display:block;" loading="lazy"></iframe>
+          </div>
+          <p><a href="${url.replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">${file.name.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</a></p>
+          <p><br/></p>
+        `;
+      } else if (["ppt", "pptx", "doc", "docx", "xls", "xlsx"].includes(ext)) {
+        const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+        html = `
+          <div class="my-4 border border-border rounded-md overflow-hidden bg-muted/20" style="width:100%;">
+            <iframe src="${officeUrl.replace(/"/g, "&quot;")}" style="width:100%; height:780px; border:0; display:block;" loading="lazy"></iframe>
+          </div>
+          <p><a href="${url.replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">${file.name.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</a></p>
+          <p><br/></p>
+        `;
+      } else {
+        html = `
+          <p><a href="${url.replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">📎 ${file.name.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</a></p>
+          <p><br/></p>
+        `;
+      }
+      document.execCommand("insertHTML", false, html);
+      if (editorRef.current) onChange(editorRef.current.innerHTML);
+    } catch (err: any) {
+      toast({ title: "Document upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onDocChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) uploadDocumentAndInsert(f);
+    e.target.value = "";
+  };
+
   const handleInput = () => {
     if (editorRef.current) onChange(editorRef.current.innerHTML);
   };
