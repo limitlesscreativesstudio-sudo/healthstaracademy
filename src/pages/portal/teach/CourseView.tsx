@@ -605,12 +605,19 @@ const Placeholder: React.FC<{ title: string }> = ({ title }) => (
 );
 
 // ── Nav items ─────────────────────────────────────────────────────────────────
+// Health Star-specific order: daily-used tabs first, then a divider, then
+// planning / administration / infrequently-used tabs.
 const NAV_ITEMS = [
   { id:'home',          label:'Home',               icon:'🏠' },
+  { id:'modules',       label:'Modules',            icon:'📦' },
   { id:'announcements', label:'Announcements',      icon:'📢' },
   { id:'assignments',   label:'Assignments',        icon:'✅' },
+  { id:'quizzes',       label:'Quizzes',            icon:'❓' },
   { id:'discussions',   label:'Discussions',        icon:'💬' },
   { id:'grades',        label:'Grades',             icon:'📊' },
+  { id:'calendar',      label:'Calendar',           icon:'📅' },
+  { id:'attendance',    label:'Attendance',         icon:'✔️' },
+  { type:'divider' },
   { id:'progress',      label:'Progress',           icon:'📈' },
   { id:'people',        label:'People',             icon:'👥' },
   { id:'pages',         label:'Pages',              icon:'📄' },
@@ -618,16 +625,12 @@ const NAV_ITEMS = [
   { id:'syllabus',      label:'Syllabus',           icon:'📋' },
   { id:'outcomes',      label:'Outcomes',           icon:'🎯' },
   { id:'rubrics',       label:'Rubrics',            icon:'📏' },
-  { id:'quizzes',       label:'Quizzes',            icon:'❓' },
-  { id:'modules',       label:'Modules',            icon:'📦' },
-  { id:'attendance',    label:'Attendance',         icon:'✔️' },
   { id:'clinical',      label:'Clinical Skills',    icon:'🩺' },
   { id:'readiness',     label:'Exam Readiness',     icon:'🏆' },
   { id:'required',      label:'Required Work',      icon:'📌' },
   { id:'career',        label:'Career Portal',      icon:'💼' },
   { id:'analytics',     label:'New Analytics',      icon:'📈' },
   { id:'lucid',         label:'Lucid (Whiteboard)', icon:'✏️' },
-  { id:'calendar',      label:'Calendar',           icon:'📅' },
   { id:'settings',      label:'Settings',           icon:'⚙️' },
 ];
 
@@ -997,7 +1000,10 @@ const CourseView: React.FC = () => {
           {/* Course sidebar nav (desktop) or drawer (mobile) */}
           {!isMobile && (
             <div style={{ width:200, background:C.white, borderRight:`1px solid ${C.border}`, flexShrink:0, minHeight:'calc(100vh - 76px)', overflowY:'auto' }}>
-              {NAV_ITEMS.map(item => {
+              {NAV_ITEMS.map((item, idx) => {
+                if (item.type === 'divider') {
+                  return <div key={`divider-${idx}`} style={{ height:12, margin:'4px 14px', borderTop:`1px solid ${C.border}` }} />;
+                }
                 const active = activeTab === item.id || (item.id === 'modules' && activeTab === 'home');
                 return (
                   <div key={item.id} onClick={() => setActiveTab(item.id)}
@@ -1021,7 +1027,10 @@ const CourseView: React.FC = () => {
                   <span style={{ fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Course Menu</span>
                   <button onClick={() => setMobileNavOpen(false)} style={{ background:'none', border:'none', fontSize:18, cursor:'pointer' }}>✕</button>
                 </div>
-                {NAV_ITEMS.map(item => {
+                {NAV_ITEMS.map((item, idx) => {
+                  if (item.type === 'divider') {
+                    return <div key={`m-divider-${idx}`} style={{ height:12, margin:'4px 16px', borderTop:`1px solid ${C.border}` }} />;
+                  }
                   const active = activeTab === item.id || (item.id === 'modules' && activeTab === 'home');
                   return (
                     <div key={item.id} onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }}
