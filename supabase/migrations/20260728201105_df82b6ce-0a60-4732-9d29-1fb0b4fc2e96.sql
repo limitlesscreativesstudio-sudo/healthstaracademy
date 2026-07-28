@@ -1,0 +1,1 @@
+ALTER TABLE public.module_items ADD COLUMN IF NOT EXISTS indent smallint NOT NULL DEFAULT 0;

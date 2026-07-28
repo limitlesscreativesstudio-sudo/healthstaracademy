@@ -381,6 +381,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
       <ItemDialog
         open={itemDlg.open}
         moduleId={itemDlg.moduleId}
+        moduleTitle={modules.find(m => m.id === itemDlg.moduleId)?.title}
         item={itemDlg.item}
         courseId={courseId}
         nextPosition={itemDlg.moduleId ? items.filter(i => i.module_id === itemDlg.moduleId).length : 0}
@@ -523,7 +524,8 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, 
     id: i.id,
     data: { type: "item", moduleId: i.module_id },
   });
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const indent = Math.max(0, Math.min(5, Number(i.indent ?? 0)));
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, paddingLeft: `${12 + indent * 24}px` };
 
 
   const isHeader = i.item_type === "header";
@@ -532,7 +534,7 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, 
   return (
     <div
       ref={setNodeRef} style={style}
-      className={`flex items-center gap-2 px-3 py-2 border-b border-border last:border-0 hover:bg-muted/30 ${!i.published ? "opacity-60" : ""}`}
+      className={`flex items-center gap-2 pr-3 py-2 border-b border-border last:border-0 hover:bg-muted/30 ${!i.published ? "opacity-60" : ""}`}
     >
       {isInstructor && (
         <button type="button" {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing touch-none p-1 hover:bg-muted rounded" title="Drag to reorder item">
@@ -650,12 +652,14 @@ const ModuleDialog = ({ open, module: m, courseId, nextPosition, onClose, onSave
 };
 
 // ============ Item Dialog ============
-const ItemDialog = ({ open, moduleId, item, courseId, nextPosition, onClose, onSaved }: any) => {
-  const [type, setType] = useState("page");
+const CREATE_NEW = "__create_new__";
+const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition, onClose, onSaved }: any) => {
+  const [type, setType] = useState("assignment");
   const [title, setTitle] = useState("");
   const [contentRef, setContentRef] = useState<string>("");
   const [url, setUrl] = useState("");
   const [published, setPublished] = useState(true);
+  const [indent, setIndent] = useState<number>(0);
   const [saving, setSaving] = useState(false);
 
   // pickers
@@ -664,25 +668,27 @@ const ItemDialog = ({ open, moduleId, item, courseId, nextPosition, onClose, onS
   const [pages, setPages] = useState<any[]>([]);
   const [files, setFiles] = useState<any[]>([]);
 
+  const reloadPickers = async () => {
+    const [a, q, p, f] = await Promise.all([
+      supabase.from("assignments").select("id, title").eq("course_id", courseId).order("title"),
+      supabase.from("quizzes").select("id, title").eq("course_id", courseId).order("title"),
+      supabase.from("lms_pages").select("id, title").eq("course_id", courseId).order("title"),
+      supabase.from("lms_files").select("id, name").eq("course_id", courseId).order("name"),
+    ]);
+    setAssignments(a.data ?? []); setQuizzes(q.data ?? []);
+    setPages(p.data ?? []); setFiles(f.data ?? []);
+  };
+
   useEffect(() => {
     if (!open) return;
     if (item) {
       setType(item.item_type); setTitle(item.title);
       setContentRef(item.content_ref ?? ""); setUrl(item.url ?? "");
-      setPublished(item.published);
+      setPublished(item.published); setIndent(Number(item.indent ?? 0));
     } else {
-      setType("page"); setTitle(""); setContentRef(""); setUrl(""); setPublished(true);
+      setType("assignment"); setTitle(""); setContentRef(""); setUrl(""); setPublished(true); setIndent(0);
     }
-    (async () => {
-      const [a, q, p, f] = await Promise.all([
-        supabase.from("assignments").select("id, title").eq("course_id", courseId).order("title"),
-        supabase.from("quizzes").select("id, title").eq("course_id", courseId).order("title"),
-        supabase.from("lms_pages").select("id, title").eq("course_id", courseId).order("title"),
-        supabase.from("lms_files").select("id, name").eq("course_id", courseId).order("name"),
-      ]);
-      setAssignments(a.data ?? []); setQuizzes(q.data ?? []);
-      setPages(p.data ?? []); setFiles(f.data ?? []);
-    })();
+    reloadPickers();
   }, [open, item, courseId]);
 
   // auto-fill title when picking existing content
@@ -691,12 +697,52 @@ const ItemDialog = ({ open, moduleId, item, courseId, nextPosition, onClose, onS
     if (!title) setTitle(label);
   };
 
+  // inline create for assignment/quiz/page
+  const createNewAndAttach = async (): Promise<string | null> => {
+    const displayTitle = title.trim() || `New ${type}`;
+    if (type === "assignment") {
+      const { data, error } = await supabase.from("assignments")
+        .insert({ course_id: courseId, title: displayTitle, submission_type: "assignment", group_name: "Assignments", points: 100, published: false })
+        .select().single();
+      if (error) { toast({ title: "Could not create assignment", variant: "destructive" }); return null; }
+      return data.id;
+    }
+    if (type === "quiz") {
+      const { data, error } = await supabase.from("quizzes")
+        .insert({ course_id: courseId, title: displayTitle, published: false })
+        .select().single();
+      if (error) { toast({ title: "Could not create quiz", variant: "destructive" }); return null; }
+      return data.id;
+    }
+    if (type === "page") {
+      const { data, error } = await supabase.from("lms_pages")
+        .insert({ course_id: courseId, title: displayTitle, body_html: "", published: false })
+        .select().single();
+      if (error) { toast({ title: "Could not create page", variant: "destructive" }); return null; }
+      return data.id;
+    }
+    return null;
+  };
+
   const save = async () => {
-    if (!title.trim()) return;
+    if (!title.trim() && type !== "header") return;
+    if (type === "header" && !title.trim()) return;
     setSaving(true);
+
+    let finalContentRef: string | null = null;
+    if (["assignment", "quiz", "page", "file"].includes(type)) {
+      if (contentRef === CREATE_NEW) {
+        const newId = await createNewAndAttach();
+        if (!newId) { setSaving(false); return; }
+        finalContentRef = newId;
+      } else {
+        finalContentRef = contentRef || null;
+      }
+    }
+
     const payload: any = {
-      module_id: moduleId, title: title.trim(), item_type: type, published,
-      content_ref: ["assignment", "quiz", "page", "file"].includes(type) ? (contentRef || null) : null,
+      module_id: moduleId, title: title.trim(), item_type: type, published, indent,
+      content_ref: finalContentRef,
       url: ["link", "video"].includes(type) ? (url || null) : null,
     };
     if (item) {
@@ -711,35 +757,54 @@ const ItemDialog = ({ open, moduleId, item, courseId, nextPosition, onClose, onS
     onClose();
   };
 
+  const needsPicker = ["assignment", "quiz", "page", "file"].includes(type);
+  const pickerOptions =
+    type === "assignment" ? assignments.map(a => ({ id: a.id, label: a.title })) :
+    type === "quiz"       ? quizzes.map(q => ({ id: q.id, label: q.title })) :
+    type === "page"       ? pages.map(p => ({ id: p.id, label: p.title })) :
+    type === "file"       ? files.map(f => ({ id: f.id, label: f.name })) : [];
+  const canCreateInline = ["assignment", "quiz", "page"].includes(type);
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>{item ? "Edit Item" : "Add Item to Module"}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>
+            {item ? "Edit Item" : `Add Item to ${moduleTitle || "Module"}`}
+          </DialogTitle>
+        </DialogHeader>
         <div className="space-y-3">
-          <div>
-            <Label>Type</Label>
+          <div className="flex items-center gap-2">
+            <Label className="whitespace-nowrap">Add</Label>
             <Select value={type} onValueChange={(v) => { setType(v); setContentRef(""); }}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {ITEM_TYPES.map(t => (
                   <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {moduleTitle && (
+              <span className="text-sm text-muted-foreground truncate">to {moduleTitle}</span>
+            )}
           </div>
 
-          {type === "assignment" && (
-            <PickerSelect label="Assignment" value={contentRef} options={assignments.map(a => ({ id: a.id, label: a.title }))} onChange={onPickContent} emptyHint="Create assignments first in the Assignments tab." />
+          {needsPicker && (
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">
+                Select the {type} you want to associate with this module{canCreateInline ? `, or add a new one by selecting "Create ${type[0].toUpperCase()+type.slice(1)}"` : ""}.
+              </div>
+              <PickerSelect
+                label={type[0].toUpperCase() + type.slice(1)}
+                value={contentRef}
+                options={pickerOptions}
+                onChange={onPickContent}
+                canCreate={canCreateInline}
+                createLabel={`[ Create ${type[0].toUpperCase()+type.slice(1)} ]`}
+              />
+            </div>
           )}
-          {type === "quiz" && (
-            <PickerSelect label="Quiz" value={contentRef} options={quizzes.map(q => ({ id: q.id, label: q.title }))} onChange={onPickContent} emptyHint="Create quizzes first in the Quizzes tab." />
-          )}
-          {type === "page" && (
-            <PickerSelect label="Page" value={contentRef} options={pages.map(p => ({ id: p.id, label: p.title }))} onChange={onPickContent} emptyHint="No pages yet. Create one in the Pages tab." />
-          )}
-          {type === "file" && (
-            <PickerSelect label="File" value={contentRef} options={files.map(f => ({ id: f.id, label: f.name }))} onChange={onPickContent} emptyHint="No files yet. Upload one in the Files tab." />
-          )}
+
           {(type === "link" || type === "video") && (
             <div>
               <Label>URL</Label>
@@ -752,6 +817,21 @@ const ItemDialog = ({ open, moduleId, item, courseId, nextPosition, onClose, onS
             <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={type === "header" ? "Section heading text" : "Title shown to students"} />
           </div>
 
+          <div>
+            <Label>Indentation</Label>
+            <Select value={String(indent)} onValueChange={(v) => setIndent(Number(v))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">Don't Indent</SelectItem>
+                <SelectItem value="1">Indent 1 Level</SelectItem>
+                <SelectItem value="2">Indent 2 Levels</SelectItem>
+                <SelectItem value="3">Indent 3 Levels</SelectItem>
+                <SelectItem value="4">Indent 4 Levels</SelectItem>
+                <SelectItem value="5">Indent 5 Levels</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
             Published
@@ -759,30 +839,30 @@ const ItemDialog = ({ open, moduleId, item, courseId, nextPosition, onClose, onS
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={save} disabled={saving || !title.trim()}>{saving ? "Saving…" : "Save"}</Button>
+          <Button onClick={save} disabled={saving || !title.trim()}>{saving ? "Saving…" : "Add Item"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
 
-const PickerSelect = ({ label, value, options, onChange, emptyHint }: any) => (
-  <div>
-    <Label>{label}</Label>
-    {options.length === 0 ? (
-      <div className="text-xs text-muted-foreground italic mt-1">{emptyHint}</div>
-    ) : (
-      <Select value={value} onValueChange={(v) => {
-        const opt = options.find((o: any) => o.id === v);
-        onChange(v, opt?.label ?? "");
-      }}>
-        <SelectTrigger><SelectValue placeholder={`Choose a ${label.toLowerCase()}…`} /></SelectTrigger>
-        <SelectContent>
-          {options.map((o: any) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
-        </SelectContent>
-      </Select>
-    )}
-  </div>
+const PickerSelect = ({ label, value, options, onChange, canCreate, createLabel }: any) => (
+  <Select value={value} onValueChange={(v) => {
+    if (v === CREATE_NEW) { onChange(CREATE_NEW, ""); return; }
+    const opt = options.find((o: any) => o.id === v);
+    onChange(v, opt?.label ?? "");
+  }}>
+    <SelectTrigger><SelectValue placeholder={`Choose a ${label.toLowerCase()}…`} /></SelectTrigger>
+    <SelectContent>
+      {canCreate && (
+        <SelectItem value={CREATE_NEW} className="font-semibold">{createLabel}</SelectItem>
+      )}
+      {options.length === 0 && !canCreate && (
+        <div className="px-2 py-1.5 text-xs text-muted-foreground italic">No existing {label.toLowerCase()}s.</div>
+      )}
+      {options.map((o: any) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
+    </SelectContent>
+  </Select>
 );
 
 // ============ Progress Dialog ============
