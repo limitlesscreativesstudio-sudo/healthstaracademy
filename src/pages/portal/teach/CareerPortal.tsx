@@ -1,7 +1,9 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B' } as const;
+
 
 const JOBS = [
   // ── HSA partner clinical sites — Stockton / Lodi / Hayward / Sacramento ──
@@ -29,16 +31,48 @@ const RESOURCES = [
   { icon:'💰', title:'Salary Comparison', desc:'Compare CNA wages by facility type and region in California.', action:'View Data', url:'https://www.bls.gov/oes/current/oes311131.htm' },
 ];
 
+const FALLBACK_JOBS = JOBS;
+
 const CareerPortal: React.FC = () => {
   const [tab, setTab] = useState<'jobs'|'resources'>('jobs');
   const [filter, setFilter] = useState('All');
   const [partnersOnly, setPartnersOnly] = useState(false);
+  const [jobs, setJobs] = useState<any[]>(FALLBACK_JOBS);
+  const [lastRefreshed, setLastRefreshed] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from('career_jobs')
+        .select('*')
+        .eq('active', true)
+        .order('is_partner', { ascending: false })
+        .order('last_refreshed_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        setJobs(data.map((j: any) => ({
+          id: j.id,
+          title: j.title,
+          org: j.org,
+          location: j.location,
+          type: j.type,
+          wage: j.wage,
+          posted: j.posted,
+          tags: Array.isArray(j.tags) ? j.tags : [],
+          url: j.url,
+        })));
+        setLastRefreshed(data[0].last_refreshed_at);
+      }
+      setLoading(false);
+    })();
+  }, []);
 
   const types = ['All','Full-Time','Part-Time','Per Diem'];
-  const filtered = JOBS.filter(j =>
+  const filtered = jobs.filter(j =>
     (filter === 'All' || j.type === filter) &&
-    (!partnersOnly || j.tags.includes('Partner Site'))
+    (!partnersOnly || (j.tags || []).includes('Partner Site') || /Partner Site/i.test(j.location || ''))
   );
+
 
   return (
     <div style={{ padding:24 }}>
@@ -61,7 +95,11 @@ const CareerPortal: React.FC = () => {
         <>
           <div style={{ background:'#EDE8F7', border:`1px solid ${C.primary}22`, borderLeft:`3px solid ${C.primary}`, borderRadius:6, padding:'10px 14px', marginBottom:14, fontSize:12, color:C.text, fontFamily:'sans-serif', lineHeight:1.5 }}>
             <strong style={{ color:C.primary }}>HSA Partner Sites</strong> — CNA openings sourced from our clinical rotation partners in Stockton, Lodi, Hayward and Sacramento. Listings are verified against each facility's careers page; wages reflect regional posted ranges. Click any listing to apply directly.
+            <div style={{ marginTop:6, fontSize:11, color:C.muted }}>
+              🔄 Auto-refreshes every Monday. {lastRefreshed ? `Last updated ${new Date(lastRefreshed).toLocaleDateString('en-US',{ month:'short', day:'numeric', year:'numeric' })}.` : loading ? 'Loading latest listings…' : 'Showing cached listings.'}
+            </div>
           </div>
+
           <div style={{ display:'flex', gap:6, marginBottom:16, flexWrap:'wrap', alignItems:'center' }}>
             {types.map(t => (
               <button key={t} onClick={() => setFilter(t)}
