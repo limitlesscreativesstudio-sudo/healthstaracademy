@@ -555,7 +555,7 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
                 <div style={{ display:'flex', alignItems:'center', gap:14 }}>
                   <span style={{ fontSize:22 }}>❓</span>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:14, fontWeight:600, color:C.primary }}>{q.title}</div>
+                    <div onClick={() => openDetails(q)} style={{ fontSize:14, fontWeight:600, color:C.primary, cursor:'pointer' }}>{q.title}</div>
                     <div style={{ fontSize:12, color:C.muted }}>
                       {q.due_at && `Due ${new Date(q.due_at).toLocaleDateString()} • `}{Number(q.total_points||0)} pts
                       {!canEdit && taken && <span style={{ color:C.success, marginLeft:8, fontWeight:600 }}>✓ Submitted</span>}
