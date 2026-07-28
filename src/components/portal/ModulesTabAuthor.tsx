@@ -626,16 +626,11 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, 
       const d = discussionMap?.[i.content_ref];
       return onOpenPage?.(d ?? { title: i.title, body: "" });
     }
-    // link / video / external_tool / anything with a url — preview inline when we can
+    // link / video / external_tool / anything with a url — always preview inline
+    // so students stay on the course page instead of leaving to a new tab.
     const url: string | undefined = i.url;
     if (url) {
-      const lower = url.toLowerCase().split(/[?#]/)[0];
-      const previewable = /\.(pdf|pptx?|docx?|xlsx?|mp4|mov|webm|m4v|ogg|mp3|wav|m4a|jpe?g|png|gif|webp|svg)$/i.test(lower)
-        || /youtu\.?be|vimeo\.com|view\.officeapps\.live\.com/.test(url);
-      if (previewable) {
-        return onOpenFile?.({ url }, i.title, "", i.title);
-      }
-      return window.open(url, "_blank", "noopener,noreferrer");
+      return onOpenFile?.({ url }, i.title, "", i.title);
     }
     toast({ title: "Nothing to open for this item" });
   };
