@@ -15,6 +15,15 @@ const COLORS = [
   '#C0392B','#E67E22',
 ];
 
+// Stable auto-color from course id/title (Canvas-style varied cards)
+const autoColor = (seed: string): string => {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = ((h << 5) - h + seed.charCodeAt(i)) | 0;
+  return COLORS[Math.abs(h) % COLORS.length];
+};
+const colorFor = (c: { id: string; color?: string | null; name?: string }) =>
+  c.color && c.color.trim() ? c.color : autoColor((c.id || '') + (c.name || ''));
+
 interface DBCourse {
   id: string;          // real Supabase UUID
   name: string;
@@ -27,10 +36,12 @@ interface DBCourse {
   created_at: string;
 }
 
+type EnterTab = 'home' | 'announcements' | 'assignments' | 'discussions' | 'files' | 'grades' | 'people';
 
 interface Props {
-  onEnterCourse: (course: DBCourse) => void;
+  onEnterCourse: (course: DBCourse, tab?: EnterTab) => void;
 }
+
 
 // ── Course Card ───────────────────────────────────────────────────────────────
 const CourseCard: React.FC<{
