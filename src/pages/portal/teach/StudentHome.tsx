@@ -34,8 +34,12 @@ interface AnnouncementRow {
 }
 
 const StudentHome: React.FC = () => {
-  const { user, loading } = usePortalAuth(true);
+  const { user, loading, isInstructor } = usePortalAuth(true);
   const navigate = useNavigate();
+  // Instructors and admins get their own dashboard — keep student and instructor views separate.
+  useEffect(() => {
+    if (!loading && isInstructor) navigate('/portal/teach', { replace: true });
+  }, [loading, isInstructor, navigate]);
   const [courses, setCourses] = useState<CourseRow[]>([]);
   const [upcoming, setUpcoming] = useState<UpcomingItem[]>([]);
   const [announcements, setAnnouncements] = useState<AnnouncementRow[]>([]);
