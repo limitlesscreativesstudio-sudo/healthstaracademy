@@ -445,6 +445,21 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
           onClose={() => setProgressOpen(false)}
         />
       )}
+      <ContentViewer
+        open={!!viewer}
+        onClose={() => setViewer(null)}
+        source={viewer?.src ?? null}
+        fileName={viewer?.name}
+        fileType={viewer?.type}
+      />
+      <Dialog open={!!pageView} onOpenChange={(o) => !o && setPageView(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{pageView?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: pageView?.body || "<p class='text-muted-foreground'>Empty page.</p>" }} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
