@@ -221,6 +221,26 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
     load();
   };
 
+  // ----- Reorder item within its module (menu fallback for drag) -----
+  const moveItemWithin = async (item: ModuleItem, where: "up" | "down" | "top" | "bottom") => {
+    const within = items.filter(i => i.module_id === item.module_id).sort((a, b) => a.position - b.position);
+    const idx = within.findIndex(x => x.id === item.id);
+    if (idx < 0) return;
+    let newIdx = idx;
+    if (where === "up") newIdx = Math.max(0, idx - 1);
+    if (where === "down") newIdx = Math.min(within.length - 1, idx + 1);
+    if (where === "top") newIdx = 0;
+    if (where === "bottom") newIdx = within.length - 1;
+    if (newIdx === idx) return;
+    const reordered = arrayMove(within, idx, newIdx);
+    const others = items.filter(i => i.module_id !== item.module_id);
+    setItems([...others, ...reordered.map((x, i2) => ({ ...x, position: i2 }))]);
+    await Promise.all(reordered.map((x, i2) =>
+      supabase.from("module_items").update({ position: i2 }).eq("id", x.id)
+    ));
+    toast({ title: "Item moved" });
+  };
+
   // ----- Duplicate item -----
   const duplicateItem = async (item: ModuleItem) => {
     const sameModuleCount = items.filter(i => i.module_id === item.module_id).length;
@@ -340,6 +360,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
                   onToggleItemPublish={togglePublishItem}
                   onDuplicateItem={duplicateItem}
                   onMoveItem={moveItemToModule}
+                  onMoveItemWithin={moveItemWithin}
                   onMoveModule={(where: "up" | "down" | "top" | "bottom") => moveModule(m, where)}
                 />
               ))}
@@ -383,7 +404,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
 const SortableModule = ({
   module: m, items, allModules, collapsed, isInstructor, courseId,
   onToggleCollapse, onTogglePublish, onEdit, onDelete, onAddItem,
-  onEditItem, onDeleteItem, onToggleItemPublish, onDuplicateItem, onMoveItem, onMoveModule,
+  onEditItem, onDeleteItem, onToggleItemPublish, onDuplicateItem, onMoveItem, onMoveItemWithin, onMoveModule,
 }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: m.id,
@@ -406,7 +427,7 @@ const SortableModule = ({
     <Card ref={setNodeRef} style={style}>
       <div className="px-3 py-2 border-b border-border bg-muted/40 flex items-center gap-2">
         {isInstructor && (
-          <button {...attributes} {...listeners} className="cursor-grab p-1 hover:bg-muted rounded" title="Drag to reorder module">
+          <button type="button" {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing touch-none p-1 hover:bg-muted rounded" title="Drag to reorder module">
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </button>
         )}
@@ -465,15 +486,18 @@ const SortableModule = ({
                   {isInstructor ? "No items — drag an item here or click Add item." : "No items in this module."}
                 </div>
               ) : (
-                items.map((i: ModuleItem) => (
+                items.map((i: ModuleItem, idx2: number) => (
                   <SortableItem
                     key={i.id} item={i} courseId={courseId} isInstructor={isInstructor}
                     otherModules={otherModules}
+                    isFirst={idx2 === 0}
+                    isLast={idx2 === items.length - 1}
                     onTogglePublish={() => onToggleItemPublish(i)}
                     onEdit={() => onEditItem(i)}
                     onDelete={() => onDeleteItem(i)}
                     onDuplicate={() => onDuplicateItem(i)}
                     onMoveTo={(targetId: string) => onMoveItem(i, targetId)}
+                    onMoveWithin={(where: "up" | "down" | "top" | "bottom") => onMoveItemWithin(i, where)}
                   />
                 ))
               )}
@@ -494,7 +518,7 @@ const SortableModule = ({
 
 
 // ============ Sortable Item ============
-const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo }: any) => {
+const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: i.id,
     data: { type: "item", moduleId: i.module_id },
@@ -511,7 +535,7 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onToggleP
       className={`flex items-center gap-2 px-3 py-2 border-b border-border last:border-0 hover:bg-muted/30 ${!i.published ? "opacity-60" : ""}`}
     >
       {isInstructor && (
-        <button {...attributes} {...listeners} className="cursor-grab p-1 hover:bg-muted rounded">
+        <button type="button" {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing touch-none p-1 hover:bg-muted rounded" title="Drag to reorder item">
           <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
       )}
@@ -538,6 +562,19 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onToggleP
             <DropdownMenuContent align="end" className="max-h-80 overflow-auto">
               <DropdownMenuItem onClick={onEdit}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
               <DropdownMenuItem onClick={onDuplicate}><Copy className="h-4 w-4 mr-2" /> Duplicate</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled={isFirst} onClick={() => onMoveWithin("top")}>
+                <ChevronsUp className="h-4 w-4 mr-2" /> Move to top
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={isFirst} onClick={() => onMoveWithin("up")}>
+                <ArrowUp className="h-4 w-4 mr-2" /> Move up
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={isLast} onClick={() => onMoveWithin("down")}>
+                <ArrowDown className="h-4 w-4 mr-2" /> Move down
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={isLast} onClick={() => onMoveWithin("bottom")}>
+                <ChevronsDown className="h-4 w-4 mr-2" /> Move to bottom
+              </DropdownMenuItem>
               {otherModules && otherModules.length > 0 && (
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
