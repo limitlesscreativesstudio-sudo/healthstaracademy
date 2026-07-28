@@ -77,7 +77,9 @@ const CareerPortal: React.FC = () => {
 
 
   return (
+    <PortalLayout>
     <div style={{ padding:24 }}>
+
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Career Portal</h2>
         <span style={{ fontSize:13, color:C.muted, fontFamily:'sans-serif' }}>Help your students land their first CNA role</span>
