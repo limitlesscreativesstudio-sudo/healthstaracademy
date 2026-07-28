@@ -122,7 +122,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   };
 
   const visible = folder === 'All' ? files : files.filter(f => f.folder === folder);
-  const allFolders = ['All', ...FOLDERS];
+  const sidebarFolders = ['All', ...allFolders];
   const usedMB = files.reduce((s, f) => s + (f.file_size ?? 0), 0) / 1048576;
 
   return (
