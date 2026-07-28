@@ -193,11 +193,12 @@ const NotificationsPanel: React.FC<{ prefs: typeof DEFAULT_PREFS; setPrefs:(p:ty
 const ProfilePanel: React.FC = () => {
   const { user, updateProfile, updatePassword } = useAuth();
   const [name, setName] = useState(user?.name ?? '');
-  const [title, setTitle] = useState('CNA Lead Instructor');
+  const [title, setTitle] = useState('');
   const [phone, setPhone] = useState('');
   const [bio, setBio] = useState('');
   const [msg, setMsg] = useState<{type:'success'|'error';text:string}|null>(null);
   const [loading, setLoading] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   const [curPass, setCurPass] = useState('');
   const [newPass, setNewPass] = useState('');
@@ -207,12 +208,31 @@ const ProfilePanel: React.FC = () => {
   const [pwMsg, setPwMsg] = useState<{type:'success'|'error';text:string}|null>(null);
   const [pwLoading, setPwLoading] = useState(false);
 
+  // Load current profile values from DB so edits show what's saved.
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, job_title, phone, bio')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data) {
+        setName((data.full_name as string) ?? user.name ?? '');
+        setTitle((data.job_title as string) ?? '');
+        setPhone((data.phone as string) ?? '');
+        setBio((data.bio as string) ?? '');
+      }
+      setHydrated(true);
+    })();
+  }, [user?.id]);
+
   const save = async () => {
     if (!name.trim()) return setMsg({ type:'error', text:'Name cannot be empty.' });
     setLoading(true);
-    const r = await updateProfile(name.trim());
+    const r = await updateProfile({ name: name.trim(), jobTitle: title.trim(), phone: phone.trim(), bio: bio.trim() });
     setLoading(false);
-    setMsg(r.error ? { type:'error', text:r.error } : { type:'success', text:'Profile updated.' });
+    setMsg(r.error ? { type:'error', text:r.error } : { type:'success', text:'Profile saved.' });
     setTimeout(() => setMsg(null), 4000);
   };
   const changePw = async () => {
@@ -244,14 +264,14 @@ const ProfilePanel: React.FC = () => {
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 20px' }}>
           <Field label="Full Name *" value={name} onChange={setName}/>
           <Field label="Email Address" value={user?.email ?? ''} onChange={()=>{}} disabled hint="Email is managed via account security."/>
-          <Field label="Job Title" value={title} onChange={setTitle}/>
+          <Field label="Job Title" value={title} onChange={setTitle} placeholder="e.g. CNA Lead Instructor"/>
           <Field label="Phone Number" value={phone} onChange={setPhone} placeholder="(555) 555-1234"/>
         </div>
         <div style={{ marginBottom:14 }}>
           <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, marginBottom:5 }}>Biography</label>
           <textarea rows={3} value={bio} onChange={e=>setBio(e.target.value)} style={{ width:'100%', border:`1.5px solid ${C.border}`, borderRadius:6, padding:'9px 12px', fontSize:13, color:C.text, outline:'none', boxSizing:'border-box', resize:'vertical' }}/>
         </div>
-        <PrimaryBtn onClick={save} disabled={loading}>{loading ? 'Saving…' : 'Save Profile'}</PrimaryBtn>
+        <PrimaryBtn onClick={save} disabled={loading || !hydrated}>{loading ? 'Saving…' : 'Save Profile'}</PrimaryBtn>
       </Section>
 
       <Section title="Change Password" subtitle="You'll need the new password on your next sign-in.">
