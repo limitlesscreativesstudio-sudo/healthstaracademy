@@ -636,6 +636,47 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
           </p>
         </div>
 
+        {/* Recent Feedback (Canvas parity) */}
+        <div style={{ marginBottom:24 }}>
+          <h3 style={{ fontSize:14, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 10px' }}>
+            Recent Feedback
+          </h3>
+          {recentFeedback.length === 0 ? (
+            <p style={{ fontSize:13, color:C.muted, fontFamily:'sans-serif', margin:0 }}>Nothing for now</p>
+          ) : recentFeedback.map(fb => (
+            <div key={fb.id} onClick={() => onEnterCourse(fb.courseObj, 'grades')}
+              style={{ padding:'8px 0', borderBottom:`1px solid ${C.border}`, cursor:'pointer', display:'flex', gap:8 }}>
+              <div style={{ width:4, borderRadius:2, background: colorFor(fb.courseObj), flexShrink:0, alignSelf:'stretch' }}/>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:12, fontWeight:600, color:C.primary, fontFamily:'sans-serif', lineHeight:1.3 }}>{fb.assignment}</div>
+                <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif', wordBreak:'break-word' }}>{fb.course}</div>
+                <div style={{ fontSize:11, color:C.text, fontFamily:'sans-serif' }}>
+                  {fb.score}/{fb.max} • {fb.when}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Quick actions (Canvas parity) */}
+        <div style={{ marginBottom:24, display:'flex', flexDirection:'column', gap:8 }}>
+          {canEdit && (
+            <button onClick={() => setShowCreate(true)}
+              style={{ padding:'10px 12px', border:`1px solid ${C.border}`, borderRadius:6, background:C.white,
+                color:C.text, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer', textAlign:'left' }}>
+              + Start a New Course
+            </button>
+          )}
+          <a href="/portal/teach#grades"
+            style={{ padding:'10px 12px', border:`1px solid ${C.border}`, borderRadius:6, background:C.white,
+              color:C.text, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer',
+              textDecoration:'none', display:'block' }}>
+            View Grades
+          </a>
+        </div>
+
+
+
         {/* Stats */}
         <div style={{ background:C.bg, borderRadius:8, padding:14 }}>
           <h3 style={{ fontSize:13, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 10px' }}>
