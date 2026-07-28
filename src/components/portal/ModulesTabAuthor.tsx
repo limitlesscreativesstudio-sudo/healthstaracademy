@@ -759,7 +759,8 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
     if (fileSource === "upload" && uploadFile) {
       const { uploadViaXhr } = await import("@/pages/portal/teach/uploadViaXhr");
       const ext = uploadFile.name.split(".").pop() ?? "";
-      const path = `${courseId}/${Date.now()}_${uploadFile.name}`;
+      const safeName = uploadFile.name.replace(/[^\w.\-]+/g, '_').replace(/_+/g, '_');
+      const path = `${courseId}/${Date.now()}_${safeName}`;
       const { error: upErr } = await uploadViaXhr("course-files", path, uploadFile, { onProgress: setUploadPct });
       if (upErr) { toast({ title: "Upload failed", description: upErr.message, variant: "destructive" }); return null; }
       const { data: { publicUrl } } = supabase.storage.from("course-files").getPublicUrl(path);
