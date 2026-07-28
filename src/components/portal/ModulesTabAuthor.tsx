@@ -677,6 +677,10 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
   const [published, setPublished] = useState(true);
   const [indent, setIndent] = useState<number>(0);
   const [saving, setSaving] = useState(false);
+  const [fileSource, setFileSource] = useState<"existing" | "upload" | "drive" | "url">("existing");
+  const [driveUrl, setDriveUrl] = useState("");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadPct, setUploadPct] = useState(0);
 
   // pickers
   const [assignments, setAssignments] = useState<any[]>([]);
