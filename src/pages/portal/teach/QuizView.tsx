@@ -41,6 +41,23 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
   const [viewing, setViewing] = useState<Quiz & { attempts_allowed?: number; time_limit_minutes?: number | null } | null>(null);
   const [viewQCount, setViewQCount] = useState(0);
   const saveTimer = useRef<any>(null);
+  const retryTimer = useRef<any>(null);
+  const retryAttempt = useRef<number>(0);
+  const inFlight = useRef<boolean>(false);
+  const answersRef = useRef<Record<string, any>>({});
+  const draftKey = (quizId?: string) => (user?.id && quizId ? `hsa_quiz_draft_${quizId}_${user.id}` : null);
+  const loadLocalDraft = (quizId: string): Record<string, any> | null => {
+    const k = draftKey(quizId); if (!k) return null;
+    try { const raw = localStorage.getItem(k); return raw ? JSON.parse(raw) : null; } catch { return null; }
+  };
+  const writeLocalDraft = (quizId: string, val: Record<string, any>) => {
+    const k = draftKey(quizId); if (!k) return;
+    try { localStorage.setItem(k, JSON.stringify(val)); } catch { /* quota */ }
+  };
+  const clearLocalDraft = (quizId: string) => {
+    const k = draftKey(quizId); if (!k) return;
+    try { localStorage.removeItem(k); } catch { /* ignore */ }
+  };
 
   const openDetails = async (q: Quiz) => {
     const { data: full } = await supabase.from('quizzes').select('*').eq('id', q.id).maybeSingle();
