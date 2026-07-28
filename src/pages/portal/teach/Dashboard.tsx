@@ -331,12 +331,15 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
   const [loading,     setLoading]     = useState(true);
   const [showCreate,  setShowCreate]  = useState(false);
   const [dismissed,   setDismissed]   = useState<number[]>([]);
+  const [coursesFlyout, setCoursesFlyout] = useState(false);
+  const [recentFeedback, setRecentFeedback] = useState<Array<{ id: string; course: string; assignment: string; score: number; max: number; when: string; courseObj: DBCourse }>>([]);
 
   const TODO_ITEMS = [
     { id:1, text:'Grade attendance records',      course:'Check each course', pts:'', due:'Today',         color:C.primary },
     { id:2, text:'Review submitted assignments',  course:'Check gradebook',   pts:'', due:'This week',     color:C.accent  },
     { id:3, text:'Update course materials',       course:'Modules tab',       pts:'', due:'As needed',     color:C.warn    },
   ];
+
 
   // ── Load courses from Supabase ─────────────────────────────────────────────
   const loadCourses = async () => {
