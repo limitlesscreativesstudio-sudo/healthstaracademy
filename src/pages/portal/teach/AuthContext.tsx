@@ -33,7 +33,7 @@ interface AuthContextValue {
   login: (email: string, password: string, chosenRole?: UserRole) => Promise<LoginResult>;
   logout: () => void;
   isAuthenticated: boolean;
-  updateProfile: (name: string) => Promise<UpdateProfileResult>;
+  updateProfile: (fields: { name: string; jobTitle?: string; phone?: string; bio?: string }) => Promise<UpdateProfileResult>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<UpdateProfileResult>;
 }
 
@@ -151,18 +151,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { role };
   };
 
-  const updateProfile = async (name: string): Promise<UpdateProfileResult> => {
+  const updateProfile = async (
+    fields: { name: string; jobTitle?: string; phone?: string; bio?: string }
+  ): Promise<UpdateProfileResult> => {
     if (!user) return { error: 'Not logged in.' };
-    if (!name.trim()) return { error: 'Name cannot be empty.' };
+    const name = fields.name.trim();
+    if (!name) return { error: 'Name cannot be empty.' };
 
+    const patch: Record<string, unknown> = {
+      full_name: name,
+      job_title: fields.jobTitle ?? null,
+      phone: fields.phone ?? null,
+      bio: fields.bio ?? null,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Upsert to handle the case where a profile row doesn't yet exist.
     const { error } = await supabase
-      .from('profiles').update({ full_name: name.trim() }).eq('user_id', user.id);
+      .from('profiles')
+      .upsert({ user_id: user.id, ...patch }, { onConflict: 'user_id' });
     if (error) return { error: error.message };
 
     setUser(prev => prev ? {
       ...prev,
-      name: name.trim(),
-      avatarInitials: name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+      name,
+      avatarInitials: name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
     } : null);
     return {};
   };
