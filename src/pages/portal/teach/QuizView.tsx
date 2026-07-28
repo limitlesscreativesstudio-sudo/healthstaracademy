@@ -37,7 +37,16 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
   const [attemptedIds, setAttemptedIds] = useState<Set<string>>(new Set());
   const [saveState, setSaveState] = useState<'idle'|'saving'|'saved'>('idle');
   const [stats, setStats] = useState<Record<string, Stats>>({});
+  const [viewing, setViewing] = useState<Quiz & { attempts_allowed?: number; time_limit_minutes?: number | null } | null>(null);
+  const [viewQCount, setViewQCount] = useState(0);
   const saveTimer = useRef<any>(null);
+
+  const openDetails = async (q: Quiz) => {
+    const { data: full } = await supabase.from('quizzes').select('*').eq('id', q.id).maybeSingle();
+    setViewing(full ?? q as any);
+    const { count } = await supabase.from('quiz_questions').select('id', { count:'exact', head:true }).eq('quiz_id', q.id);
+    setViewQCount(count ?? 0);
+  };
 
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
@@ -231,6 +240,97 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
 
   if (!courseId) return <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Select a course.</div>;
   if (loading) return <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Loading quizzes…</div>;
+
+  // Quiz details (Canvas-style summary)
+  if (viewing && !taking && !editing) {
+    const q = viewing;
+    const fmtDate = (d: string | null) => d ? new Date(d).toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' }) : '—';
+    const row = (label:string, value:React.ReactNode) => (
+      <div style={{ display:'grid', gridTemplateColumns:'220px 1fr', padding:'8px 0', borderBottom:`1px solid ${C.border}` }}>
+        <div style={{ textAlign:'right', paddingRight:16, fontWeight:600, color:C.text, fontSize:13 }}>{label}</div>
+        <div style={{ color:C.text, fontSize:13 }}>{value}</div>
+      </div>
+    );
+    return (
+      <div style={{ padding:'20px 24px', maxWidth:1100, margin:'0 auto', fontFamily:'sans-serif' }}>
+        <button onClick={() => setViewing(null)} style={{ background:'none', border:'none', color:C.primary, cursor:'pointer', marginBottom:8, fontSize:13 }}>← Back to quizzes</button>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:12, marginBottom:14, flexWrap:'wrap' }}>
+          <h2 style={{ margin:0, fontSize:22, color:C.text }}>{q.title}</h2>
+          {canEdit && (
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={async () => { await togglePub(q as any); openDetails(q as any); }}
+                style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:q.published?'#e8f5e9':C.white, color:q.published?C.success:C.text, fontSize:13, cursor:'pointer', fontWeight:600 }}>
+                {q.published ? '● Published' : '○ Publish'}
+              </button>
+              <button onClick={() => { const cur = q; setViewing(null); startTake(cur as any); }} style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer' }}>Preview</button>
+              <button onClick={() => { const cur = q; setViewing(null); startEdit(cur as any); }} style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer' }}>✎ Edit</button>
+            </div>
+          )}
+        </div>
+        {canEdit && !q.published && (
+          <div style={{ background:'#FDECEA', border:'1px solid #F5C6CB', color:'#8A1F11', borderRadius:4, padding:'10px 14px', fontSize:12, marginBottom:16 }}>
+            <div style={{ fontWeight:700 }}>This quiz is unpublished</div>
+            Only teachers can see the quiz until it is published.
+          </div>
+        )}
+
+        {q.instructions && (
+          <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:'12px 16px', marginBottom:16, fontSize:13, color:C.text, whiteSpace:'pre-wrap' }}>
+            {q.instructions}
+          </div>
+        )}
+
+        <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:'8px 20px', marginBottom:20 }}>
+          {row('Quiz Type', 'Graded Quiz')}
+          {row('Points', Number(q.total_points || 0))}
+          {row('Questions', viewQCount)}
+          {row('Assignment Group', 'Assignments')}
+          {row('Shuffle Answers', 'No')}
+          {row('Time Limit', q.time_limit_minutes ? `${q.time_limit_minutes} minutes` : 'No Time Limit')}
+          {row('Multiple Attempts', (q.attempts_allowed ?? 1) > 1 ? `Yes (${q.attempts_allowed} allowed)` : 'No')}
+          {row('View Responses', 'Always')}
+          {row('Show Correct Answers', 'Immediately')}
+          <div style={{ display:'grid', gridTemplateColumns:'220px 1fr', padding:'8px 0' }}>
+            <div style={{ textAlign:'right', paddingRight:16, fontWeight:600, color:C.text, fontSize:13 }}>One Question at a Time</div>
+            <div style={{ color:C.text, fontSize:13 }}>No</div>
+          </div>
+        </div>
+
+        <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, overflow:'hidden', marginBottom:20 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', padding:'10px 16px', fontWeight:700, fontSize:12, color:C.text, background:C.bg, borderBottom:`1px solid ${C.border}` }}>
+            <div>Due</div><div>For</div><div>Available from</div><div>Until</div>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', padding:'10px 16px', fontSize:13, color:C.text }}>
+            <div>{fmtDate(q.due_at)}</div><div>Everyone</div><div>—</div><div>—</div>
+          </div>
+        </div>
+
+        <div style={{ textAlign:'center', marginBottom:20 }}>
+          <button onClick={() => { const cur = q; setViewing(null); startTake(cur as any); }}
+            style={{ padding:'10px 28px', border:'none', borderRadius:5, background:C.accent, color:C.text, fontSize:14, fontWeight:700, cursor:'pointer' }}>
+            {canEdit ? 'Preview' : (attemptedIds.has(q.id) ? 'Review' : 'Take the Quiz')}
+          </button>
+        </div>
+
+        {canEdit && (
+          <>
+            <hr style={{ border:0, borderTop:`1px solid ${C.border}`, margin:'20px 0' }}/>
+            <div style={{ display:'flex', gap:10, justifyContent:'center' }}>
+              <button onClick={() => toast.info('Open the Rubrics tab to create a rubric, then attach it here.')} style={{ padding:'8px 16px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer' }}>+ Create Rubric</button>
+              <button onClick={() => toast.info('Open the Rubrics tab to browse rubrics.')} style={{ padding:'8px 16px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer' }}>🔍 Find Rubric</button>
+            </div>
+            {stats[q.id] && (
+              <div style={{ marginTop:24, display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
+                <Stat label="Attempts" value={stats[q.id].attempts} />
+                <Stat label="Completion" value={stats[q.id].attempts ? `${Math.round((stats[q.id].submitted/stats[q.id].attempts)*100)}%` : '—'} sub={`${stats[q.id].submitted}/${stats[q.id].attempts}`} />
+                <Stat label="Avg score" value={stats[q.id].submitted ? `${stats[q.id].avgPct}%` : '—'} />
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  }
 
   // Taking a quiz
   if (taking) {
@@ -455,7 +555,7 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
                 <div style={{ display:'flex', alignItems:'center', gap:14 }}>
                   <span style={{ fontSize:22 }}>❓</span>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:14, fontWeight:600, color:C.primary }}>{q.title}</div>
+                    <div onClick={() => openDetails(q)} style={{ fontSize:14, fontWeight:600, color:C.primary, cursor:'pointer' }}>{q.title}</div>
                     <div style={{ fontSize:12, color:C.muted }}>
                       {q.due_at && `Due ${new Date(q.due_at).toLocaleDateString()} • `}{Number(q.total_points||0)} pts
                       {!canEdit && taken && <span style={{ color:C.success, marginLeft:8, fontWeight:600 }}>✓ Submitted</span>}
