@@ -29,6 +29,7 @@ const toDrivePreviewUrl = (raw: string): string | null => {
 };
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadViaXhr } from "@/pages/portal/teach/uploadViaXhr";
 import { toast } from "@/hooks/use-toast";
 
 type Props = {
@@ -57,6 +58,7 @@ const ToolbarBtn = ({
 const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [mode, setMode] = useState<"rich" | "html">("rich");
   const [htmlDraft, setHtmlDraft] = useState(value);
@@ -238,9 +240,8 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
     try {
       const ext = file.name.split(".").pop() || "png";
       const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error } = await supabase.storage.from("page-images").upload(path, file, {
-        contentType: file.type, upsert: false,
-      });
+      // Use XHR to bypass the Lovable preview fetch proxy that can swallow POST bodies.
+      const { error } = await uploadViaXhr("page-images", path, file);
       if (error) throw error;
       const { data } = supabase.storage.from("page-images").getPublicUrl(path);
       // restore focus so insertImage targets the editor
@@ -256,6 +257,61 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
   const onFileChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (f) uploadAndInsertImage(f);
+    e.target.value = "";
+  };
+
+  const uploadDocumentAndInsert = async (file: File) => {
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Max 50MB.", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "").toLowerCase();
+      const safe = file.name.replace(/[^\w.\-]+/g, "_").replace(/_+/g, "_");
+      const path = `docs/${Date.now()}_${safe}`;
+      const { error } = await uploadViaXhr("page-images", path, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from("page-images").getPublicUrl(path);
+      const url = data.publicUrl;
+      focusEditorWithRange();
+
+      let html = "";
+      if (ext === "pdf") {
+        html = `
+          <div class="my-4 border border-border rounded-md overflow-hidden bg-muted/20" style="width:100%;">
+            <iframe src="${url.replace(/"/g, "&quot;")}" style="width:100%; height:780px; border:0; display:block;" loading="lazy"></iframe>
+          </div>
+          <p><a href="${url.replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">${file.name.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</a></p>
+          <p><br/></p>
+        `;
+      } else if (["ppt", "pptx", "doc", "docx", "xls", "xlsx"].includes(ext)) {
+        const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+        html = `
+          <div class="my-4 border border-border rounded-md overflow-hidden bg-muted/20" style="width:100%;">
+            <iframe src="${officeUrl.replace(/"/g, "&quot;")}" style="width:100%; height:780px; border:0; display:block;" loading="lazy"></iframe>
+          </div>
+          <p><a href="${url.replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">${file.name.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</a></p>
+          <p><br/></p>
+        `;
+      } else {
+        html = `
+          <p><a href="${url.replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">📎 ${file.name.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</a></p>
+          <p><br/></p>
+        `;
+      }
+      document.execCommand("insertHTML", false, html);
+      if (editorRef.current) onChange(editorRef.current.innerHTML);
+    } catch (err: any) {
+      toast({ title: "Document upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onDocChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) uploadDocumentAndInsert(f);
     e.target.value = "";
   };
 
@@ -380,12 +436,25 @@ const RichTextEditor = ({ value, onChange, minHeight = 420 }: Props) => {
         >
           <Upload className={cn("h-4 w-4", uploading && "animate-pulse")} />
         </ToolbarBtn>
+        <ToolbarBtn
+          title={uploading ? "Uploading…" : "Upload document (PDF, Word, PowerPoint, etc.)"}
+          onClick={() => docInputRef.current?.click()}
+        >
+          <FileText className={cn("h-4 w-4", uploading && "animate-pulse")} />
+        </ToolbarBtn>
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
           className="hidden"
           onChange={onFileChosen}
+        />
+        <input
+          ref={docInputRef}
+          type="file"
+          accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip"
+          className="hidden"
+          onChange={onDocChosen}
         />
 
         <Separator orientation="vertical" className="mx-1 h-6" />
