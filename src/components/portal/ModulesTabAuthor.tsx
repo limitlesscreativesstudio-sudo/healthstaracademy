@@ -467,6 +467,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
 // ============ Sortable Module ============
 const SortableModule = ({
   module: m, items, allModules, collapsed, isInstructor, courseId,
+  fileMap, pageMap, discussionMap, onOpenFile, onOpenPage,
   onToggleCollapse, onTogglePublish, onEdit, onDelete, onAddItem,
   onEditItem, onDeleteItem, onToggleItemPublish, onDuplicateItem, onMoveItem, onMoveItemWithin, onMoveModule,
 }: any) => {
