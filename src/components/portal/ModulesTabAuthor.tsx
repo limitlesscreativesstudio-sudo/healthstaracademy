@@ -1027,7 +1027,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={save} disabled={saving || !title.trim()}>{saving ? "Saving…" : item ? "Save" : "Add Item"}</Button>
+          <Button onClick={save} disabled={saving || !title.trim() || !fileReady}>{saving ? "Saving…" : item ? "Save" : "Add Item"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
