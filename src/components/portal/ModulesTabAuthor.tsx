@@ -69,7 +69,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
   const [fileMap, setFileMap] = useState<Record<string, { url: string; name: string; type: string }>>({});
   const [pageMap, setPageMap] = useState<Record<string, { title: string; body: string }>>({});
   const [discussionMap, setDiscussionMap] = useState<Record<string, { title: string; body: string }>>({});
-  const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type?: string } | null>(null);
+  const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type?: string; title?: string } | null>(null);
   const [pageView, setPageView] = useState<{ title: string; body: string } | null>(null);
 
   // dialogs
