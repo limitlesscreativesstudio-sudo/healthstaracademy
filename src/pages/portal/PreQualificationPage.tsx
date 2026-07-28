@@ -820,31 +820,37 @@ const PreQualificationPage = () => {
                           })
                       ) : (
                         weekendCohortDates
-                          .filter((w) => new Date(w.deadlineISO + "T23:59:59") >= new Date())
-                          .map((w) => (
-                            <label
-                              key={w.startISO}
-                              htmlFor={`cohort-weekend-${w.startISO}`}
-                              className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all ${
-                                selectedCohort === w.startISO
-                                  ? "border-cyan bg-cyan/5"
-                                  : "border-border bg-background hover:border-cyan/40"
-                              }`}
-                            >
-                              <RadioGroupItem value={w.startISO} id={`cohort-weekend-${w.startISO}`} />
-                              <div>
-                                <p className="font-semibold text-charcoal">
-                                  {w.startDate} — {w.endDate}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  8 weekends · Sat & Sun 6 AM – 6 PM
-                                </p>
-                                <p className="text-xs text-cyan font-medium mt-1">
-                                  ⏰ Apply by: {w.deadline}
-                                </p>
-                              </div>
-                            </label>
-                          ))
+                          .filter((w) => new Date(getApplyByISO(w.startISO) + "T23:59:59") >= new Date())
+                          .map((w) => {
+                            const dl = getCohortDeadlines(w);
+                            return (
+                              <label
+                                key={w.startISO}
+                                htmlFor={`cohort-weekend-${w.startISO}`}
+                                className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                                  selectedCohort === w.startISO
+                                    ? "border-cyan bg-cyan/5"
+                                    : "border-border bg-background hover:border-cyan/40"
+                                }`}
+                              >
+                                <RadioGroupItem value={w.startISO} id={`cohort-weekend-${w.startISO}`} />
+                                <div>
+                                  <p className="font-semibold text-charcoal">
+                                    {w.startDate} — {w.endDate}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    8 weekends · Sat & Sun 6 AM – 6 PM
+                                  </p>
+                                  <p className="text-xs text-cyan font-bold mt-1">
+                                    ⏰ Apply by: {dl.applyBy}
+                                  </p>
+                                  <p className="text-[11px] text-muted-foreground">
+                                    Final enrollment cutoff: {dl.finalCutoff}
+                                  </p>
+                                </div>
+                              </label>
+                            );
+                          })
                       )}
                     </RadioGroup>
                   </div>
