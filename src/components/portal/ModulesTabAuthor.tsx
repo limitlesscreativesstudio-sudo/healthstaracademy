@@ -763,6 +763,7 @@ const ItemDialog = ({ open, moduleId, moduleTitle, item, courseId, nextPosition,
   const [url, setUrl] = useState("");
   const [published, setPublished] = useState(true);
   const [indent, setIndent] = useState<number>(0);
+  const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [fileSource, setFileSource] = useState<"existing" | "upload" | "drive" | "url">("existing");
   const [driveUrl, setDriveUrl] = useState("");
