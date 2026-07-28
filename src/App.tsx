@@ -2,6 +2,10 @@ import CustomLogin from "./pages/CustomLogin";
 import PortalLogin from "./pages/portal/teach/PortalLogin";
 import AcceptInvite from './pages/portal/teach/AcceptInvite';
 import CourseView from './pages/portal/teach/CourseView';
+import GlobalCalendar from './pages/portal/teach/GlobalCalendar';
+import Inbox from './pages/portal/teach/Inbox';
+import HistoryPage from './pages/portal/teach/HistoryPage';
+import HelpPage from './pages/portal/teach/HelpPage';
 import { AuthProvider } from './pages/portal/teach/AuthContext';
 import ProtectedRoute from './pages/portal/teach/ProtectedRoute';
 import CreateAccount from './pages/portal/teach/CreateAccount';
@@ -126,6 +130,10 @@ const AppShell = () => {
           <Route path="/portal/courses/:courseId/*" element={<AuthProvider><RoleGuard><CourseView /></RoleGuard></AuthProvider>} />
           <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<AuthProvider><RoleGuard><AssignmentDetail /></RoleGuard></AuthProvider>} />
           <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<AuthProvider><RoleGuard><QuizView /></RoleGuard></AuthProvider>} />
+          <Route path="/portal/calendar" element={<AuthProvider><RoleGuard><GlobalCalendar /></RoleGuard></AuthProvider>} />
+          <Route path="/portal/inbox" element={<AuthProvider><RoleGuard><Inbox /></RoleGuard></AuthProvider>} />
+          <Route path="/portal/history" element={<AuthProvider><RoleGuard><HistoryPage /></RoleGuard></AuthProvider>} />
+          <Route path="/portal/help" element={<AuthProvider><RoleGuard><HelpPage /></RoleGuard></AuthProvider>} />
 
           <Route path="/portal/teach/login"          element={<AuthProvider><PortalLogin /></AuthProvider>} />
           <Route path="/portal/teach/reset" element={<AuthProvider><ForgotPassword /></AuthProvider>} />

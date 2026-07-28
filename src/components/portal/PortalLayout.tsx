@@ -10,6 +10,22 @@ import NotificationBell from "./NotificationBell";
 const PortalLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, isInstructor, loading } = usePortalAuth(true);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Track recent page visits for History page
+  if (typeof window !== 'undefined') {
+    try {
+      const key = 'hsa.recent.pages';
+      const raw = localStorage.getItem(key);
+      const list = raw ? JSON.parse(raw) : [];
+      const label = document?.title || location.pathname;
+      const path = location.pathname + location.hash;
+      if (!list[0] || list[0].path !== path) {
+        list.unshift({ path, label, visited_at: new Date().toISOString() });
+        localStorage.setItem(key, JSON.stringify(list.slice(0, 30)));
+      }
+    } catch {}
+  }
 
   const logout = async () => {
     await supabase.auth.signOut();
