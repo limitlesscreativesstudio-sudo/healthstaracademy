@@ -6,7 +6,7 @@ import ContentViewer, { type ContentSource } from '@/components/portal/ContentVi
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
-const FOLDERS = ['CA NATP ALS Power Point Presentations','CA State Curriculum Learning Resources','CDPH & School contact information','Uploaded Media','Uploaded Media 2'];
+const DEFAULT_FOLDERS = ['Course Files','Handouts','Presentations','Recordings','Uploaded Media'];
 const fileIcon = (t: string) => ({ pdf:'📄', pptx:'📊', ppt:'📊', docx:'📝', doc:'📝', mp4:'🎥', mov:'🎥', jpg:'🖼️', png:'🖼️', xlsx:'📈' }[t.toLowerCase()] ?? '📎');
 const fmtSize  = (b: number) => b > 1048576 ? `${(b/1048576).toFixed(1)} MB` : `${(b/1024).toFixed(0)} KB`;
 
