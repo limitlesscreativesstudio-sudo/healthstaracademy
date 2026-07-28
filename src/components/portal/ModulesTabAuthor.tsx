@@ -440,7 +440,7 @@ const SortableModule = ({
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </button>
         )}
-        <button onClick={onToggleCollapse} className="p-1 hover:bg-muted rounded" aria-label="Toggle module">
+            <button type="button" onClick={onToggleCollapse} className="p-1 hover:bg-muted rounded" aria-label="Toggle module">
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
         <div className="font-semibold flex-1 truncate">{m.title}</div>
@@ -454,9 +454,12 @@ const SortableModule = ({
                 ? <CheckCircle2 className="h-4 w-4 text-green-600 fill-green-600/10" />
                 : <EyeOff className="h-4 w-4 text-muted-foreground" />}
             </button>
+            <button type="button" onClick={onAddItem} className="p-1.5 hover:bg-muted rounded" title={`Add item to ${m.title}`} aria-label={`Add item to ${m.title}`}>
+              <Plus className="h-4 w-4 text-muted-foreground" />
+            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-1.5 hover:bg-muted rounded" aria-label="Module options">
+                <button type="button" className="p-1.5 hover:bg-muted rounded" aria-label="Module options">
                   <MoreVertical className="h-4 w-4" />
                 </button>
               </DropdownMenuTrigger>
@@ -488,7 +491,7 @@ const SortableModule = ({
 
       {!collapsed && (
         <CardContent className="p-0">
-          <div ref={setDropRef} className={isOver ? "bg-purple/5 ring-2 ring-purple/40 ring-inset" : ""}>
+          <div ref={setDropRef} className={`min-h-10 ${isOver ? "bg-purple/5 ring-2 ring-purple/40 ring-inset" : ""}`}>
             <SortableContext items={items.map((i: ModuleItem) => i.id)} strategy={verticalListSortingStrategy}>
               {items.length === 0 ? (
                 <div className="p-4 text-sm text-muted-foreground italic">
@@ -560,14 +563,14 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, isFirst, 
       )}
       {isInstructor && (
         <>
-          <button onClick={onTogglePublish} className="p-1 hover:bg-muted rounded" title={i.published ? "Published — click to unpublish" : "Unpublished — click to publish"}>
+          <button type="button" onClick={onTogglePublish} className="p-1 hover:bg-muted rounded" title={i.published ? "Published — click to unpublish" : "Unpublished — click to publish"}>
             {i.published
               ? <CheckCircle2 className="h-4 w-4 text-green-600 fill-green-600/10" />
               : <EyeOff className="h-4 w-4 text-muted-foreground" />}
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-1 hover:bg-muted rounded"><MoreVertical className="h-3.5 w-3.5" /></button>
+              <button type="button" className="p-1 hover:bg-muted rounded" aria-label={`Options for ${i.title}`}><MoreVertical className="h-3.5 w-3.5" /></button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="max-h-80 overflow-auto">
               <DropdownMenuItem onClick={onEdit}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
