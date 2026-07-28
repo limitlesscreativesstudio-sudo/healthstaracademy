@@ -1,333 +1,546 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from './AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Bell, CalendarDays, CalendarRange, BellOff, User as UserIcon, FileText, Settings as SettingsIcon, Share2, QrCode, Megaphone, Upload, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
 
 const C = {
   primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF',
   border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8',
-  error:'#C0392B', success:'#127A1B',
+  error:'#C0392B', success:'#127A1B', warn:'#B27300',
+  headerBar:'#EDE8F7',
 } as const;
 
-// ── Reusable field ────────────────────────────────────────────────────────────
-const Field: React.FC<{
-  label: string; value: string; onChange: (v:string) => void;
-  type?: string; placeholder?: string; disabled?: boolean;
-  error?: string; hint?: string;
-}> = ({ label, value, onChange, type='text', placeholder, disabled, error, hint }) => (
-  <div style={{ marginBottom:16 }}>
-    <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:5 }}>{label}</label>
-    <input type={type} value={value} onChange={e => onChange(e.target.value)}
-      placeholder={placeholder} disabled={disabled}
-      style={{ width:'100%', border:`1.5px solid ${error ? C.error : C.border}`, borderRadius:6, padding:'9px 12px', fontSize:13, fontFamily:'sans-serif', color:C.text, boxSizing:'border-box', outline:'none', background:disabled ? C.bg : C.white, opacity:disabled ? 0.7 : 1, transition:'border-color .15s' }}
-      onFocus={e => { if(!disabled) e.target.style.borderColor = error ? C.error : C.primary; }}
-      onBlur={e  => { e.target.style.borderColor = error ? C.error : C.border; }}/>
-    {error && <div style={{ color:C.error, fontSize:12, fontFamily:'sans-serif', marginTop:4, display:'flex', gap:4 }}><span>⚠</span>{error}</div>}
-    {hint && !error && <div style={{ color:C.muted, fontSize:11, fontFamily:'sans-serif', marginTop:3 }}>{hint}</div>}
-  </div>
+// ─── Notification matrix data ─────────────────────────────────────────────────
+type Freq = 'immediate' | 'daily' | 'weekly' | 'off';
+const FREQ_ORDER: Freq[] = ['immediate','daily','weekly','off'];
+const FREQ_ICON: Record<Freq, React.ReactNode> = {
+  immediate: <Bell size={16}/>, daily: <CalendarDays size={16}/>, weekly: <CalendarRange size={16}/>, off: <BellOff size={16}/>,
+};
+const FREQ_COLOR: Record<Freq, string> = {
+  immediate:'#127A1B', daily:'#0B7285', weekly:'#0B7285', off:'#8B95A1',
+};
+const FREQ_LABEL: Record<Freq, string> = { immediate:'Notify immediately', daily:'Daily summary', weekly:'Weekly summary', off:'Notifications off' };
+
+type MatrixRow = { key: string; label: string; sub?: string };
+type MatrixGroup = { group: string; rows: MatrixRow[] };
+const MATRIX: MatrixGroup[] = [
+  { group:'Course Activities', rows:[
+    { key:'due_date',        label:'Due Date',           sub:'Assignment due date change' },
+    { key:'grading_policy',  label:'Grading Policies',   sub:'Course grading policy change' },
+    { key:'course_content',  label:'Course Content',     sub:'Page / quiz / assignment content changes' },
+    { key:'files',           label:'Files',              sub:'New file added to your course' },
+    { key:'announcement',    label:'Announcement',       sub:'New announcement in your course' },
+    { key:'announcement_own',label:'Announcement Created By You', sub:'Replies to your announcements' },
+    { key:'grading',         label:'Grading',            sub:'Grade entered / weight changed' },
+    { key:'invitation',      label:'Invitation',         sub:'Web conference / group / collaboration invites' },
+    { key:'all_submissions', label:'All Submissions',    sub:'(Instructor/Admin) Assignment submission or resubmission' },
+    { key:'late_grading',    label:'Late Grading',       sub:'(Instructor/Admin) Late assignment submission' },
+    { key:'submission_comment', label:'Submission Comment', sub:'Assignment submission comment' },
+  ]},
+  { group:'Discussions', rows:[
+    { key:'new_topic',       label:'New Topic',   sub:'New discussion topic in your course' },
+    { key:'new_reply',       label:'New Reply',   sub:'New reply on a topic you follow' },
+    { key:'new_mention',     label:'New Mention', sub:'You were @mentioned in a discussion' },
+  ]},
+  { group:'Conversations', rows:[
+    { key:'added_conv',      label:'Added To Conversation', sub:'You are added to a conversation' },
+    { key:'conv_message',    label:'Conversation Message',  sub:'New inbox messages' },
+    { key:'conv_own',        label:'Conversations Created By Me' },
+  ]},
+  { group:'Scheduling', rows:[
+    { key:'appt_signup',     label:'Appointment Signups',      sub:'(Instructor/Admin) Student appointment sign-up' },
+    { key:'appt_new',        label:'Appointment Signups (You)',sub:'New appointment on your calendar' },
+    { key:'appt_cancel',     label:'Appointment Cancellations' },
+    { key:'appt_avail',      label:'Appointment Availability', sub:'New timeslots available for signup' },
+    { key:'calendar',        label:'Calendar',                 sub:'New / changed items on your course calendar' },
+  ]},
+  { group:'Alerts', rows:[
+    { key:'admin_notice',    label:'Administrative Notifications', sub:'Course enrollment, exports, migration reports' },
+    { key:'content_link_err',label:'Content Link Error',           sub:'Failed link a student interacted with' },
+    { key:'global_ann',      label:'Global Announcements',         sub:'Institution-wide announcements' },
+  ]},
+];
+
+// Default frequencies (matches Canvas defaults roughly)
+const DEFAULT_PREFS: Record<string,{email:Freq; push:Freq}> = Object.fromEntries(
+  MATRIX.flatMap(g => g.rows.map(r => [r.key, { email:'immediate', push:'off' } as {email:Freq;push:Freq}]))
 );
 
-// ── Toast banner ──────────────────────────────────────────────────────────────
+// ─── Small UI atoms ───────────────────────────────────────────────────────────
 const Toast: React.FC<{ type:'success'|'error'; message:string }> = ({ type, message }) => (
-  <div style={{ padding:'10px 14px', borderRadius:6, marginBottom:16, display:'flex', alignItems:'flex-start', gap:10,
+  <div style={{ padding:'10px 14px', borderRadius:6, marginBottom:16, display:'flex', gap:10,
     background: type==='success' ? '#e8f5e9' : '#fdecea',
     border: `1px solid ${type==='success' ? '#c8e6c9' : '#f5c6c2'}` }}>
-    <span style={{ fontSize:16, flexShrink:0 }}>{type==='success' ? '✅' : '⚠️'}</span>
-    <span style={{ fontSize:13, fontFamily:'sans-serif', color: type==='success' ? C.success : C.error, lineHeight:1.5 }}>{message}</span>
+    <span>{type==='success' ? '✅' : '⚠️'}</span>
+    <span style={{ fontSize:13, color: type==='success' ? C.success : C.error, lineHeight:1.5 }}>{message}</span>
   </div>
 );
 
-// ── Section wrapper ───────────────────────────────────────────────────────────
-const Section: React.FC<{ title:string; subtitle?:string; children:React.ReactNode }> = ({ title, subtitle, children }) => (
+const Section: React.FC<{ title:string; subtitle?:string; right?:React.ReactNode; children:React.ReactNode }> = ({ title, subtitle, right, children }) => (
   <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, padding:24, marginBottom:20 }}>
-    <div style={{ marginBottom:20, paddingBottom:14, borderBottom:`1px solid ${C.border}` }}>
-      <h2 style={{ margin:0, fontSize:16, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>{title}</h2>
-      {subtitle && <p style={{ margin:'4px 0 0', fontSize:12, color:C.muted, fontFamily:'sans-serif' }}>{subtitle}</p>}
+    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:20, paddingBottom:14, borderBottom:`1px solid ${C.border}` }}>
+      <div>
+        <h2 style={{ margin:0, fontSize:16, fontWeight:700, color:C.text }}>{title}</h2>
+        {subtitle && <p style={{ margin:'4px 0 0', fontSize:12, color:C.muted }}>{subtitle}</p>}
+      </div>
+      {right}
     </div>
     {children}
   </div>
 );
 
-// ── Main component ─────────────────────────────────────────────────────────────
-interface AccountProps { onBackToDashboard?: () => void; isAdmin?: boolean; }
+const PrimaryBtn: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, style, ...p }) => (
+  <button {...p} style={{ padding:'9px 20px', background:C.primary, color:'white', border:'none', borderRadius:6, fontSize:13, fontWeight:600, cursor:'pointer', display:'inline-flex', alignItems:'center', gap:6, ...style }}>{children}</button>
+);
+const GhostBtn: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, style, ...p }) => (
+  <button {...p} style={{ padding:'7px 14px', background:'transparent', color:C.primary, border:`1px solid ${C.border}`, borderRadius:6, fontSize:13, fontWeight:600, cursor:'pointer', ...style }}>{children}</button>
+);
 
-const Account: React.FC<AccountProps> = ({ onBackToDashboard, isAdmin }) => {
-  const { user, updateProfile, updatePassword } = useAuth();
+const Field: React.FC<{ label:string; value:string; onChange:(v:string)=>void; type?:string; placeholder?:string; disabled?:boolean; hint?:string; error?:string; }> =
+({ label, value, onChange, type='text', placeholder, disabled, hint, error }) => (
+  <div style={{ marginBottom:14 }}>
+    <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, marginBottom:5 }}>{label}</label>
+    <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} disabled={disabled}
+      style={{ width:'100%', border:`1.5px solid ${error?C.error:C.border}`, borderRadius:6, padding:'9px 12px', fontSize:13, color:C.text, background:disabled?C.bg:C.white, outline:'none', boxSizing:'border-box' }}/>
+    {error && <div style={{ color:C.error, fontSize:12, marginTop:4 }}>⚠ {error}</div>}
+    {hint && !error && <div style={{ color:C.muted, fontSize:11, marginTop:3 }}>{hint}</div>}
+  </div>
+);
 
-  // Profile fields — pre-filled from auth context
-  const [name, setName]     = useState(user?.name ?? '');
-  const [title, setTitle]   = useState('CNA Lead Instructor');
-  const [phone, setPhone]   = useState('');
-  const [bio, setBio]       = useState('');
-  const [profileMsg, setProfileMsg] = useState<{ type:'success'|'error'; text:string } | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
-
-  // Password fields
-  const [curPass, setCurPass]   = useState('');
-  const [newPass, setNewPass]   = useState('');
-  const [confPass, setConfPass] = useState('');
-  const [showCur, setShowCur]   = useState(false);
-  const [showNew, setShowNew]   = useState(false);
-  const [passErrors, setPassErrors] = useState<Record<string,string>>({});
-  const [passMsg, setPassMsg]   = useState<{ type:'success'|'error'; text:string } | null>(null);
-  const [passLoading, setPassLoading] = useState(false);
-
-  // Notifications (extended)
-  const [prefs, setPrefs] = useState({
-    emailSubmission: true,
-    emailMessage: true,
-    emailWeeklyGrades: false,
-    emailNewDiscussion: true,
-    emailDiscussionReply: true,
-    emailLateSubmission: true,
-    emailQuizAttempt: false,
-    emailAttendanceMissed: true,
-    emailAnnouncement: true,
-    smsUrgent: false,
-    digestDaily: false,
-    digestWeekly: true,
-    quietHours: false,
-    quietStart: '21:00',
-    quietEnd: '07:00',
-  });
-  const setPref = (k: keyof typeof prefs, v: any) => setPrefs(p => ({ ...p, [k]: v }));
-  const [notifMsg, setNotifMsg]     = useState<{ type:'success'|'error'; text:string } | null>(null);
-
-  // Persist prefs locally per user (backend column can be added later)
-  React.useEffect(() => {
-    if (!user?.id) return;
-    try { const raw = localStorage.getItem(`hsa_notif_prefs_${user.id}`); if (raw) setPrefs(p => ({ ...p, ...JSON.parse(raw) })); } catch {}
-  }, [user?.id]);
-  const saveNotifPrefs = () => {
-    try { if (user?.id) localStorage.setItem(`hsa_notif_prefs_${user.id}`, JSON.stringify(prefs)); } catch {}
-    setNotifMsg({ type:'success', text:'Notification preferences saved.' });
-    setTimeout(() => setNotifMsg(null), 3000);
+// ─── Notifications matrix ─────────────────────────────────────────────────────
+const NotificationsPanel: React.FC<{ prefs: typeof DEFAULT_PREFS; setPrefs:(p:typeof DEFAULT_PREFS)=>void; save:()=>void; savedAt?: string; msg:{type:'success'|'error';text:string}|null; email:string; }> =
+({ prefs, setPrefs, save, savedAt, msg, email }) => {
+  const cycle = (row:string, ch:'email'|'push') => {
+    const cur = prefs[row]?.[ch] ?? 'off';
+    const next = FREQ_ORDER[(FREQ_ORDER.indexOf(cur) + 1) % FREQ_ORDER.length];
+    setPrefs({ ...prefs, [row]: { ...(prefs[row] ?? {email:'off',push:'off'}), [ch]: next } });
   };
-
-  // ── Save profile ────────────────────────────────────────────────────────────
-  const saveProfile = async () => {
-    setProfileMsg(null);
-    if (!name.trim()) { setProfileMsg({ type:'error', text:'Name cannot be empty.' }); return; }
-    setProfileLoading(true);
-    const result = await updateProfile(name.trim());
-    setProfileLoading(false);
-    if (result.error) {
-      setProfileMsg({ type:'error', text: result.error });
-    } else {
-      setProfileMsg({ type:'success', text:'Profile updated successfully!' });
-      setTimeout(() => setProfileMsg(null), 4000);
-    }
+  const setAll = (freq: Freq) => {
+    const next = { ...prefs };
+    MATRIX.forEach(g => g.rows.forEach(r => { next[r.key] = { email: freq, push: freq === 'off' ? 'off' : (prefs[r.key]?.push ?? 'off') }; }));
+    setPrefs(next);
   };
-
-  // ── Change password ─────────────────────────────────────────────────────────
-  const changePassword = async () => {
-    setPassMsg(null);
-    const e: Record<string,string> = {};
-    if (!curPass)           e.curPass  = 'Please enter your current password.';
-    if (newPass.length < 8) e.newPass  = 'New password must be at least 8 characters.';
-    if (newPass === curPass) e.newPass = 'New password must be different from your current password.';
-    if (newPass !== confPass) e.confPass = 'Passwords do not match.';
-    if (Object.keys(e).length > 0) { setPassErrors(e); return; }
-    setPassErrors({});
-    setPassLoading(true);
-    const result = await updatePassword(curPass, newPass);
-    setPassLoading(false);
-    if (result.error) {
-      setPassErrors({ curPass: result.error });
-    } else {
-      setPassMsg({ type:'success', text:'Password changed successfully! Use your new password next time you sign in.' });
-      setCurPass(''); setNewPass(''); setConfPass('');
-      setTimeout(() => setPassMsg(null), 5000);
-    }
-  };
-
-  const roleLabel = user?.role
-    ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
-    : 'Instructor';
 
   return (
-    <div style={{ padding:28, maxWidth:740, margin:'0 auto' }}>
-      {onBackToDashboard && (
-        <button onClick={onBackToDashboard}
-          style={{ marginBottom:16, background:'none', border:`1px solid ${C.border}`, borderRadius:6, padding:'7px 14px', color:C.primary, fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
-          ← Back to Dashboard
-        </button>
-      )}
-      <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:28 }}>
-        <div>
-          <h1 style={{ margin:0, fontSize:22, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Account Settings</h1>
-          <p style={{ margin:'4px 0 0', fontSize:13, color:C.muted, fontFamily:'sans-serif' }}>
-            Manage your profile, password, and notification preferences.
-          </p>
-        </div>
+    <Section title="Notification Settings" subtitle="Applies to all your courses. Course-level settings override these." right={
+      <div style={{ display:'flex', gap:6 }}>
+        <GhostBtn onClick={() => setAll('immediate')} title="Turn all email to immediate">All immediate</GhostBtn>
+        <GhostBtn onClick={() => setAll('off')} title="Turn all off">All off</GhostBtn>
+      </div>
+    }>
+      {msg && <Toast type={msg.type} message={msg.text}/>}
+      <div style={{ background:'#EEF6FB', border:'1px solid #C9E1EE', color:'#0B4D6E', padding:'10px 12px', borderRadius:6, fontSize:12, marginBottom:14 }}>
+        Click any icon to cycle through <b>Immediate</b> → <b>Daily</b> → <b>Weekly</b> → <b>Off</b>. Daily digests deliver around 6pm; weekly digests deliver Saturday between 5–7am.
       </div>
 
-      {/* ── Profile Information ── */}
-      <Section title="Profile Information" subtitle="Your name will appear throughout the HSA portal.">
-        {/* Avatar */}
-        <div style={{ display:'flex', gap:16, alignItems:'center', marginBottom:22 }}>
-          <div style={{ width:72, height:72, borderRadius:'50%', background:`linear-gradient(135deg,${C.primary},${C.accent})`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 4px 14px rgba(123,77,181,0.35)' }}>
-            <span style={{ color:'white', fontSize:24, fontWeight:700, fontFamily:'sans-serif' }}>
-              {name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() || '?'}
-            </span>
-          </div>
+      <div style={{ overflowX:'auto' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+          <thead>
+            <tr style={{ background:C.headerBar }}>
+              <th style={{ textAlign:'left', padding:'10px 12px', color:C.text, fontSize:12, borderBottom:`1px solid ${C.border}` }}>Course Activities</th>
+              <th style={{ padding:'10px 12px', color:C.text, fontSize:12, borderBottom:`1px solid ${C.border}`, width:130 }}>
+                Email<div style={{ fontSize:10, color:C.muted, fontWeight:400 }}>{email || '—'}</div>
+              </th>
+              <th style={{ padding:'10px 12px', color:C.text, fontSize:12, borderBottom:`1px solid ${C.border}`, width:130 }}>
+                Push<div style={{ fontSize:10, color:C.muted, fontWeight:400 }}>For All Devices</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {MATRIX.map(g => (
+              <React.Fragment key={g.group}>
+                <tr>
+                  <td colSpan={3} style={{ padding:'14px 12px 6px', fontSize:11, textTransform:'uppercase', letterSpacing:0.5, fontWeight:700, color:C.muted }}>{g.group}</td>
+                </tr>
+                {g.rows.map(r => {
+                  const p = prefs[r.key] ?? { email:'off', push:'off' };
+                  return (
+                    <tr key={r.key} style={{ borderTop:`1px solid ${C.border}` }}>
+                      <td style={{ padding:'10px 12px', color:C.text }}>
+                        <div style={{ fontWeight:600 }}>{r.label}</div>
+                        {r.sub && <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{r.sub}</div>}
+                      </td>
+                      {(['email','push'] as const).map(ch => (
+                        <td key={ch} style={{ padding:'10px 12px', textAlign:'center' }}>
+                          <button
+                            onClick={() => cycle(r.key, ch)}
+                            title={FREQ_LABEL[p[ch]]}
+                            style={{ width:34, height:34, borderRadius:'50%', border:`1px solid ${C.border}`,
+                              background: p[ch]==='off' ? '#F5F5F7' : '#E8F5EE',
+                              color: FREQ_COLOR[p[ch]], cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center' }}>
+                            {FREQ_ICON[p[ch]]}
+                          </button>
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div style={{ display:'flex', gap:12, alignItems:'center', marginTop:20 }}>
+        <PrimaryBtn onClick={save}>Save Notification Settings</PrimaryBtn>
+        {savedAt && <span style={{ fontSize:12, color:C.muted }}>Last saved {savedAt}</span>}
+      </div>
+    </Section>
+  );
+};
+
+// ─── Profile panel ────────────────────────────────────────────────────────────
+const ProfilePanel: React.FC = () => {
+  const { user, updateProfile, updatePassword } = useAuth();
+  const [name, setName] = useState(user?.name ?? '');
+  const [title, setTitle] = useState('CNA Lead Instructor');
+  const [phone, setPhone] = useState('');
+  const [bio, setBio] = useState('');
+  const [msg, setMsg] = useState<{type:'success'|'error';text:string}|null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const [curPass, setCurPass] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [confPass, setConfPass] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [pwErr, setPwErr] = useState<Record<string,string>>({});
+  const [pwMsg, setPwMsg] = useState<{type:'success'|'error';text:string}|null>(null);
+  const [pwLoading, setPwLoading] = useState(false);
+
+  const save = async () => {
+    if (!name.trim()) return setMsg({ type:'error', text:'Name cannot be empty.' });
+    setLoading(true);
+    const r = await updateProfile(name.trim());
+    setLoading(false);
+    setMsg(r.error ? { type:'error', text:r.error } : { type:'success', text:'Profile updated.' });
+    setTimeout(() => setMsg(null), 4000);
+  };
+  const changePw = async () => {
+    const e: Record<string,string> = {};
+    if (!curPass) e.curPass = 'Enter your current password.';
+    if (newPass.length < 8) e.newPass = 'At least 8 characters.';
+    if (newPass !== confPass) e.confPass = 'Passwords do not match.';
+    if (Object.keys(e).length) return setPwErr(e);
+    setPwErr({}); setPwLoading(true);
+    const r = await updatePassword(curPass, newPass);
+    setPwLoading(false);
+    if (r.error) setPwErr({ curPass: r.error });
+    else { setPwMsg({ type:'success', text:'Password updated.' }); setCurPass(''); setNewPass(''); setConfPass(''); setTimeout(()=>setPwMsg(null), 4000); }
+  };
+  const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() || '?';
+
+  return (
+    <>
+      <Section title="User Profile" subtitle="Your name and photo appear throughout the HSA portal.">
+        {msg && <Toast type={msg.type} message={msg.text}/>}
+        <div style={{ display:'flex', gap:16, alignItems:'center', marginBottom:20 }}>
+          <div style={{ width:72, height:72, borderRadius:'50%', background:`linear-gradient(135deg,${C.primary},${C.accent})`, display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:24, fontWeight:700 }}>{initials}</div>
           <div>
-            <div style={{ fontSize:15, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>{name || 'Your Name'}</div>
-            <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', marginTop:2 }}>{user?.email}</div>
-            <span style={{ fontSize:11, padding:'2px 10px', borderRadius:20, background:'#EDE8F7', color:C.primary, fontFamily:'sans-serif', fontWeight:600, display:'inline-block', marginTop:5 }}>
-              {roleLabel}
-            </span>
+            <div style={{ fontSize:15, fontWeight:700, color:C.text }}>{name || 'Your Name'}</div>
+            <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>{user?.email}</div>
+            <span style={{ fontSize:11, padding:'2px 10px', borderRadius:20, background:C.headerBar, color:C.primary, fontWeight:600, display:'inline-block', marginTop:5 }}>{user?.role ?? 'user'}</span>
           </div>
         </div>
-
-        {profileMsg && <Toast type={profileMsg.type} message={profileMsg.text}/>}
-
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 20px' }}>
-          <Field label="Full Name *" value={name} onChange={setName} placeholder="Your full name"/>
-          <Field label="Email Address" value={user?.email ?? ''} onChange={()=>{}} disabled hint="Email cannot be changed here."/>
-          <Field label="Job Title" value={title} onChange={setTitle} placeholder="e.g. CNA Lead Instructor"/>
-          <Field label="Phone Number" value={phone} onChange={setPhone} placeholder="(XXX) XXX-XXXX"/>
+          <Field label="Full Name *" value={name} onChange={setName}/>
+          <Field label="Email Address" value={user?.email ?? ''} onChange={()=>{}} disabled hint="Email is managed via account security."/>
+          <Field label="Job Title" value={title} onChange={setTitle}/>
+          <Field label="Phone Number" value={phone} onChange={setPhone} placeholder="(555) 555-1234"/>
         </div>
-        <div style={{ marginBottom:16 }}>
-          <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:5 }}>Bio</label>
-          <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3}
-            placeholder="A short bio visible to students and colleagues…"
-            style={{ width:'100%', border:`1.5px solid ${C.border}`, borderRadius:6, padding:'9px 12px', fontSize:13, fontFamily:'sans-serif', color:C.text, boxSizing:'border-box', resize:'vertical', outline:'none' }}
-            onFocus={e => (e.target.style.borderColor = C.primary)}
-            onBlur={e  => (e.target.style.borderColor = C.border)}/>
+        <div style={{ marginBottom:14 }}>
+          <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, marginBottom:5 }}>Biography</label>
+          <textarea rows={3} value={bio} onChange={e=>setBio(e.target.value)} style={{ width:'100%', border:`1.5px solid ${C.border}`, borderRadius:6, padding:'9px 12px', fontSize:13, color:C.text, outline:'none', boxSizing:'border-box', resize:'vertical' }}/>
         </div>
-        <button onClick={saveProfile} disabled={profileLoading}
-          style={{ padding:'9px 24px', background:profileLoading ? C.muted : C.primary, color:'white', border:'none', borderRadius:6, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:profileLoading ? 'not-allowed' : 'pointer', display:'flex', alignItems:'center', gap:8 }}>
-          {profileLoading
-            ? <><span style={{ width:13, height:13, border:'2px solid rgba(255,255,255,0.4)', borderTop:'2px solid white', borderRadius:'50%', display:'inline-block', animation:'hsa-spin 0.7s linear infinite' }}/>Saving…</>
-            : 'Save Profile'}
-        </button>
+        <PrimaryBtn onClick={save} disabled={loading}>{loading ? 'Saving…' : 'Save Profile'}</PrimaryBtn>
       </Section>
 
-      {/* ── Change Password ── */}
-      <Section title="Change Password" subtitle="After changing your password, you'll need to use the new one on your next sign-in.">
-        {passMsg && <Toast type={passMsg.type} message={passMsg.text}/>}
-
+      <Section title="Change Password" subtitle="You'll need the new password on your next sign-in.">
+        {pwMsg && <Toast type={pwMsg.type} message={pwMsg.text}/>}
         <div style={{ position:'relative' }}>
-          <Field
-            label="Current Password *"
-            value={curPass} onChange={v => { setCurPass(v); setPassErrors(p => ({ ...p, curPass:'' })); }}
-            type={showCur ? 'text' : 'password'}
-            placeholder="Your current password"
-            error={passErrors.curPass}/>
-          <button onClick={() => setShowCur(!showCur)}
-            style={{ position:'absolute', right:10, top:28, background:'none', border:'none', cursor:'pointer', color:C.muted, fontSize:12, fontFamily:'sans-serif' }}>
-            {showCur ? 'Hide' : 'Show'}
-          </button>
+          <Field label="Current Password *" value={curPass} onChange={v=>{setCurPass(v); setPwErr(p=>({...p,curPass:''}));}} type={showPw?'text':'password'} error={pwErr.curPass}/>
         </div>
-
-        <div style={{ position:'relative' }}>
-          <Field
-            label="New Password *"
-            value={newPass} onChange={v => { setNewPass(v); setPassErrors(p => ({ ...p, newPass:'' })); }}
-            type={showNew ? 'text' : 'password'}
-            placeholder="Min. 8 characters"
-            error={passErrors.newPass}
-            hint="Use a mix of letters, numbers, and symbols for a stronger password."/>
-          <button onClick={() => setShowNew(!showNew)}
-            style={{ position:'absolute', right:10, top:28, background:'none', border:'none', cursor:'pointer', color:C.muted, fontSize:12, fontFamily:'sans-serif' }}>
-            {showNew ? 'Hide' : 'Show'}
-          </button>
-        </div>
-
-        <Field
-          label="Confirm New Password *"
-          value={confPass} onChange={v => { setConfPass(v); setPassErrors(p => ({ ...p, confPass:'' })); }}
-          type={showNew ? 'text' : 'password'}
-          placeholder="Re-enter your new password"
-          error={passErrors.confPass}/>
-
-        {/* Password strength indicator */}
-        {newPass.length > 0 && (
-          <div style={{ marginBottom:16, marginTop:-8 }}>
-            <div style={{ display:'flex', gap:4, marginBottom:4 }}>
-              {[1,2,3,4].map(i => {
-                const strength = newPass.length >= 12 && /[A-Z]/.test(newPass) && /[0-9]/.test(newPass) && /[^a-zA-Z0-9]/.test(newPass) ? 4
-                  : newPass.length >= 10 && (/[A-Z]/.test(newPass) || /[0-9]/.test(newPass)) ? 3
-                  : newPass.length >= 8 ? 2 : 1;
-                const colors = ['','#e74c3c','#e67e22','#f1c40f','#27ae60'];
-                return <div key={i} style={{ flex:1, height:4, borderRadius:2, background: i <= strength ? colors[strength] : C.border, transition:'background .2s' }}/>;
-              })}
-            </div>
-            <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>
-              {newPass.length < 8 ? 'Too short' : newPass.length >= 12 && /[A-Z]/.test(newPass) && /[0-9]/.test(newPass) ? 'Strong password' : newPass.length >= 10 ? 'Good password' : 'Acceptable — consider adding numbers or symbols'}
-            </div>
-          </div>
-        )}
-
-        <button onClick={changePassword} disabled={passLoading}
-          style={{ padding:'9px 24px', background:passLoading ? C.muted : C.primary, color:'white', border:'none', borderRadius:6, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:passLoading ? 'not-allowed' : 'pointer', display:'flex', alignItems:'center', gap:8 }}>
-          {passLoading
-            ? <><span style={{ width:13, height:13, border:'2px solid rgba(255,255,255,0.4)', borderTop:'2px solid white', borderRadius:'50%', display:'inline-block', animation:'hsa-spin 0.7s linear infinite' }}/>Updating…</>
-            : 'Update Password'}
-        </button>
-      </Section>
-
-      {/* ── Notification Preferences ── */}
-      <Section title="Notification Preferences" subtitle="Choose which activity generates an email or SMS. Applies to all courses you teach.">
-        {notifMsg && <Toast type={notifMsg.type} message={notifMsg.text}/>}
-
-        <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, margin:'0 0 10px' }}>Student Activity</div>
-        {([
-          ['emailSubmission',      'A student submits an assignment'],
-          ['emailLateSubmission',  'A student submits an assignment after the due date'],
-          ['emailQuizAttempt',     'A student submits a quiz or exam attempt'],
-          ['emailMessage',         'A student sends me a direct message'],
-          ['emailAttendanceMissed','A student is marked absent in attendance'],
-        ] as const).map(([k, label]) => (
-          <label key={k} style={{ display:'flex', alignItems:'center', gap:10, fontSize:13, fontFamily:'sans-serif', color:C.text, marginBottom:10, cursor:'pointer' }}>
-            <input type="checkbox" checked={prefs[k] as boolean} onChange={e => setPref(k, e.target.checked)} style={{ accentColor:C.primary, width:16, height:16 }}/>
-            {label}
-          </label>
-        ))}
-
-        <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, margin:'18px 0 10px' }}>Discussions & Announcements</div>
-        {([
-          ['emailNewDiscussion',   'A new discussion is posted in one of my courses'],
-          ['emailDiscussionReply', 'Someone replies to a discussion I started or replied to'],
-          ['emailAnnouncement',    'An announcement is posted (as CC when I authored it)'],
-        ] as const).map(([k, label]) => (
-          <label key={k} style={{ display:'flex', alignItems:'center', gap:10, fontSize:13, fontFamily:'sans-serif', color:C.text, marginBottom:10, cursor:'pointer' }}>
-            <input type="checkbox" checked={prefs[k] as boolean} onChange={e => setPref(k, e.target.checked)} style={{ accentColor:C.primary, width:16, height:16 }}/>
-            {label}
-          </label>
-        ))}
-
-        <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, margin:'18px 0 10px' }}>Digests & Delivery</div>
-        {([
-          ['digestDaily',        'Send me a daily digest at 8:00 AM'],
-          ['digestWeekly',       'Send me a weekly summary every Monday'],
-          ['emailWeeklyGrades',  'Include weekly grade export summary'],
-          ['smsUrgent',          'Text me for urgent items (clinical no-shows, exam failures)'],
-        ] as const).map(([k, label]) => (
-          <label key={k} style={{ display:'flex', alignItems:'center', gap:10, fontSize:13, fontFamily:'sans-serif', color:C.text, marginBottom:10, cursor:'pointer' }}>
-            <input type="checkbox" checked={prefs[k] as boolean} onChange={e => setPref(k, e.target.checked)} style={{ accentColor:C.primary, width:16, height:16 }}/>
-            {label}
-          </label>
-        ))}
-
-        <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, margin:'18px 0 10px' }}>Quiet Hours</div>
-        <label style={{ display:'flex', alignItems:'center', gap:10, fontSize:13, fontFamily:'sans-serif', color:C.text, marginBottom:10, cursor:'pointer' }}>
-          <input type="checkbox" checked={prefs.quietHours} onChange={e => setPref('quietHours', e.target.checked)} style={{ accentColor:C.primary, width:16, height:16 }}/>
-          Pause non-urgent notifications during quiet hours
+        <Field label="New Password *" value={newPass} onChange={v=>{setNewPass(v); setPwErr(p=>({...p,newPass:''}));}} type={showPw?'text':'password'} error={pwErr.newPass} hint="Min 8 characters. Use letters, numbers, symbols."/>
+        <Field label="Confirm New Password *" value={confPass} onChange={v=>{setConfPass(v); setPwErr(p=>({...p,confPass:''}));}} type={showPw?'text':'password'} error={pwErr.confPass}/>
+        <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color:C.muted, marginBottom:12, cursor:'pointer' }}>
+          <input type="checkbox" checked={showPw} onChange={e=>setShowPw(e.target.checked)}/> Show passwords
         </label>
-        {prefs.quietHours && (
-          <div style={{ display:'flex', gap:10, alignItems:'center', marginLeft:26, marginBottom:14, fontSize:12, color:C.text, fontFamily:'sans-serif' }}>
-            From <input type="time" value={prefs.quietStart} onChange={e => setPref('quietStart', e.target.value)} style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:'4px 8px' }}/>
-            to <input type="time" value={prefs.quietEnd} onChange={e => setPref('quietEnd', e.target.value)} style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:'4px 8px' }}/>
-          </div>
-        )}
-
-        <button onClick={saveNotifPrefs}
-          style={{ marginTop:8, padding:'9px 24px', background:C.primary, color:'white', border:'none', borderRadius:6, fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer' }}>
-          Save Preferences
-        </button>
+        <PrimaryBtn onClick={changePw} disabled={pwLoading}>{pwLoading?'Updating…':'Update Password'}</PrimaryBtn>
       </Section>
+    </>
+  );
+};
 
-      <style>{`@keyframes hsa-spin { to { transform: rotate(360deg); } }`}</style>
+// ─── Files panel ──────────────────────────────────────────────────────────────
+const FilesPanel: React.FC = () => {
+  const { user } = useAuth();
+  const [files, setFiles] = useState<{ name:string; size:number; updated_at:string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [msg, setMsg] = useState<{type:'success'|'error';text:string}|null>(null);
+  const folder = user?.id ? `personal/${user.id}` : '';
+
+  const load = async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    const { data, error } = await supabase.storage.from('submissions').list(folder, { limit:100, sortBy:{ column:'updated_at', order:'desc' } });
+    setLoading(false);
+    if (error) { setMsg({ type:'error', text: error.message }); return; }
+    setFiles((data ?? []).filter(f => f.name && !f.name.startsWith('.')).map(f => ({ name:f.name, size:(f.metadata as any)?.size ?? 0, updated_at:f.updated_at ?? '' })));
+  };
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id]);
+
+  const upload = async (fl: FileList | null) => {
+    if (!fl || !fl[0] || !user?.id) return;
+    setUploading(true);
+    const f = fl[0];
+    const { error } = await supabase.storage.from('submissions').upload(`${folder}/${Date.now()}-${f.name}`, f, { upsert:false });
+    setUploading(false);
+    if (error) { setMsg({ type:'error', text: error.message }); return; }
+    setMsg({ type:'success', text:'Uploaded.' });
+    load();
+    setTimeout(()=>setMsg(null), 3000);
+  };
+  const remove = async (name:string) => {
+    if (!confirm(`Delete ${name}?`)) return;
+    const { error } = await supabase.storage.from('submissions').remove([`${folder}/${name}`]);
+    if (error) { setMsg({ type:'error', text: error.message }); return; }
+    load();
+  };
+  const download = async (name:string) => {
+    const { data } = await supabase.storage.from('submissions').createSignedUrl(`${folder}/${name}`, 60);
+    if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+  };
+
+  return (
+    <Section title="My Files" subtitle="Private files scoped to your account. 50 MB soft limit." right={
+      <label style={{ cursor:'pointer' }}>
+        <input type="file" style={{ display:'none' }} onChange={e => upload(e.target.files)}/>
+        <span style={{ padding:'8px 14px', background:C.primary, color:'white', borderRadius:6, fontSize:13, fontWeight:600, display:'inline-flex', alignItems:'center', gap:6 }}>
+          <Upload size={14}/> {uploading?'Uploading…':'Upload'}
+        </span>
+      </label>
+    }>
+      {msg && <Toast type={msg.type} message={msg.text}/>}
+      {loading ? <div style={{ padding:20, color:C.muted, fontSize:13 }}>Loading…</div> :
+        files.length === 0 ? <div style={{ padding:24, textAlign:'center', color:C.muted, fontSize:13 }}>No files yet. Upload lecture notes, drafts, or references.</div> :
+        <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+          <thead><tr style={{ background:C.headerBar }}>
+            <th style={{ textAlign:'left', padding:'8px 12px', color:C.text }}>Name</th>
+            <th style={{ textAlign:'left', padding:'8px 12px', color:C.text }}>Size</th>
+            <th style={{ textAlign:'left', padding:'8px 12px', color:C.text }}>Modified</th>
+            <th style={{ width:110 }}/>
+          </tr></thead>
+          <tbody>{files.map(f => (
+            <tr key={f.name} style={{ borderTop:`1px solid ${C.border}` }}>
+              <td style={{ padding:'10px 12px', color:C.primary, cursor:'pointer' }} onClick={()=>download(f.name)}>{f.name.replace(/^\d+-/,'')}</td>
+              <td style={{ padding:'10px 12px', color:C.muted }}>{(f.size/1024).toFixed(1)} KB</td>
+              <td style={{ padding:'10px 12px', color:C.muted }}>{f.updated_at ? new Date(f.updated_at).toLocaleDateString() : '—'}</td>
+              <td style={{ padding:'10px 12px', textAlign:'right' }}>
+                <button onClick={()=>remove(f.name)} style={{ background:'none', border:'none', color:C.error, cursor:'pointer' }} title="Delete"><Trash2 size={15}/></button>
+              </td>
+            </tr>
+          ))}</tbody>
+        </table>
+      }
+    </Section>
+  );
+};
+
+// ─── Settings panel (contacts + feature flags) ────────────────────────────────
+const FLAGS: { key:string; label:string; hint:string }[] = [
+  { key:'high_contrast',    label:'Use High Contrast UI',   hint:'Higher contrast between text and background.' },
+  { key:'dyslexia_font',    label:'Use a dyslexia-friendly font', hint:'Applies OpenDyslexic where possible.' },
+  { key:'underline_links',  label:'Underline Links',        hint:'Underline every link for easier scanning.' },
+  { key:'auto_captions',    label:'Auto show closed captions', hint:'Turn captions on for embedded video by default.' },
+  { key:'open_todo_new_tab',label:'Open to-do items in a new tab', hint:'Keeps your current page open.' },
+  { key:'no_celebrate',     label:'Disable Celebration Animations', hint:'No confetti or fanfare on submissions.' },
+  { key:'disable_shortcuts',label:'Disable Keyboard Shortcuts', hint:'Turn off portal-wide keyboard shortcuts.' },
+];
+
+const SettingsPanel: React.FC<{ flags:Record<string,boolean>; setFlags:(f:Record<string,boolean>)=>void; contacts:{ altEmail:string; phone:string; smsOptIn:boolean }; setContacts:(c:any)=>void; save:()=>void; msg:{type:'success'|'error';text:string}|null; }> =
+({ flags, setFlags, contacts, setContacts, save, msg }) => (
+  <>
+    <Section title="Ways to Contact" subtitle="Add backup email and SMS so we can reach you if your primary email bounces.">
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0 20px' }}>
+        <Field label="Alternate Email" value={contacts.altEmail} onChange={v=>setContacts({...contacts, altEmail:v})} placeholder="you@backup.com"/>
+        <Field label="Mobile Phone" value={contacts.phone} onChange={v=>setContacts({...contacts, phone:v})} placeholder="(555) 555-1234"/>
+      </div>
+      <label style={{ display:'flex', gap:8, alignItems:'center', fontSize:13, color:C.text, marginBottom:14, cursor:'pointer' }}>
+        <input type="checkbox" checked={contacts.smsOptIn} onChange={e=>setContacts({...contacts, smsOptIn:e.target.checked})}/>
+        Send urgent alerts (clinical no-shows, exam failures) by SMS
+      </label>
+    </Section>
+    <Section title="Feature Options" subtitle="Turn features on or off for your account.">
+      {msg && <Toast type={msg.type} message={msg.text}/>}
+      <div style={{ border:`1px solid ${C.border}`, borderRadius:6, overflow:'hidden' }}>
+        {FLAGS.map((f, i) => (
+          <div key={f.key} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'12px 16px', borderTop: i===0?'none':`1px solid ${C.border}` }}>
+            <div>
+              <div style={{ fontSize:13, fontWeight:600, color:C.text }}>{f.label}</div>
+              <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{f.hint}</div>
+            </div>
+            <button onClick={()=>setFlags({ ...flags, [f.key]: !flags[f.key] })}
+              style={{ width:44, height:24, borderRadius:12, border:'none', cursor:'pointer', background: flags[f.key] ? C.primary : '#D0D0D0', position:'relative', transition:'background .15s' }}>
+              <span style={{ position:'absolute', top:2, left: flags[f.key] ? 22 : 2, width:20, height:20, borderRadius:'50%', background:'white', transition:'left .15s' }}/>
+            </button>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop:16 }}><PrimaryBtn onClick={save}>Save Settings</PrimaryBtn></div>
+    </Section>
+  </>
+);
+
+// ─── Shared content ───────────────────────────────────────────────────────────
+const SharedPanel: React.FC = () => (
+  <Section title="Received Content" subtitle="Content that other instructors or admins share with you shows here.">
+    <div style={{ padding:40, textAlign:'center', color:C.muted, fontSize:14 }}>
+      <div style={{ fontSize:36, marginBottom:8 }}>🎁</div>
+      No content has been shared with you yet.
+    </div>
+  </Section>
+);
+
+// ─── QR Mobile Login ──────────────────────────────────────────────────────────
+const QRPanel: React.FC = () => {
+  const { user } = useAuth();
+  const [confirmed, setConfirmed] = useState(false);
+  const payload = useMemo(() => encodeURIComponent(`hsa-login:${user?.id ?? 'unknown'}:${Date.now()}`), [user?.id, confirmed]);
+  return (
+    <Section title="QR for Mobile Login" subtitle="Scan from the HSA mobile app to sign in without typing your password.">
+      {!confirmed ? (
+        <div style={{ maxWidth:460 }}>
+          <div style={{ padding:14, background:'#FFF7E6', border:'1px solid #F5D8A0', borderRadius:6, fontSize:13, color:'#6B4A00', marginBottom:14 }}>
+            Sharing a QR code can give others immediate access to your account. Make sure no one can capture your screen from your surroundings or a screen-sharing service.
+          </div>
+          <PrimaryBtn onClick={()=>setConfirmed(true)}>Proceed</PrimaryBtn>
+        </div>
+      ) : (
+        <div style={{ textAlign:'center', padding:20 }}>
+          <img alt="Login QR" width={260} height={260}
+               src={`https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${payload}`}
+               style={{ border:`1px solid ${C.border}`, borderRadius:6, background:'white' }}/>
+          <div style={{ fontSize:12, color:C.muted, marginTop:10 }}>This code expires in 10 minutes.</div>
+          <GhostBtn onClick={()=>setConfirmed(false)} style={{ marginTop:14 }}>Hide QR</GhostBtn>
+        </div>
+      )}
+    </Section>
+  );
+};
+
+// ─── Global Announcements ─────────────────────────────────────────────────────
+const AnnouncementsPanel: React.FC = () => {
+  const [items, setItems] = useState<{id:string; title:string; body:string; posted_at:string}[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<'current'|'recent'>('current');
+  useEffect(() => { (async () => {
+    const { data } = await supabase.from('lms_announcements').select('id,title,body,posted_at').order('posted_at', { ascending:false }).limit(20);
+    setItems(data ?? []); setLoading(false);
+  })(); }, []);
+  const now = Date.now();
+  const visible = items.filter(a => tab==='current' ? (now - new Date(a.posted_at).getTime() < 1000*60*60*24*14) : true);
+
+  return (
+    <Section title="Global Announcements" subtitle="Institution-wide notices from HSA leadership.">
+      <div style={{ display:'flex', gap:0, borderBottom:`1px solid ${C.border}`, marginBottom:14 }}>
+        {(['current','recent'] as const).map(t => (
+          <button key={t} onClick={()=>setTab(t)} style={{ padding:'10px 18px', border:'none', background:'transparent', cursor:'pointer', borderBottom: tab===t ? `2px solid ${C.primary}` : '2px solid transparent', color: tab===t ? C.primary : C.muted, fontWeight:600, fontSize:13, textTransform:'capitalize' }}>{t}</button>
+        ))}
+      </div>
+      {loading ? <div style={{ color:C.muted, fontSize:13 }}>Loading…</div> :
+        visible.length===0 ? <div style={{ padding:24, textAlign:'center', color:C.muted, fontSize:13 }}>No announcements right now.</div> :
+        visible.map(a => (
+          <div key={a.id} style={{ borderLeft:`4px solid ${C.primary}`, padding:'12px 16px', background:'#F9F7FD', marginBottom:10, borderRadius:'0 6px 6px 0' }}>
+            <div style={{ fontWeight:700, color:C.text, fontSize:14 }}>{a.title}</div>
+            <div style={{ fontSize:12, color:C.muted, marginTop:2 }}>{new Date(a.posted_at).toLocaleString()}</div>
+            <div style={{ fontSize:13, color:C.text, marginTop:6, whiteSpace:'pre-wrap' }}>{a.body}</div>
+          </div>
+        ))
+      }
+    </Section>
+  );
+};
+
+// ─── Sub-nav + main shell ─────────────────────────────────────────────────────
+type TabKey = 'notifications'|'profile'|'files'|'settings'|'shared'|'qr'|'announcements';
+const TABS: { key:TabKey; label:string; icon:React.ReactNode }[] = [
+  { key:'notifications', label:'Notifications', icon:<Bell size={15}/> },
+  { key:'profile',       label:'Profile',       icon:<UserIcon size={15}/> },
+  { key:'files',         label:'Files',         icon:<FileText size={15}/> },
+  { key:'settings',      label:'Settings',      icon:<SettingsIcon size={15}/> },
+  { key:'shared',        label:'Shared Content',icon:<Share2 size={15}/> },
+  { key:'qr',            label:'QR for Mobile Login', icon:<QrCode size={15}/> },
+  { key:'announcements', label:'Global Announcements', icon:<Megaphone size={15}/> },
+];
+
+const Account: React.FC<{ onBackToDashboard?:()=>void }> = () => {
+  const { user } = useAuth();
+  const [tab, setTab] = useState<TabKey>(() => (window.location.hash.replace('#','') as TabKey) || 'notifications');
+  useEffect(() => { window.location.hash = tab; }, [tab]);
+
+  // Prefs state (loaded from DB)
+  const [prefs, setPrefs] = useState<typeof DEFAULT_PREFS>(DEFAULT_PREFS);
+  const [flags, setFlags] = useState<Record<string,boolean>>({});
+  const [contacts, setContacts] = useState<{altEmail:string;phone:string;smsOptIn:boolean}>({ altEmail:'', phone:'', smsOptIn:false });
+  const [notifMsg, setNotifMsg] = useState<{type:'success'|'error';text:string}|null>(null);
+  const [settingsMsg, setSettingsMsg] = useState<{type:'success'|'error';text:string}|null>(null);
+  const [savedAt, setSavedAt] = useState<string|undefined>();
+
+  useEffect(() => { if (!user?.id) return; (async () => {
+    const { data } = await supabase.from('user_account_settings').select('*').eq('user_id', user.id).maybeSingle();
+    if (data) {
+      setPrefs({ ...DEFAULT_PREFS, ...((data.notification_prefs as any) ?? {}) });
+      setFlags((data.feature_flags as any) ?? {});
+      setContacts({ altEmail:'', phone:'', smsOptIn:false, ...((data.contact_methods as any) ?? {}) });
+      if (data.updated_at) setSavedAt(new Date(data.updated_at).toLocaleString());
+    }
+  })(); }, [user?.id]);
+
+  const saveNotifications = async () => {
+    if (!user?.id) return;
+    const { error } = await supabase.from('user_account_settings').upsert({ user_id:user.id, notification_prefs: prefs, updated_at: new Date().toISOString() });
+    if (error) return setNotifMsg({ type:'error', text: error.message });
+    setNotifMsg({ type:'success', text:'Notification settings saved.' });
+    setSavedAt(new Date().toLocaleString());
+    setTimeout(()=>setNotifMsg(null), 3000);
+  };
+  const saveSettings = async () => {
+    if (!user?.id) return;
+    const { error } = await supabase.from('user_account_settings').upsert({ user_id:user.id, feature_flags: flags, contact_methods: contacts, updated_at: new Date().toISOString() });
+    if (error) return setSettingsMsg({ type:'error', text: error.message });
+    setSettingsMsg({ type:'success', text:'Settings saved.' });
+    setTimeout(()=>setSettingsMsg(null), 3000);
+  };
+
+  return (
+    <div style={{ display:'flex', minHeight:'calc(100vh - 64px)', background:C.bg }}>
+      {/* Sub-nav rail */}
+      <aside style={{ width:230, background:C.white, borderRight:`1px solid ${C.border}`, padding:'20px 0', flexShrink:0 }}>
+        <div style={{ padding:'0 20px 14px', fontSize:11, textTransform:'uppercase', letterSpacing:0.6, color:C.muted, fontWeight:700 }}>Account</div>
+        {TABS.map(t => (
+          <button key={t.key} onClick={()=>setTab(t.key)}
+            style={{ display:'flex', alignItems:'center', gap:10, width:'100%', padding:'10px 20px', border:'none',
+              borderLeft: tab===t.key ? `3px solid ${C.primary}` : '3px solid transparent',
+              background: tab===t.key ? C.headerBar : 'transparent',
+              color: tab===t.key ? C.primary : C.text,
+              fontWeight: tab===t.key ? 700 : 500,
+              fontSize:13, cursor:'pointer', textAlign:'left' }}>
+            {t.icon}{t.label}
+          </button>
+        ))}
+      </aside>
+
+      {/* Content */}
+      <main style={{ flex:1, padding:'28px 32px', maxWidth:1000 }}>
+        <div style={{ marginBottom:18, fontSize:13, color:C.muted }}>{user?.name ?? user?.email} <span style={{ margin:'0 6px' }}>›</span> <span style={{ color:C.text, fontWeight:600 }}>{TABS.find(t=>t.key===tab)?.label}</span></div>
+        {tab==='notifications' && <NotificationsPanel prefs={prefs} setPrefs={setPrefs} save={saveNotifications} savedAt={savedAt} msg={notifMsg} email={user?.email ?? ''}/>}
+        {tab==='profile' && <ProfilePanel/>}
+        {tab==='files' && <FilesPanel/>}
+        {tab==='settings' && <SettingsPanel flags={flags} setFlags={setFlags} contacts={contacts} setContacts={setContacts} save={saveSettings} msg={settingsMsg}/>}
+        {tab==='shared' && <SharedPanel/>}
+        {tab==='qr' && <QRPanel/>}
+        {tab==='announcements' && <AnnouncementsPanel/>}
+      </main>
     </div>
   );
 };
