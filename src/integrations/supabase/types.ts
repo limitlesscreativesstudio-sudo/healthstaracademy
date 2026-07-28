@@ -1819,6 +1819,105 @@ export type Database = {
           },
         ]
       }
+      portal_conversation_participants: {
+        Row: {
+          archived: boolean
+          conversation_id: string
+          last_read_at: string | null
+          starred: boolean
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          conversation_id: string
+          last_read_at?: string | null
+          starred?: boolean
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          conversation_id?: string
+          last_read_at?: string | null
+          starred?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "portal_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_conversations: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          last_message_at: string
+          subject: string
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          last_message_at?: string
+          subject?: string
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          last_message_at?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_conversations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portal_messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "portal_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2581,6 +2680,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_conversation_participant: {
+        Args: { _convo: string; _user: string }
+        Returns: boolean
+      }
       is_enrolled_in: { Args: { _course_id: string }; Returns: boolean }
       is_instructor_of: { Args: { _course_id: string }; Returns: boolean }
     }
