@@ -95,7 +95,7 @@ const AnnouncementBar = () => {
         icon: Calendar,
         title: buildTitle('daytime'),
         startDate: nextDaytime.startDate,
-        deadline: stripDay(nextDaytime.deadline),
+        deadline: stripDay(daytimeDeadlines.applyBy),
         ctaText: 'View Cohorts',
         ctaLink: '/programs/cohorts',
         hasCountdown: true,
