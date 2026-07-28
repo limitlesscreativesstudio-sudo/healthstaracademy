@@ -265,6 +265,7 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
       answers, score, max_score: max, submitted_at: new Date().toISOString(),
     }).eq('id', attemptId);
     if (error) return toast.error('Could not submit');
+    clearLocalDraft(taking.id);
     setResults({ score, max, perQ });
     setAttemptedIds(s => new Set(s).add(taking.id));
     toast.success('Quiz submitted');
