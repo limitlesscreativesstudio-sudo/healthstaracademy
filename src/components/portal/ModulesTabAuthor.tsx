@@ -221,6 +221,23 @@ const ModulesTabAuthor = ({ courseId, isInstructor }: { courseId: string; isInst
     load();
   };
 
+  // ----- Duplicate item -----
+  const duplicateItem = async (item: ModuleItem) => {
+    const sameModuleCount = items.filter(i => i.module_id === item.module_id).length;
+    const { error } = await supabase.from("module_items").insert({
+      module_id: item.module_id,
+      title: `${item.title} (copy)`,
+      item_type: item.item_type,
+      content_ref: item.content_ref,
+      url: item.url,
+      published: false,
+      position: sameModuleCount,
+    });
+    if (error) { toast({ title: "Duplicate failed", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Item duplicated" });
+    load();
+  };
+
   // ----- Move module up/down/top/bottom -----
   const moveModule = async (m: Module, where: "up" | "down" | "top" | "bottom") => {
     const idx = modules.findIndex(x => x.id === m.id);
