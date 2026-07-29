@@ -49,7 +49,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
     const [enrRes, pendRes] = await Promise.all([
       supabase
         .from('enrollments')
-        .select(`id, role, section_id, user_id, profiles ( id, full_name )`)
+        .select('id, role, section_id, user_id')
         .eq('course_id', courseId),
       supabase
         .from('pending_enrollments')
@@ -59,9 +59,17 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
     ]);
 
     const built: Person[] = [];
+    // Profiles are fetched separately (no FK relationship for a PostgREST embed).
+    const userIds = (enrRes.data as any[] | null)?.map(r => r.user_id).filter(Boolean) ?? [];
+    const profMap: Record<string, any> = {};
+    if (userIds.length) {
+      const { data: profs } = await supabase
+        .from('profiles').select('id, user_id, full_name').in('user_id', userIds);
+      for (const pr of (profs ?? []) as any[]) profMap[pr.user_id] = pr;
+    }
     if (!enrRes.error && enrRes.data) {
       for (const row of enrRes.data as any[]) {
-        const p = row.profiles;
+        const p = profMap[row.user_id];
         const name = p?.full_name ?? 'Student';
         const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
         built.push({
