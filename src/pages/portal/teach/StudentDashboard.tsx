@@ -231,7 +231,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
             placeholder="Search people…"
             style={{ border:'none', outline:'none', flex:1, fontSize:13, fontFamily:'sans-serif', color:C.text }}/>
         </div>
-        <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)}
+        <select aria-label="Filter by role" value={roleFilter} onChange={e => setRoleFilter(e.target.value)}
           style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px',
             fontSize:13, fontFamily:'sans-serif', color:C.text, background:C.white }}>
           <option value="all">All Roles</option>
@@ -272,7 +272,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
               <tr style={{ background:'#F0EDF7', borderBottom:`1px solid ${C.border}` }}>
                 {canEdit && (
                   <th style={{ padding:'9px 14px', width:40 }}>
-                    <input type="checkbox"
+                    <input type="checkbox" aria-label="Select all people"
                       checked={selected.length === visible.length && visible.length > 0}
                       onChange={toggleAll}
                       style={{ accentColor:C.primary }}/>
@@ -294,7 +294,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
 
                   {canEdit && (
                     <td style={{ padding:'10px 14px' }}>
-                      <input type="checkbox"
+                      <input type="checkbox" aria-label={`Select ${p.name ?? 'person'}`}
                         checked={selected.includes(p.enrollmentId)}
                         onChange={() => toggleSelect(p.enrollmentId)}
                         style={{ accentColor:C.primary }}/>
@@ -416,7 +416,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
               <div>
                 <label style={{ display:'block', fontSize:13, fontWeight:600, color:C.text,
                   fontFamily:'sans-serif', marginBottom:6 }}>Role</label>
-                <select value={addRole} onChange={e => setAddRole(e.target.value)}
+                <select aria-label="Role" value={addRole} onChange={e => setAddRole(e.target.value)}
                   style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5,
                     padding:'9px 10px', fontSize:13, fontFamily:'sans-serif' }}>
                   <option value="student">Student</option>
@@ -429,7 +429,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
               <div>
                 <label style={{ display:'block', fontSize:13, fontWeight:600, color:C.text,
                   fontFamily:'sans-serif', marginBottom:6 }}>Section</label>
-                <select value={addSection} onChange={e => setAddSection(e.target.value)}
+                <select aria-label="Section" value={addSection} onChange={e => setAddSection(e.target.value)}
                   style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5,
                     padding:'9px 10px', fontSize:13, fontFamily:'sans-serif' }}>
                   <option>Hybrid Day NATP</option>
@@ -442,7 +442,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
               <label style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'12px 14px',
                 background:'#EDE8F7', border:`1px solid ${C.border}`, borderRadius:6,
                 marginBottom:16, cursor:'pointer', fontFamily:'sans-serif' }}>
-                <input type="checkbox" checked={enrollInCohort}
+                <input type="checkbox" aria-label="Enroll entire cohort" checked={enrollInCohort}
                   onChange={e => setEnrollInCohort(e.target.checked)}
                   style={{ marginTop:2 }}/>
                 <div>

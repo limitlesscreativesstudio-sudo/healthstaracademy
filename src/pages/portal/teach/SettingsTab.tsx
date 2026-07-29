@@ -175,14 +175,14 @@ const CourseDetails: React.FC<{ canEdit: boolean; courseId?: string }> = ({ canE
         {/* Name */}
         <div style={{ marginBottom:18 }}>
           <label style={{ display:'block', fontSize:13, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:6 }}>Name:</label>
-          <input value={name} onChange={e => setName(e.target.value)} disabled={!canEdit}
+          <input aria-label="Course name" value={name} onChange={e => setName(e.target.value)} disabled={!canEdit}
             style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'9px 12px', fontSize:14, fontFamily:'sans-serif', color:C.text, boxSizing:'border-box', outline:'none', background:canEdit?C.white:C.bg }}/>
         </div>
 
         {/* Course code */}
         <div style={{ marginBottom:18 }}>
           <label style={{ display:'block', fontSize:13, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:6 }}>Course Code:</label>
-          <input value={code} onChange={e => setCode(e.target.value)} disabled={!canEdit}
+          <input aria-label="Course code" value={code} onChange={e => setCode(e.target.value)} disabled={!canEdit}
             style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'9px 12px', fontSize:14, fontFamily:'sans-serif', color:C.text, boxSizing:'border-box', outline:'none', background:canEdit?C.white:C.bg }}/>
         </div>
 
@@ -195,7 +195,7 @@ const CourseDetails: React.FC<{ canEdit: boolean; courseId?: string }> = ({ canE
         {/* Timezone */}
         <div style={{ marginBottom:18 }}>
           <label style={{ display:'block', fontSize:13, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:6 }}>Time Zone:</label>
-          <select value={tz} onChange={e => setTz(e.target.value)} disabled={!canEdit}
+          <select aria-label="Time zone" value={tz} onChange={e => setTz(e.target.value)} disabled={!canEdit}
             style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'9px 12px', fontSize:13, fontFamily:'sans-serif', color:C.text, background:canEdit?C.white:C.bg }}>
             <option>Pacific Time (US & Canada) (-08:00/-07:00)</option>
             <option>Mountain Time (US & Canada) (-07:00/-06:00)</option>
@@ -207,7 +207,7 @@ const CourseDetails: React.FC<{ canEdit: boolean; courseId?: string }> = ({ canE
         {/* Participation */}
         <div style={{ marginBottom:18 }}>
           <label style={{ display:'block', fontSize:13, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:6 }}>Participation:</label>
-          <select disabled={!canEdit}
+          <select aria-label="Participation" disabled={!canEdit}
             style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 12px', fontSize:13, fontFamily:'sans-serif', background:canEdit?C.white:C.bg }}>
             <option>Term</option><option>Course</option><option>Unrestricted</option>
           </select>
@@ -221,7 +221,7 @@ const CourseDetails: React.FC<{ canEdit: boolean; courseId?: string }> = ({ canE
           {[['Start', start, setStart],['End', end, setEnd]].map(([label, val, set]) => (
             <div key={label as string}>
               <label style={{ display:'block', fontSize:13, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:6 }}>{label as string}</label>
-              <input type="date" value={val as string} onChange={e => (set as Function)(e.target.value)} disabled={!canEdit}
+              <input aria-label={`${label as string} date`} type="date" value={val as string} onChange={e => (set as Function)(e.target.value)} disabled={!canEdit}
                 style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', background:canEdit?C.white:C.bg }}/>
             </div>
           ))}
@@ -229,7 +229,7 @@ const CourseDetails: React.FC<{ canEdit: boolean; courseId?: string }> = ({ canE
 
         {/* Restrict checkbox */}
         <label style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:24, cursor:'pointer' }}>
-          <input type="checkbox" disabled={!canEdit} style={{ marginTop:2, accentColor:C.primary }}/>
+          <input aria-label="Restrict students from viewing course before term start date" type="checkbox" disabled={!canEdit} style={{ marginTop:2, accentColor:C.primary }}/>
           <span style={{ fontSize:13, color:C.text, fontFamily:'sans-serif', lineHeight:1.5 }}>
             Restrict students from viewing course before term start date
           </span>
@@ -312,7 +312,7 @@ const Sections: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
       ))}
       {canEdit && (
         <div style={{ display:'flex', gap:10, marginTop:16 }}>
-          <input value={newSec} onChange={e => setNewSec(e.target.value)} placeholder="New section name"
+          <input aria-label="New section name" value={newSec} onChange={e => setNewSec(e.target.value)} placeholder="New section name"
             style={{ flex:1, border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', outline:'none' }}/>
           <button onClick={() => { if(newSec.trim()){ setSections(p=>[...p,newSec.trim()]); setNewSec(''); } }}
             style={{ padding:'8px 18px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>

@@ -302,7 +302,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
             />
             {canEdit && (
               <>
-                <select value={selFolder} onChange={e => setSelFolder(e.target.value)}
+                <select aria-label="Destination folder" value={selFolder} onChange={e => setSelFolder(e.target.value)}
                   style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'6px 8px', fontSize:12, fontFamily:'sans-serif', maxWidth:200 }}>
                   {folderChoices.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                 </select>

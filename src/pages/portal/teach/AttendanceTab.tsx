@@ -103,7 +103,7 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
           </div>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-          <input type="date" value={sessionDate} onChange={e => setSessionDate(e.target.value)}
+          <input aria-label="Session date" type="date" value={sessionDate} onChange={e => setSessionDate(e.target.value)}
             style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'7px 10px', fontSize:13, fontFamily:'sans-serif' }}/>
           {canEdit && (
             <button onClick={saveAttendance} disabled={saving}
