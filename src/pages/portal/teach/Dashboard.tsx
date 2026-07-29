@@ -601,8 +601,11 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
           if (!copyErr) {
             newPath = candidate;
             newUrl = supabase.storage.from(bucket).getPublicUrl(candidate).data.publicUrl;
+            if (f.file_url && newUrl) fileUrlMap.set(f.file_url, newUrl);
+            fileUrlMap.set(f.storage_path, candidate);
           }
         }
+
 
         const { data: nf, error: fileErr } = await supabase.from('lms_files').insert({
           course_id: newCourse.id,
