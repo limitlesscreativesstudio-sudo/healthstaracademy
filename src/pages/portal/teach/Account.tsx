@@ -298,7 +298,10 @@ const ProfilePanel: React.FC = () => {
           <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, marginBottom:5 }}>Biography</label>
           <textarea rows={3} value={bio} onChange={e=>setBio(e.target.value)} style={{ width:'100%', border:`1.5px solid ${C.border}`, borderRadius:6, padding:'9px 12px', fontSize:13, color:C.text, outline:'none', boxSizing:'border-box', resize:'vertical' }}/>
         </div>
-        <PrimaryBtn onClick={save} disabled={loading || !hydrated}>{loading ? 'Saving…' : 'Save Profile'}</PrimaryBtn>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <PrimaryBtn onClick={save} disabled={loading || !hydrated}>{loading ? 'Saving…' : 'Save Profile'}</PrimaryBtn>
+          {hydrated && <SaveStatus dirty={dirty} saving={loading} savedAt={savedAt} error={autoErr} />}
+        </div>
       </Section>
 
       <Section title="Change Password" subtitle="You'll need the new password on your next sign-in.">
