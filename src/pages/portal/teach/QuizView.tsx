@@ -353,7 +353,7 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
               </button>
               <button onClick={() => { const cur = q; setViewing(null); startTake(cur as any); }} style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer' }}>Preview</button>
               <button onClick={() => { const cur = q; setViewing(null); startEdit(cur as any); }} style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer' }}>✎ Edit</button>
-            </div>
+              <button onClick={() => { const cur = q; setViewing(null); startEdit(cur as any); }} style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer', color:C.primary, fontWeight:600 }}>✎ Keep Editing This Quiz</button>
           )}
         </div>
         {canEdit && !q.published && (
