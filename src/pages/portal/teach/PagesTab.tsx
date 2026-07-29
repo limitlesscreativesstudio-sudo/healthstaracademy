@@ -133,12 +133,8 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     return () => { supabase.removeChannel(ch); };
   }, [courseId]);
 
-  const orderedPages = useMemo(() => {
-    const all = [...pages];
-    const allZero = all.every(p => !p.position);
-    if (allZero) return all.sort(smartCompare);
-    return all.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-  }, [pages]);
+  const orderedPages = useMemo(() => [...pages].sort(smartCompare), [pages]);
+
 
   // Auto-select first page (Video Conference Info will be first after smart sort).
   useEffect(() => {
