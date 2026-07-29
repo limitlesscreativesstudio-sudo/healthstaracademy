@@ -688,9 +688,13 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
           <div key={qi} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:16, marginBottom:12 }}>
             <div style={{ display:'flex', gap:10, marginBottom:10 }}>
               <span style={{ fontSize:12, fontWeight:700, color:C.muted, padding:'6px 0' }}>Q{qi+1}</span>
-              <select value={q.question_type} onChange={e => updateQuestion(qi, { question_type: e.target.value as QType, correct_answer: 0 })}
+              <select value={q.question_type} onChange={e => {
+                  const nt = e.target.value as QType;
+                  updateQuestion(qi, { question_type: nt, correct_answer: nt === 'multiple_answers' ? [] : 0 });
+                }}
                 style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:'5px 8px', fontSize:12 }}>
                 <option value="multiple_choice">Multiple Choice</option>
+                <option value="multiple_answers">Multiple Answers</option>
                 <option value="true_false">True / False</option>
                 <option value="short_answer">Short Answer</option>
                 <option value="essay">Essay</option>
@@ -709,8 +713,40 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                     <input value={o.text} onChange={e => updateQuestion(qi, { options: q.options.map((x,i) => i===oi ? { text:e.target.value } : x) })}
                       placeholder={`Choice ${oi+1}`}
                       style={{ flex:1, border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 9px', fontSize:13, outline:'none' }}/>
+                    <button onClick={() => updateQuestion(qi, { options: q.options.filter((_,i) => i !== oi) })} disabled={q.options.length <= 2}
+                      style={{ background:'none', border:'none', color:C.muted, cursor: q.options.length<=2?'not-allowed':'pointer', fontSize:14 }}>✕</button>
                   </div>
                 ))}
+                <button onClick={() => updateQuestion(qi, { options: [...q.options, { text:'' }] })}
+                  style={{ padding:'4px 10px', border:`1px dashed ${C.border}`, borderRadius:4, background:'transparent', color:C.primary, fontSize:12, cursor:'pointer' }}>+ Add Choice</button>
+              </div>
+            )}
+            {q.question_type === 'multiple_answers' && (
+              <div>
+                <div style={{ fontSize:11, color:C.muted, marginBottom:6, fontStyle:'italic' }}>Check every correct answer. Students must select them all to earn credit.</div>
+                {q.options.map((o, oi) => {
+                  const arr: number[] = Array.isArray(q.correct_answer) ? q.correct_answer : [];
+                  const checked = arr.includes(oi);
+                  return (
+                    <div key={oi} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+                      <input type="checkbox" checked={checked} onChange={() => {
+                        const next = checked ? arr.filter(x => x !== oi) : [...arr, oi].sort((a,b)=>a-b);
+                        updateQuestion(qi, { correct_answer: next });
+                      }} style={{ accentColor:C.primary }}/>
+                      <input value={o.text} onChange={e => updateQuestion(qi, { options: q.options.map((x,i) => i===oi ? { text:e.target.value } : x) })}
+                        placeholder={`Choice ${oi+1}`}
+                        style={{ flex:1, border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 9px', fontSize:13, outline:'none' }}/>
+                      <button onClick={() => {
+                        const filtered = q.options.filter((_,i) => i !== oi);
+                        const remapped = arr.filter(x => x !== oi).map(x => x > oi ? x - 1 : x);
+                        updateQuestion(qi, { options: filtered, correct_answer: remapped });
+                      }} disabled={q.options.length <= 2}
+                        style={{ background:'none', border:'none', color:C.muted, cursor: q.options.length<=2?'not-allowed':'pointer', fontSize:14 }}>✕</button>
+                    </div>
+                  );
+                })}
+                <button onClick={() => updateQuestion(qi, { options: [...q.options, { text:'' }] })}
+                  style={{ padding:'4px 10px', border:`1px dashed ${C.border}`, borderRadius:4, background:'transparent', color:C.primary, fontSize:12, cursor:'pointer' }}>+ Add Choice</button>
               </div>
             )}
             {q.question_type === 'true_false' && (
