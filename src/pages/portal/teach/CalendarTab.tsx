@@ -58,10 +58,38 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
       attDates.forEach(d => evs.push({ id:`att-${d}`, refId:'', title:'Class Session', date:new Date(d+'T09:00:00'), type:'attendance', color:C.accent, section: null }));
       evs.sort((a,b) => a.date.getTime() - b.date.getTime());
       setEvents(evs);
+
+      // Items with no due date yet — instructors can schedule them from here
+      const [{ data: ua }, { data: uq }] = await Promise.all([
+        supabase.from('assignments').select('id,title').eq('course_id', courseId).is('due_at', null),
+        supabase.from('quizzes').select('id,title').eq('course_id', courseId).is('due_at', null),
+      ]);
+      setUndated([
+        ...(ua ?? []).map(a => ({ id:a.id, title:a.title, kind:'assignment' as const })),
+        ...(uq ?? []).map(q => ({ id:q.id, title:q.title, kind:'quiz' as const })),
+      ].sort((a,b) => a.title.localeCompare(b.title, undefined, { numeric:true })));
       setLoading(false);
     };
     load();
-  }, [courseId]);
+  }, [courseId, reloadKey]);
+
+  const toLocalInput = (d?: Date | null) => {
+    if (!d) return '';
+    const p = (n:number) => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  };
+
+  const saveDueDate = async (kind:'assignment'|'quiz', id:string, localValue:string) => {
+    setSavingDue(true);
+    const iso = localValue ? new Date(localValue).toISOString() : null;
+    const table = kind === 'quiz' ? 'quizzes' : 'assignments';
+    const { error } = await supabase.from(table).update({ due_at: iso }).eq('id', id);
+    setSavingDue(false);
+    if (error) { toast.error(error.message); return false; }
+    toast.success(iso ? 'Due date updated' : 'Due date cleared');
+    setReloadKey(k => k + 1);
+    return true;
+  };
 
   const sectionOptions = useMemo(() => {
     const s = new Set<string>();
