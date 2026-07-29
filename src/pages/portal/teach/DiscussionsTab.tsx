@@ -219,19 +219,25 @@ const DiscussionsTab: React.FC<Props> = ({ courseId, canEdit }) => {
         <div style={{ marginBottom:8, fontSize:13, color:C.muted, fontFamily:'sans-serif', fontWeight:600 }}>{replies.length} {replies.length===1?'reply':'replies'}</div>
         {renderReplies('root', 0)}
 
-        <div id="reply-composer" style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:6, padding:14, marginTop:12 }}>
-          {replyTo && (
-            <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', marginBottom:6, display:'flex', justifyContent:'space-between' }}>
-              <span>Replying to <strong style={{ color:C.primary }}>{replyTo.author_name}</strong></span>
-              <button onClick={() => setReplyTo(null)} style={{ background:'none', border:'none', color:C.error, cursor:'pointer', fontSize:12 }}>Cancel</button>
-            </div>
-          )}
-          <textarea value={replyBody} onChange={e => setReplyBody(e.target.value)} placeholder={replyTo ? `Reply to ${replyTo.author_name}…` : 'Write a reply…'} rows={3}
-            style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', resize:'vertical', boxSizing:'border-box', outline:'none' }}/>
-          <div style={{ marginTop:8, textAlign:'right' }}>
-            <button onClick={postReply} disabled={!replyBody.trim()} style={{ padding:'7px 18px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', opacity:replyBody.trim()?1:.5 }}>Post Reply</button>
+        {open.locked ? (
+          <div style={{ background:'#F5F1F9', border:`1px dashed ${C.border}`, borderRadius:6, padding:14, marginTop:12, textAlign:'center', color:C.muted, fontFamily:'sans-serif', fontSize:13 }}>
+            🔒 This discussion is closed for comments.
           </div>
-        </div>
+        ) : (
+          <div id="reply-composer" style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:6, padding:14, marginTop:12 }}>
+            {replyTo && (
+              <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', marginBottom:6, display:'flex', justifyContent:'space-between' }}>
+                <span>Replying to <strong style={{ color:C.primary }}>{replyTo.author_name}</strong></span>
+                <button onClick={() => setReplyTo(null)} style={{ background:'none', border:'none', color:C.error, cursor:'pointer', fontSize:12 }}>Cancel</button>
+              </div>
+            )}
+            <textarea value={replyBody} onChange={e => setReplyBody(e.target.value)} placeholder={replyTo ? `Reply to ${replyTo.author_name}…` : 'Write a reply…'} rows={3}
+              style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', resize:'vertical', boxSizing:'border-box', outline:'none' }}/>
+            <div style={{ marginTop:8, textAlign:'right' }}>
+              <button onClick={postReply} disabled={!replyBody.trim()} style={{ padding:'7px 18px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', opacity:replyBody.trim()?1:.5 }}>Post Reply</button>
+            </div>
+          </div>
+        )}
 
         <ConfirmDialog open={!!confirm} title={confirm?.title || ''} body={confirm?.body || ''}
           onCancel={() => setConfirm(null)} onConfirm={() => confirm?.onConfirm()} />
@@ -294,24 +300,52 @@ const DiscussionsTab: React.FC<Props> = ({ courseId, canEdit }) => {
           <div style={{ fontSize:40, marginBottom:12 }}>💬</div>
           No discussions yet. Start one above.
         </div>
-      ) : items.map(d => (
-        <div key={d.id} onClick={() => openThread(d)}
-          style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:16, marginBottom:8, cursor:'pointer', display:'flex', alignItems:'center', gap:12 }}
-          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#faf9fd'}
-          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
-          <span style={{ fontSize:22 }}>💬</span>
-          <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontSize:14, fontWeight:600, color:C.primary, fontFamily:'sans-serif' }}>{d.title}</div>
-            <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', marginTop:3 }}>
-              by {d.author_name} • {d.reply_count} {d.reply_count===1?'reply':'replies'} • last activity {new Date(d.last_activity!).toLocaleDateString()}
+      ) : (() => {
+        const pinned = items.filter(d => d.pinned);
+        const closed = items.filter(d => !d.pinned && d.locked);
+        const main   = items.filter(d => !d.pinned && !d.locked);
+        const renderRow = (d: Discussion) => (
+          <div key={d.id} onClick={() => openThread(d)}
+            style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:16, marginBottom:8, cursor:'pointer', display:'flex', alignItems:'center', gap:12 }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#faf9fd'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
+            <span style={{ fontSize:22 }}>{d.locked ? '🔒' : d.pinned ? '📌' : '💬'}</span>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:14, fontWeight:600, color:C.primary, fontFamily:'sans-serif' }}>{d.title}</div>
+              <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', marginTop:3 }}>
+                by {d.author_name} • {d.reply_count} {d.reply_count===1?'reply':'replies'} • last activity {new Date(d.last_activity!).toLocaleDateString()}
+              </div>
             </div>
+            {canEdit && (
+              <>
+                <button onClick={e => { e.stopPropagation(); togglePin(d); }} title={d.pinned ? 'Unpin' : 'Pin to top'}
+                  style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:d.pinned?'#EDE8F7':C.white, fontSize:12, color:C.text, cursor:'pointer' }}>📌</button>
+                <button onClick={e => { e.stopPropagation(); toggleLock(d); }} title={d.locked ? 'Reopen' : 'Close for comments'}
+                  style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:d.locked?'#EDE8F7':C.white, fontSize:12, color:C.text, cursor:'pointer' }}>{d.locked ? '🔓' : '🔒'}</button>
+              </>
+            )}
+            {(canEdit || d.author_id === user?.id) && (
+              <button onClick={e => { e.stopPropagation(); askDeleteDiscussion(d); }}
+                style={{ padding:'4px 10px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:12, color:C.error, cursor:'pointer' }}>✕</button>
+            )}
           </div>
-          {(canEdit || d.author_id === user?.id) && (
-            <button onClick={e => { e.stopPropagation(); askDeleteDiscussion(d); }}
-              style={{ padding:'4px 10px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:12, color:C.error, cursor:'pointer' }}>✕</button>
-          )}
-        </div>
-      ))}
+        );
+        const Section = ({ title, list, empty }: { title: string; list: Discussion[]; empty: string }) => (
+          <div style={{ marginBottom:22 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:C.text, fontFamily:'sans-serif', padding:'6px 4px', borderBottom:`1px solid ${C.border}`, marginBottom:10 }}>{title} ({list.length})</div>
+            {list.length === 0
+              ? <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', padding:'8px 4px' }}>{empty}</div>
+              : list.map(renderRow)}
+          </div>
+        );
+        return (
+          <>
+            <Section title="📌 Pinned Discussions" list={pinned} empty="No pinned discussions." />
+            <Section title="Discussions" list={main} empty="No open discussions." />
+            <Section title="🔒 Closed for Comments" list={closed} empty="Nothing closed." />
+          </>
+        );
+      })()}
 
       <ConfirmDialog open={!!confirm} title={confirm?.title || ''} body={confirm?.body || ''}
         onCancel={() => setConfirm(null)} onConfirm={() => confirm?.onConfirm()} />
