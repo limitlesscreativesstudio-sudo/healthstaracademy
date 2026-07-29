@@ -240,7 +240,8 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
             color: folder === 'root' ? C.primary : C.text, fontWeight: folder === 'root' ? 600 : 400,
             marginBottom:8, display:'flex', alignItems:'center', gap:6 }}>
           <span>🏫</span>
-          <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{rootName}</span>
+          <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{rootName}</span>
+          <span style={{ fontSize:10, color:C.muted }}>{countFor('root')}</span>
         </div>
         {folders.map((f, idx) => (
           <div key={f.id}
@@ -253,6 +254,7 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
               background: dragFolderId === f.id ? C.bg : folder === f.id ? '#EDE8F7' : 'transparent',
               color: folder === f.id ? C.primary : C.text, fontWeight: folder === f.id ? 600 : 400,
               marginBottom:2, display:'flex', alignItems:'center', gap:6 }}>
+
           <span>🏫</span>
           <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{rootName}</span>
           <span style={{ fontSize:10, color:C.muted }}>{countFor('root')}</span>
