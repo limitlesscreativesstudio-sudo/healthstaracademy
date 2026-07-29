@@ -46,6 +46,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   const [saveState, setSaveState] = useState<'idle'|'saving'|'saved'|'error'>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [stats, setStats] = useState<Record<string, Stats>>({});
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [viewing, setViewing] = useState<Quiz & { attempts_allowed?: number; time_limit_minutes?: number | null } | null>(null);
   const [viewQCount, setViewQCount] = useState(0);
   const [startedAt, setStartedAt] = useState<Date | null>(null);
