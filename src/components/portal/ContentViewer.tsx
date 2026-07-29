@@ -91,6 +91,8 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
   const [err, setErr] = useState<string | null>(null);
   const [officeFailed, setOfficeFailed] = useState(false);
   const [frameBlocked, setFrameBlocked] = useState(false);
+  const [iframeLoading, setIframeLoading] = useState(false);
+
 
   useEffect(() => {
     if (!open || !source) return;
