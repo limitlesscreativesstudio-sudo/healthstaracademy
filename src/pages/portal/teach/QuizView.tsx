@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase, useAuth } from './AuthContext';
 import { toast } from 'sonner';
 
@@ -26,10 +26,12 @@ const emptyQuestion = (pos:number): Question => ({
 const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditProp }) => {
   const { user } = useAuth();
   const params = useParams<{ courseId?: string; quizId?: string }>();
+  const navigate = useNavigate();
   const courseId = courseIdProp ?? params.courseId;
   const canEdit = canEditProp ?? !!user?.canEdit;
   const routeQuizId = params.quizId;
   const [autoOpened, setAutoOpened] = useState(false);
+  const backToList = () => (routeQuizId ? navigate(-1) : setViewing(null));
 
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
@@ -377,7 +379,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     );
     return (
       <div style={{ padding:'20px 24px', maxWidth:1100, margin:'0 auto', fontFamily:'sans-serif' }}>
-        <button onClick={() => setViewing(null)} style={{ background:'none', border:'none', color:C.primary, cursor:'pointer', marginBottom:8, fontSize:13 }}>← Back to quizzes</button>
+        <button onClick={backToList} style={{ background:'none', border:'none', color:C.primary, cursor:'pointer', marginBottom:8, fontSize:13 }}>← {routeQuizId ? 'Back' : 'Back to quizzes'}</button>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:12, marginBottom:14, flexWrap:'wrap' }}>
           <h2 style={{ margin:0, fontSize:22, color:C.text }}>{q.title}</h2>
           {canEdit && (
@@ -464,7 +466,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     return (
       <div style={{ padding:'20px 24px 96px', maxWidth:1200, margin:'0 auto', fontFamily:'sans-serif', display:'grid', gridTemplateColumns:'minmax(0,1fr) 220px', gap:24 }}>
         <div style={{ minWidth:0 }}>
-          <button onClick={() => { setTaking(null); setResults(null); setAttemptId(null); load(); }} style={{ background:'none', border:'none', color:C.primary, cursor:'pointer', marginBottom:8, fontSize:13 }}>← Back to quizzes</button>
+          <button onClick={() => { setTaking(null); setResults(null); setAttemptId(null); if (routeQuizId) navigate(-1); else load(); }} style={{ background:'none', border:'none', color:C.primary, cursor:'pointer', marginBottom:8, fontSize:13 }}>← {routeQuizId ? 'Back' : 'Back to quizzes'}</button>
           <h2 style={{ margin:'0 0 6px', color:C.text }}>{taking.title}</h2>
           {canEdit && !results && (
             <div style={{ background:'#FDECEA', border:'1px solid #F5C6CB', color:'#8A1F11', borderRadius:4, padding:'8px 12px', fontSize:12, marginBottom:12 }}>
@@ -771,9 +773,25 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     );
   }
 
+  // Direct-open via /quizzes/:quizId — skip rendering the full list so the item
+  // opens straight into its own details view (no "whole quiz page" flash).
+  if (routeQuizId) {
+    const missing = quizzes.length > 0 && !quizzes.find(q => q.id === routeQuizId);
+    if (missing) {
+      return (
+        <div style={{ padding:32, textAlign:'center', fontFamily:'sans-serif' }}>
+          <div style={{ color:C.muted, marginBottom:12 }}>This quiz couldn't be found.</div>
+          <button onClick={() => navigate(-1)} style={{ padding:'8px 16px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, cursor:'pointer', fontSize:13 }}>← Go back</button>
+        </div>
+      );
+    }
+    return <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Opening quiz…</div>;
+  }
+
   // List
   return (
     <div style={{ padding:24, fontFamily:'sans-serif' }}>
+
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text }}>Quizzes</h2>
         {canEdit && <button onClick={() => setShowCreate(v => !v)} style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, cursor:'pointer' }}>+ New Quiz</button>}
