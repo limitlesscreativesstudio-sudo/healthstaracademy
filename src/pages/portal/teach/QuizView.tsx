@@ -1,7 +1,9 @@
 // @ts-nocheck
 import React, { useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { supabase, useAuth } from './AuthContext';
 import { toast } from 'sonner';
+
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -21,8 +23,14 @@ const emptyQuestion = (pos:number): Question => ({
   correct_answer: 0, points: 1,
 });
 
-const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
+const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditProp }) => {
   const { user } = useAuth();
+  const params = useParams<{ courseId?: string; quizId?: string }>();
+  const courseId = courseIdProp ?? params.courseId;
+  const canEdit = canEditProp ?? !!user?.canEdit;
+  const routeQuizId = params.quizId;
+  const [autoOpened, setAutoOpened] = useState(false);
+
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Quiz | null>(null);
@@ -107,6 +115,13 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
   };
 
   useEffect(() => { load(); }, [courseId, user?.id]);
+
+  useEffect(() => {
+    if (autoOpened || !routeQuizId || !quizzes.length) return;
+    const q = quizzes.find(x => x.id === routeQuizId);
+    if (q) { openDetails(q); setAutoOpened(true); }
+  }, [routeQuizId, quizzes, autoOpened]);
+
 
   const loadQuestions = async (quizId: string): Promise<Question[]> => {
     const { data } = await supabase.from('quiz_questions')
