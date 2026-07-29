@@ -244,20 +244,28 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
         {!loading && resolvedUrl && !err && (
           <>
             {kind === "pdf" && (
-              <iframe
-                src={resolvedUrl}
-                className="w-full h-full border-0 bg-white"
-                title={displayName}
-              />
+              <div className="relative w-full h-full">
+                <iframe
+                  src={resolvedUrl}
+                  className="w-full h-full border-0 bg-white"
+                  title={displayName}
+                  onLoad={() => setIframeLoading(false)}
+                />
+                {iframeLoading && <LoadingOverlay label="Loading PDF…" />}
+              </div>
             )}
 
             {kind === "office" && !officeFailed && (
-              <iframe
-                src={officeEmbed(resolvedUrl)}
-                className="w-full h-full border-0 bg-white"
-                title={displayName}
-                onError={() => setOfficeFailed(true)}
-              />
+              <div className="relative w-full h-full">
+                <iframe
+                  src={officeEmbed(resolvedUrl)}
+                  className="w-full h-full border-0 bg-white"
+                  title={displayName}
+                  onError={() => setOfficeFailed(true)}
+                  onLoad={() => setIframeLoading(false)}
+                />
+                {iframeLoading && <LoadingOverlay label="Loading Office preview…" />}
+              </div>
             )}
 
             {kind === "office" && officeFailed && (
@@ -270,6 +278,7 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
                 controls
                 autoPlay
                 className="max-w-full max-h-full m-auto bg-black"
+                onLoadedData={() => setIframeLoading(false)}
               />
             )}
 
@@ -284,36 +293,51 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
                 src={resolvedUrl}
                 alt={displayName}
                 className="max-w-full max-h-full m-auto object-contain"
+                onLoad={() => setIframeLoading(false)}
               />
             )}
 
             {kind === "youtube" && (
-              <iframe
-                src={youtubeEmbed(resolvedUrl)}
-                className="w-full h-full border-0"
-                title={displayName}
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowFullScreen
-              />
+              <div className="relative w-full h-full">
+                <iframe
+                  src={youtubeEmbed(resolvedUrl)}
+                  className="w-full h-full border-0"
+                  title={displayName}
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                  onLoad={() => setIframeLoading(false)}
+                />
+                {iframeLoading && <LoadingOverlay label="Loading video…" />}
+              </div>
             )}
 
             {kind === "vimeo" && (
-              <iframe
-                src={vimeoEmbed(resolvedUrl)}
-                className="w-full h-full border-0"
-                title={displayName}
-                allow="autoplay; fullscreen; picture-in-picture"
-                allowFullScreen
-              />
+              <div className="relative w-full h-full">
+                <iframe
+                  src={vimeoEmbed(resolvedUrl)}
+                  className="w-full h-full border-0"
+                  title={displayName}
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  onLoad={() => setIframeLoading(false)}
+                />
+                {iframeLoading && <LoadingOverlay label="Loading video…" />}
+              </div>
             )}
 
             {kind === "html" && !frameBlocked && (
-              <iframe
-                src={resolvedUrl}
-                className="w-full h-full border-0 bg-white"
-                title={displayName}
-                onLoad={() => setFrameBlocked(false)}
-              />
+              <div className="relative w-full h-full">
+                <iframe
+                  src={resolvedUrl}
+                  className="w-full h-full border-0 bg-white"
+                  title={displayName}
+                  onLoad={() => {
+                    setFrameBlocked(false);
+                    setIframeLoading(false);
+                  }}
+                />
+                {iframeLoading && <LoadingOverlay label="Loading external page…" />}
+              </div>
             )}
 
             {kind === "html" && frameBlocked && (
@@ -323,6 +347,7 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
             {kind === "other" && <FallbackDownload url={resolvedUrl} fileName={fileName} />}
           </>
         )}
+
       </div>
 
       {kind === "office" && !officeFailed && !loading && (
