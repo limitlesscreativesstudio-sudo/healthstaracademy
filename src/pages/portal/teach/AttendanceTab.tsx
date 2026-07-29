@@ -25,19 +25,27 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
     if (!courseId) { setLoading(false); return; }
     const loadStudents = async () => {
       setLoading(true);
-      const { data } = await supabase.from('enrollments')
-        .select('profiles(id, full_name, email, role)')
-        .eq('course_id', courseId);
-      if (data) {
-        const studs: Student[] = data
-          .map((r: any) => r.profiles)
-          .filter((p: any) => p?.role === 'student')
-          .map((p: any) => ({
-            id: p.id, name: p.full_name, email: p.email,
-            initials: p.full_name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase(),
-          }));
+      const { data: enr } = await supabase.from('enrollments')
+        .select('user_id, role')
+        .eq('course_id', courseId)
+        .eq('role', 'student');
+      const ids = (enr ?? []).map((r: any) => r.user_id).filter(Boolean);
+      if (ids.length) {
+        const { data: profs } = await supabase.from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', ids);
+        const studs: Student[] = (profs ?? []).map((p: any) => {
+          const name = p.full_name || 'Student';
+          return {
+            id: p.user_id, name, email: '',
+            initials: name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase(),
+          };
+        });
         setStudents(studs);
         setAttendance(studs.map(s => ({ studentId: s.id, status: 'P' })));
+      } else {
+        setStudents([]);
+        setAttendance([]);
       }
       setLoading(false);
     };
