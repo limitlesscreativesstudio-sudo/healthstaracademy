@@ -66,6 +66,12 @@ const AssignmentDetail: React.FC = () => {
   const [roster, setRoster] = useState<StudentRow[]>([]);
   const [viewer, setViewer] = useState<{ source: ContentSource; name: string } | null>(null);
 
+  // Rubric state
+  const [rubric, setRubric] = useState<RubricLite | null>(null);
+  const [criteria, setCriteria] = useState<Criterion[]>([]);
+  const [courseRubrics, setCourseRubrics] = useState<RubricLite[]>([]);
+  const [rubricScores, setRubricScores] = useState<Record<string, Record<string, { score:number; comment:string|null }>>>({});
+
   const overdue = useMemo(
     () => assignment?.due_at && new Date(assignment.due_at) < new Date(),
     [assignment],
