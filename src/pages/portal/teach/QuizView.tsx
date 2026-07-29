@@ -554,6 +554,24 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                         {o.text}
                       </label>
                     ))}
+                    {q.question_type === 'multiple_answers' && (
+                      <>
+                        <div style={{ fontSize:11, color:C.muted, marginBottom:6, fontStyle:'italic' }}>Select all that apply.</div>
+                        {q.options.map((o,oi) => {
+                          const arr: number[] = Array.isArray(answers[q.id!]) ? answers[q.id!] : [];
+                          const checked = arr.includes(oi);
+                          return (
+                            <label key={oi} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', cursor:'pointer', fontSize:13, color:C.text, borderTop:oi===0?'none':`1px solid ${C.border}` }}>
+                              <input type="checkbox" checked={checked} onChange={() => {
+                                const next = checked ? arr.filter(x => x !== oi) : [...arr, oi].sort((a,b)=>a-b);
+                                setAnswers(a => ({ ...a, [q.id!]: next }));
+                              }} style={{ accentColor:C.primary }}/>
+                              {o.text}
+                            </label>
+                          );
+                        })}
+                      </>
+                    )}
                     {q.question_type === 'true_false' && [{v:0,l:'True'},{v:1,l:'False'}].map((o,oi) => (
                       <label key={o.v} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', cursor:'pointer', fontSize:13, borderTop:oi===0?'none':`1px solid ${C.border}` }}>
                         <input type="radio" name={`q-${q.id}`} checked={answers[q.id!]===o.v} onChange={() => setAnswers(a => ({ ...a, [q.id!]: o.v }))} style={{ accentColor:C.primary }}/>
