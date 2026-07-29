@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 const C = {
   primary: '#7B4DB5', accent: '#5BC8E8',
   white: '#FFFFFF', border: '#D4C8E8',
-  text: '#2D1B4E', muted: '#8878A8', error: '#C0392B',
+  text: '#2D1B4E', muted: '#655480', error: '#C0392B',
 } as const;
 
 export default function CustomLogin() {

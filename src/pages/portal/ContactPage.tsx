@@ -178,7 +178,7 @@ const ContactPage = () => {
                     <div>
                       <label htmlFor="interest" className="block text-sm font-medium text-charcoal mb-2">I'm interested in... *</label>
                       <Select value={formData.interest} onValueChange={(value) => handleChange("interest", value)} required>
-                        <SelectTrigger className="bg-background"><SelectValue placeholder="Select a topic" /></SelectTrigger>
+                        <SelectTrigger aria-label="Select a topic" className="bg-background"><SelectValue placeholder="Select a topic" /></SelectTrigger>
                         <SelectContent>
                           {interestOptions.map((option) => (
                             <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
@@ -193,7 +193,7 @@ const ContactPage = () => {
                     <Button type="submit" variant="default" size="lg" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? "Sending..." : (<>Send My Inquiry <Send className="ml-2 h-5 w-5" /></>)}
                     </Button>
-                    <p className="text-xs text-gray-medium text-center">By submitting, you agree to be contacted by Health Star Academy regarding your inquiry.</p>
+                    <p className="text-xs text-gray-dark text-center">By submitting, you agree to be contacted by Health Star Academy regarding your inquiry.</p>
                   </form>
                 )}
               </div>

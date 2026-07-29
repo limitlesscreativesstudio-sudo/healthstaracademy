@@ -33,7 +33,9 @@ export default {
         cyan: {
           DEFAULT: "hsl(var(--cyan))",
           dark: "hsl(var(--cyan-dark))",
+          deep: "hsl(var(--cyan-deep))",
         },
+
         magenta: {
           DEFAULT: "hsl(var(--magenta))",
           dark: "hsl(var(--magenta-dark))",

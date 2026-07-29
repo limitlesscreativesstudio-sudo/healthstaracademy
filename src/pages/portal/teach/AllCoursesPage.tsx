@@ -238,7 +238,7 @@ export default function AllCoursesPage() {
                         />
                         <Link
                           to={courseHref(c.id)}
-                          className="text-cyan hover:underline truncate font-medium"
+                          className="text-cyan-deep hover:underline truncate font-medium"
                         >
                           {nick || c.title}
                         </Link>
@@ -261,7 +261,7 @@ export default function AllCoursesPage() {
                           onClick={() => setEditingNick(c.id)}
                           className="text-left text-muted-foreground hover:text-charcoal"
                         >
-                          {nick || <span className="italic opacity-60">Add nickname…</span>}
+                          {nick || <span className="italic text-muted-foreground">Add nickname…</span>}
                         </button>
                       )}
                     </td>

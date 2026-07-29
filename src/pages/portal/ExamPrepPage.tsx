@@ -18,7 +18,7 @@ const ModeSelection = () => {
     <div className="space-y-8">
       <div className="text-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-charcoal mb-4">California CNA State Exam Prep</h1>
-        <p className="text-gray-medium max-w-2xl mx-auto">Master the 175 CDPH-aligned practice questions and boost your confidence for the California CNA certification exam.</p>
+        <p className="text-gray-dark max-w-2xl mx-auto">Master the 175 CDPH-aligned practice questions and boost your confidence for the California CNA certification exam.</p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
@@ -29,7 +29,7 @@ const ModeSelection = () => {
             <CardDescription>Learn at your own pace with immediate feedback and detailed explanations</CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="text-sm text-gray-medium space-y-1">
+            <ul className="text-sm text-gray-dark space-y-1">
               <li>✓ Unlimited time per question</li>
               <li>✓ Instant feedback & explanations</li>
               <li>✓ Navigate freely between questions</li>
@@ -46,7 +46,7 @@ const ModeSelection = () => {
             <CardDescription>Simulate real exam conditions with 75 questions in 2 hours</CardDescription>
           </CardHeader>
           <CardContent>
-            <ul className="text-sm text-gray-medium space-y-1">
+            <ul className="text-sm text-gray-dark space-y-1">
               <li>✓ 2-hour countdown timer</li>
               <li>✓ 75 randomized questions</li>
               <li>✓ No going back (like real exam)</li>
@@ -130,18 +130,18 @@ const QuizInterface = () => {
             <div className="grid grid-cols-3 gap-4 text-center">
               <div className="p-4 bg-green-50 rounded-lg">
                 <div className="text-3xl font-bold text-green-600">{result?.correctAnswers}</div>
-                <div className="text-sm text-gray-medium">Correct</div>
+                <div className="text-sm text-gray-dark">Correct</div>
               </div>
               <div className="p-4 bg-red-50 rounded-lg">
                 <div className="text-3xl font-bold text-red-600">{result?.incorrectAnswers}</div>
-                <div className="text-sm text-gray-medium">Incorrect</div>
+                <div className="text-sm text-gray-dark">Incorrect</div>
               </div>
               <div className="p-4 bg-primary/10 rounded-lg">
                 <div className="text-3xl font-bold text-primary">{result?.percentage}%</div>
-                <div className="text-sm text-gray-medium">Score</div>
+                <div className="text-sm text-gray-dark">Score</div>
               </div>
             </div>
-            <div className="text-center text-sm text-gray-medium">
+            <div className="text-center text-sm text-gray-dark">
               Time: {Math.floor((result?.timeSpent || 0) / 60)}m {(result?.timeSpent || 0) % 60}s | 
               Avg: {result?.averageTimePerQuestion}s per question
             </div>
@@ -177,7 +177,7 @@ const QuizInterface = () => {
       <div className="flex items-center justify-between mb-4">
         <Button variant="ghost" size="sm" onClick={resetQuiz}><ArrowLeft className="w-4 h-4 mr-1" /> Exit</Button>
         <Badge variant="outline">{categoryInfo?.name}</Badge>
-        <span className="text-sm text-gray-medium">Q {currentSession.currentQuestionIndex + 1}/{currentSession.questions.length}</span>
+        <span className="text-sm text-gray-dark">Q {currentSession.currentQuestionIndex + 1}/{currentSession.questions.length}</span>
       </div>
 
       <Progress value={progress} className="mb-6 h-2" />
@@ -192,7 +192,7 @@ const QuizInterface = () => {
               <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-primary text-primary' : ''}`} />
             </Button>
           </div>
-          {question.scenario && <p className="text-gray-medium italic mb-2">{question.scenario}</p>}
+          {question.scenario && <p className="text-gray-dark italic mb-2">{question.scenario}</p>}
           <CardTitle className="text-lg">{question.stem}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -231,7 +231,7 @@ const QuizInterface = () => {
                 <h4 className="font-bold text-green-700 mb-2">✓ Correct Answer: {question.correctAnswer}</h4>
                 <p className="text-sm mb-3">{question.explanation.correct}</p>
                 {question.cdphReference && (
-                  <p className="text-xs text-gray-medium italic">Reference: {question.cdphReference}</p>
+                  <p className="text-xs text-gray-dark italic">Reference: {question.cdphReference}</p>
                 )}
               </CardContent>
             </Card>
@@ -275,7 +275,7 @@ const ExamPrepPage = () => {
       <div className="container-custom section-padding">
         <ExamPrepContent />
         
-        <div className="mt-12 p-6 bg-muted rounded-lg text-sm text-gray-medium">
+        <div className="mt-12 p-6 bg-muted rounded-lg text-sm text-gray-dark">
           <h3 className="font-bold text-charcoal mb-2">California CNA State Exam Preparation Tool</h3>
           <p className="mb-2">This interactive prep tool is designed by Health Star Academy educators with extensive knowledge of the California Department of Public Health (CDPH) Certified Nurse Assistant certification requirements.</p>
           <p className="italic">Important Disclaimer: This tool is for preparation and educational purposes only. Success on this practice platform does not guarantee passing the official California CNA State Certification Exam.</p>

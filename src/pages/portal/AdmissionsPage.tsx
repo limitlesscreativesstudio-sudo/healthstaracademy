@@ -78,7 +78,7 @@ const AdmissionsPage = () => {
           <>
             Your Application<br />
             Checklist:<br />
-            <span className="text-cyan">Simple & Clear</span>
+            <span className="text-cyan-deep">Simple & Clear</span>
           </>
         }
         subtitle="New Classes Start Monthly!"
@@ -112,7 +112,7 @@ const AdmissionsPage = () => {
                 </div>
                 <div className="pb-8">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="bg-cyan/10 text-cyan px-3 py-1 rounded-full text-sm font-semibold">Step {item.step}</span>
+                    <span className="bg-cyan/10 text-cyan-deep-deep px-3 py-1 rounded-full text-sm font-semibold">Step {item.step}</span>
                   </div>
                   <h3 className="font-heading font-semibold text-xl text-charcoal mb-2">{item.title}</h3>
                   <p className="text-gray-dark leading-relaxed">{item.description}</p>
@@ -160,14 +160,14 @@ const AdmissionsPage = () => {
             <div className="flex flex-col justify-center">
               <div className="bg-background rounded-xl p-6 shadow-soft text-center">
                 <div className="w-16 h-16 bg-cyan/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Download className="h-8 w-8 text-cyan" />
+                  <Download className="h-8 w-8 text-cyan-deep" />
                 </div>
                 <h3 className="font-heading font-semibold text-2xl text-charcoal mb-3">Ready to Enroll?</h3>
                 <p className="text-gray-dark mb-6">Start your application today and secure your spot in the next class.</p>
                 <Button variant="secondary" size="lg" asChild>
                   <Link to={ENROLLMENT_LINK}>Enroll Now <ArrowRight className="ml-2 h-5 w-5" /></Link>
                 </Button>
-                <p className="text-sm text-gray-medium mt-4">
+                <p className="text-sm text-gray-dark mt-4">
                   Call: <a href="tel:2093234169" className="text-purple hover:underline">(209) 323-4169</a>
                 </p>
               </div>
@@ -258,7 +258,7 @@ const AdmissionsPage = () => {
             {/* Time */}
             <div className="bg-neutral-light rounded-xl p-6 shadow-soft border-t-4 border-cyan">
               <div className="w-12 h-12 bg-cyan/10 rounded-full flex items-center justify-center mb-4">
-                <Clock className="h-6 w-6 text-cyan" />
+                <Clock className="h-6 w-6 text-cyan-deep" />
               </div>
               <h3 className="font-heading font-bold text-lg text-charcoal mb-2">
                 "Do I have time for this?"
@@ -269,7 +269,7 @@ const AdmissionsPage = () => {
               </p>
               <Link
                 to={ENROLLMENT_LINK}
-                className="inline-flex items-center text-cyan font-semibold text-sm hover:underline"
+                className="inline-flex items-center text-cyan-deep font-semibold text-sm hover:underline"
               >
                 Start your application <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
@@ -290,7 +290,7 @@ const AdmissionsPage = () => {
               </p>
               <Link
                 to={ENROLLMENT_LINK}
-                className="inline-flex items-center text-magenta font-semibold text-sm hover:underline"
+                className="inline-flex items-center text-magenta-dark font-semibold text-sm hover:underline"
               >
                 Enroll with confidence <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
@@ -299,7 +299,7 @@ const AdmissionsPage = () => {
             {/* Community Resources */}
             <div className="bg-neutral-light rounded-xl p-6 shadow-soft border-t-4 border-cyan">
               <div className="w-12 h-12 bg-cyan/10 rounded-full flex items-center justify-center mb-4">
-                <HandHeart className="h-6 w-6 text-cyan" />
+                <HandHeart className="h-6 w-6 text-cyan-deep" />
               </div>
               <h3 className="font-heading font-bold text-lg text-charcoal mb-2">
                 "Need help paying?"
@@ -311,7 +311,7 @@ const AdmissionsPage = () => {
               </p>
               <Link
                 to="/community-resources"
-                className="inline-flex items-center text-cyan font-semibold text-sm hover:underline"
+                className="inline-flex items-center text-cyan-deep font-semibold text-sm hover:underline"
               >
                 Explore community resources <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
@@ -344,7 +344,7 @@ const AdmissionsPage = () => {
                     <HelpCircle className="h-5 w-5 text-purple flex-shrink-0" />
                     <span className="font-semibold text-charcoal pr-4">{faq.question}</span>
                   </div>
-                  {openFaq === index ? <ChevronUp className="h-5 w-5 text-purple flex-shrink-0" /> : <ChevronDown className="h-5 w-5 text-gray-medium flex-shrink-0" />}
+                  {openFaq === index ? <ChevronUp className="h-5 w-5 text-purple flex-shrink-0" /> : <ChevronDown className="h-5 w-5 text-gray-dark flex-shrink-0" />}
                 </button>
                 {openFaq === index && (
                   <div className="pb-6 pl-9 animate-fade-in">

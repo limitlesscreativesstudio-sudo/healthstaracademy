@@ -12,14 +12,15 @@ const buttonVariants = cva(
         // Primary Purple Button
         default: "bg-purple text-primary-foreground hover:bg-purple-dark shadow-soft hover:shadow-medium",
         
-        // Secondary Cyan Button (filled)
-        secondary: "bg-cyan text-secondary-foreground hover:bg-cyan-dark shadow-soft hover:shadow-medium",
+        // Secondary Cyan Button (filled) — charcoal text for WCAG AA contrast on cyan
+        secondary: "bg-cyan text-charcoal hover:bg-cyan-dark hover:text-charcoal shadow-soft hover:shadow-medium",
         
         // Purple Outline Button
         "purple-outline": "border-2 border-purple text-purple bg-transparent hover:bg-purple hover:text-primary-foreground",
         
         // Cyan Outline Button
-        "cyan-outline": "border-2 border-cyan text-cyan bg-transparent hover:bg-cyan hover:text-secondary-foreground",
+        "cyan-outline": "border-2 border-cyan-deep text-cyan-deep bg-transparent hover:bg-cyan-deep hover:text-primary-foreground",
+
         
         // Gray Outline (Tertiary/Login)
         "gray-outline": "border-2 border-charcoal text-charcoal bg-transparent hover:bg-charcoal hover:text-primary-foreground",

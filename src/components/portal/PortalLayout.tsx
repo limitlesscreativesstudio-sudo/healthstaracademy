@@ -103,7 +103,8 @@ const RailItem = ({ to, icon: Icon, label, exact }: { to: string; icon: any; lab
   return (
     <Link
       to={to}
-      className={`w-full flex flex-col items-center gap-0.5 py-2 rounded text-center ${active ? "bg-white/15 text-cyan" : "hover:bg-white/10"}`}
+      aria-current={active ? "page" : undefined}
+      className={`w-full flex flex-col items-center gap-0.5 py-2 rounded text-center ${active ? "bg-white/20 text-white font-semibold" : "text-white/90 hover:bg-white/10"}`}
       title={label}
     >
       <Icon className="h-5 w-5" />

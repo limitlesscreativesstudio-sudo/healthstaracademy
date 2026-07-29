@@ -475,7 +475,7 @@ const PreQualificationPage = () => {
         <HeroBanner
           imageSrc={studentBloodPressure}
           imageAlt="Student practicing clinical skills at Health Star Academy"
-          title={<>Pre-Qualification<br /><span className="text-cyan">Questionnaire</span></>}
+          title={<>Pre-Qualification<br /><span className="text-cyan-deep">Questionnaire</span></>}
           subtitle="Find out if you're ready to enroll — takes less than 2 minutes!"
         />
 
@@ -483,7 +483,7 @@ const PreQualificationPage = () => {
         <section className="bg-cyan/5 border-b border-cyan/20">
           <div className="container-custom py-3 text-center text-sm text-gray-dark">
             💜 Worried about cost?{" "}
-            <a href="/community-resources" className="text-cyan font-semibold hover:underline">
+            <a href="/community-resources" className="text-cyan-deep font-semibold hover:underline">
               Explore community resources for financial assistance →
             </a>
           </div>
@@ -756,7 +756,7 @@ const PreQualificationPage = () => {
                     >
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-charcoal">🌙 Weekend Program</p>
-                        <span className="bg-cyan/20 text-cyan text-xs font-bold px-2 py-0.5 rounded">NEW</span>
+                        <span className="bg-cyan/20 text-cyan-deep text-xs font-bold px-2 py-0.5 rounded">NEW</span>
                       </div>
                       <p className="text-sm text-muted-foreground">Sat & Sun, 6:00 AM – 6:00 PM</p>
                       <p className="text-xs text-muted-foreground">8 weekends (16 class days)</p>
@@ -841,7 +841,7 @@ const PreQualificationPage = () => {
                                   <p className="text-sm text-muted-foreground">
                                     8 weekends · Sat & Sun 6 AM – 6 PM
                                   </p>
-                                  <p className="text-xs text-cyan font-bold mt-1">
+                                  <p className="text-xs text-cyan-deep font-bold mt-1">
                                     ⏰ Apply by: {dl.applyBy}
                                   </p>
                                   <p className="text-[11px] text-muted-foreground">

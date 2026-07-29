@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from './AuthContext';
 import PortalLayout from '@/components/portal/PortalLayout';
 
-const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', warn:'#E67E22' } as const;
+const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', warn:'#E67E22' } as const;
 
 interface Ev { id:string; refId:string; courseId:string; courseTitle:string; title:string; date:Date; type:'assignment'|'quiz'|'attendance'; color:string; }
 
@@ -108,7 +108,7 @@ const GlobalCalendar: React.FC = () => {
                 {t === 'all' ? 'All' : t === 'attendance' ? 'Sessions' : t + 's'}
               </button>
             ))}
-            <select value={courseFilter} onChange={e => setCourseFilter(e.target.value)}
+            <select aria-label="Filter by course" value={courseFilter} onChange={e => setCourseFilter(e.target.value)}
               style={{ padding:'6px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:12 }}>
               <option value="all">All courses</option>
               {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}

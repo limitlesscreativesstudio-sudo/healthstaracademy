@@ -11,7 +11,7 @@ import { Loader2, Upload, FileText, CheckCircle2, Eye, Save } from 'lucide-react
 
 const C = {
   primary: '#7B4DB5', accent: '#5BC8E8', bg: '#F4F2FA', white: '#fff',
-  border: '#D4C8E8', text: '#2D1B4E', muted: '#8878A8',
+  border: '#D4C8E8', text: '#2D1B4E', muted: '#655480',
   success: '#127A1B', error: '#C0392B',
 } as const;
 

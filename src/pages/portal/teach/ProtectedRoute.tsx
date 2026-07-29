@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from './AuthContext';
 
-const C = { primary:'#7B4DB5', bg:'#F4F2FA', text:'#2D1B4E', muted:'#8878A8', border:'#D4C8E8', white:'#FFFFFF' } as const;
+const C = { primary:'#7B4DB5', bg:'#F4F2FA', text:'#2D1B4E', muted:'#655480', border:'#D4C8E8', white:'#FFFFFF' } as const;
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

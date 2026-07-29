@@ -4,7 +4,7 @@ import { supabase } from './AuthContext';
 import PortalLayout from '@/components/portal/PortalLayout';
 import { toast } from 'sonner';
 
-const C = { primary:'#7B4DB5', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', unread:'#FEF3C7' } as const;
+const C = { primary:'#7B4DB5', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', unread:'#FEF3C7' } as const;
 
 interface Convo {
   id: string; subject: string; last_message_at: string; created_by: string;
@@ -198,12 +198,12 @@ const Inbox: React.FC = () => {
         <div style={{ display:'grid', gridTemplateColumns:'340px 1fr', gap:16, minHeight:'70vh' }}>
           <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, display:'flex', flexDirection:'column' }}>
             <div style={{ padding:10, borderBottom:`1px solid ${C.border}`, display:'flex', flexDirection:'column', gap:8 }}>
-              <select value={courseFilter} onChange={e => setCourseFilter(e.target.value)}
+              <select aria-label="Filter by course" value={courseFilter} onChange={e => setCourseFilter(e.target.value)}
                 style={{ padding:'6px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:12 }}>
                 <option value="all">All Courses</option>
                 {enrolledCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
               </select>
-              <select value={filter} onChange={e => setFilter(e.target.value as any)}
+              <select aria-label="Filter messages" value={filter} onChange={e => setFilter(e.target.value as any)}
                 style={{ padding:'6px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:12 }}>
                 <option value="inbox">Inbox</option>
                 <option value="starred">Starred</option>
@@ -243,14 +243,14 @@ const Inbox: React.FC = () => {
             {composing ? (
               <div style={{ padding:20, display:'flex', flexDirection:'column', gap:10 }}>
                 <h3 style={{ margin:0, color:C.text }}>New Message</h3>
-                <select value={newCourse} onChange={e => setNewCourse(e.target.value)}
+                <select aria-label="Course for new message" value={newCourse} onChange={e => setNewCourse(e.target.value)}
                   style={{ padding:'8px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13 }}>
                   <option value="">Course (optional)</option>
                   {enrolledCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
                 <div>
                   <div style={{ fontSize:12, color:C.muted, marginBottom:4 }}>To:</div>
-                  <select multiple value={newRecipients} onChange={e => setNewRecipients(Array.from(e.target.selectedOptions).map(o => o.value))}
+                  <select aria-label="Recipients" multiple value={newRecipients} onChange={e => setNewRecipients(Array.from(e.target.selectedOptions).map(o => o.value))}
                     style={{ padding:'8px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, width:'100%', minHeight:100 }}>
                     {directory.map(p => <option key={p.id} value={p.id}>{p.full_name || p.email}</option>)}
                   </select>

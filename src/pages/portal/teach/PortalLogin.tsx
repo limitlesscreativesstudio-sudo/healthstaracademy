@@ -5,7 +5,7 @@ import { lovable } from '@/integrations/lovable';
 const C = {
   nav:'#3D1B6E', primary:'#7B4DB5', accent:'#5BC8E8',
   bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8',
-  text:'#2D1B4E', muted:'#8878A8', error:'#C0392B', success:'#127A1B',
+  text:'#2D1B4E', muted:'#655480', error:'#C0392B', success:'#127A1B',
 } as const;
 
 const roleLabels: Record<UserRole, { label:string; icon:string; desc:string }> = {

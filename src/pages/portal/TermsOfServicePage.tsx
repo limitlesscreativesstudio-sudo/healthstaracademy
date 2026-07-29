@@ -20,7 +20,7 @@ const TermsOfServicePage = () => {
             <h1 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-2">
               Terms of Service
             </h1>
-            <p className="text-gray-medium mb-8">Last Updated: February 16, 2026</p>
+            <p className="text-gray-dark mb-8">Last Updated: February 16, 2026</p>
 
             <div className="prose prose-lg max-w-none space-y-8 text-gray-dark">
               <section>
