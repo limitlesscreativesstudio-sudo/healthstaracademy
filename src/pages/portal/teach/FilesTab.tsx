@@ -28,6 +28,9 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [dragFolderId, setDragFolderId] = useState<string | null>(null);
   const [error,      setError]      = useState('');
   const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type: string } | null>(null);
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'name'|'size'|'date'|'type'>('name');
+  const [sortDir, setSortDir] = useState<'asc'|'desc'>('asc');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const pathFromUrl = (url: string): string | null => {
@@ -200,11 +203,32 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     if (path) await supabase.storage.from('course-files').remove([decodeURIComponent(path)]);
   };
 
-  const visible = folder === 'root' ? files : files.filter(f => f.folder_id === folder || folders.find(x => x.id === folder)?.name === f.folder);
+  const rawVisible = folder === 'root' ? files : files.filter(f => f.folder_id === folder || folders.find(x => x.id === folder)?.name === f.folder);
+  const filtered = search.trim()
+    ? rawVisible.filter(f => f.file_name.toLowerCase().includes(search.trim().toLowerCase()))
+    : rawVisible;
+  const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+  const visible = [...filtered].sort((a, b) => {
+    let cmp = 0;
+    if (sortBy === 'name') cmp = collator.compare(a.file_name || '', b.file_name || '');
+    else if (sortBy === 'size') cmp = (a.file_size ?? 0) - (b.file_size ?? 0);
+    else if (sortBy === 'type') cmp = collator.compare(a.file_type || '', b.file_type || '');
+    else cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
   const usedMB = files.reduce((s, f) => s + (f.file_size ?? 0), 0) / 1048576;
+  const countFor = (fid: string) => fid === 'root'
+    ? files.length
+    : files.filter(f => f.folder_id === fid || folders.find(x => x.id === fid)?.name === f.folder).length;
+  const toggleSort = (col: 'name'|'size'|'date'|'type') => {
+    if (sortBy === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortBy(col); setSortDir('asc'); }
+  };
+  const sortArrow = (col: string) => sortBy === col ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '';
 
   return (
     <div style={{ display:'flex', height:'100%' }}>
+
       {/* Sidebar */}
       <div style={{ width:220, borderRight:`1px solid ${C.border}`, padding:16, flexShrink:0, background:C.white }}>
         <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', marginBottom:10 }}>
@@ -216,7 +240,8 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
             color: folder === 'root' ? C.primary : C.text, fontWeight: folder === 'root' ? 600 : 400,
             marginBottom:8, display:'flex', alignItems:'center', gap:6 }}>
           <span>🏫</span>
-          <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{rootName}</span>
+          <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{rootName}</span>
+          <span style={{ fontSize:10, color:C.muted }}>{countFor('root')}</span>
         </div>
         {folders.map((f, idx) => (
           <div key={f.id}
@@ -232,7 +257,8 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
             <span onClick={() => setFolder(f.id)} style={{ flex:1, display:'flex', alignItems:'center', gap:6, minWidth:0 }}>
               {canEdit && <span title="Drag to reorder" style={{ color:C.muted, cursor:'grab' }}>⋮⋮</span>}
               <span>📂</span>
-              <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.name}</span>
+              <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{f.name}</span>
+              <span style={{ fontSize:10, color:C.muted }}>{countFor(f.id)}</span>
             </span>
             {canEdit && (
               <span style={{ display:'flex', gap:2 }}>
@@ -261,29 +287,40 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
 
       {/* Main */}
       <div style={{ flex:1, padding:20, overflowY:'auto' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, gap:12, flexWrap:'wrap' }}>
           <h2 style={{ margin:0, fontSize:18, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>
             Files — {activeFolderName}
+            <span style={{ marginLeft:8, fontSize:12, color:C.muted, fontWeight:500 }}>({rawVisible.length})</span>
           </h2>
-          {canEdit && (
-            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              <select value={selFolder} onChange={e => setSelFolder(e.target.value)}
-                style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'6px 8px', fontSize:12, fontFamily:'sans-serif', maxWidth:200 }}>
-                {folderChoices.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-              </select>
-              <button onClick={createDoc}
-                style={{ padding:'7px 12px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
-                📝 New Doc
-              </button>
-              <button onClick={() => fileRef.current?.click()}
-                style={{ padding:'7px 14px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
-                📤 Upload
-              </button>
-              <input ref={fileRef} type="file" multiple style={{ display:'none' }}
-                onChange={e => uploadFiles(e.target.files)}/>
-            </div>
-          )}
+          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+            <input
+              type="search"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="🔍 Search files…"
+              style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'6px 10px', fontSize:12, fontFamily:'sans-serif', width:200, outline:'none' }}
+            />
+            {canEdit && (
+              <>
+                <select value={selFolder} onChange={e => setSelFolder(e.target.value)}
+                  style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'6px 8px', fontSize:12, fontFamily:'sans-serif', maxWidth:200 }}>
+                  {folderChoices.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+                <button onClick={createDoc}
+                  style={{ padding:'7px 12px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
+                  📝 New Doc
+                </button>
+                <button onClick={() => fileRef.current?.click()}
+                  style={{ padding:'7px 14px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
+                  📤 Upload
+                </button>
+                <input ref={fileRef} type="file" multiple style={{ display:'none' }}
+                  onChange={e => uploadFiles(e.target.files)}/>
+              </>
+            )}
+          </div>
         </div>
+
 
         {error && (
           <div style={{ background:'#fdecea', border:'1px solid #f5c6c6', borderRadius:6, padding:'10px 14px', marginBottom:14, fontSize:12, color:C.error, fontFamily:'sans-serif' }}>{error}</div>
@@ -326,11 +363,22 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
             <table style={{ width:'100%', borderCollapse:'collapse', fontFamily:'sans-serif' }}>
               <thead>
                 <tr style={{ background:'#F0EDF7', borderBottom:`1px solid ${C.border}` }}>
-                  {['Name','Folder','Size','Date',''].map(h => (
-                    <th key={h} style={{ padding:'9px 14px', textAlign:'left', fontSize:11, fontWeight:700, color:C.text }}>{h}</th>
+                  {[
+                    { key:'name', label:'Name' },
+                    { key:'folder', label:'Folder' },
+                    { key:'size', label:'Size' },
+                    { key:'date', label:'Date' },
+                  ].map(h => (
+                    <th key={h.key}
+                      onClick={() => h.key !== 'folder' && toggleSort(h.key as any)}
+                      style={{ padding:'9px 14px', textAlign:'left', fontSize:11, fontWeight:700, color:C.text, cursor: h.key === 'folder' ? 'default' : 'pointer', userSelect:'none' }}>
+                      {h.label}{h.key !== 'folder' && sortArrow(h.key)}
+                    </th>
                   ))}
+                  <th style={{ padding:'9px 14px' }}></th>
                 </tr>
               </thead>
+
               <tbody>
                 {visible.map((f, i) => (
                   <tr key={f.id} style={{ borderBottom: i < visible.length-1 ? `1px solid ${C.border}` : 'none' }}
