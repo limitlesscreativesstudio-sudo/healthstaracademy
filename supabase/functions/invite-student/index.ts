@@ -98,6 +98,7 @@ Deno.serve(async (req) => {
               section: section ?? null,
               role: inviteRole,
               invited_by: invitedBy,
+              invited_at: new Date().toISOString(),
               status: "pending",
             },
             { onConflict: "course_id,email" },
