@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ContentViewer, { type ContentSource } from "@/components/portal/ContentViewer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -595,6 +595,7 @@ const SortableModule = ({
 // ============ Sortable Item ============
 const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, pageMap, discussionMap, onOpenFile, onOpenPage, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin }: any) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: i.id,
     data: { type: "item", moduleId: i.module_id },
@@ -606,8 +607,9 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, 
 
   const openItem = () => {
     const t = i.item_type;
-    if (t === "assignment" && i.content_ref) return navigate(`/portal/courses/${courseId}/assignments/${i.content_ref}`);
-    if (t === "quiz" && i.content_ref) return navigate(`/portal/courses/${courseId}/quizzes/${i.content_ref}`);
+    const moduleReturnPath = `${location.pathname}${location.search || `?course=${courseId}&tab=modules`}`;
+    if (t === "assignment" && i.content_ref) return navigate(`/portal/courses/${courseId}/assignments/${i.content_ref}`, { state: { from: moduleReturnPath } });
+    if (t === "quiz" && i.content_ref) return navigate(`/portal/courses/${courseId}/quizzes/${i.content_ref}`, { state: { from: moduleReturnPath } });
     if (t === "file") {
       const f = fileMap?.[i.content_ref];
       const fileUrl = f?.url || i.url || i.file_url;

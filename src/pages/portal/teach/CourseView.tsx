@@ -1,6 +1,6 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import AttendanceTab     from './AttendanceTab';
 import CareerPortal      from './CareerPortal';
 import ClinicalSkillsTab from './ClinicalSkillsTab';
@@ -638,15 +638,18 @@ const NAV_ITEMS = [
 // ── Main CourseView ───────────────────────────────────────────────────────────
 const CourseView: React.FC = () => {
   const { user: authUser, logout } = useAuth();
+  const routeParams = useParams<{ courseId?: string }>();
+
+  // Keep course + tab in the URL so leaving for a quiz/case study and pressing
+  // browser Back returns to the same opened course/module context.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const courseParam = searchParams.get('course') || routeParams.courseId || '';
 
   const realCanEdit    = authUser?.canEdit        ?? false;
   const canManageUsers = authUser?.canManageUsers  ?? false;
 
   const [activeCourse, setActiveCourse] = useState<Course>(COURSES[0]);
   const [courseOptions, setCourseOptions] = useState<Course[]>([]);
-  // Sync active tab with ?tab= URL param so browser Back navigates between tabs
-  // instead of leaving the course entirely.
-  const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'home';
   const setActiveTab = (tab: string) => {
     setSearchParams(prev => {
@@ -657,7 +660,7 @@ const CourseView: React.FC = () => {
   };
   const [showCourses, setShowCourses]   = useState(false);
   const [showProfile, setShowProfile]   = useState(false);
-  const [showDashboard, setShowDashboard] = useState(true);
+  const [showDashboard, setShowDashboard] = useState(!courseParam);
   const [pageLoading, setPageLoading]   = useState(true);
   const [pageError, setPageError]       = useState('');
   const [studentView, setStudentView]   = useState(false);
@@ -671,6 +674,38 @@ const CourseView: React.FC = () => {
   const [homePageType, setHomePageType] = useState<string>('modules');
   const [hasFrontPage, setHasFrontPage] = useState(false);
   const [homePageDlgOpen, setHomePageDlgOpen] = useState(false);
+
+  const openDashboard = () => {
+    setShowDashboard(true);
+    setShowCourses(false);
+    setShowProfile(false);
+    setMobileNavOpen(false);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete('course');
+      next.delete('tab');
+      return next;
+    });
+  };
+
+  const openCourse = (course: Course, tab: string = 'home') => {
+    setActiveCourse(course);
+    setCourseOptions(prev => prev.some(c => c.uuid === course.uuid) ? prev : [course, ...prev]);
+    setShowDashboard(false);
+    setShowCourses(false);
+    setShowProfile(false);
+    setMobileNavOpen(false);
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (course.uuid) next.set('course', course.uuid);
+      if (!tab || tab === 'home') next.delete('tab'); else next.set('tab', tab);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (courseParam) setShowDashboard(false);
+  }, [courseParam]);
 
   // Load per-course home_page_type + front-page availability
   useEffect(() => {
@@ -744,7 +779,10 @@ const CourseView: React.FC = () => {
             published: c.status === 'published',
           }));
           setCourseOptions(mapped);
-          setActiveCourse(prev => prev.uuid ? (mapped.find(c => c.uuid === prev.uuid) ?? prev) : mapped[0]);
+          setActiveCourse(prev => {
+            if (courseParam) return mapped.find(c => c.uuid === courseParam) ?? prev;
+            return prev.uuid ? (mapped.find(c => c.uuid === prev.uuid) ?? prev) : mapped[0];
+          });
         }
         await new Promise(r => setTimeout(r, 700));
         setPageLoading(false);
@@ -754,7 +792,7 @@ const CourseView: React.FC = () => {
       }
     };
     load();
-  }, []);
+  }, [courseParam]);
 
   const handleLogout = () => {
     logout();
@@ -766,10 +804,7 @@ const CourseView: React.FC = () => {
     <Dashboard onEnterCourse={(course, tab) => {
       const selected = { id: 1, uuid: course.id, name: course.name, code: course.code,
         color: course.color || C.primary, term: course.term, students: 0, published: course.published };
-      setActiveCourse(selected);
-      setCourseOptions(prev => prev.some(c => c.uuid === selected.uuid) ? prev : [selected, ...prev]);
-      setShowDashboard(false);
-      setActiveTab(tab || 'home');
+      openCourse(selected, tab || 'home');
     }}/>
   );
 
@@ -835,12 +870,12 @@ const CourseView: React.FC = () => {
 
       {/* Fixed purple left rail */}
       <div style={{ width:52, background:C.nav, minHeight:'100vh', position:'fixed', left:0, top:0, zIndex:100, display:'flex', flexDirection:'column', alignItems:'center', paddingTop:10 }}>
-        <img src="/hsa-logo.png" alt="HSA" onClick={() => setShowDashboard(true)}
+        <img src="/hsa-logo.png" alt="HSA" onClick={openDashboard}
           title="Go to Dashboard"
           style={{ width:38, height:38, borderRadius:'50%', marginBottom:16, cursor:'pointer', objectFit:'cover', border:'2px solid rgba(255,255,255,0.3)', display:'block' }}/>
         {[
-          { icon:'🏠', title:'Home',     onClick:() => { setActiveTab('home');         setMobileNavOpen(false); setShowDashboard(true);  setShowProfile(false); } },
-          { icon:'📚', title:'Courses',  onClick:() => { setShowCourses(true);         setMobileNavOpen(false); setShowDashboard(false); setShowProfile(false); } },
+          { icon:'🏠', title:'Home',     onClick:openDashboard },
+          { icon:'📚', title:'Courses',  onClick:() => { openCourse(activeCourse, 'home'); setShowCourses(true); } },
           { icon:'📅', title:'Calendar', onClick:() => { setActiveTab('calendar');     setMobileNavOpen(false); setShowDashboard(false); setShowProfile(false); } },
           { icon:'👤', title:'Account',  onClick:() => { setActiveTab('account');      setMobileNavOpen(false); setShowDashboard(false); setShowProfile(false); } },
           { icon:'💼', title:'Career',   onClick:() => { setActiveTab('career');       setMobileNavOpen(false); setShowDashboard(false); setShowProfile(false); } },
@@ -934,7 +969,7 @@ const CourseView: React.FC = () => {
                   </div>
                   {switcherCourses.map(course => (
                     <div key={course.uuid ?? course.id}
-                      onClick={() => { setActiveCourse(course); setShowCourses(false); setActiveTab('home'); }}
+                      onClick={() => openCourse(course, 'home')}
                       style={{ padding:'11px 14px', display:'flex', alignItems:'center', gap:12, cursor:'pointer', background:course.id === activeCourse.id ? '#EDE8F7' : C.white, borderBottom:`1px solid ${C.border}` }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f4f2fa'}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = course.id === activeCourse.id ? '#EDE8F7' : C.white}>
