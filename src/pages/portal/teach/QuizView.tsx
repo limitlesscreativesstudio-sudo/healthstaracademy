@@ -687,6 +687,13 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
             <input type="number" value={createForm.total_points} onChange={e => setCreateForm(p => ({ ...p, total_points:parseInt(e.target.value)||10 }))}
               style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 10px', fontSize:13, outline:'none' }}/>
           </div>
+          <textarea
+            value={createForm.instructions}
+            onChange={e => setCreateForm(p => ({ ...p, instructions:e.target.value }))}
+            placeholder="Description / instructions (optional) — shown to students before they start the quiz"
+            rows={4}
+            style={{ width:'100%', marginTop:10, border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 10px', fontSize:13, outline:'none', resize:'vertical', fontFamily:'inherit' }}
+          />
           <div style={{ display:'flex', gap:8, marginTop:10 }}>
             <button onClick={createQuiz} style={{ padding:'7px 18px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, cursor:'pointer' }}>Create & Add Questions</button>
             <button onClick={() => setShowCreate(false)} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer' }}>Cancel</button>
