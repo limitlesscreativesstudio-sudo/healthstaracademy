@@ -18,7 +18,10 @@ const C = {
 interface Assignment {
   id: string; course_id: string; title: string; instructions: string | null;
   points: number; due_at: string | null; submission_type: string; published: boolean;
+  rubric_id?: string | null;
 }
+interface RubricLite { id: string; title: string; description?: string | null; }
+interface Criterion { id: string; title: string; description: string | null; points: number; position: number; }
 interface Submission {
   id: string; assignment_id: string; user_id: string;
   body: string | null; file_url: string | null; file_name: string | null;
@@ -63,6 +66,12 @@ const AssignmentDetail: React.FC = () => {
   const [roster, setRoster] = useState<StudentRow[]>([]);
   const [viewer, setViewer] = useState<{ source: ContentSource; name: string } | null>(null);
 
+  // Rubric state
+  const [rubric, setRubric] = useState<RubricLite | null>(null);
+  const [criteria, setCriteria] = useState<Criterion[]>([]);
+  const [courseRubrics, setCourseRubrics] = useState<RubricLite[]>([]);
+  const [rubricScores, setRubricScores] = useState<Record<string, Record<string, { score:number; comment:string|null }>>>({});
+
   const overdue = useMemo(
     () => assignment?.due_at && new Date(assignment.due_at) < new Date(),
     [assignment],
@@ -93,6 +102,70 @@ const AssignmentDetail: React.FC = () => {
       if (gr) setMyGrade(gr as Grade);
     })();
   }, [assignmentId, user, isStaff]);
+
+  // ── Rubric: attached rubric + criteria (+ course rubric list for instructors)
+  useEffect(() => {
+    if (!assignment) return;
+    (async () => {
+      if (isStaff) {
+        const { data: list } = await supabase
+          .from('rubrics').select('id,title').eq('course_id', assignment.course_id).order('title');
+        setCourseRubrics((list ?? []) as RubricLite[]);
+      }
+      const rid = (assignment as any).rubric_id as string | null;
+      if (!rid) { setRubric(null); setCriteria([]); setRubricScores({}); return; }
+      const [{ data: r }, { data: crits }] = await Promise.all([
+        supabase.from('rubrics').select('id,title,description').eq('id', rid).maybeSingle(),
+        supabase.from('rubric_criteria').select('id,title,description,points,position').eq('rubric_id', rid).order('position'),
+      ]);
+      setRubric((r as RubricLite) ?? null);
+      setCriteria((crits ?? []) as Criterion[]);
+
+      let q = supabase.from('rubric_scores')
+        .select('user_id,criterion_id,score,comment').eq('assignment_id', assignment.id);
+      if (!isStaff && user) q = q.eq('user_id', user.id);
+      const { data: rs } = await q;
+      const map: Record<string, Record<string, { score:number; comment:string|null }>> = {};
+      (rs ?? []).forEach((row: any) => {
+        map[row.user_id] = map[row.user_id] ?? {};
+        map[row.user_id][row.criterion_id] = { score: Number(row.score), comment: row.comment };
+      });
+      setRubricScores(map);
+    })();
+  }, [assignment, isStaff, user]);
+
+  const attachRubric = async (rid: string) => {
+    if (!assignment) return;
+    const { error } = await supabase.from('assignments')
+      .update({ rubric_id: rid || null }).eq('id', assignment.id);
+    if (error) { alert('Could not attach rubric: ' + error.message); return; }
+    setAssignment(a => a ? ({ ...a, rubric_id: rid || null } as Assignment) : a);
+  };
+
+  // Save criterion-level scores for one student, then roll up into the grade
+  const saveRubricScores = async (
+    uid: string,
+    values: Record<string, { score: number; comment: string }>,
+  ) => {
+    if (!assignment || !rubric) return 0;
+    const rows = criteria.map(c => ({
+      assignment_id: assignment.id,
+      user_id: uid,
+      criterion_id: c.id,
+      score: Number(values[c.id]?.score ?? 0),
+      comment: values[c.id]?.comment || null,
+      graded_by: user?.id ?? null,
+      graded_at: new Date().toISOString(),
+    }));
+    await supabase.from('rubric_scores').delete().eq('assignment_id', assignment.id).eq('user_id', uid);
+    const { error } = await supabase.from('rubric_scores').insert(rows);
+    if (error) { alert('Rubric save failed: ' + error.message); return 0; }
+    setRubricScores(prev => ({
+      ...prev,
+      [uid]: Object.fromEntries(rows.map(r => [r.criterion_id, { score: r.score, comment: r.comment }])),
+    }));
+    return rows.reduce((s, r) => s + Number(r.score || 0), 0);
+  };
 
   // ── Instructor: load roster + submissions + grades
   useEffect(() => {
@@ -203,6 +276,76 @@ const AssignmentDetail: React.FC = () => {
         )}
       </div>
 
+      {/* ── RUBRIC ── */}
+      <div style={{ marginTop: 20, padding: 20, background: C.white, border: `1px solid ${C.border}`, borderRadius: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Rubric</h2>
+          {isStaff && (
+            <select
+              value={assignment.rubric_id ?? ''}
+              onChange={e => attachRubric(e.target.value)}
+              style={{ marginLeft: 'auto', padding: '6px 8px', border: `1px solid ${C.border}`, borderRadius: 5, fontSize: 13 }}
+            >
+              <option value="">No rubric attached</option>
+              {courseRubrics.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}
+            </select>
+          )}
+        </div>
+
+        {!rubric ? (
+          <div style={{ fontSize: 13, color: C.muted, marginTop: 10 }}>
+            {isStaff ? 'Attach a rubric to grade this assignment criterion by criterion.' : 'No rubric for this assignment.'}
+          </div>
+        ) : (
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>{rubric.title}</div>
+            {rubric.description && <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{rubric.description}</div>}
+            <table style={{ width: '100%', marginTop: 10, borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: C.bg }}>
+                  <th style={{ textAlign: 'left', padding: 8, borderBottom: `1px solid ${C.border}` }}>Criterion</th>
+                  <th style={{ textAlign: 'right', padding: 8, borderBottom: `1px solid ${C.border}`, width: 90 }}>Points</th>
+                  {!isStaff && <th style={{ textAlign: 'right', padding: 8, borderBottom: `1px solid ${C.border}`, width: 90 }}>Earned</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {criteria.map(c => {
+                  const mine = user ? rubricScores[user.id]?.[c.id] : undefined;
+                  return (
+                    <tr key={c.id}>
+                      <td style={{ padding: 8, borderBottom: `1px solid ${C.border}` }}>
+                        <div style={{ fontWeight: 600 }}>{c.title}</div>
+                        {c.description && <div style={{ fontSize: 12, color: C.muted }}>{c.description}</div>}
+                        {!isStaff && mine?.comment && <div style={{ fontSize: 12, color: C.primary, marginTop: 3 }}>{mine.comment}</div>}
+                      </td>
+                      <td style={{ padding: 8, textAlign: 'right', borderBottom: `1px solid ${C.border}` }}>{c.points}</td>
+                      {!isStaff && (
+                        <td style={{ padding: 8, textAlign: 'right', borderBottom: `1px solid ${C.border}`, fontWeight: 700, color: mine ? C.success : C.muted }}>
+                          {mine ? mine.score : '—'}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td style={{ padding: 8, fontWeight: 700 }}>Total</td>
+                  <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>{criteria.reduce((s, c) => s + Number(c.points || 0), 0)}</td>
+                  {!isStaff && (
+                    <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>
+                      {user && rubricScores[user.id]
+                        ? Object.values(rubricScores[user.id]).reduce((s, v) => s + Number(v.score || 0), 0)
+                        : '—'}
+                    </td>
+                  )}
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+      </div>
+
       {/* ── STUDENT VIEW ── */}
       {!isStaff && (
         <div style={{ marginTop: 20, padding: 20, background: C.white, border: `1px solid ${C.border}`, borderRadius: 8 }}>
@@ -282,6 +425,9 @@ const AssignmentDetail: React.FC = () => {
                   key={r.user_id}
                   row={r}
                   points={assignment.points}
+                  criteria={criteria}
+                  existingRubric={rubricScores[r.user_id]}
+                  onSaveRubric={saveRubricScores}
                   onOpenFile={(src, name) => setViewer({ source: src, name })}
                   onSaveGrade={saveGrade}
                 />
@@ -305,13 +451,31 @@ const AssignmentDetail: React.FC = () => {
 const RosterRow: React.FC<{
   row: StudentRow;
   points: number;
+  criteria: Criterion[];
+  existingRubric?: Record<string, { score: number; comment: string | null }>;
+  onSaveRubric: (uid: string, values: Record<string, { score: number; comment: string }>) => Promise<number>;
   onOpenFile: (src: ContentSource, name: string) => void;
   onSaveGrade: (uid: string, score: number, feedback: string) => void;
-}> = ({ row, points, onOpenFile, onSaveGrade }) => {
+}> = ({ row, points, criteria, existingRubric, onSaveRubric, onOpenFile, onSaveGrade }) => {
   const [score, setScore] = useState<string>(row.grade?.score?.toString() ?? '');
   const [feedback, setFeedback] = useState<string>(row.grade?.feedback ?? '');
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [critVals, setCritVals] = useState<Record<string, { score: number; comment: string }>>(() =>
+    Object.fromEntries(criteria.map(c => [c.id, {
+      score: Number(existingRubric?.[c.id]?.score ?? 0),
+      comment: existingRubric?.[c.id]?.comment ?? '',
+    }])),
+  );
+
+  useEffect(() => {
+    setCritVals(Object.fromEntries(criteria.map(c => [c.id, {
+      score: Number(existingRubric?.[c.id]?.score ?? 0),
+      comment: existingRubric?.[c.id]?.comment ?? '',
+    }])));
+  }, [criteria, existingRubric]);
+
+  const rubricTotal = criteria.reduce((s, c) => s + Number(critVals[c.id]?.score ?? 0), 0);
 
   const submitted = !!row.submission;
   const graded = !!row.grade;
@@ -352,6 +516,45 @@ const RosterRow: React.FC<{
             >
               <Eye className="h-4 w-4" /> View {row.submission!.file_name}
             </button>
+          )}
+          {criteria.length > 0 && (
+            <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 6, padding: 10, marginBottom: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Rubric grading</div>
+              {criteria.map(c => (
+                <div key={c.id} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 160, fontSize: 13 }}>{c.title}</div>
+                  <input
+                    type="number" min={0} max={c.points}
+                    value={critVals[c.id]?.score ?? 0}
+                    onChange={e => setCritVals(v => ({ ...v, [c.id]: { ...(v[c.id] ?? { comment: '' }), score: Math.min(Number(c.points), Math.max(0, Number(e.target.value) || 0)) } }))}
+                    style={{ width: 70, padding: '5px 6px', border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 13 }}
+                  />
+                  <span style={{ fontSize: 12, color: C.muted }}>/ {c.points}</span>
+                  <input
+                    placeholder="Comment"
+                    value={critVals[c.id]?.comment ?? ''}
+                    onChange={e => setCritVals(v => ({ ...v, [c.id]: { ...(v[c.id] ?? { score: 0 }), comment: e.target.value } }))}
+                    style={{ flex: 1, minWidth: 160, padding: '5px 6px', border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 13 }}
+                  />
+                </div>
+              ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>Rubric total: {rubricTotal}</div>
+                <button
+                  disabled={saving}
+                  onClick={async () => {
+                    setSaving(true);
+                    const total = await onSaveRubric(row.user_id, critVals);
+                    setScore(String(total));
+                    await onSaveGrade(row.user_id, total, feedback);
+                    setSaving(false);
+                  }}
+                  style={{ padding: '6px 12px', border: 'none', borderRadius: 4, background: C.success, color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Save rubric &amp; grade
+                </button>
+              </div>
+            </div>
           )}
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
             <div>
