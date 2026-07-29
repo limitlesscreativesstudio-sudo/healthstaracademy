@@ -379,11 +379,29 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
 
                   {/* Actions */}
                   <td style={{ padding:'10px 14px' }}>
-                    <div style={{ display:'flex', gap:6 }}>
+                    <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
                       <button style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4,
                         background:C.white, fontSize:11, cursor:'pointer', color:C.text, fontFamily:'sans-serif' }}>
                         ✉ Message
                       </button>
+                      {canEdit && p.pending && (
+                        <button
+                          onClick={() => resendInvite(p)}
+                          disabled={resendingId === p.enrollmentId}
+                          title={`Resend invitation to ${p.email}`}
+                          style={{ padding:'4px 10px', border:`1px solid ${C.primary}44`, borderRadius:4,
+                            background:C.white, fontSize:11,
+                            cursor: resendingId === p.enrollmentId ? 'wait' : 'pointer',
+                            color:C.primary, fontWeight:600 }}>
+                          {resendingId === p.enrollmentId ? 'Resending…' : '↻ Resend invite'}
+                        </button>
+                      )}
+                      {resendMsg?.id === p.enrollmentId && (
+                        <span style={{ fontSize:11, color: resendMsg.ok ? '#1E7A34' : C.error }}>
+                          {resendMsg.text}
+                        </span>
+                      )}
+
                       {canEdit && (
                         <button onClick={() => {
                           if (confirm(`Remove ${p.name} from this course?`)) removePerson(p.enrollmentId);
