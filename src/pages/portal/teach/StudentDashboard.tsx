@@ -41,6 +41,8 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   const [selected,     setSelected]     = useState<string[]>([]);
   const [cohortInfo,   setCohortInfo]   = useState<{ id: string; name: string; courseCount: number } | null>(null);
   const [enrollInCohort, setEnrollInCohort] = useState(true);
+  const [resendingId,  setResendingId]  = useState<string | null>(null);
+  const [resendMsg,    setResendMsg]    = useState<{ id: string; ok: boolean; text: string } | null>(null);
 
   // ── Load enrollments + pending invites ─────────────────────────────────────
   const load = async () => {
