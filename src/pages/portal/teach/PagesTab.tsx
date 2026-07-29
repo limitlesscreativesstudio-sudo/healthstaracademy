@@ -169,7 +169,30 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     setEditing(null); setCreating(false);
     setForm({ title:'', body:'', published:false, front_page:false });
     setSaving(false);
+    setDirty(false);
+    setSavedAt(Date.now());
   };
+
+  // Debounced autosave — only for edits of an existing page.
+  useEffect(() => {
+    if (skipAutoRef.current) return;
+    if (!editing || !form.title.trim()) return;
+    setDirty(true);
+    const t = setTimeout(async () => {
+      setSaving(true);
+      setAutoErr(null);
+      const { data, error } = await supabase.from('lms_pages')
+        .update({ title:form.title, body_html:form.body, published:form.published, front_page:form.front_page, updated_at: new Date().toISOString() })
+        .eq('id', editing.id).select().single();
+      setSaving(false);
+      if (error) { setAutoErr('Autosave failed — will retry'); return; }
+      if (data) setPages(p => p.map(x => x.id === editing.id ? data : x));
+      setDirty(false);
+      setSavedAt(Date.now());
+    }, 1200);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.title, form.body, form.published, form.front_page]);
 
   const deletePage = async (id: string) => {
     if (!confirm('Delete this page?')) return;
@@ -178,9 +201,15 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   };
 
   const openEdit = (page: Page) => {
+    skipAutoRef.current = true;
     setEditing(page);
     setForm({ title:page.title, body:page.body_html || '', published:page.published, front_page:page.front_page });
     setCreating(true);
+    setDirty(false);
+    setSavedAt(null);
+    setAutoErr(null);
+    // Allow autosave after the initial form state settles.
+    setTimeout(() => { skipAutoRef.current = false; }, 300);
   };
 
   const togglePub = async (id: string, current: boolean) => {
