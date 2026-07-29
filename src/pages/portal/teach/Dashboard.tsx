@@ -443,6 +443,8 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
       const discussionMap = new Map<string, string>();
       const folderMap = new Map<string, string>();
       const fileMap = new Map<string, string>();
+      const fileUrlMap = new Map<string, string>();
+
 
       const [rubricsRes, pagesRes, quizzesRes, assignmentsRes, discussionsRes, foldersRes, filesRes, announcementsRes, sectionsRes, modsRes] = await Promise.all([
         supabase.from('rubrics').select('id,title,description,created_by').eq('course_id', src.id).order('created_at'),
