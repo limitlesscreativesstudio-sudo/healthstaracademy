@@ -451,13 +451,31 @@ const AssignmentDetail: React.FC = () => {
 const RosterRow: React.FC<{
   row: StudentRow;
   points: number;
+  criteria: Criterion[];
+  existingRubric?: Record<string, { score: number; comment: string | null }>;
+  onSaveRubric: (uid: string, values: Record<string, { score: number; comment: string }>) => Promise<number>;
   onOpenFile: (src: ContentSource, name: string) => void;
   onSaveGrade: (uid: string, score: number, feedback: string) => void;
-}> = ({ row, points, onOpenFile, onSaveGrade }) => {
+}> = ({ row, points, criteria, existingRubric, onSaveRubric, onOpenFile, onSaveGrade }) => {
   const [score, setScore] = useState<string>(row.grade?.score?.toString() ?? '');
   const [feedback, setFeedback] = useState<string>(row.grade?.feedback ?? '');
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [critVals, setCritVals] = useState<Record<string, { score: number; comment: string }>>(() =>
+    Object.fromEntries(criteria.map(c => [c.id, {
+      score: Number(existingRubric?.[c.id]?.score ?? 0),
+      comment: existingRubric?.[c.id]?.comment ?? '',
+    }])),
+  );
+
+  useEffect(() => {
+    setCritVals(Object.fromEntries(criteria.map(c => [c.id, {
+      score: Number(existingRubric?.[c.id]?.score ?? 0),
+      comment: existingRubric?.[c.id]?.comment ?? '',
+    }])));
+  }, [criteria, existingRubric]);
+
+  const rubricTotal = criteria.reduce((s, c) => s + Number(critVals[c.id]?.score ?? 0), 0);
 
   const submitted = !!row.submission;
   const graded = !!row.grade;
