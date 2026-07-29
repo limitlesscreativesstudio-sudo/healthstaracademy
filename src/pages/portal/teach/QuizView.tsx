@@ -466,7 +466,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     return (
       <div style={{ padding:'20px 24px 96px', maxWidth:1200, margin:'0 auto', fontFamily:'sans-serif', display:'grid', gridTemplateColumns:'minmax(0,1fr) 220px', gap:24 }}>
         <div style={{ minWidth:0 }}>
-          <button onClick={() => { setTaking(null); setResults(null); setAttemptId(null); load(); }} style={{ background:'none', border:'none', color:C.primary, cursor:'pointer', marginBottom:8, fontSize:13 }}>← Back to quizzes</button>
+          <button onClick={() => { setTaking(null); setResults(null); setAttemptId(null); if (routeQuizId) navigate(-1); else load(); }} style={{ background:'none', border:'none', color:C.primary, cursor:'pointer', marginBottom:8, fontSize:13 }}>← {routeQuizId ? 'Back' : 'Back to quizzes'}</button>
           <h2 style={{ margin:'0 0 6px', color:C.text }}>{taking.title}</h2>
           {canEdit && !results && (
             <div style={{ background:'#FDECEA', border:'1px solid #F5C6CB', color:'#8A1F11', borderRadius:4, padding:'8px 12px', fontSize:12, marginBottom:12 }}>
