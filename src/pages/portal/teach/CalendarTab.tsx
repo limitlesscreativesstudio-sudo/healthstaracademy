@@ -247,6 +247,28 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
             </div>
           ))
         }
+
+        {canEdit && (
+          <>
+            <h3 style={{ fontSize:12, fontWeight:700, color:C.text, textTransform:'uppercase', letterSpacing:0.5, margin:'20px 0 8px' }}>
+              Needs a due date {undated.length > 0 && `(${undated.length})`}
+            </h3>
+            {undated.length === 0 ? <p style={{ fontSize:12, color:C.muted }}>Everything is scheduled 🎉</p> :
+              undated.slice(0, 25).map(u => (
+                <div key={`${u.kind}-${u.id}`} style={{ marginBottom:10, background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:8 }}>
+                  <div style={{ fontSize:12, fontWeight:600, color:C.text, marginBottom:4 }}>{u.title}</div>
+                  <div style={{ fontSize:10, color:C.muted, textTransform:'uppercase', marginBottom:5 }}>{u.kind}</div>
+                  <input
+                    type="datetime-local"
+                    disabled={savingDue}
+                    onChange={e => { if (e.target.value) saveDueDate(u.kind, u.id, e.target.value); }}
+                    style={{ width:'100%', padding:'4px 6px', border:`1px solid ${C.border}`, borderRadius:4, fontSize:11, fontFamily:'sans-serif' }}
+                  />
+                </div>
+              ))
+            }
+          </>
+        )}
       </div>
 
       {selected && (
@@ -255,10 +277,35 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
             <h3 style={{ margin:'0 0 6px', color:C.text, fontFamily:'sans-serif' }}>{selected.title}</h3>
             <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', marginBottom:12 }}>{selected.date.toLocaleString()}</div>
             <div style={{ fontSize:13, color:C.text, fontFamily:'sans-serif', textTransform:'capitalize' }}>Type: {selected.type}</div>
+
+            {canEdit && selected.type !== 'attendance' && selected.refId && (
+              <div style={{ marginTop:14, paddingTop:14, borderTop:`1px solid ${C.border}` }}>
+                <label style={{ display:'block', fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', marginBottom:6, fontFamily:'sans-serif' }}>Due date</label>
+                <div style={{ display:'flex', gap:6 }}>
+                  <input
+                    type="datetime-local"
+                    value={dueDraft || toLocalInput(selected.date)}
+                    onChange={e => setDueDraft(e.target.value)}
+                    style={{ flex:1, padding:'6px 8px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:12, fontFamily:'sans-serif' }}
+                  />
+                  <button
+                    disabled={savingDue}
+                    onClick={async () => {
+                      const kind = selected.id.startsWith('q-') ? 'quiz' : 'assignment';
+                      const ok = await saveDueDate(kind, selected.refId, dueDraft || toLocalInput(selected.date));
+                      if (ok) { setDueDraft(''); setSelected(null); }
+                    }}
+                    style={{ padding:'6px 12px', border:'none', borderRadius:5, background:C.success, color:'white', cursor:'pointer', fontSize:12, fontFamily:'sans-serif' }}>
+                    {savingDue ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div style={{ marginTop:16, display:'flex', gap:8 }}>
               {selected.refId && selected.type !== 'attendance' && (
                 <button onClick={() => {
-                  const isQuiz = selected.type === 'quiz' && selected.id.startsWith('q-');
+                  const isQuiz = selected.id.startsWith('q-');
                   const path = isQuiz
                     ? `/portal/courses/${courseId}/quizzes/${selected.refId}`
                     : `/portal/courses/${courseId}/assignments/${selected.refId}`;
@@ -268,7 +315,7 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
                   Open
                 </button>
               )}
-              <button onClick={() => setSelected(null)} style={{ padding:'7px 16px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, cursor:'pointer', fontFamily:'sans-serif' }}>Close</button>
+              <button onClick={() => { setSelected(null); setDueDraft(''); }} style={{ padding:'7px 16px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, cursor:'pointer', fontFamily:'sans-serif' }}>Close</button>
             </div>
           </div>
         </div>
