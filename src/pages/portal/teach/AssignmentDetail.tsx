@@ -425,6 +425,9 @@ const AssignmentDetail: React.FC = () => {
                   key={r.user_id}
                   row={r}
                   points={assignment.points}
+                  criteria={criteria}
+                  existingRubric={rubricScores[r.user_id]}
+                  onSaveRubric={saveRubricScores}
                   onOpenFile={(src, name) => setViewer({ source: src, name })}
                   onSaveGrade={saveGrade}
                 />
