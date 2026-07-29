@@ -28,7 +28,7 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
   const [editing, setEditing] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [showCreate, setShowCreate] = useState(false);
-  const [createForm, setCreateForm] = useState({ title:'', due_at:'', total_points:10 });
+  const [createForm, setCreateForm] = useState({ title:'', instructions:'', due_at:'', total_points:10 });
   const [taking, setTaking] = useState<Quiz | null>(null);
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [attemptQs, setAttemptQs] = useState<Question[]>([]);
@@ -228,12 +228,13 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
     if (!createForm.title.trim() || !courseId) return;
     const { data, error } = await supabase.from('quizzes').insert({
       course_id: courseId, title: createForm.title.trim(),
+      instructions: createForm.instructions.trim() || null,
       due_at: createForm.due_at || null, total_points: createForm.total_points,
       published: false,
     }).select().single();
     if (error) return toast.error('Could not create quiz');
     setQuizzes(p => [...p, data]);
-    setCreateForm({ title:'', due_at:'', total_points:10 });
+    setCreateForm({ title:'', instructions:'', due_at:'', total_points:10 });
     setShowCreate(false);
     toast.success('Quiz created');
     startEdit(data);
@@ -686,6 +687,13 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
             <input type="number" value={createForm.total_points} onChange={e => setCreateForm(p => ({ ...p, total_points:parseInt(e.target.value)||10 }))}
               style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 10px', fontSize:13, outline:'none' }}/>
           </div>
+          <textarea
+            value={createForm.instructions}
+            onChange={e => setCreateForm(p => ({ ...p, instructions:e.target.value }))}
+            placeholder="Description / instructions (optional) — shown to students before they start the quiz"
+            rows={4}
+            style={{ width:'100%', marginTop:10, border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 10px', fontSize:13, outline:'none', resize:'vertical', fontFamily:'inherit' }}
+          />
           <div style={{ display:'flex', gap:8, marginTop:10 }}>
             <button onClick={createQuiz} style={{ padding:'7px 18px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, cursor:'pointer' }}>Create & Add Questions</button>
             <button onClick={() => setShowCreate(false)} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer' }}>Cancel</button>
