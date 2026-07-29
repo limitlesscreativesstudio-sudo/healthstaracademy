@@ -40,6 +40,11 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
   const [stats, setStats] = useState<Record<string, Stats>>({});
   const [viewing, setViewing] = useState<Quiz & { attempts_allowed?: number; time_limit_minutes?: number | null } | null>(null);
   const [viewQCount, setViewQCount] = useState(0);
+  const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [nowTick, setNowTick] = useState<number>(Date.now());
+  const [hideTime, setHideTime] = useState(false);
+  const [timeLimitMin, setTimeLimitMin] = useState<number | null>(null);
+  const autoSubmittedRef = useRef(false);
   const saveTimer = useRef<any>(null);
   const retryTimer = useRef<any>(null);
   const retryAttempt = useRef<number>(0);
