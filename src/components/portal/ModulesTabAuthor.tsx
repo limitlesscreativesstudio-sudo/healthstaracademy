@@ -1148,7 +1148,7 @@ const PickerSelect = ({ label, value, options, onChange, canCreate, createLabel 
     onChange(v, opt?.label ?? "");
   }}>
     <SelectTrigger><SelectValue placeholder={`Choose a ${label.toLowerCase()}…`} /></SelectTrigger>
-    <SelectContent>
+    <SelectContent className="max-h-[320px] overflow-y-auto">
       {canCreate && (
         <SelectItem value={CREATE_NEW} className="font-semibold">{createLabel}</SelectItem>
       )}
