@@ -11,7 +11,7 @@ interface Props { courseId?: string; canEdit?: boolean; }
 
 interface EvExt extends Ev { section?: string | null; }
 
-const CalendarTab: React.FC<Props> = ({ courseId }) => {
+const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const navigate = useNavigate();
   const filterKey = courseId ? `hsa.calendar.filters.${courseId}` : '';
   const initial = React.useMemo(() => {
