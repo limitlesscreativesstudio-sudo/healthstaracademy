@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
-type QType = 'multiple_choice' | 'true_false' | 'short_answer' | 'essay';
+type QType = 'multiple_choice' | 'multiple_answers' | 'true_false' | 'short_answer' | 'essay';
 interface Question {
   id?: string; position: number; question_type: QType; prompt: string;
   options: { text:string }[]; correct_answer: any; points: number;
@@ -315,6 +315,11 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       let ok = false; let auto = true;
       if (q.question_type === 'multiple_choice') ok = a !== undefined && Number(a) === Number(q.correct_answer);
       else if (q.question_type === 'true_false') ok = a !== undefined && Number(a) === Number(q.correct_answer);
+      else if (q.question_type === 'multiple_answers') {
+        const exp = Array.isArray(q.correct_answer) ? [...q.correct_answer].map(Number).sort() : [];
+        const got = Array.isArray(a) ? [...a].map(Number).sort() : [];
+        ok = exp.length > 0 && exp.length === got.length && exp.every((v,i) => v === got[i]);
+      }
       else auto = false; // manually graded
       if (auto && ok) score += q.points;
       perQ.push({ qid:q.id!, correct:ok, user:a, expected:q.correct_answer, auto });
@@ -338,9 +343,11 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       const uAns = r?.user;
       const uText = q.question_type === 'multiple_choice' ? q.options[uAns]?.text ?? '(no answer)'
         : q.question_type === 'true_false' ? (uAns===0?'True':uAns===1?'False':'(no answer)')
+        : q.question_type === 'multiple_answers' ? (Array.isArray(uAns) && uAns.length ? uAns.map((i:number)=>q.options[i]?.text).filter(Boolean).join('; ') : '(no answer)')
         : (uAns ?? '(no answer)');
       const eText = q.question_type === 'multiple_choice' ? q.options[q.correct_answer]?.text
         : q.question_type === 'true_false' ? (q.correct_answer===0?'True':'False')
+        : q.question_type === 'multiple_answers' ? (Array.isArray(q.correct_answer) ? q.correct_answer.map((i:number)=>q.options[i]?.text).filter(Boolean).join('; ') : '')
         : '(manually graded)';
       lines.push(`  Your answer: ${uText}`);
       lines.push(`  Correct:     ${eText}`);
@@ -451,7 +458,8 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
   // Taking a quiz
   if (taking) {
-    const answeredCount = attemptQs.filter(q => answers[q.id!] !== undefined && answers[q.id!] !== '').length;
+    const isAnswered = (v:any) => v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0);
+    const answeredCount = attemptQs.filter(q => isAnswered(answers[q.id!])).length;
     return (
       <div style={{ padding:'20px 24px 96px', maxWidth:1200, margin:'0 auto', fontFamily:'sans-serif', display:'grid', gridTemplateColumns:'minmax(0,1fr) 220px', gap:24 }}>
         <div style={{ minWidth:0 }}>
@@ -505,6 +513,19 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                           </div>
                         );
                       })}
+                      {q.question_type === 'multiple_answers' && q.options.map((o, oi) => {
+                        const uArr = Array.isArray(r?.user) ? r!.user.map(Number) : [];
+                        const cArr = Array.isArray(q.correct_answer) ? q.correct_answer.map(Number) : [];
+                        const isU = uArr.includes(oi); const isC = cArr.includes(oi);
+                        const mark = isC && isU ? '✓' : isC && !isU ? '·' : !isC && isU ? '✗' : ' ';
+                        const bg = isC ? '#E8F5E9' : isU ? '#FDECEA' : 'transparent';
+                        const col = isC ? C.success : isU ? C.error : C.text;
+                        return (
+                          <div key={oi} style={{ padding:'6px 10px', borderRadius:4, marginBottom:3, background:bg, color:col }}>
+                            {mark} {o.text}{isU && !isC && ' (your selection)'}{isC && !isU && ' (missed)'}
+                          </div>
+                        );
+                      })}
                       {q.question_type === 'true_false' && (
                         <div>Your answer: <strong>{r?.user===0?'True':r?.user===1?'False':'—'}</strong> • Correct: <strong>{q.correct_answer===0?'True':'False'}</strong></div>
                       )}
@@ -534,6 +555,24 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                         {o.text}
                       </label>
                     ))}
+                    {q.question_type === 'multiple_answers' && (
+                      <>
+                        <div style={{ fontSize:11, color:C.muted, marginBottom:6, fontStyle:'italic' }}>Select all that apply.</div>
+                        {q.options.map((o,oi) => {
+                          const arr: number[] = Array.isArray(answers[q.id!]) ? answers[q.id!] : [];
+                          const checked = arr.includes(oi);
+                          return (
+                            <label key={oi} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', cursor:'pointer', fontSize:13, color:C.text, borderTop:oi===0?'none':`1px solid ${C.border}` }}>
+                              <input type="checkbox" checked={checked} onChange={() => {
+                                const next = checked ? arr.filter(x => x !== oi) : [...arr, oi].sort((a,b)=>a-b);
+                                setAnswers(a => ({ ...a, [q.id!]: next }));
+                              }} style={{ accentColor:C.primary }}/>
+                              {o.text}
+                            </label>
+                          );
+                        })}
+                      </>
+                    )}
                     {q.question_type === 'true_false' && [{v:0,l:'True'},{v:1,l:'False'}].map((o,oi) => (
                       <label key={o.v} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', cursor:'pointer', fontSize:13, borderTop:oi===0?'none':`1px solid ${C.border}` }}>
                         <input type="radio" name={`q-${q.id}`} checked={answers[q.id!]===o.v} onChange={() => setAnswers(a => ({ ...a, [q.id!]: o.v }))} style={{ accentColor:C.primary }}/>
@@ -570,7 +609,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
               <div style={{ fontWeight:700, color:C.text, marginBottom:8 }}>Questions</div>
               <div style={{ display:'flex', flexDirection:'column', gap:4, maxHeight:'40vh', overflowY:'auto' }}>
                 {attemptQs.map((q, qi) => {
-                  const answered = answers[q.id!] !== undefined && answers[q.id!] !== '';
+                  const answered = isAnswered(answers[q.id!]);
                   return (
                     <a key={q.id} href={`#q-${qi+1}`} style={{ color: answered ? C.success : C.primary, textDecoration:'none', padding:'3px 4px', borderRadius:3, display:'flex', alignItems:'center', gap:6 }}>
                       <span style={{ display:'inline-block', width:14, textAlign:'center', fontWeight:700 }}>{answered ? '✓' : ''}</span>
@@ -649,9 +688,13 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
           <div key={qi} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:16, marginBottom:12 }}>
             <div style={{ display:'flex', gap:10, marginBottom:10 }}>
               <span style={{ fontSize:12, fontWeight:700, color:C.muted, padding:'6px 0' }}>Q{qi+1}</span>
-              <select value={q.question_type} onChange={e => updateQuestion(qi, { question_type: e.target.value as QType, correct_answer: 0 })}
+              <select value={q.question_type} onChange={e => {
+                  const nt = e.target.value as QType;
+                  updateQuestion(qi, { question_type: nt, correct_answer: nt === 'multiple_answers' ? [] : 0 });
+                }}
                 style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:'5px 8px', fontSize:12 }}>
                 <option value="multiple_choice">Multiple Choice</option>
+                <option value="multiple_answers">Multiple Answers</option>
                 <option value="true_false">True / False</option>
                 <option value="short_answer">Short Answer</option>
                 <option value="essay">Essay</option>
@@ -670,8 +713,40 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                     <input value={o.text} onChange={e => updateQuestion(qi, { options: q.options.map((x,i) => i===oi ? { text:e.target.value } : x) })}
                       placeholder={`Choice ${oi+1}`}
                       style={{ flex:1, border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 9px', fontSize:13, outline:'none' }}/>
+                    <button onClick={() => updateQuestion(qi, { options: q.options.filter((_,i) => i !== oi) })} disabled={q.options.length <= 2}
+                      style={{ background:'none', border:'none', color:C.muted, cursor: q.options.length<=2?'not-allowed':'pointer', fontSize:14 }}>✕</button>
                   </div>
                 ))}
+                <button onClick={() => updateQuestion(qi, { options: [...q.options, { text:'' }] })}
+                  style={{ padding:'4px 10px', border:`1px dashed ${C.border}`, borderRadius:4, background:'transparent', color:C.primary, fontSize:12, cursor:'pointer' }}>+ Add Choice</button>
+              </div>
+            )}
+            {q.question_type === 'multiple_answers' && (
+              <div>
+                <div style={{ fontSize:11, color:C.muted, marginBottom:6, fontStyle:'italic' }}>Check every correct answer. Students must select them all to earn credit.</div>
+                {q.options.map((o, oi) => {
+                  const arr: number[] = Array.isArray(q.correct_answer) ? q.correct_answer : [];
+                  const checked = arr.includes(oi);
+                  return (
+                    <div key={oi} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+                      <input type="checkbox" checked={checked} onChange={() => {
+                        const next = checked ? arr.filter(x => x !== oi) : [...arr, oi].sort((a,b)=>a-b);
+                        updateQuestion(qi, { correct_answer: next });
+                      }} style={{ accentColor:C.primary }}/>
+                      <input value={o.text} onChange={e => updateQuestion(qi, { options: q.options.map((x,i) => i===oi ? { text:e.target.value } : x) })}
+                        placeholder={`Choice ${oi+1}`}
+                        style={{ flex:1, border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 9px', fontSize:13, outline:'none' }}/>
+                      <button onClick={() => {
+                        const filtered = q.options.filter((_,i) => i !== oi);
+                        const remapped = arr.filter(x => x !== oi).map(x => x > oi ? x - 1 : x);
+                        updateQuestion(qi, { options: filtered, correct_answer: remapped });
+                      }} disabled={q.options.length <= 2}
+                        style={{ background:'none', border:'none', color:C.muted, cursor: q.options.length<=2?'not-allowed':'pointer', fontSize:14 }}>✕</button>
+                    </div>
+                  );
+                })}
+                <button onClick={() => updateQuestion(qi, { options: [...q.options, { text:'' }] })}
+                  style={{ padding:'4px 10px', border:`1px dashed ${C.border}`, borderRadius:4, background:'transparent', color:C.primary, fontSize:12, cursor:'pointer' }}>+ Add Choice</button>
               </div>
             )}
             {q.question_type === 'true_false' && (
