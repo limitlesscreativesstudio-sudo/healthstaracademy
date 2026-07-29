@@ -83,22 +83,48 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Send Supabase auth invite. If user already exists this returns an error —
-      // in that case fall back to enrolling them directly.
+      // 1) ALWAYS record the invite row first so the email is never lost even if
+      //    the outbound auth email fails (rate limits, SMTP issues, etc).
+      let saveError: string | null = null;
+      for (const cid of targetCourseIds) {
+        const { error: peErr } = await admin
+          .from("pending_enrollments")
+          .upsert(
+            {
+              course_id: cid,
+              email,
+              section: section ?? null,
+              role: inviteRole,
+              invited_by: invitedBy,
+              status: "pending",
+            },
+            { onConflict: "course_id,email" },
+          );
+        if (peErr) {
+          console.error("pending_enrollments upsert error", peErr);
+          saveError = peErr.message;
+        }
+      }
+      if (saveError) {
+        results.push({ email, ok: false, message: `Could not save invite: ${saveError}` });
+        continue;
+      }
+
+      // 2) Try to send the Supabase auth invite email.
       const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
-        data: { role: "student", full_name: email.split("@")[0] },
+        data: { role: inviteRole, full_name: email.split("@")[0] },
         redirectTo: finalRedirect,
       });
 
       let userAlreadyExists = false;
       let existingUserId: string | null = null;
+      let mailWarning: string | null = null;
       if (inviteErr) {
         const msg = (inviteErr.message || "").toLowerCase();
         if (msg.includes("already been registered") || msg.includes("already registered") || msg.includes("already exists")) {
           userAlreadyExists = true;
         } else {
-          results.push({ email, ok: false, message: inviteErr.message });
-          continue;
+          mailWarning = inviteErr.message;
         }
       }
 
@@ -117,23 +143,22 @@ Deno.serve(async (req) => {
         existingUserId = inviteData.user.id;
       }
 
-      // Record pending_enrollment for tracking — one row per target course.
-      for (const cid of targetCourseIds) {
-        const { error: peErr } = await admin
-          .from("pending_enrollments")
-          .upsert(
-            {
-              course_id: cid,
-              email,
-              section: section ?? null,
-              invited_by: invitedBy,
-              status: userAlreadyExists ? "accepted" : "pending",
-              accepted_at: userAlreadyExists ? new Date().toISOString() : null,
-            },
-            { onConflict: "course_id,email" },
-          );
-        if (peErr) console.error("pending_enrollments upsert error", peErr);
+      if (userAlreadyExists) {
+        for (const cid of targetCourseIds) {
+          await admin.from("pending_enrollments")
+            .update({ status: "accepted", accepted_at: new Date().toISOString() })
+            .eq("course_id", cid).eq("email", email);
+        }
       }
+
+      if (mailWarning) {
+        results.push({
+          email, ok: true,
+          message: `Saved to the roster, but the invitation email could not be sent (${mailWarning}).`,
+        });
+        continue;
+      }
+
 
       // If user already exists, enroll them directly right now — across every
       // target course. Also stamp cohort_id on the students record when we know it.
