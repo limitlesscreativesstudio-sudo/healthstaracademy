@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', error:'#C0392B', success:'#127A1B' } as const;
 
-interface Discussion { id:string; title:string; body:string|null; author_id:string; created_at:string; author_name?:string; reply_count?:number; last_activity?:string; }
+interface Discussion { id:string; title:string; body:string|null; author_id:string; created_at:string; pinned?:boolean; locked?:boolean; author_name?:string; reply_count?:number; last_activity?:string; }
 interface Reply { id:string; body:string; author_id:string; created_at:string; parent_reply_id?:string|null; author_name?:string; }
 interface AuditEntry { id:string; action:string; actor_email:string|null; created_at:string; snapshot:any; reply_id:string|null; }
 
@@ -46,7 +46,7 @@ const DiscussionsTab: React.FC<Props> = ({ courseId, canEdit }) => {
     if (!courseId) { setLoading(false); return; }
     setLoading(true);
     const { data: d } = await supabase.from('discussions')
-      .select('id,title,body,author_id,created_at')
+      .select('id,title,body,author_id,created_at,pinned,locked')
       .eq('course_id', courseId).order('created_at',{ ascending:false });
     const ds = d ?? [];
     const ids = ds.map(x => x.id);
@@ -141,6 +141,20 @@ const DiscussionsTab: React.FC<Props> = ({ courseId, canEdit }) => {
     body: `This removes the discussion and all replies. The action is recorded in the activity log with your name and the current time.`,
     onConfirm: () => { doDeleteDiscussion(d.id); setConfirm(null); },
   });
+
+  const togglePin = async (d: Discussion) => {
+    const { error } = await supabase.from('discussions').update({ pinned: !d.pinned }).eq('id', d.id);
+    if (error) return toast.error('Could not update');
+    setItems(p => p.map(x => x.id === d.id ? { ...x, pinned: !d.pinned } : x));
+    toast.success(d.pinned ? 'Unpinned' : 'Pinned to top');
+  };
+
+  const toggleLock = async (d: Discussion) => {
+    const { error } = await supabase.from('discussions').update({ locked: !d.locked }).eq('id', d.id);
+    if (error) return toast.error('Could not update');
+    setItems(p => p.map(x => x.id === d.id ? { ...x, locked: !d.locked } : x));
+    toast.success(d.locked ? 'Opened for comments' : 'Closed for comments');
+  };
 
   const loadAudit = async () => {
     if (!courseId) return;
