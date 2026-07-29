@@ -677,8 +677,38 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
         }
       }
 
+      // Rewrite any embedded links to the old course's files inside copied content.
+      if (fileUrlMap.size) {
+        const rewrite = (html: string | null) => {
+          if (!html) return html;
+          let out = html;
+          fileUrlMap.forEach((to, from) => { out = out.split(from).join(to); });
+          return out;
+        };
+
+        const { data: newPages } = await supabase.from('lms_pages').select('id,body_html').eq('course_id', newCourse.id);
+        for (const p of (newPages ?? []) as any[]) {
+          const next = rewrite(p.body_html);
+          if (next !== p.body_html) await supabase.from('lms_pages').update({ body_html: next }).eq('id', p.id);
+        }
+        const { data: newQuizzes } = await supabase.from('quizzes').select('id,instructions').eq('course_id', newCourse.id);
+        for (const q of (newQuizzes ?? []) as any[]) {
+          const next = rewrite(q.instructions);
+          if (next !== q.instructions) await supabase.from('quizzes').update({ instructions: next }).eq('id', q.id);
+        }
+        const { data: newAssignments } = await supabase.from('assignments').select('id,instructions').eq('course_id', newCourse.id);
+        for (const a of (newAssignments ?? []) as any[]) {
+          const next = rewrite(a.instructions);
+          if (next !== a.instructions) await supabase.from('assignments').update({ instructions: next }).eq('id', a.id);
+        }
+        const syllabus = rewrite((srcCourseFull as any)?.syllabus_html ?? '');
+        const frontPage = rewrite((srcCourseFull as any)?.front_page_html ?? '');
+        await supabase.from('courses').update({ syllabus_html: syllabus ?? '', front_page_html: frontPage ?? '' }).eq('id', newCourse.id);
+      }
+
       await loadCourses();
-      alert(`Created "${newName}" as a full sandbox copy with modules, files, pages, quizzes, assignments, discussions, announcements, sections, rubrics, and course settings.`);
+      alert(`Created "${newName}" as a full sandbox copy — modules, module items, files (storage copies), folders, pages, quizzes + questions, assignments, rubrics + criteria, discussions, announcements, sections, syllabus, and course settings all transferred.`);
+
     } catch (err: any) {
       alert('Course duplication could not be completed: ' + (err?.message ?? 'unknown error'));
     }
