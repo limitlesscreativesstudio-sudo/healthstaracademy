@@ -1,5 +1,6 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AttendanceTab     from './AttendanceTab';
 import CareerPortal      from './CareerPortal';
 import ClinicalSkillsTab from './ClinicalSkillsTab';
