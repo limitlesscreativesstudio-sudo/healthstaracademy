@@ -315,6 +315,11 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       let ok = false; let auto = true;
       if (q.question_type === 'multiple_choice') ok = a !== undefined && Number(a) === Number(q.correct_answer);
       else if (q.question_type === 'true_false') ok = a !== undefined && Number(a) === Number(q.correct_answer);
+      else if (q.question_type === 'multiple_answers') {
+        const exp = Array.isArray(q.correct_answer) ? [...q.correct_answer].map(Number).sort() : [];
+        const got = Array.isArray(a) ? [...a].map(Number).sort() : [];
+        ok = exp.length > 0 && exp.length === got.length && exp.every((v,i) => v === got[i]);
+      }
       else auto = false; // manually graded
       if (auto && ok) score += q.points;
       perQ.push({ qid:q.id!, correct:ok, user:a, expected:q.correct_answer, auto });
