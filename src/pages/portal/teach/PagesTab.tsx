@@ -4,6 +4,7 @@ import { supabase } from './AuthContext';
 import { uploadViaXhr } from './uploadViaXhr';
 import RichTextEditor, { sanitizeHtml } from '@/components/portal/RichTextEditor';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
+import SaveStatus from '@/components/portal/SaveStatus';
 
 const fileIcon = (t: string) => ({ pdf:'📄', pptx:'📊', ppt:'📊', docx:'📝', doc:'📝', mp4:'🎥', mov:'🎥', jpg:'🖼️', png:'🖼️', xlsx:'📈' }[(t||'').toLowerCase()] ?? '📎');
 
