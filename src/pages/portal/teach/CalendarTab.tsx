@@ -20,6 +20,10 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
     catch { return { type:'all', section:'all', search:'', view:'month' }; }
   }, [filterKey]);
   const [events, setEvents] = useState<EvExt[]>([]);
+  const [undated, setUndated] = useState<Array<{ id:string; title:string; kind:'assignment'|'quiz' }>>([]);
+  const [dueDraft, setDueDraft] = useState<string>('');
+  const [savingDue, setSavingDue] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'month'|'agenda'>(initial.view);
   const [monthCursor, setMonthCursor] = useState(() => { const d = new Date(); d.setDate(1); return d; });
