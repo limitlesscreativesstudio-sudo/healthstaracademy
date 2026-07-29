@@ -133,6 +133,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
         courseId,
         emails: list,
         section: addSection,
+        role: addRole,
         cohortId: enrollInCohort && cohortInfo ? cohortInfo.id : null,
         redirectTo: `${window.location.origin}/portal/teach/login`,
       },
