@@ -47,22 +47,43 @@ const officeViewer = (url: string) =>
 const googleDocsViewer = (url: string) =>
   `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`;
 
-// Smart-order: Video Conference Info first, then Module N → PowerPoint N → Module N+1 …
-const smartCompare = (a: Page, b: Page) => {
-  const score = (p: Page): [number, number, number, string] => {
-    const t = (p.title || '').trim();
-    if (/^video\s*conference/i.test(t)) return [0, 0, 0, t];
-    const m = t.match(/^(module|power\s*point|powerpoint|ppt)\s*(\d+)/i);
-    if (m) {
-      const isPpt = /^p/i.test(m[1]);
-      return [1, parseInt(m[2], 10), isPpt ? 1 : 0, t];
-    }
-    return [2, p.position ?? 9999, 0, t];
-  };
-  const sa = score(a), sb = score(b);
-  for (let i = 0; i < 3; i++) if (sa[i] !== sb[i]) return (sa[i] as number) - (sb[i] as number);
-  return (sa[3] as string).localeCompare(sb[3] as string);
+// Smart-order: Video Conference Info first, then natural numeric title sort
+// (Module 1, Module 2 … Module 10; PowerPoint 1 grouped after its Module N).
+const parseNums = (t: string): number[] => {
+  const nums: number[] = [];
+  const re = /(\d+(?:\.\d+)?)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(t)) !== null) nums.push(parseFloat(m[1]));
+  return nums;
 };
+const smartCompare = (a: Page, b: Page) => {
+  const ta = (a.title || '').trim();
+  const tb = (b.title || '').trim();
+  const va = /^video\s*conference/i.test(ta) ? 0 : 1;
+  const vb = /^video\s*conference/i.test(tb) ? 0 : 1;
+  if (va !== vb) return va - vb;
+  // Group by leading module number, then PowerPoint after Module of same N
+  const kindRank = (t: string) => {
+    if (/^power\s*point|^powerpoint|^ppt/i.test(t)) return 1;
+    if (/^module/i.test(t)) return 0;
+    return 2;
+  };
+  const na = parseNums(ta);
+  const nb = parseNums(tb);
+  const firstA = na[0] ?? Number.POSITIVE_INFINITY;
+  const firstB = nb[0] ?? Number.POSITIVE_INFINITY;
+  if (firstA !== firstB) return firstA - firstB;
+  const ka = kindRank(ta), kb = kindRank(tb);
+  if (ka !== kb) return ka - kb;
+  // Compare remaining numeric segments naturally
+  const len = Math.max(na.length, nb.length);
+  for (let i = 1; i < len; i++) {
+    const av = na[i] ?? -1, bv = nb[i] ?? -1;
+    if (av !== bv) return av - bv;
+  }
+  return ta.localeCompare(tb, undefined, { numeric: true, sensitivity: 'base' });
+};
+
 
 const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [pages,    setPages]    = useState<Page[]>([]);
@@ -112,12 +133,8 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     return () => { supabase.removeChannel(ch); };
   }, [courseId]);
 
-  const orderedPages = useMemo(() => {
-    const all = [...pages];
-    const allZero = all.every(p => !p.position);
-    if (allZero) return all.sort(smartCompare);
-    return all.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
-  }, [pages]);
+  const orderedPages = useMemo(() => [...pages].sort(smartCompare), [pages]);
+
 
   // Auto-select first page (Video Conference Info will be first after smart sort).
   useEffect(() => {
