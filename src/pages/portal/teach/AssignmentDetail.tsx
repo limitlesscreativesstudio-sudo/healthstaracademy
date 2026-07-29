@@ -94,6 +94,70 @@ const AssignmentDetail: React.FC = () => {
     })();
   }, [assignmentId, user, isStaff]);
 
+  // ── Rubric: attached rubric + criteria (+ course rubric list for instructors)
+  useEffect(() => {
+    if (!assignment) return;
+    (async () => {
+      if (isStaff) {
+        const { data: list } = await supabase
+          .from('rubrics').select('id,title').eq('course_id', assignment.course_id).order('title');
+        setCourseRubrics((list ?? []) as RubricLite[]);
+      }
+      const rid = (assignment as any).rubric_id as string | null;
+      if (!rid) { setRubric(null); setCriteria([]); setRubricScores({}); return; }
+      const [{ data: r }, { data: crits }] = await Promise.all([
+        supabase.from('rubrics').select('id,title,description').eq('id', rid).maybeSingle(),
+        supabase.from('rubric_criteria').select('id,title,description,points,position').eq('rubric_id', rid).order('position'),
+      ]);
+      setRubric((r as RubricLite) ?? null);
+      setCriteria((crits ?? []) as Criterion[]);
+
+      let q = supabase.from('rubric_scores')
+        .select('user_id,criterion_id,score,comment').eq('assignment_id', assignment.id);
+      if (!isStaff && user) q = q.eq('user_id', user.id);
+      const { data: rs } = await q;
+      const map: Record<string, Record<string, { score:number; comment:string|null }>> = {};
+      (rs ?? []).forEach((row: any) => {
+        map[row.user_id] = map[row.user_id] ?? {};
+        map[row.user_id][row.criterion_id] = { score: Number(row.score), comment: row.comment };
+      });
+      setRubricScores(map);
+    })();
+  }, [assignment, isStaff, user]);
+
+  const attachRubric = async (rid: string) => {
+    if (!assignment) return;
+    const { error } = await supabase.from('assignments')
+      .update({ rubric_id: rid || null }).eq('id', assignment.id);
+    if (error) { alert('Could not attach rubric: ' + error.message); return; }
+    setAssignment(a => a ? ({ ...a, rubric_id: rid || null } as Assignment) : a);
+  };
+
+  // Save criterion-level scores for one student, then roll up into the grade
+  const saveRubricScores = async (
+    uid: string,
+    values: Record<string, { score: number; comment: string }>,
+  ) => {
+    if (!assignment || !rubric) return 0;
+    const rows = criteria.map(c => ({
+      assignment_id: assignment.id,
+      user_id: uid,
+      criterion_id: c.id,
+      score: Number(values[c.id]?.score ?? 0),
+      comment: values[c.id]?.comment || null,
+      graded_by: user?.id ?? null,
+      graded_at: new Date().toISOString(),
+    }));
+    await supabase.from('rubric_scores').delete().eq('assignment_id', assignment.id).eq('user_id', uid);
+    const { error } = await supabase.from('rubric_scores').insert(rows);
+    if (error) { alert('Rubric save failed: ' + error.message); return 0; }
+    setRubricScores(prev => ({
+      ...prev,
+      [uid]: Object.fromEntries(rows.map(r => [r.criterion_id, { score: r.score, comment: r.comment }])),
+    }));
+    return rows.reduce((s, r) => s + Number(r.score || 0), 0);
+  };
+
   // ── Instructor: load roster + submissions + grades
   useEffect(() => {
     if (!assignmentId || !courseId || !isStaff) return;
