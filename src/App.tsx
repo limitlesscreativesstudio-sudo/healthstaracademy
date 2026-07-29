@@ -61,6 +61,7 @@ import StudentHome from "./pages/portal/teach/StudentHome";
 import AssignmentView from "./pages/portal/teach/AssignmentView";
 import AssignmentDetail from "./pages/portal/teach/AssignmentDetail";
 import QuizView from "./pages/portal/teach/QuizView";
+import PortalLayout from "./components/portal/PortalLayout";
 import Account from "./pages/portal/teach/Account";
 import CareerPortal from "./pages/portal/teach/CareerPortal";
 import RequiredWork from "./pages/portal/teach/RequiredWork";
