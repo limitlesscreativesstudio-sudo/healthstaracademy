@@ -1,0 +1,1 @@
+ALTER TABLE public.pending_enrollments ADD COLUMN IF NOT EXISTS role text NOT NULL DEFAULT 'student';
