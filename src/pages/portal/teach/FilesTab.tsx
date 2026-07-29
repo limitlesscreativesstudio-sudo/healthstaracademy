@@ -63,7 +63,9 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     ...folders.map(f => ({ id: f.id, name: f.name })),
   ], [folders, rootName]);
 
-  const selectedFolder = folderChoices.find(f => f.id === selFolder) ?? folderChoices[0];
+  // Keep the upload-destination dropdown in sync with the folder the user is viewing
+  React.useEffect(() => { setSelFolder(folder); }, [folder]);
+  const selectedFolder = folderChoices.find(f => f.id === selFolder) ?? folderChoices.find(f => f.id === folder) ?? folderChoices[0];
   const activeFolderName = folder === 'root' ? rootName : folders.find(f => f.id === folder)?.name ?? rootName;
 
   const createFolder = async () => {
