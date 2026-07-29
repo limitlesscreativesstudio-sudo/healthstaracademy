@@ -1,7 +1,7 @@
 // Single-assignment page: students submit, instructors grade.
 // Replaces the old behavior where /assignments/:id incorrectly showed the full list.
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { usePortalAuth } from '@/hooks/usePortalAuth';
 import { uploadViaXhr } from './uploadViaXhr';
@@ -41,6 +41,10 @@ const AssignmentDetail: React.FC = () => {
   const { courseId, assignmentId } = useParams<{ courseId: string; assignmentId: string }>();
   const { user, isInstructor } = usePortalAuth(true);
   const isStaff = isInstructor;
+  const location = useLocation();
+  const navigate = useNavigate();
+  const backTo = (location.state as { from?: string } | null)?.from
+    || (courseId ? `/portal/courses/${courseId}?course=${courseId}&tab=modules` : '/portal/courses');
 
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -179,7 +183,7 @@ const AssignmentDetail: React.FC = () => {
 
   return (
     <div style={{ padding: 24, maxWidth: 1000, margin: '0 auto', fontFamily: 'sans-serif', color: C.text }}>
-      <Link to={`/portal/courses/${assignment.course_id}`} style={{ color: C.primary, fontSize: 13, textDecoration: 'none' }}>← Back to course</Link>
+      <button onClick={() => navigate(backTo)} style={{ color: C.primary, fontSize: 13, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>← Back</button>
 
       <div style={{ marginTop: 12, padding: 20, background: C.white, border: `1px solid ${C.border}`, borderRadius: 8 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
