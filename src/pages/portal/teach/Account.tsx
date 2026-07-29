@@ -235,8 +235,32 @@ const ProfilePanel: React.FC = () => {
     const r = await updateProfile({ name: name.trim(), jobTitle: title.trim(), phone: phone.trim(), bio: bio.trim() });
     setLoading(false);
     setMsg(r.error ? { type:'error', text:r.error } : { type:'success', text:'Profile saved.' });
+    setSavedAt(Date.now());
+    setDirty(false);
     setTimeout(() => setMsg(null), 4000);
   };
+
+  // Autosave profile edits (debounced) once hydrated.
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [autoErr, setAutoErr] = useState<string | null>(null);
+  useEffect(() => {
+    if (!hydrated || !user?.id) return;
+    if (!name.trim()) return;
+    setDirty(true);
+    const t = setTimeout(async () => {
+      setLoading(true);
+      setAutoErr(null);
+      const r = await updateProfile({ name: name.trim(), jobTitle: title.trim(), phone: phone.trim(), bio: bio.trim() });
+      setLoading(false);
+      if (r.error) { setAutoErr('Autosave failed — will retry'); return; }
+      setDirty(false);
+      setSavedAt(Date.now());
+    }, 1200);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name, title, phone, bio, hydrated]);
+
   const changePw = async () => {
     const e: Record<string,string> = {};
     if (!curPass) e.curPass = 'Enter your current password.';
