@@ -773,9 +773,25 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     );
   }
 
+  // Direct-open via /quizzes/:quizId — skip rendering the full list so the item
+  // opens straight into its own details view (no "whole quiz page" flash).
+  if (routeQuizId) {
+    const missing = quizzes.length > 0 && !quizzes.find(q => q.id === routeQuizId);
+    if (missing) {
+      return (
+        <div style={{ padding:32, textAlign:'center', fontFamily:'sans-serif' }}>
+          <div style={{ color:C.muted, marginBottom:12 }}>This quiz couldn't be found.</div>
+          <button onClick={() => navigate(-1)} style={{ padding:'8px 16px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, cursor:'pointer', fontSize:13 }}>← Go back</button>
+        </div>
+      );
+    }
+    return <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Opening quiz…</div>;
+  }
+
   // List
   return (
     <div style={{ padding:24, fontFamily:'sans-serif' }}>
+
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text }}>Quizzes</h2>
         {canEdit && <button onClick={() => setShowCreate(v => !v)} style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, cursor:'pointer' }}>+ New Quiz</button>}
