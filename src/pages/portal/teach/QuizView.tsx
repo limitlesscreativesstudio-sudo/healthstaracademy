@@ -130,29 +130,35 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
     setSaveState('idle');
     setLastSavedAt(null);
     retryAttempt.current = 0;
+    autoSubmittedRef.current = false;
+    // Pull optional time_limit_minutes so we can enforce a countdown.
+    const { data: full } = await supabase.from('quizzes').select('time_limit_minutes').eq('id', q.id).maybeSingle();
+    setTimeLimitMin((full as any)?.time_limit_minutes ?? null);
     const local = loadLocalDraft(q.id) ?? {};
     setAnswers(local);
     answersRef.current = local;
     const qs = await loadQuestions(q.id);
     setAttemptQs(qs);
-    if (!user?.id) return;
+    if (!user?.id) { setStartedAt(new Date()); return; }
     // Resume open attempt or create a new one
     const { data: open } = await supabase.from('quiz_attempts')
-      .select('id, answers').eq('quiz_id', q.id).eq('user_id', user.id).is('submitted_at', null)
+      .select('id, answers, started_at').eq('quiz_id', q.id).eq('user_id', user.id).is('submitted_at', null)
       .order('started_at', { ascending:false }).limit(1).maybeSingle();
     if (open) {
       setAttemptId(open.id);
-      // Merge server + local, preferring the most recently edited (local) values.
+      setStartedAt(open.started_at ? new Date(open.started_at) : new Date());
       const merged = { ...(open.answers as any || {}), ...local };
       setAnswers(merged);
       answersRef.current = merged;
       writeLocalDraft(q.id, merged);
       toast.info('Resumed your in-progress attempt');
     } else {
+      const startIso = new Date().toISOString();
       const { data: made } = await supabase.from('quiz_attempts').insert({
-        quiz_id: q.id, user_id: user.id, answers: local, started_at: new Date().toISOString(),
+        quiz_id: q.id, user_id: user.id, answers: local, started_at: startIso,
       }).select('id').single();
       if (made) setAttemptId(made.id);
+      setStartedAt(new Date(startIso));
     }
   };
 
