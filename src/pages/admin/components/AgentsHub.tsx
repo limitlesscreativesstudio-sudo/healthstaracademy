@@ -31,6 +31,7 @@ type CompetitorSchool = { id: string; slug: string; name: string; is_hsa: boolea
 
 const AGENTS = [
   { id: "sentinel", name: "Sentinel", desc: "Site health & pipeline monitor", icon: Shield, fn: "agent-sentinel" },
+  { id: "security-monitor", name: "Security Monitor", desc: "Continuous RLS/access regression scanner", icon: Shield, fn: "agent-security-monitor" },
   { id: "concierge", name: "Concierge", desc: "Public site chat", icon: MessageSquare, fn: null },
   { id: "advocate", name: "Advocate", desc: "Student support", icon: Users, fn: null },
   { id: "mentor", name: "Mentor", desc: "Instructor LMS copilot", icon: GraduationCap, fn: null },
@@ -40,9 +41,11 @@ const AGENTS = [
 ];
 
 const sevColor: Record<string, string> = {
+  critical: "bg-red-200 text-red-900 border border-red-400",
   high: "bg-red-100 text-red-800",
   medium: "bg-amber-100 text-amber-800",
   low: "bg-blue-100 text-blue-800",
+
   info: "bg-slate-100 text-slate-700",
 };
 
