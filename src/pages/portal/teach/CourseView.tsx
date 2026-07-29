@@ -1,5 +1,6 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AttendanceTab     from './AttendanceTab';
 import CareerPortal      from './CareerPortal';
 import ClinicalSkillsTab from './ClinicalSkillsTab';
@@ -643,7 +644,17 @@ const CourseView: React.FC = () => {
 
   const [activeCourse, setActiveCourse] = useState<Course>(COURSES[0]);
   const [courseOptions, setCourseOptions] = useState<Course[]>([]);
-  const [activeTab, setActiveTab]       = useState('home');
+  // Sync active tab with ?tab= URL param so browser Back navigates between tabs
+  // instead of leaving the course entirely.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'home';
+  const setActiveTab = (tab: string) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (!tab || tab === 'home') next.delete('tab'); else next.set('tab', tab);
+      return next;
+    });
+  };
   const [showCourses, setShowCourses]   = useState(false);
   const [showProfile, setShowProfile]   = useState(false);
   const [showDashboard, setShowDashboard] = useState(true);
