@@ -3,7 +3,7 @@ import { useLocation, Link } from 'react-router-dom';
 
 const C = {
   primary:'#7B4DB5', accent:'#5BC8E8', white:'#FFFFFF',
-  text:'#2D1B4E', muted:'#8878A8', success:'#127A1B',
+  text:'#2D1B4E', muted:'#655480', success:'#127A1B',
 } as const;
 
 /**

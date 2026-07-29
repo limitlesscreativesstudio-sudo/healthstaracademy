@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from './AuthContext';
 import { toast } from 'sonner';
 
-const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
+const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
 const letter = (p: number) => p>=93?'A':p>=90?'A-':p>=87?'B+':p>=83?'B':p>=80?'B-':p>=77?'C+':p>=73?'C':p>=70?'C-':'F';
 const gColor = (p: number) => p>=80?C.success:p>=70?C.warn:C.error;
@@ -25,6 +25,18 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
   const [colSearch,   setColSearch]   = useState('');
   const [rejects,     setRejects]     = useState<Array<{ id: string; student: string; column: string; value: string; reason: string; at: Date }>>([]);
   const [showRejects, setShowRejects] = useState(false);
+  // ── Bulk entry + grading policies
+  const [showBulk,    setShowBulk]    = useState(false);
+  const [bulkCol,     setBulkCol]     = useState('');
+  const [bulkMode,    setBulkMode]    = useState<'ungraded'|'all'>('ungraded');
+  const [bulkVal,     setBulkVal]     = useState('0');
+  const [bulkBusy,    setBulkBusy]    = useState(false);
+  const policyKey = `hsa.gradebook.policy.${courseId ?? 'none'}`;
+  const [policy, setPolicy] = useState<{ dropLowest: number; curve: number; latePenalty: number }>(() => {
+    try { return { dropLowest: 0, curve: 0, latePenalty: 0, ...JSON.parse(localStorage.getItem(policyKey) || '{}') }; }
+    catch { return { dropLowest: 0, curve: 0, latePenalty: 0 }; }
+  });
+  useEffect(() => { try { localStorage.setItem(policyKey, JSON.stringify(policy)); } catch {} }, [policy, policyKey]);
   const natSort = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
 
@@ -141,6 +153,40 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
   };
 
 
+  // ── Bulk grade entry (assignment columns only)
+  const applyBulk = async () => {
+    const col = columns.find(c => c.id === bulkCol);
+    if (!col || !courseId) { toast.error('Pick an assignment column first'); return; }
+    if (col.kind !== 'assignment') { toast.error('Quiz scores are auto-graded and cannot be bulk-edited'); return; }
+    const score = Number(bulkVal);
+    if (!isFinite(score) || score < 0) { toast.error('Enter a valid, non-negative score'); return; }
+    if (col.points > 0 && score > col.points) { toast.error(`Score exceeds max (${col.points})`); return; }
+
+    const targets = visibleStudents.filter(s =>
+      bulkMode === 'all' ? true : (grades[s.id]?.[col.id] == null)
+    );
+    if (!targets.length) { toast.info('No students match this bulk action'); return; }
+
+    setBulkBusy(true);
+    const rowsToSave = targets.map(s => ({
+      course_id: courseId,
+      user_id: s.id,
+      assignment_id: col.id,
+      score,
+      max_score: col.points || null,
+      graded_at: new Date().toISOString(),
+    }));
+    const { error } = await supabase.from('grades').upsert(rowsToSave, { onConflict: 'assignment_id,user_id' });
+    setBulkBusy(false);
+    if (error) { toast.error('Bulk save failed: ' + error.message); return; }
+    setGrades(p => {
+      const next = { ...p };
+      targets.forEach(s => { next[s.id] = { ...(next[s.id] ?? {}), [col.id]: score }; });
+      return next;
+    });
+    toast.success(`Set ${score} for ${targets.length} student${targets.length === 1 ? '' : 's'} on ${col.name}`);
+  };
+
   const visibleCols = useMemo(() => {
     const q = colSearch.trim().toLowerCase();
     return columns
@@ -152,9 +198,33 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
     return q ? students.filter(s => s.name.toLowerCase().includes(q)) : students;
   }, [students, search]);
 
+  // Grading policy: drop N lowest-scoring columns per student, then apply a flat curve.
+  const droppedFor = (sId: string): Set<string> => {
+    const n = Math.max(0, Number(policy.dropLowest) || 0);
+    if (!n) return new Set();
+    const scored = visibleCols
+      .filter(c => (c.points || 0) > 0)
+      .map(c => ({ id: c.id, pct: ((grades[sId]?.[c.id] ?? 0) / c.points) }))
+      .sort((a, b) => a.pct - b.pct)
+      .slice(0, n);
+    return new Set(scored.map(x => x.id));
+  };
+
+  const totalPtsFor = (sId: string) => {
+    const dropped = droppedFor(sId);
+    return visibleCols.reduce((s, a) => s + (dropped.has(a.id) ? 0 : (a.points || 0)), 0);
+  };
   const totalPts = visibleCols.reduce((s, a) => s + (a.points || 0), 0);
-  const studentTotal = (sId: string) =>
-    visibleCols.reduce((s, a) => s + (grades[sId]?.[a.id] ?? 0), 0);
+  const studentTotal = (sId: string) => {
+    const dropped = droppedFor(sId);
+    return visibleCols.reduce((s, a) => s + (dropped.has(a.id) ? 0 : (grades[sId]?.[a.id] ?? 0)), 0);
+  };
+  const studentPct = (sId: string) => {
+    const denom = totalPtsFor(sId);
+    const base = denom > 0 ? (studentTotal(sId) / denom) * 100 : 0;
+    return Math.max(0, Math.min(100, Math.round(base + (Number(policy.curve) || 0))));
+  };
+
 
   const exportCsv = () => {
     const header = [
@@ -164,7 +234,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
     ];
     const rows = visibleStudents.map(s => {
       const tot = studentTotal(s.id);
-      const pct = totalPts > 0 ? Math.round((tot / totalPts) * 100) : 0;
+      const pct = studentPct(s.id);
       return [
         s.name,
         ...visibleCols.map(c => {
@@ -205,16 +275,24 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, gap:12, flexWrap:'wrap' }}>
         <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Gradebook</h2>
         <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search students…"
+          <label htmlFor="gb-student-search" className="sr-only">Search students</label>
+          <input id="gb-student-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search students…"
             style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, fontFamily:'sans-serif', minWidth:160 }} />
-          <input value={colSearch} onChange={e => setColSearch(e.target.value)} placeholder="Search assignments…"
+          <label htmlFor="gb-col-search" className="sr-only">Search assignments</label>
+          <input id="gb-col-search" value={colSearch} onChange={e => setColSearch(e.target.value)} placeholder="Search assignments…"
             style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, fontFamily:'sans-serif', minWidth:180 }} />
           {(['all','assignment','quiz'] as const).map(f => (
-            <button key={f} onClick={() => setFilter(f)}
+            <button key={f} onClick={() => setFilter(f)} aria-pressed={filter===f}
               style={{ padding:'6px 12px', border:`1px solid ${C.border}`, borderRadius:5, background:filter===f?C.primary:C.white, color:filter===f?'white':C.text, fontSize:12, cursor:'pointer', textTransform:'capitalize', fontFamily:'sans-serif' }}>
               {f === 'all' ? 'All' : f === 'assignment' ? 'Assignments' : 'Quizzes'}
             </button>
           ))}
+          {canEdit && (
+            <button onClick={() => setShowBulk(v => !v)} aria-expanded={showBulk}
+              style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:showBulk?C.primary:C.white, color:showBulk?'white':C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
+              ⚡ Bulk entry &amp; policies
+            </button>
+          )}
           <button onClick={exportCsv} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>📤 Export CSV</button>
           <button onClick={() => setShowRejects(v => !v)} style={{ padding:'7px 14px', border:`1px solid ${rejects.length?C.error:C.border}`, borderRadius:5, background:rejects.length?'#FDECEA':C.white, color:rejects.length?C.error:C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
             ⚠️ Rejected edits{rejects.length ? ` (${rejects.length})` : ''}
@@ -222,6 +300,67 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
           <button onClick={load} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>🔄 Refresh</button>
         </div>
       </div>
+
+      {canEdit && showBulk && (
+        <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:14, marginBottom:14, fontFamily:'sans-serif' }}>
+          <strong style={{ fontSize:13, color:C.text }}>Bulk grade entry</strong>
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap', alignItems:'flex-end', marginTop:10 }}>
+            <div>
+              <label htmlFor="bulk-col" style={{ display:'block', fontSize:11, color:C.muted, marginBottom:3 }}>Assignment</label>
+              <select id="bulk-col" value={bulkCol} onChange={e => setBulkCol(e.target.value)}
+                style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, minWidth:220 }}>
+                <option value="">Select an assignment…</option>
+                {columns.filter(c => c.kind === 'assignment').map(c => (
+                  <option key={c.id} value={c.id}>{c.name} (/{c.points})</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="bulk-mode" style={{ display:'block', fontSize:11, color:C.muted, marginBottom:3 }}>Apply to</label>
+              <select id="bulk-mode" value={bulkMode} onChange={e => setBulkMode(e.target.value as any)}
+                style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13 }}>
+                <option value="ungraded">Ungraded students only</option>
+                <option value="all">All visible students (overwrite)</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="bulk-val" style={{ display:'block', fontSize:11, color:C.muted, marginBottom:3 }}>Score</label>
+              <input id="bulk-val" value={bulkVal} onChange={e => setBulkVal(e.target.value)} inputMode="decimal"
+                style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, width:80 }} />
+            </div>
+            <button onClick={applyBulk} disabled={bulkBusy}
+              style={{ padding:'8px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, cursor: bulkBusy ? 'wait' : 'pointer' }}>
+              {bulkBusy ? 'Applying…' : 'Apply'}
+            </button>
+          </div>
+
+          <hr style={{ border:0, borderTop:`1px dashed ${C.border}`, margin:'14px 0' }} />
+
+          <strong style={{ fontSize:13, color:C.text }}>Grading policies</strong>
+          <div style={{ display:'flex', gap:16, flexWrap:'wrap', alignItems:'flex-end', marginTop:10 }}>
+            <div>
+              <label htmlFor="pol-drop" style={{ display:'block', fontSize:11, color:C.muted, marginBottom:3 }}>Drop lowest scores</label>
+              <input id="pol-drop" type="number" min={0} max={10} value={policy.dropLowest}
+                onChange={e => setPolicy(p => ({ ...p, dropLowest: Math.max(0, Number(e.target.value) || 0) }))}
+                style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, width:80 }} />
+            </div>
+            <div>
+              <label htmlFor="pol-curve" style={{ display:'block', fontSize:11, color:C.muted, marginBottom:3 }}>Curve (+ percentage points)</label>
+              <input id="pol-curve" type="number" min={0} max={25} value={policy.curve}
+                onChange={e => setPolicy(p => ({ ...p, curve: Math.max(0, Number(e.target.value) || 0) }))}
+                style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, width:80 }} />
+            </div>
+            <button onClick={() => setPolicy({ dropLowest: 0, curve: 0, latePenalty: 0 })}
+              style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer' }}>
+              Reset policies
+            </button>
+          </div>
+          <p style={{ fontSize:11, color:C.muted, marginTop:8, marginBottom:0 }}>
+            Policies affect displayed totals, letter grades and CSV exports for this course. Raw per-item scores in the database are never changed.
+          </p>
+        </div>
+      )}
+
 
       {showRejects && (
         <div style={{ background:C.white, border:`1px solid ${C.error}55`, borderRadius:6, padding:14, marginBottom:14 }}>
@@ -289,7 +428,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
             <tbody>
               {visibleStudents.map((s, si) => {
                 const tot = studentTotal(s.id);
-                const pct = totalPts > 0 ? Math.round((tot / totalPts) * 100) : 0;
+                const pct = studentPct(s.id);
                 const bg = si % 2 === 0 ? C.white : '#FDFCFF';
                 return (
                   <tr key={s.id} style={{ background: bg }}>

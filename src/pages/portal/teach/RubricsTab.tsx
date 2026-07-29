@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase, useAuth } from './AuthContext';
 import { toast } from 'sonner';
 
-const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', error:'#C0392B', success:'#127A1B' } as const;
+const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', error:'#C0392B', success:'#127A1B' } as const;
 
 interface Rubric  { id:string; title:string; description:string|null; created_at:string; criteria_count?:number; total_points?:number; }
 interface Crit    { id?:string; rubric_id?:string; position:number; title:string; description:string; points:number; }

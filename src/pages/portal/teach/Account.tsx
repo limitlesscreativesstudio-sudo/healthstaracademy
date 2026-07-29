@@ -8,7 +8,7 @@ import SaveStatus from '@/components/portal/SaveStatus';
 
 const C = {
   primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF',
-  border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8',
+  border:'#D4C8E8', text:'#2D1B4E', muted:'#655480',
   error:'#C0392B', success:'#127A1B', warn:'#B27300',
   headerBar:'#EDE8F7',
 } as const;

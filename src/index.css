@@ -14,14 +14,16 @@
     --purple-dark: 270 55% 45%;
     --cyan: 195 85% 55%;
     --cyan-dark: 195 80% 45%;
+    --cyan-deep: 195 85% 27%;
     --magenta: 290 60% 55%;
     --magenta-dark: 290 55% 45%;
     
     /* Neutrals */
     --neutral-light: 240 20% 98%;
     --white: 0 0% 100%;
-    --gray-medium: 240 10% 65%;
-    --gray-dark: 240 10% 40%;
+    --gray-medium: 240 12% 74%;
+    --gray-dark: 240 10% 36%;
+
     
     /* Semantic Colors */
     --background: 0 0% 100%;
@@ -42,7 +44,7 @@
     --secondary-hover: 195 80% 45%;
     
     --muted: 240 20% 98%;
-    --muted-foreground: 240 10% 65%;
+    --muted-foreground: 240 12% 42%;
     
     --accent: 290 60% 55%;
     --accent-foreground: 0 0% 100%;

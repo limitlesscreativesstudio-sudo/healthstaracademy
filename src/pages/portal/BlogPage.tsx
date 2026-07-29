@@ -257,7 +257,7 @@ const BlogPage = () => {
                 </div>
                 <div className="p-6">
                   <div className="flex items-center gap-4 mb-4">
-                    <span className="bg-purple/10 text-purple px-3 py-1 rounded-full text-xs font-semibold">
+                    <span className="bg-purple/10 text-purple-dark px-3 py-1 rounded-full text-xs font-semibold">
                       {article.category}
                     </span>
                   </div>
@@ -267,7 +267,7 @@ const BlogPage = () => {
                   <p className="text-gray-dark text-sm mb-4 line-clamp-3">
                     {article.excerpt}
                   </p>
-                  <div className="flex items-center gap-4 text-xs text-gray-medium mb-4">
+                  <div className="flex items-center gap-4 text-xs text-gray-dark mb-4">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       {article.date}

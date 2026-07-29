@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from './AuthContext';
 import { toast } from 'sonner';
 
-const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', warn:'#E67E22', success:'#127A1B' } as const;
+const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', warn:'#E67E22', success:'#127A1B' } as const;
 
 interface Ev { id:string; refId:string; title:string; date:Date; type:'assignment'|'quiz'|'attendance'; color:string; }
 
@@ -161,7 +161,7 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
             </button>
           ))}
           {sectionOptions.length > 0 && (
-            <select value={sectionFilter} onChange={e => setSectionFilter(e.target.value)}
+            <select aria-label="Filter by section" value={sectionFilter} onChange={e => setSectionFilter(e.target.value)}
               style={{ padding:'6px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:12, fontFamily:'sans-serif' }}>
               <option value="all">All sections</option>
               {sectionOptions.map(s => <option key={s} value={s}>{s}</option>)}

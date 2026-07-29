@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', error:'#C0392B', success:'#127A1B', warn:'#E67E22' } as const;
+const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', error:'#C0392B', success:'#127A1B', warn:'#E67E22' } as const;
 
 type InviteStatus = 'checking' | 'valid' | 'invalid' | 'expired' | 'already_used';
 type Step = 'verify' | 'setup' | 'done';

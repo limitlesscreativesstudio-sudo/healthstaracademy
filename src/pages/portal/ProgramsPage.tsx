@@ -272,7 +272,7 @@ const ProgramsPage = () => {
                 <Stethoscope className="h-7 w-7 text-cyan" />
               </div>
               <h3 className="font-heading font-semibold text-lg text-charcoal mb-1">Clinical Training</h3>
-              <p className="text-2xl font-bold text-cyan mb-1">100 Hours</p>
+              <p className="text-2xl font-bold text-cyan-deep mb-1">100 Hours</p>
               <p className="text-gray-dark text-sm">Hands-on training at approved skilled nursing facilities</p>
             </div>
           </div>
@@ -600,7 +600,7 @@ const ProgramsPage = () => {
       <section className="py-12 bg-background">
         <div className="container-custom">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-purple/10 text-purple px-4 py-2 rounded-full font-semibold text-sm mb-3">
+            <div className="inline-flex items-center gap-2 bg-purple/10 text-purple-dark px-4 py-2 rounded-full font-semibold text-sm mb-3">
               <ClipboardCheck className="h-4 w-4" />
               CDPH REQUIRED COURSEWORK
             </div>
@@ -617,7 +617,7 @@ const ProgramsPage = () => {
               <div className="bg-purple text-primary-foreground px-6 py-4 rounded-t-xl flex justify-between items-center cursor-pointer hover:bg-purple/90 transition-colors">
                 <div className="flex items-center gap-3">
                   <span className="font-semibold">View All Course Requirements</span>
-                  <span className="bg-primary-foreground/20 px-2 py-0.5 rounded text-xs">16 courses • 60 hours</span>
+                  <span className="bg-purple-dark px-2 py-0.5 rounded text-xs">16 courses • 60 hours</span>
                 </div>
                 <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${isCourseworkOpen ? 'rotate-180' : ''}`} />
               </div>
@@ -686,7 +686,7 @@ const ProgramsPage = () => {
       <section className="py-12 bg-neutral-light">
         <div className="container-custom">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-cyan/10 text-cyan px-4 py-2 rounded-full font-semibold text-sm mb-3">
+            <div className="inline-flex items-center gap-2 bg-cyan/10 text-cyan-deep-deep px-4 py-2 rounded-full font-semibold text-sm mb-3">
               <GraduationCap className="h-4 w-4" />
               GRADUATION REQUIREMENTS
             </div>

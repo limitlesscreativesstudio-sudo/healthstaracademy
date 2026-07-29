@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { supabase, useAuth } from './AuthContext';
 import { toast } from 'sonner';
 
-const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8', error:'#C0392B', success:'#127A1B' } as const;
+const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', error:'#C0392B', success:'#127A1B' } as const;
 
 interface Discussion { id:string; title:string; body:string|null; author_id:string; created_at:string; pinned?:boolean; locked?:boolean; author_name?:string; reply_count?:number; last_activity?:string; }
 interface Reply { id:string; body:string; author_id:string; created_at:string; parent_reply_id?:string|null; author_name?:string; }

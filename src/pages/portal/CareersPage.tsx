@@ -84,7 +84,7 @@ const CareersPage = () => {
         <section className="py-12 bg-background">
           <div className="container-custom">
             <div className="text-center mb-10">
-              <div className="inline-flex items-center gap-2 bg-cyan/10 text-cyan px-4 py-2 rounded-full text-sm font-semibold mb-4">
+              <div className="inline-flex items-center gap-2 bg-cyan/10 text-cyan-deep-deep px-4 py-2 rounded-full text-sm font-semibold mb-4">
                 <Briefcase className="h-4 w-4" />
                 Now Hiring
               </div>
@@ -158,7 +158,7 @@ const CareersPage = () => {
                       </div>
                     ))}
                   </div>
-                  <p className="text-sm text-gray-medium mt-4 italic">
+                  <p className="text-sm text-gray-dark mt-4 italic">
                     * All instructors must be approved by CDPH via the Instructor Application (CDPH 279)
                   </p>
                 </div>

@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from './AuthContext';
 import PortalLayout from '@/components/portal/PortalLayout';
 
-const C = { primary:'#7B4DB5', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#8878A8' } as const;
+const C = { primary:'#7B4DB5', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480' } as const;
 
 interface Notif { id:string; kind:string; title:string; body:string|null; link:string|null; read_at:string|null; created_at:string; }
 interface RecentItem { path:string; label:string; visited_at:string; }

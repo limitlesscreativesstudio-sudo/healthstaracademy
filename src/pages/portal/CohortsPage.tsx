@@ -145,7 +145,7 @@ const CohortsPage = () => {
               "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
               isClosed ? "bg-gray-200" : isWeekend ? "bg-cyan/10" : "bg-purple/10"
             )}>
-              <Calendar className={cn("h-5 w-5", isClosed ? "text-gray-400" : isWeekend ? "text-cyan" : "text-purple")} />
+              <Calendar className={cn("h-5 w-5", isClosed ? "text-gray-400" : isWeekend ? "text-cyan-deep" : "text-purple")} />
             </div>
             <h3 className="font-heading font-bold text-lg text-charcoal">{cohort.name}</h3>
           </div>
@@ -154,9 +154,9 @@ const CohortsPage = () => {
             <p className="text-gray-dark font-medium">
               {startDateFormatted} – {endDateFormatted}
             </p>
-            <p className="text-sm text-gray-medium">{isWeekend ? "8 weekends (16 class days)" : "6 weeks"}</p>
+            <p className="text-sm text-gray-dark">{isWeekend ? "8 weekends (16 class days)" : "6 weeks"}</p>
             {!isClosed && (
-              <p className={cn("text-sm font-semibold mt-1", isWeekend ? "text-cyan" : "text-purple")}>
+              <p className={cn("text-sm font-semibold mt-1", isWeekend ? "text-cyan-deep" : "text-purple")}>
                 ⏰ Apply by: {deadline}
               </p>
             )}
@@ -230,7 +230,7 @@ const CohortsPage = () => {
         <HeroBanner
           imageSrc={cnaStudentsGroup}
           imageAlt="Health Star Academy CNA students ready for their healthcare career"
-          title={<>Cohorts &<br /><span className="text-cyan">Tuition</span></>}
+          title={<>Cohorts &<br /><span className="text-cyan-deep">Tuition</span></>}
           subtitle="Select your start date and payment option below"
         />
 
@@ -274,12 +274,12 @@ const CohortsPage = () => {
                   </div>
                 </div>
                 <div className="bg-cyan/10 rounded-lg p-4 mb-4">
-                  <p className="text-4xl font-bold text-cyan">$499.80</p>
+                  <p className="text-4xl font-bold text-cyan-deep">$499.80</p>
                   <p className="text-sm text-gray-dark">Per Week × 5 Payments</p>
                 </div>
                 <ul className="space-y-2 text-sm text-gray-dark">
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-cyan" />First payment initiates enrollment</li>
-                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-cyan" />Spread the cost over 5 weeks</li>
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-cyan-deep" />First payment initiates enrollment</li>
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-cyan-deep" />Spread the cost over 5 weeks</li>
                 </ul>
               </div>
             </div>
@@ -303,7 +303,7 @@ const CohortsPage = () => {
           <section className="py-16 bg-neutral-light">
             <div className="container-custom max-w-3xl">
               <div className="bg-background rounded-2xl shadow-medium border-2 border-purple/20 p-8 md:p-12 text-center">
-                <div className="inline-flex items-center gap-2 bg-purple/10 text-purple font-semibold text-xs uppercase tracking-wider px-3 py-1.5 rounded-full mb-4">
+                <div className="inline-flex items-center gap-2 bg-purple/10 text-purple-dark font-semibold text-xs uppercase tracking-wider px-3 py-1.5 rounded-full mb-4">
                   <Clock className="h-3.5 w-3.5" /> Enrollment temporarily paused
                 </div>
                 <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-4">
@@ -322,7 +322,7 @@ const CohortsPage = () => {
                     <a href="tel:2093234169">Call (209) 323-4169</a>
                   </Button>
                 </div>
-                <p className="text-xs text-gray-medium mt-6">
+                <p className="text-xs text-gray-dark mt-6">
                   Tuition, curriculum, and program length will remain the same when new dates open.
                 </p>
               </div>
@@ -362,7 +362,7 @@ const CohortsPage = () => {
                   <div className="text-center mb-10">
                     <h2 className="font-heading text-3xl md:text-4xl font-bold text-charcoal mb-3">
                       Weekend Cohorts
-                      <span className="ml-3 inline-block bg-cyan/20 text-cyan text-sm font-bold px-3 py-1 rounded-full align-middle">NEW</span>
+                      <span className="ml-3 inline-block bg-cyan/20 text-cyan-deep text-sm font-bold px-3 py-1 rounded-full align-middle">NEW</span>
                     </h2>
                     <p className="text-gray-dark max-w-2xl mx-auto">Saturday & Sunday, 6:00 AM – 6:00 PM · 8 weekends (16 class days)</p>
                   </div>
@@ -411,7 +411,7 @@ const CohortsPage = () => {
                       </>
                     );
                   })()}
-                  <p className="text-gray-medium text-xs">
+                  <p className="text-gray-dark text-xs">
                     Have questions? Call <a href="tel:2093234169" className="text-purple hover:underline">(209) 323-4169</a> or email <a href="mailto:info@healthstaracademy.org" className="text-purple hover:underline">info@healthstaracademy.org</a>
                   </p>
                 </div>

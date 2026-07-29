@@ -19,6 +19,7 @@ import SettingsTab       from './SettingsTab';
 import CalendarTab       from './CalendarTab';
 import RubricsTab        from './RubricsTab';
 import StudentProgress   from './StudentProgress';
+import AnalyticsTab      from './AnalyticsTab';
 import Account           from './Account';
 import { useAuth, supabase } from './AuthContext';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
@@ -40,7 +41,7 @@ const useIsMobile = () => {
 const C = {
   nav:'#3D1B6E', primary:'#7B4DB5', accent:'#5BC8E8',
   bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8',
-  text:'#2D1B4E', muted:'#8878A8', success:'#127A1B',
+  text:'#2D1B4E', muted:'#655480', success:'#127A1B',
   error:'#C0392B', warn:'#E67E22',
 } as const;
 
@@ -857,7 +858,7 @@ const CourseView: React.FC = () => {
     discussions:   <DiscussionsTab courseId={cid} canEdit={canEdit} />,
     outcomes:      <Placeholder title="Outcomes" />,
     rubrics:       <RubricsTab courseId={cid} canEdit={canEdit} />,
-    analytics:     <Placeholder title="New Analytics" />,
+    analytics:     <AnalyticsTab courseId={cid} canEdit={canEdit} />,
     lucid:         <Placeholder title="Lucid (Whiteboard)" />,
     settings:      <SettingsTab courseId={cid} />,
     account:       <Account onBackToDashboard={() => { setActiveTab('home'); setShowDashboard(true); }} isAdmin={authUser?.role === 'admin'} />,
@@ -901,12 +902,12 @@ const CourseView: React.FC = () => {
                 </div>
                 <div>
                   <div style={{ fontSize:13, fontWeight:700, color:'#2D1B4E', fontFamily:'sans-serif' }}>{authUser?.name}</div>
-                  <div style={{ fontSize:11, color:'#8878A8', fontFamily:'sans-serif', textTransform:'capitalize' }}>{authUser?.role}</div>
+                  <div style={{ fontSize:11, color:'#655480', fontFamily:'sans-serif', textTransform:'capitalize' }}>{authUser?.role}</div>
                 </div>
               </div>
               {/* Accessibility */}
               <div style={{ padding:'10px 16px', borderBottom:'1px solid #D4C8E8' }}>
-                <div style={{ fontSize:11, fontWeight:700, color:'#8878A8', textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', marginBottom:8 }}>Accessibility</div>
+                <div style={{ fontSize:11, fontWeight:700, color:'#655480', textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', marginBottom:8 }}>Accessibility</div>
                 {[['Use High Contrast UI'],['Use a Dyslexia Friendly Font']].map(([label]) => (
                   <label key={label} style={{ display:'flex', alignItems:'center', gap:8, fontSize:12, fontFamily:'sans-serif', color:'#2D1B4E', marginBottom:6, cursor:'pointer' }}>
                     <input type="checkbox" style={{ accentColor:'#7B4DB5' }}/>{label}
