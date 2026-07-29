@@ -228,12 +228,13 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
     if (!createForm.title.trim() || !courseId) return;
     const { data, error } = await supabase.from('quizzes').insert({
       course_id: courseId, title: createForm.title.trim(),
+      instructions: createForm.instructions.trim() || null,
       due_at: createForm.due_at || null, total_points: createForm.total_points,
       published: false,
     }).select().single();
     if (error) return toast.error('Could not create quiz');
     setQuizzes(p => [...p, data]);
-    setCreateForm({ title:'', due_at:'', total_points:10 });
+    setCreateForm({ title:'', instructions:'', due_at:'', total_points:10 });
     setShowCreate(false);
     toast.success('Quiz created');
     startEdit(data);
