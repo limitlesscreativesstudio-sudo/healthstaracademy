@@ -40,6 +40,11 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
   const [stats, setStats] = useState<Record<string, Stats>>({});
   const [viewing, setViewing] = useState<Quiz & { attempts_allowed?: number; time_limit_minutes?: number | null } | null>(null);
   const [viewQCount, setViewQCount] = useState(0);
+  const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [nowTick, setNowTick] = useState<number>(Date.now());
+  const [hideTime, setHideTime] = useState(false);
+  const [timeLimitMin, setTimeLimitMin] = useState<number | null>(null);
+  const autoSubmittedRef = useRef(false);
   const saveTimer = useRef<any>(null);
   const retryTimer = useRef<any>(null);
   const retryAttempt = useRef<number>(0);
@@ -125,29 +130,35 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
     setSaveState('idle');
     setLastSavedAt(null);
     retryAttempt.current = 0;
+    autoSubmittedRef.current = false;
+    // Pull optional time_limit_minutes so we can enforce a countdown.
+    const { data: full } = await supabase.from('quizzes').select('time_limit_minutes').eq('id', q.id).maybeSingle();
+    setTimeLimitMin((full as any)?.time_limit_minutes ?? null);
     const local = loadLocalDraft(q.id) ?? {};
     setAnswers(local);
     answersRef.current = local;
     const qs = await loadQuestions(q.id);
     setAttemptQs(qs);
-    if (!user?.id) return;
+    if (!user?.id) { setStartedAt(new Date()); return; }
     // Resume open attempt or create a new one
     const { data: open } = await supabase.from('quiz_attempts')
-      .select('id, answers').eq('quiz_id', q.id).eq('user_id', user.id).is('submitted_at', null)
+      .select('id, answers, started_at').eq('quiz_id', q.id).eq('user_id', user.id).is('submitted_at', null)
       .order('started_at', { ascending:false }).limit(1).maybeSingle();
     if (open) {
       setAttemptId(open.id);
-      // Merge server + local, preferring the most recently edited (local) values.
+      setStartedAt(open.started_at ? new Date(open.started_at) : new Date());
       const merged = { ...(open.answers as any || {}), ...local };
       setAnswers(merged);
       answersRef.current = merged;
       writeLocalDraft(q.id, merged);
       toast.info('Resumed your in-progress attempt');
     } else {
+      const startIso = new Date().toISOString();
       const { data: made } = await supabase.from('quiz_attempts').insert({
-        quiz_id: q.id, user_id: user.id, answers: local, started_at: new Date().toISOString(),
+        quiz_id: q.id, user_id: user.id, answers: local, started_at: startIso,
       }).select('id').single();
       if (made) setAttemptId(made.id);
+      setStartedAt(new Date(startIso));
     }
   };
 
@@ -192,6 +203,26 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
     return () => window.removeEventListener('online', onOnline);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taking, results, saveState, attemptId]);
+
+  // Live timer tick — updates every second while a quiz is in progress.
+  useEffect(() => {
+    if (!taking || results) return;
+    const iv = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(iv);
+  }, [taking, results]);
+
+  // Auto-submit when the time limit expires.
+  useEffect(() => {
+    if (!taking || results || !startedAt || !timeLimitMin || autoSubmittedRef.current) return;
+    const remainingMs = startedAt.getTime() + timeLimitMin * 60_000 - nowTick;
+    if (remainingMs <= 0) {
+      autoSubmittedRef.current = true;
+      toast.warning('Time is up — submitting your quiz.');
+      submitAttempt();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nowTick, taking, results, startedAt, timeLimitMin]);
+
 
   const createQuiz = async () => {
     if (!createForm.title.trim() || !courseId) return;
@@ -322,6 +353,7 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
               </button>
               <button onClick={() => { const cur = q; setViewing(null); startTake(cur as any); }} style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer' }}>Preview</button>
               <button onClick={() => { const cur = q; setViewing(null); startEdit(cur as any); }} style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer' }}>✎ Edit</button>
+              <button onClick={() => { const cur = q; setViewing(null); startEdit(cur as any); }} style={{ padding:'6px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer', color:C.primary, fontWeight:600 }}>✎ Keep Editing This Quiz</button>
             </div>
           )}
         </div>
@@ -403,6 +435,18 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
               ⓘ Preview mode — attempts are still recorded.
             </div>
           )}
+          {!results && startedAt && (
+            <div style={{ fontSize:12, color:C.muted, marginBottom:8 }}>
+              Started: {startedAt.toLocaleString([], { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' })}
+            </div>
+          )}
+          {!results && (taking as any).instructions && (
+            <div style={{ marginBottom:14 }}>
+              <h3 style={{ fontSize:16, fontWeight:700, color:C.text, margin:'6px 0 8px' }}>Quiz Instructions</h3>
+              <div style={{ fontSize:13, color:C.text, whiteSpace:'pre-wrap' }}>{(taking as any).instructions}</div>
+              <hr style={{ border:0, borderTop:`1px solid ${C.border}`, marginTop:12 }} />
+            </div>
+          )}
           {results ? (
             <div>
               <div style={{ background:C.white, border:`2px solid ${C.success}`, borderRadius:8, padding:24, textAlign:'center', marginBottom:20 }}>
@@ -481,24 +525,59 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
           )}
         </div>
 
-        {!results && attemptQs.length > 0 && (
-          <aside style={{ position:'sticky', top:16, alignSelf:'start', background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:14, fontSize:13 }}>
-            <div style={{ fontWeight:700, color:C.text, marginBottom:8 }}>Questions</div>
-            <div style={{ display:'flex', flexDirection:'column', gap:4, maxHeight:'50vh', overflowY:'auto' }}>
-              {attemptQs.map((q, qi) => {
-                const answered = answers[q.id!] !== undefined && answers[q.id!] !== '';
-                return (
-                  <a key={q.id} href={`#q-${qi+1}`} style={{ color: answered ? C.success : C.primary, textDecoration:'none', padding:'3px 4px', borderRadius:3 }}>
-                    {answered ? '● ' : '○ '}Question {qi+1}
-                  </a>
-                );
-              })}
-            </div>
-            <div style={{ marginTop:12, paddingTop:10, borderTop:`1px solid ${C.border}`, fontSize:12, color:C.muted }}>
-              Answered: <strong style={{ color:C.text }}>{answeredCount} / {attemptQs.length}</strong>
-            </div>
-          </aside>
-        )}
+        {!results && attemptQs.length > 0 && (() => {
+          // Format time elapsed / remaining.
+          const elapsedSec = startedAt ? Math.max(0, Math.floor((nowTick - startedAt.getTime())/1000)) : 0;
+          const remainingSec = startedAt && timeLimitMin ? Math.max(0, timeLimitMin*60 - elapsedSec) : null;
+          const fmt = (s:number) => {
+            const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+            const parts:string[] = [];
+            if (h) parts.push(`${h} Hour${h===1?'':'s'}`);
+            parts.push(`${m} Minute${m===1?'':'s'}`);
+            parts.push(`${sec} Second${sec===1?'':'s'}`);
+            return parts.join(', ');
+          };
+          const lowTime = remainingSec !== null && remainingSec <= 60;
+          return (
+            <aside style={{ position:'sticky', top:16, alignSelf:'start', background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:14, fontSize:13 }}>
+              <div style={{ fontWeight:700, color:C.text, marginBottom:8 }}>Questions</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:4, maxHeight:'40vh', overflowY:'auto' }}>
+                {attemptQs.map((q, qi) => {
+                  const answered = answers[q.id!] !== undefined && answers[q.id!] !== '';
+                  return (
+                    <a key={q.id} href={`#q-${qi+1}`} style={{ color: answered ? C.success : C.primary, textDecoration:'none', padding:'3px 4px', borderRadius:3, display:'flex', alignItems:'center', gap:6 }}>
+                      <span style={{ display:'inline-block', width:14, textAlign:'center', fontWeight:700 }}>{answered ? '✓' : ''}</span>
+                      Question {qi+1}
+                    </a>
+                  );
+                })}
+              </div>
+              <div style={{ marginTop:12, paddingTop:10, borderTop:`1px solid ${C.border}`, fontSize:12, color:C.muted }}>
+                Answered: <strong style={{ color:C.text }}>{answeredCount} / {attemptQs.length}</strong>
+              </div>
+              <div style={{ marginTop:12, paddingTop:10, borderTop:`1px solid ${C.border}` }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:12, fontWeight:700, color:C.text }}>
+                    {remainingSec !== null ? 'Time Remaining:' : 'Time Elapsed:'}
+                  </span>
+                  <button onClick={() => setHideTime(v => !v)}
+                    style={{ padding:'2px 8px', border:`1px solid ${C.border}`, borderRadius:3, background:C.white, fontSize:11, cursor:'pointer', color:C.text }}>
+                    {hideTime ? 'Show Time' : 'Hide Time'}
+                  </button>
+                </div>
+                {!hideTime && (
+                  <div style={{ fontSize:13, fontWeight:600, color: lowTime ? C.error : C.text }}>
+                    {remainingSec !== null ? fmt(remainingSec) : fmt(elapsedSec)}
+                  </div>
+                )}
+                {timeLimitMin && !hideTime && (
+                  <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>Limit: {timeLimitMin} min</div>
+                )}
+              </div>
+            </aside>
+          );
+        })()}
+
 
         {!results && attemptQs.length > 0 && (() => {
           const pill = saveState === 'saving'
