@@ -116,6 +116,13 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
   useEffect(() => { load(); }, [courseId, user?.id]);
 
+  useEffect(() => {
+    if (autoOpened || !routeQuizId || !quizzes.length) return;
+    const q = quizzes.find(x => x.id === routeQuizId);
+    if (q) { openDetails(q); setAutoOpened(true); }
+  }, [routeQuizId, quizzes, autoOpened]);
+
+
   const loadQuestions = async (quizId: string): Promise<Question[]> => {
     const { data } = await supabase.from('quiz_questions')
       .select('*').eq('quiz_id', quizId).order('position');
