@@ -397,39 +397,224 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
     await supabase.from('courses').delete().eq('id', id);
   };
 
-  // ── Duplicate course (clones modules + module_items) ───────────────────────
+  // ── Duplicate course (deep-clones course content + module links) ───────────
   const handleDuplicate = async (src: DBCourse) => {
     const newName = prompt(`Duplicate "${src.name}" as a new cohort. New course name:`, src.name + ' (Copy)');
     if (!newName) return;
     const newCode = prompt('New course code (must be unique):', src.code + '-COPY');
     if (!newCode) return;
 
-    const { data: newCourse, error: cErr } = await supabase.from('courses').insert({
-      title: newName.trim(), code: newCode.trim(), description: (src as any).description ?? '',
-      term: src.term, color: src.color, instructor_id: user?.id, status: 'draft',
-    }).select('id,title,code,color,image_url,status,term,description,created_at').single();
-    if (cErr || !newCourse) { alert('Failed to create course: ' + (cErr?.message ?? 'unknown')); return; }
+    try {
+      const { data: newCourse, error: cErr } = await supabase.from('courses').insert({
+        title: newName.trim(), code: newCode.trim(), description: (src as any).description ?? '',
+        term: src.term, color: src.color, image_url: src.image_url ?? null, instructor_id: user?.id, status: 'draft',
+      }).select('id,title,code,color,image_url,status,term,description,created_at').single();
+      if (cErr || !newCourse) throw new Error(cErr?.message ?? 'Failed to create course.');
 
-    const { data: srcMods } = await supabase.from('modules')
-      .select('id,title,published,position').eq('course_id', src.id).order('position');
+      const rubricMap = new Map<string, string>();
+      const pageMap = new Map<string, string>();
+      const quizMap = new Map<string, string>();
+      const assignmentMap = new Map<string, string>();
+      const discussionMap = new Map<string, string>();
+      const folderMap = new Map<string, string>();
+      const fileMap = new Map<string, string>();
 
-    for (const m of (srcMods ?? [])) {
-      const { data: nm } = await supabase.from('modules').insert({
-        course_id: newCourse.id, title: m.title, published: false, position: m.position,
-      }).select('id').single();
-      if (!nm) continue;
-      const { data: srcItems } = await supabase.from('module_items')
-        .select('item_type,title,points,published,position,file_url,file_name,file_type')
-        .eq('module_id', m.id).order('position');
-      if (srcItems && srcItems.length) {
-        await supabase.from('module_items').insert(
-          srcItems.map((it: any) => ({ ...it, module_id: nm.id, course_id: newCourse.id, published: false }))
-        );
+      const [rubricsRes, pagesRes, quizzesRes, assignmentsRes, discussionsRes, foldersRes, filesRes, modsRes] = await Promise.all([
+        supabase.from('rubrics').select('id,title,description,created_by').eq('course_id', src.id).order('created_at'),
+        supabase.from('lms_pages').select('id,title,body_html,front_page,published,position').eq('course_id', src.id).order('position'),
+        supabase.from('quizzes').select('id,title,instructions,due_at,total_points,published,attempts_allowed,time_limit_minutes').eq('course_id', src.id).order('created_at'),
+        supabase.from('assignments').select('id,title,instructions,due_at,points,published,submission_type,group_name,rubric_id').eq('course_id', src.id).order('created_at'),
+        supabase.from('discussions').select('id,title,body,author_id,pinned,locked').eq('course_id', src.id).order('created_at'),
+        supabase.from('lms_folders').select('id,name,parent_id,position,created_by').eq('course_id', src.id).order('position'),
+        supabase.from('lms_files').select('id,name,file_name,file_type,file_url,file_size,mime_type,size_bytes,storage_provider,storage_path,external_url,drive_file_id,folder,folder_id,uploaded_by,modified_by').eq('course_id', src.id).order('name'),
+        supabase.from('modules').select('id,title,published,position').eq('course_id', src.id).order('position'),
+      ]);
+
+      for (const r of (rubricsRes.data ?? []) as any[]) {
+        const { data: nr, error } = await supabase.from('rubrics').insert({
+          course_id: newCourse.id,
+          title: r.title,
+          description: r.description,
+          created_by: user?.id ?? r.created_by ?? null,
+        }).select('id').single();
+        if (error) throw error;
+        if (!nr) continue;
+        rubricMap.set(r.id, nr.id);
+        const { data: criteria } = await supabase.from('rubric_criteria')
+          .select('title,description,points,position,levels').eq('rubric_id', r.id).order('position');
+        if (criteria?.length) {
+          const { error: critErr } = await supabase.from('rubric_criteria').insert(
+            criteria.map((c: any) => ({ ...c, rubric_id: nr.id }))
+          );
+          if (critErr) throw critErr;
+        }
       }
-    }
 
-    await loadCourses();
-    alert(`Created "${newName}" with ${srcMods?.length ?? 0} modules copied.`);
+      for (const p of (pagesRes.data ?? []) as any[]) {
+        const { data: np, error } = await supabase.from('lms_pages').insert({
+          course_id: newCourse.id,
+          title: p.title,
+          body_html: p.body_html ?? '',
+          front_page: p.front_page,
+          published: p.published,
+          position: p.position,
+        }).select('id').single();
+        if (error) throw error;
+        if (np) pageMap.set(p.id, np.id);
+      }
+
+      for (const q of (quizzesRes.data ?? []) as any[]) {
+        const { data: nq, error } = await supabase.from('quizzes').insert({
+          course_id: newCourse.id,
+          title: q.title,
+          instructions: q.instructions,
+          due_at: q.due_at,
+          total_points: q.total_points,
+          published: q.published,
+          attempts_allowed: q.attempts_allowed,
+          time_limit_minutes: q.time_limit_minutes,
+        }).select('id').single();
+        if (error) throw error;
+        if (!nq) continue;
+        quizMap.set(q.id, nq.id);
+        const { data: qs } = await supabase.from('quiz_questions')
+          .select('position,question_type,prompt,options,correct_answer,points').eq('quiz_id', q.id).order('position');
+        if (qs?.length) {
+          const { error: qsErr } = await supabase.from('quiz_questions').insert(
+            qs.map((question: any) => ({ ...question, quiz_id: nq.id }))
+          );
+          if (qsErr) throw qsErr;
+        }
+      }
+
+      for (const a of (assignmentsRes.data ?? []) as any[]) {
+        const { data: na, error } = await supabase.from('assignments').insert({
+          course_id: newCourse.id,
+          title: a.title,
+          instructions: a.instructions,
+          due_at: a.due_at,
+          points: a.points,
+          published: a.published,
+          submission_type: a.submission_type,
+          group_name: a.group_name,
+          rubric_id: a.rubric_id ? (rubricMap.get(a.rubric_id) ?? null) : null,
+        }).select('id').single();
+        if (error) throw error;
+        if (na) assignmentMap.set(a.id, na.id);
+      }
+
+      for (const d of (discussionsRes.data ?? []) as any[]) {
+        const { data: nd, error } = await supabase.from('discussions').insert({
+          course_id: newCourse.id,
+          title: d.title,
+          body: d.body,
+          author_id: user?.id ?? d.author_id,
+          pinned: d.pinned,
+          locked: d.locked,
+        }).select('id').single();
+        if (error) throw error;
+        if (nd) discussionMap.set(d.id, nd.id);
+      }
+
+      const pendingFolders = [...((foldersRes.data ?? []) as any[])];
+      let safety = 0;
+      while (pendingFolders.length && safety < 20) {
+        safety++;
+        for (let i = pendingFolders.length - 1; i >= 0; i--) {
+          const f = pendingFolders[i];
+          if (f.parent_id && !folderMap.has(f.parent_id)) continue;
+          const { data: nf, error } = await supabase.from('lms_folders').insert({
+            course_id: newCourse.id,
+            name: f.name,
+            parent_id: f.parent_id ? folderMap.get(f.parent_id) : null,
+            position: f.position,
+            created_by: user?.id ?? f.created_by ?? null,
+          }).select('id').single();
+          if (error) throw error;
+          if (nf) folderMap.set(f.id, nf.id);
+          pendingFolders.splice(i, 1);
+        }
+      }
+
+      if (filesRes.data?.length) {
+        const { data: newFiles, error: fileErr } = await supabase.from('lms_files').insert(
+          (filesRes.data as any[]).map(f => ({
+            course_id: newCourse.id,
+            name: f.name,
+            file_name: f.file_name,
+            file_type: f.file_type,
+            file_url: f.file_url,
+            file_size: f.file_size,
+            mime_type: f.mime_type,
+            size_bytes: f.size_bytes,
+            storage_provider: f.storage_provider,
+            storage_path: f.storage_path,
+            external_url: f.external_url,
+            drive_file_id: f.drive_file_id,
+            folder: f.folder,
+            folder_id: f.folder_id ? (folderMap.get(f.folder_id) ?? null) : null,
+            uploaded_by: user?.id ?? f.uploaded_by ?? null,
+            modified_by: user?.id ?? f.modified_by ?? null,
+          }))
+        ).select('id,name,file_name,storage_path');
+        if (fileErr) throw fileErr;
+        (filesRes.data as any[]).forEach((oldFile, index) => {
+          const newFile = newFiles?.[index];
+          if (newFile) fileMap.set(oldFile.id, newFile.id);
+        });
+      }
+
+      for (const m of (modsRes.data ?? []) as any[]) {
+        const { data: nm, error: modErr } = await supabase.from('modules').insert({
+          course_id: newCourse.id, title: m.title, published: m.published, position: m.position,
+        }).select('id').single();
+        if (modErr) throw modErr;
+        if (!nm) continue;
+
+        const { data: srcItems, error: itemsErr } = await supabase.from('module_items')
+          .select('id,item_type,title,content_ref,url,description,published,position,file_url,file_name,file_type,indent')
+          .eq('module_id', m.id).order('position');
+        if (itemsErr) throw itemsErr;
+
+        for (const it of (srcItems ?? []) as any[]) {
+          const nextRef =
+            it.item_type === 'quiz' ? (quizMap.get(it.content_ref) ?? it.content_ref) :
+            it.item_type === 'assignment' ? (assignmentMap.get(it.content_ref) ?? it.content_ref) :
+            it.item_type === 'page' ? (pageMap.get(it.content_ref) ?? it.content_ref) :
+            it.item_type === 'discussion' ? (discussionMap.get(it.content_ref) ?? it.content_ref) :
+            it.item_type === 'file' ? (fileMap.get(it.content_ref) ?? it.content_ref) :
+            it.content_ref;
+
+          const { data: newItem, error: itemErr } = await supabase.from('module_items').insert({
+            module_id: nm.id,
+            item_type: it.item_type,
+            title: it.title,
+            content_ref: nextRef,
+            url: it.url,
+            description: it.description,
+            published: it.published,
+            position: it.position,
+            file_url: it.file_url,
+            file_name: it.file_name,
+            file_type: it.file_type,
+            indent: it.indent ?? 0,
+          }).select('id').single();
+          if (itemErr) throw itemErr;
+
+          if (newItem?.id && it.item_type === 'quiz' && nextRef) {
+            await supabase.from('quizzes').update({ module_item_id: newItem.id }).eq('id', nextRef);
+          }
+          if (newItem?.id && it.item_type === 'assignment' && nextRef) {
+            await supabase.from('assignments').update({ module_item_id: newItem.id }).eq('id', nextRef);
+          }
+        }
+      }
+
+      await loadCourses();
+      alert(`Created "${newName}" as a full sandbox copy with modules, files, pages, quizzes, assignments, discussions, and rubrics.`);
+    } catch (err: any) {
+      alert('Course duplication could not be completed: ' + (err?.message ?? 'unknown error'));
+    }
   };
 
   const published   = courses.filter(c => c.published);
