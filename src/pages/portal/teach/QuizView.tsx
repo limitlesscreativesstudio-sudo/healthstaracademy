@@ -524,24 +524,59 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
           )}
         </div>
 
-        {!results && attemptQs.length > 0 && (
-          <aside style={{ position:'sticky', top:16, alignSelf:'start', background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:14, fontSize:13 }}>
-            <div style={{ fontWeight:700, color:C.text, marginBottom:8 }}>Questions</div>
-            <div style={{ display:'flex', flexDirection:'column', gap:4, maxHeight:'50vh', overflowY:'auto' }}>
-              {attemptQs.map((q, qi) => {
-                const answered = answers[q.id!] !== undefined && answers[q.id!] !== '';
-                return (
-                  <a key={q.id} href={`#q-${qi+1}`} style={{ color: answered ? C.success : C.primary, textDecoration:'none', padding:'3px 4px', borderRadius:3 }}>
-                    {answered ? '● ' : '○ '}Question {qi+1}
-                  </a>
-                );
-              })}
-            </div>
-            <div style={{ marginTop:12, paddingTop:10, borderTop:`1px solid ${C.border}`, fontSize:12, color:C.muted }}>
-              Answered: <strong style={{ color:C.text }}>{answeredCount} / {attemptQs.length}</strong>
-            </div>
-          </aside>
-        )}
+        {!results && attemptQs.length > 0 && (() => {
+          // Format time elapsed / remaining.
+          const elapsedSec = startedAt ? Math.max(0, Math.floor((nowTick - startedAt.getTime())/1000)) : 0;
+          const remainingSec = startedAt && timeLimitMin ? Math.max(0, timeLimitMin*60 - elapsedSec) : null;
+          const fmt = (s:number) => {
+            const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+            const parts:string[] = [];
+            if (h) parts.push(`${h} Hour${h===1?'':'s'}`);
+            parts.push(`${m} Minute${m===1?'':'s'}`);
+            parts.push(`${sec} Second${sec===1?'':'s'}`);
+            return parts.join(', ');
+          };
+          const lowTime = remainingSec !== null && remainingSec <= 60;
+          return (
+            <aside style={{ position:'sticky', top:16, alignSelf:'start', background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:14, fontSize:13 }}>
+              <div style={{ fontWeight:700, color:C.text, marginBottom:8 }}>Questions</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:4, maxHeight:'40vh', overflowY:'auto' }}>
+                {attemptQs.map((q, qi) => {
+                  const answered = answers[q.id!] !== undefined && answers[q.id!] !== '';
+                  return (
+                    <a key={q.id} href={`#q-${qi+1}`} style={{ color: answered ? C.success : C.primary, textDecoration:'none', padding:'3px 4px', borderRadius:3, display:'flex', alignItems:'center', gap:6 }}>
+                      <span style={{ display:'inline-block', width:14, textAlign:'center', fontWeight:700 }}>{answered ? '✓' : ''}</span>
+                      Question {qi+1}
+                    </a>
+                  );
+                })}
+              </div>
+              <div style={{ marginTop:12, paddingTop:10, borderTop:`1px solid ${C.border}`, fontSize:12, color:C.muted }}>
+                Answered: <strong style={{ color:C.text }}>{answeredCount} / {attemptQs.length}</strong>
+              </div>
+              <div style={{ marginTop:12, paddingTop:10, borderTop:`1px solid ${C.border}` }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
+                  <span style={{ fontSize:12, fontWeight:700, color:C.text }}>
+                    {remainingSec !== null ? 'Time Remaining:' : 'Time Elapsed:'}
+                  </span>
+                  <button onClick={() => setHideTime(v => !v)}
+                    style={{ padding:'2px 8px', border:`1px solid ${C.border}`, borderRadius:3, background:C.white, fontSize:11, cursor:'pointer', color:C.text }}>
+                    {hideTime ? 'Show Time' : 'Hide Time'}
+                  </button>
+                </div>
+                {!hideTime && (
+                  <div style={{ fontSize:13, fontWeight:600, color: lowTime ? C.error : C.text }}>
+                    {remainingSec !== null ? fmt(remainingSec) : fmt(elapsedSec)}
+                  </div>
+                )}
+                {timeLimitMin && !hideTime && (
+                  <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>Limit: {timeLimitMin} min</div>
+                )}
+              </div>
+            </aside>
+          );
+        })()}
+
 
         {!results && attemptQs.length > 0 && (() => {
           const pill = saveState === 'saving'
