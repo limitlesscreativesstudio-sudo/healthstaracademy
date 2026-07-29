@@ -130,9 +130,8 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
     }
   }, [resolvedUrl, fileName, fileType]);
 
-
-
   // Detect frame-block failures for external iframe embeds. Browsers give us
+
   // no direct signal when X-Frame-Options / CSP frame-ancestors kills the
   // load, so we set a soft timer: if `onLoad` never fires within 5s for an
   // external URL, assume the site refused to embed and show a fallback card.
