@@ -154,7 +154,34 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
     setAddingPeople(false);
   };
 
+  // ── Resend a pending invitation ────────────────────────────────────────────
+  const resendInvite = async (p: Person) => {
+    if (!courseId || !p.email) return;
+    setResendingId(p.enrollmentId);
+    setResendMsg(null);
+    const { data, error } = await supabase.functions.invoke('invite-student', {
+      body: {
+        courseId,
+        emails: [p.email],
+        section: p.section || null,
+        role: p.role,
+        cohortId: cohortInfo ? cohortInfo.id : null,
+        redirectTo: `${window.location.origin}/portal/teach/login`,
+      },
+    });
+    const result = (data?.results ?? [])[0];
+    if (error || (result && !result.ok)) {
+      setResendMsg({ id: p.enrollmentId, ok: false, text: error?.message || result?.message || 'Could not resend.' });
+    } else {
+      setResendMsg({ id: p.enrollmentId, ok: true, text: 'Invitation resent' });
+    }
+    setResendingId(null);
+    await load();
+    setTimeout(() => setResendMsg(null), 5000);
+  };
+
   // ── Remove (unenroll or cancel invite) ─────────────────────────────────────
+
   const removeOne = async (id: string) => {
     if (id.startsWith('pending:')) {
       const peId = id.slice('pending:'.length);
