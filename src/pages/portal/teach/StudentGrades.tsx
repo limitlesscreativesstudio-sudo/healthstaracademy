@@ -22,8 +22,10 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
   const [editVal,     setEditVal]     = useState('');
   const [filter,      setFilter]      = useState<'all'|'assignment'|'quiz'>('all');
   const [search,      setSearch]      = useState('');
+  const [colSearch,   setColSearch]   = useState('');
   const [rejects,     setRejects]     = useState<Array<{ id: string; student: string; column: string; value: string; reason: string; at: Date }>>([]);
   const [showRejects, setShowRejects] = useState(false);
+  const natSort = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
 
   const load = async () => {
@@ -59,7 +61,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
     const cols: Column[] = [
       ...(asgns ?? []).map((a: any) => ({ id: a.id, name: a.title, points: Number(a.points ?? 0), kind: 'assignment' as const })),
       ...(qzs ?? []).map((q: any) => ({ id: q.id, name: q.title, points: Number(q.total_points ?? 0), kind: 'quiz' as const })),
-    ];
+    ].sort((a, b) => natSort(a.name, b.name));
     setColumns(cols);
 
     // 4) Grades (assignments) + best quiz attempt (quizzes)
@@ -139,10 +141,12 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
   };
 
 
-  const visibleCols = useMemo(
-    () => columns.filter(c => filter === 'all' || c.kind === filter),
-    [columns, filter]
-  );
+  const visibleCols = useMemo(() => {
+    const q = colSearch.trim().toLowerCase();
+    return columns
+      .filter(c => filter === 'all' || c.kind === filter)
+      .filter(c => !q || c.name.toLowerCase().includes(q));
+  }, [columns, filter, colSearch]);
   const visibleStudents = useMemo(() => {
     const q = search.trim().toLowerCase();
     return q ? students.filter(s => s.name.toLowerCase().includes(q)) : students;
@@ -202,6 +206,8 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
         <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Gradebook</h2>
         <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search students…"
+            style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, fontFamily:'sans-serif', minWidth:160 }} />
+          <input value={colSearch} onChange={e => setColSearch(e.target.value)} placeholder="Search assignments…"
             style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, fontFamily:'sans-serif', minWidth:180 }} />
           {(['all','assignment','quiz'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
@@ -333,6 +339,32 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
                 );
               })}
             </tbody>
+            <tfoot>
+              <tr style={{ background:'#F0EDF7', fontWeight:700 }}>
+                <td style={{ padding:'10px 14px', fontSize:12, color:C.text, borderTop:`2px solid ${C.border}`, borderRight:`1px solid ${C.border}`, position:'sticky', left:0, background:'#F0EDF7', zIndex:5 }}>
+                  Class Average
+                </td>
+                {visibleCols.map(a => {
+                  const vals = visibleStudents.map(s => grades[s.id]?.[a.id]).filter(v => v != null) as number[];
+                  const avg = vals.length ? vals.reduce((x, y) => x + y, 0) / vals.length : null;
+                  const pctCell = avg != null && a.points > 0 ? Math.round((avg / a.points) * 100) : null;
+                  return (
+                    <td key={a.id} style={{ padding:'8px', textAlign:'center', fontSize:12, color: pctCell != null ? gColor(pctCell) : C.muted, borderTop:`2px solid ${C.border}`, borderRight:`1px solid ${C.border}` }}>
+                      {avg != null ? avg.toFixed(1) : '—'}
+                      {pctCell != null && <div style={{ fontSize:10, color:C.muted, fontWeight:400 }}>{pctCell}%</div>}
+                    </td>
+                  );
+                })}
+                <td style={{ padding:'8px', textAlign:'center', fontSize:12, borderTop:`2px solid ${C.border}`, position:'sticky', right:0, background:'#F0EDF7' }}>
+                  {(() => {
+                    const totals = visibleStudents.map(s => studentTotal(s.id)).filter(v => v > 0);
+                    const avgTot = totals.length ? totals.reduce((x, y) => x + y, 0) / totals.length : 0;
+                    const avgPct = totalPts > 0 ? Math.round((avgTot / totalPts) * 100) : 0;
+                    return <><div style={{ color: gColor(avgPct) }}>{avgPct}%</div><div style={{ fontSize:10, color:C.muted, fontWeight:400 }}>{letter(avgPct)}</div></>;
+                  })()}
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       )}
