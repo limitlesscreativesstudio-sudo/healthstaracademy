@@ -204,6 +204,26 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taking, results, saveState, attemptId]);
 
+  // Live timer tick — updates every second while a quiz is in progress.
+  useEffect(() => {
+    if (!taking || results) return;
+    const iv = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(iv);
+  }, [taking, results]);
+
+  // Auto-submit when the time limit expires.
+  useEffect(() => {
+    if (!taking || results || !startedAt || !timeLimitMin || autoSubmittedRef.current) return;
+    const remainingMs = startedAt.getTime() + timeLimitMin * 60_000 - nowTick;
+    if (remainingMs <= 0) {
+      autoSubmittedRef.current = true;
+      toast.warning('Time is up — submitting your quiz.');
+      submitAttempt();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nowTick, taking, results, startedAt, timeLimitMin]);
+
+
   const createQuiz = async () => {
     if (!createForm.title.trim() || !courseId) return;
     const { data, error } = await supabase.from('quizzes').insert({
