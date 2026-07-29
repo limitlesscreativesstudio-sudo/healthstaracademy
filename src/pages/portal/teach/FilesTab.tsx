@@ -203,11 +203,32 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     if (path) await supabase.storage.from('course-files').remove([decodeURIComponent(path)]);
   };
 
-  const visible = folder === 'root' ? files : files.filter(f => f.folder_id === folder || folders.find(x => x.id === folder)?.name === f.folder);
+  const rawVisible = folder === 'root' ? files : files.filter(f => f.folder_id === folder || folders.find(x => x.id === folder)?.name === f.folder);
+  const filtered = search.trim()
+    ? rawVisible.filter(f => f.file_name.toLowerCase().includes(search.trim().toLowerCase()))
+    : rawVisible;
+  const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+  const visible = [...filtered].sort((a, b) => {
+    let cmp = 0;
+    if (sortBy === 'name') cmp = collator.compare(a.file_name || '', b.file_name || '');
+    else if (sortBy === 'size') cmp = (a.file_size ?? 0) - (b.file_size ?? 0);
+    else if (sortBy === 'type') cmp = collator.compare(a.file_type || '', b.file_type || '');
+    else cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
   const usedMB = files.reduce((s, f) => s + (f.file_size ?? 0), 0) / 1048576;
+  const countFor = (fid: string) => fid === 'root'
+    ? files.length
+    : files.filter(f => f.folder_id === fid || folders.find(x => x.id === fid)?.name === f.folder).length;
+  const toggleSort = (col: 'name'|'size'|'date'|'type') => {
+    if (sortBy === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortBy(col); setSortDir('asc'); }
+  };
+  const sortArrow = (col: string) => sortBy === col ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '';
 
   return (
     <div style={{ display:'flex', height:'100%' }}>
+
       {/* Sidebar */}
       <div style={{ width:220, borderRight:`1px solid ${C.border}`, padding:16, flexShrink:0, background:C.white }}>
         <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:0.5, fontFamily:'sans-serif', marginBottom:10 }}>
