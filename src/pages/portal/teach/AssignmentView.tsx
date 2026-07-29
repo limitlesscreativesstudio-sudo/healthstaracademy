@@ -24,10 +24,13 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all'|'published'|'unpublished'>('all');
   const [form, setForm] = useState({
     title:'', submission_type:'assignment', group_name:'Assignments',
     points:'100', due_at:'', published: false,
   });
+  const natSort = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
@@ -108,7 +111,14 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
     navigate(`/portal/courses/${courseId}/assignments/${a.id}`);
   };
 
-  const groups = useMemo(() => [...new Set(assignments.map(a => a.group_name || 'Assignments'))], [assignments]);
+  const groups = useMemo(() => [...new Set(assignments.map(a => a.group_name || 'Assignments'))].sort(natSort), [assignments]);
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return assignments
+      .filter(a => !q || a.title.toLowerCase().includes(q))
+      .filter(a => statusFilter === 'all' || (statusFilter === 'published' ? a.published : !a.published))
+      .sort((a, b) => natSort(a.title, b.title));
+  }, [assignments, search, statusFilter]);
 
   const statusForStudent = (a: Assignment): { label:string; color:string } => {
     const g = gradeMap[a.id];
@@ -122,12 +132,24 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
     <div style={{ padding:24 }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Assignments</h2>
-        {canEdit && (
-          <button onClick={() => setShowForm(!showForm)}
-            style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
-            + Assignment
-          </button>
-        )}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14, gap:8, flexWrap:'wrap' }}>
+        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Assignments</h2>
+        <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search assignments…"
+            style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, fontFamily:'sans-serif', minWidth:200 }} />
+          {canEdit && (['all','published','unpublished'] as const).map(f => (
+            <button key={f} onClick={() => setStatusFilter(f)}
+              style={{ padding:'6px 12px', border:`1px solid ${C.border}`, borderRadius:5, background:statusFilter===f?C.primary:C.white, color:statusFilter===f?'white':C.text, fontSize:12, cursor:'pointer', textTransform:'capitalize', fontFamily:'sans-serif' }}>
+              {f}
+            </button>
+          ))}
+          {canEdit && (
+            <button onClick={() => setShowForm(!showForm)}
+              style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
+              + Assignment
+            </button>
+          )}
+        </div>
       </div>
 
       {showForm && canEdit && (
@@ -193,7 +215,7 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
         <div key={group} style={{ marginBottom:20 }}>
           <div style={{ padding:'8px 14px', background:'#F0EDF7', border:`1px solid ${C.border}`, borderBottom:'none', borderRadius:'6px 6px 0 0', fontWeight:700, fontSize:13, fontFamily:'sans-serif', color:C.text }}>{group}</div>
           <div style={{ border:`1px solid ${C.border}`, borderRadius:'0 0 6px 6px', overflow:'hidden', background:C.white }}>
-            {assignments.filter(a => (a.group_name || 'Assignments') === group).map((a, i, arr) => {
+            {filtered.filter(a => (a.group_name || 'Assignments') === group).map((a, i, arr) => {
               const stu = !canEdit ? statusForStudent(a) : null;
               const count = subMap[a.id] ?? 0;
               return (
