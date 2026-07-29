@@ -512,6 +512,19 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                           </div>
                         );
                       })}
+                      {q.question_type === 'multiple_answers' && q.options.map((o, oi) => {
+                        const uArr = Array.isArray(r?.user) ? r!.user.map(Number) : [];
+                        const cArr = Array.isArray(q.correct_answer) ? q.correct_answer.map(Number) : [];
+                        const isU = uArr.includes(oi); const isC = cArr.includes(oi);
+                        const mark = isC && isU ? '✓' : isC && !isU ? '·' : !isC && isU ? '✗' : ' ';
+                        const bg = isC ? '#E8F5E9' : isU ? '#FDECEA' : 'transparent';
+                        const col = isC ? C.success : isU ? C.error : C.text;
+                        return (
+                          <div key={oi} style={{ padding:'6px 10px', borderRadius:4, marginBottom:3, background:bg, color:col }}>
+                            {mark} {o.text}{isU && !isC && ' (your selection)'}{isC && !isU && ' (missed)'}
+                          </div>
+                        );
+                      })}
                       {q.question_type === 'true_false' && (
                         <div>Your answer: <strong>{r?.user===0?'True':r?.user===1?'False':'—'}</strong> • Correct: <strong>{q.correct_answer===0?'True':'False'}</strong></div>
                       )}
