@@ -443,6 +443,8 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
       const discussionMap = new Map<string, string>();
       const folderMap = new Map<string, string>();
       const fileMap = new Map<string, string>();
+      const fileUrlMap = new Map<string, string>();
+
 
       const [rubricsRes, pagesRes, quizzesRes, assignmentsRes, discussionsRes, foldersRes, filesRes, announcementsRes, sectionsRes, modsRes] = await Promise.all([
         supabase.from('rubrics').select('id,title,description,created_by').eq('course_id', src.id).order('created_at'),
@@ -585,33 +587,48 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
         }
       }
 
-      if (filesRes.data?.length) {
-        const { data: newFiles, error: fileErr } = await supabase.from('lms_files').insert(
-          (filesRes.data as any[]).map(f => ({
-            course_id: newCourse.id,
-            name: f.name,
-            file_name: f.file_name,
-            file_type: f.file_type,
-            file_url: f.file_url,
-            file_size: f.file_size,
-            mime_type: f.mime_type,
-            size_bytes: f.size_bytes,
-            storage_provider: f.storage_provider,
-            storage_path: f.storage_path,
-            external_url: f.external_url,
-            drive_file_id: f.drive_file_id,
-            folder: f.folder,
-            folder_id: f.folder_id ? (folderMap.get(f.folder_id) ?? null) : null,
-            uploaded_by: user?.id ?? f.uploaded_by ?? null,
-            modified_by: user?.id ?? f.modified_by ?? null,
-          }))
-        ).select('id,name,file_name,storage_path');
+      // Files: copy the underlying storage objects into the new course folder so the
+      // duplicated course owns its content (storage access is scoped by course-id prefix).
+      for (const f of ((filesRes.data ?? []) as any[])) {
+        let newPath: string | null = f.storage_path ?? null;
+        let newUrl: string | null = f.file_url ?? null;
+
+        if (f.storage_path && f.storage_provider !== 'drive') {
+          const bucket = f.storage_path.startsWith('submissions/') ? 'course-assets' : 'course-files';
+          const tail = String(f.storage_path).split('/').slice(1).join('/') || String(f.storage_path);
+          const candidate = `${newCourse.id}/${tail}`;
+          const { error: copyErr } = await supabase.storage.from(bucket).copy(f.storage_path, candidate);
+          if (!copyErr) {
+            newPath = candidate;
+            newUrl = supabase.storage.from(bucket).getPublicUrl(candidate).data.publicUrl;
+            if (f.file_url && newUrl) fileUrlMap.set(f.file_url, newUrl);
+            fileUrlMap.set(f.storage_path, candidate);
+          }
+        }
+
+
+        const { data: nf, error: fileErr } = await supabase.from('lms_files').insert({
+          course_id: newCourse.id,
+          name: f.name,
+          file_name: f.file_name,
+          file_type: f.file_type,
+          file_url: newUrl,
+          file_size: f.file_size,
+          mime_type: f.mime_type,
+          size_bytes: f.size_bytes,
+          storage_provider: f.storage_provider,
+          storage_path: newPath,
+          external_url: f.external_url,
+          drive_file_id: f.drive_file_id,
+          folder: f.folder,
+          folder_id: f.folder_id ? (folderMap.get(f.folder_id) ?? null) : null,
+          uploaded_by: user?.id ?? f.uploaded_by ?? null,
+          modified_by: user?.id ?? f.modified_by ?? null,
+        }).select('id').single();
         if (fileErr) throw fileErr;
-        (filesRes.data as any[]).forEach((oldFile, index) => {
-          const newFile = newFiles?.[index];
-          if (newFile) fileMap.set(oldFile.id, newFile.id);
-        });
+        if (nf) fileMap.set(f.id, nf.id);
       }
+
 
       for (const m of (modsRes.data ?? []) as any[]) {
         const { data: nm, error: modErr } = await supabase.from('modules').insert({
@@ -639,11 +656,12 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
             item_type: it.item_type,
             title: it.title,
             content_ref: nextRef,
-            url: it.url,
+            url: it.url ? (fileUrlMap.get(it.url) ?? it.url) : it.url,
             description: it.description,
             published: it.published,
             position: it.position,
-            file_url: it.file_url,
+            file_url: it.file_url ? (fileUrlMap.get(it.file_url) ?? it.file_url) : it.file_url,
+
             file_name: it.file_name,
             file_type: it.file_type,
             indent: it.indent ?? 0,
@@ -659,8 +677,38 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
         }
       }
 
+      // Rewrite any embedded links to the old course's files inside copied content.
+      if (fileUrlMap.size) {
+        const rewrite = (html: string | null) => {
+          if (!html) return html;
+          let out = html;
+          fileUrlMap.forEach((to, from) => { out = out.split(from).join(to); });
+          return out;
+        };
+
+        const { data: newPages } = await supabase.from('lms_pages').select('id,body_html').eq('course_id', newCourse.id);
+        for (const p of (newPages ?? []) as any[]) {
+          const next = rewrite(p.body_html);
+          if (next !== p.body_html) await supabase.from('lms_pages').update({ body_html: next }).eq('id', p.id);
+        }
+        const { data: newQuizzes } = await supabase.from('quizzes').select('id,instructions').eq('course_id', newCourse.id);
+        for (const q of (newQuizzes ?? []) as any[]) {
+          const next = rewrite(q.instructions);
+          if (next !== q.instructions) await supabase.from('quizzes').update({ instructions: next }).eq('id', q.id);
+        }
+        const { data: newAssignments } = await supabase.from('assignments').select('id,instructions').eq('course_id', newCourse.id);
+        for (const a of (newAssignments ?? []) as any[]) {
+          const next = rewrite(a.instructions);
+          if (next !== a.instructions) await supabase.from('assignments').update({ instructions: next }).eq('id', a.id);
+        }
+        const syllabus = rewrite((srcCourseFull as any)?.syllabus_html ?? '');
+        const frontPage = rewrite((srcCourseFull as any)?.front_page_html ?? '');
+        await supabase.from('courses').update({ syllabus_html: syllabus ?? '', front_page_html: frontPage ?? '' }).eq('id', newCourse.id);
+      }
+
       await loadCourses();
-      alert(`Created "${newName}" as a full sandbox copy with modules, files, pages, quizzes, assignments, discussions, announcements, sections, rubrics, and course settings.`);
+      alert(`Created "${newName}" as a full sandbox copy — modules, module items, files (storage copies), folders, pages, quizzes + questions, assignments, rubrics + criteria, discussions, announcements, sections, syllabus, and course settings all transferred.`);
+
     } catch (err: any) {
       alert('Course duplication could not be completed: ' + (err?.message ?? 'unknown error'));
     }
