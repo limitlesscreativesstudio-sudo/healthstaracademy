@@ -26,10 +26,12 @@ const emptyQuestion = (pos:number): Question => ({
 const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditProp }) => {
   const { user } = useAuth();
   const params = useParams<{ courseId?: string; quizId?: string }>();
+  const navigate = useNavigate();
   const courseId = courseIdProp ?? params.courseId;
   const canEdit = canEditProp ?? !!user?.canEdit;
   const routeQuizId = params.quizId;
   const [autoOpened, setAutoOpened] = useState(false);
+  const backToList = () => (routeQuizId ? navigate(-1) : setViewing(null));
 
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
