@@ -61,6 +61,7 @@ import StudentHome from "./pages/portal/teach/StudentHome";
 import AssignmentView from "./pages/portal/teach/AssignmentView";
 import AssignmentDetail from "./pages/portal/teach/AssignmentDetail";
 import QuizView from "./pages/portal/teach/QuizView";
+import PortalLayout from "./components/portal/PortalLayout";
 import Account from "./pages/portal/teach/Account";
 import CareerPortal from "./pages/portal/teach/CareerPortal";
 import RequiredWork from "./pages/portal/teach/RequiredWork";
@@ -129,8 +130,8 @@ const AppShell = () => {
           <Route path="/portal/required" element={<AuthProvider><RoleGuard require="instructor"><RequiredWork /></RoleGuard></AuthProvider>} />
           <Route path="/portal/courses" element={<AuthProvider><RoleGuard><AllCoursesPage /></RoleGuard></AuthProvider>} />
           <Route path="/portal/courses/:courseId/*" element={<AuthProvider><RoleGuard><CourseView /></RoleGuard></AuthProvider>} />
-          <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<AuthProvider><RoleGuard><AssignmentDetail /></RoleGuard></AuthProvider>} />
-          <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<AuthProvider><RoleGuard><QuizView /></RoleGuard></AuthProvider>} />
+          <Route path="/portal/courses/:courseId/assignments/:assignmentId" element={<AuthProvider><RoleGuard><PortalLayout><AssignmentDetail /></PortalLayout></RoleGuard></AuthProvider>} />
+          <Route path="/portal/courses/:courseId/quizzes/:quizId" element={<AuthProvider><RoleGuard><PortalLayout><QuizView /></PortalLayout></RoleGuard></AuthProvider>} />
           <Route path="/portal/calendar" element={<AuthProvider><RoleGuard><GlobalCalendar /></RoleGuard></AuthProvider>} />
           <Route path="/portal/inbox" element={<AuthProvider><RoleGuard><Inbox /></RoleGuard></AuthProvider>} />
           <Route path="/portal/history" element={<AuthProvider><RoleGuard><HistoryPage /></RoleGuard></AuthProvider>} />
