@@ -458,7 +458,8 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
   // Taking a quiz
   if (taking) {
-    const answeredCount = attemptQs.filter(q => answers[q.id!] !== undefined && answers[q.id!] !== '').length;
+    const isAnswered = (v:any) => v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0);
+    const answeredCount = attemptQs.filter(q => isAnswered(answers[q.id!])).length;
     return (
       <div style={{ padding:'20px 24px 96px', maxWidth:1200, margin:'0 auto', fontFamily:'sans-serif', display:'grid', gridTemplateColumns:'minmax(0,1fr) 220px', gap:24 }}>
         <div style={{ minWidth:0 }}>
