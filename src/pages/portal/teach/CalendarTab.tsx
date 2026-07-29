@@ -259,6 +259,7 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
                   <div style={{ fontSize:12, fontWeight:600, color:C.text, marginBottom:4 }}>{u.title}</div>
                   <div style={{ fontSize:10, color:C.muted, textTransform:'uppercase', marginBottom:5 }}>{u.kind}</div>
                   <input
+                    aria-label={`Set due date for ${u.title}`}
                     type="datetime-local"
                     disabled={savingDue}
                     onChange={e => { if (e.target.value) saveDueDate(u.kind, u.id, e.target.value); }}
@@ -283,6 +284,7 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
                 <label style={{ display:'block', fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', marginBottom:6, fontFamily:'sans-serif' }}>Due date</label>
                 <div style={{ display:'flex', gap:6 }}>
                   <input
+                    aria-label="Due date"
                     type="datetime-local"
                     value={dueDraft || toLocalInput(selected.date)}
                     onChange={e => setDueDraft(e.target.value)}
