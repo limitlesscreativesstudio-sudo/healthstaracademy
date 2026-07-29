@@ -28,6 +28,9 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [dragFolderId, setDragFolderId] = useState<string | null>(null);
   const [error,      setError]      = useState('');
   const [viewer, setViewer] = useState<{ src: ContentSource; name: string; type: string } | null>(null);
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'name'|'size'|'date'|'type'>('name');
+  const [sortDir, setSortDir] = useState<'asc'|'desc'>('asc');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const pathFromUrl = (url: string): string | null => {
