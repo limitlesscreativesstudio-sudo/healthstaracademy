@@ -609,7 +609,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
               <div style={{ fontWeight:700, color:C.text, marginBottom:8 }}>Questions</div>
               <div style={{ display:'flex', flexDirection:'column', gap:4, maxHeight:'40vh', overflowY:'auto' }}>
                 {attemptQs.map((q, qi) => {
-                  const answered = answers[q.id!] !== undefined && answers[q.id!] !== '';
+                  const answered = isAnswered(answers[q.id!]);
                   return (
                     <a key={q.id} href={`#q-${qi+1}`} style={{ color: answered ? C.success : C.primary, textDecoration:'none', padding:'3px 4px', borderRadius:3, display:'flex', alignItems:'center', gap:6 }}>
                       <span style={{ display:'inline-block', width:14, textAlign:'center', fontWeight:700 }}>{answered ? '✓' : ''}</span>
