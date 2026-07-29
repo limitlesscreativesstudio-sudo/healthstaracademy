@@ -123,11 +123,13 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
 
   // Start iframe loading state for any embedded/iframe content once the URL is resolved.
   useEffect(() => {
-    if (!resolvedUrl || !kind) return;
-    if (["pdf", "office", "youtube", "vimeo", "html"].includes(kind)) {
+    if (!resolvedUrl) return;
+    const k = detectKind(resolvedUrl, fileName, fileType);
+    if (["pdf", "office", "youtube", "vimeo", "html"].includes(k)) {
       setIframeLoading(true);
     }
-  }, [resolvedUrl, kind]);
+  }, [resolvedUrl, fileName, fileType]);
+
 
 
   // Detect frame-block failures for external iframe embeds. Browsers give us
