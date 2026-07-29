@@ -99,6 +99,7 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
     setErr(null);
     setOfficeFailed(false);
     setFrameBlocked(false);
+    setIframeLoading(false);
     if ("url" in source && source.url) {
       setResolvedUrl(rewriteEmbeddable(source.url));
       return;
@@ -119,6 +120,15 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
         .finally(() => setLoading(false));
     }
   }, [open, source]);
+
+  // Start iframe loading state for any embedded/iframe content once the URL is resolved.
+  useEffect(() => {
+    if (!resolvedUrl || !kind) return;
+    if (["pdf", "office", "youtube", "vimeo", "html"].includes(kind)) {
+      setIframeLoading(true);
+    }
+  }, [resolvedUrl, kind]);
+
 
   // Detect frame-block failures for external iframe embeds. Browsers give us
   // no direct signal when X-Frame-Options / CSP frame-ancestors kills the
