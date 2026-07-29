@@ -343,9 +343,11 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       const uAns = r?.user;
       const uText = q.question_type === 'multiple_choice' ? q.options[uAns]?.text ?? '(no answer)'
         : q.question_type === 'true_false' ? (uAns===0?'True':uAns===1?'False':'(no answer)')
+        : q.question_type === 'multiple_answers' ? (Array.isArray(uAns) && uAns.length ? uAns.map((i:number)=>q.options[i]?.text).filter(Boolean).join('; ') : '(no answer)')
         : (uAns ?? '(no answer)');
       const eText = q.question_type === 'multiple_choice' ? q.options[q.correct_answer]?.text
         : q.question_type === 'true_false' ? (q.correct_answer===0?'True':'False')
+        : q.question_type === 'multiple_answers' ? (Array.isArray(q.correct_answer) ? q.correct_answer.map((i:number)=>q.options[i]?.text).filter(Boolean).join('; ') : '')
         : '(manually graded)';
       lines.push(`  Your answer: ${uText}`);
       lines.push(`  Correct:     ${eText}`);
