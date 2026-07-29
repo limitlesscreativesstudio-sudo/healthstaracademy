@@ -253,10 +253,26 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
               background: dragFolderId === f.id ? C.bg : folder === f.id ? '#EDE8F7' : 'transparent',
               color: folder === f.id ? C.primary : C.text, fontWeight: folder === f.id ? 600 : 400,
               marginBottom:2, display:'flex', alignItems:'center', gap:6 }}>
+          <span>🏫</span>
+          <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{rootName}</span>
+          <span style={{ fontSize:10, color:C.muted }}>{countFor('root')}</span>
+        </div>
+        {folders.map((f, idx) => (
+          <div key={f.id}
+            draggable={!!canEdit}
+            onDragStart={() => setDragFolderId(f.id)}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => dropFolder(f.id)}
+            onDragEnd={() => setDragFolderId(null)}
+            style={{ padding:'7px 10px', borderRadius:5, cursor:'pointer', fontSize:12, fontFamily:'sans-serif',
+              background: dragFolderId === f.id ? C.bg : folder === f.id ? '#EDE8F7' : 'transparent',
+              color: folder === f.id ? C.primary : C.text, fontWeight: folder === f.id ? 600 : 400,
+              marginBottom:2, display:'flex', alignItems:'center', gap:6 }}>
             <span onClick={() => setFolder(f.id)} style={{ flex:1, display:'flex', alignItems:'center', gap:6, minWidth:0 }}>
               {canEdit && <span title="Drag to reorder" style={{ color:C.muted, cursor:'grab' }}>⋮⋮</span>}
               <span>📂</span>
-              <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.name}</span>
+              <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{f.name}</span>
+              <span style={{ fontSize:10, color:C.muted }}>{countFor(f.id)}</span>
             </span>
             {canEdit && (
               <span style={{ display:'flex', gap:2 }}>
