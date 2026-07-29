@@ -22,8 +22,10 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
   const [editVal,     setEditVal]     = useState('');
   const [filter,      setFilter]      = useState<'all'|'assignment'|'quiz'>('all');
   const [search,      setSearch]      = useState('');
+  const [colSearch,   setColSearch]   = useState('');
   const [rejects,     setRejects]     = useState<Array<{ id: string; student: string; column: string; value: string; reason: string; at: Date }>>([]);
   const [showRejects, setShowRejects] = useState(false);
+  const natSort = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
 
   const load = async () => {
@@ -59,7 +61,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
     const cols: Column[] = [
       ...(asgns ?? []).map((a: any) => ({ id: a.id, name: a.title, points: Number(a.points ?? 0), kind: 'assignment' as const })),
       ...(qzs ?? []).map((q: any) => ({ id: q.id, name: q.title, points: Number(q.total_points ?? 0), kind: 'quiz' as const })),
-    ];
+    ].sort((a, b) => natSort(a.name, b.name));
     setColumns(cols);
 
     // 4) Grades (assignments) + best quiz attempt (quizzes)
@@ -139,10 +141,12 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
   };
 
 
-  const visibleCols = useMemo(
-    () => columns.filter(c => filter === 'all' || c.kind === filter),
-    [columns, filter]
-  );
+  const visibleCols = useMemo(() => {
+    const q = colSearch.trim().toLowerCase();
+    return columns
+      .filter(c => filter === 'all' || c.kind === filter)
+      .filter(c => !q || c.name.toLowerCase().includes(q));
+  }, [columns, filter, colSearch]);
   const visibleStudents = useMemo(() => {
     const q = search.trim().toLowerCase();
     return q ? students.filter(s => s.name.toLowerCase().includes(q)) : students;
@@ -202,6 +206,8 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
         <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Gradebook</h2>
         <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search students…"
+            style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, fontFamily:'sans-serif', minWidth:160 }} />
+          <input value={colSearch} onChange={e => setColSearch(e.target.value)} placeholder="Search assignments…"
             style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, fontFamily:'sans-serif', minWidth:180 }} />
           {(['all','assignment','quiz'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
