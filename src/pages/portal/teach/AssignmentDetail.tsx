@@ -276,6 +276,76 @@ const AssignmentDetail: React.FC = () => {
         )}
       </div>
 
+      {/* ── RUBRIC ── */}
+      <div style={{ marginTop: 20, padding: 20, background: C.white, border: `1px solid ${C.border}`, borderRadius: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Rubric</h2>
+          {isStaff && (
+            <select
+              value={assignment.rubric_id ?? ''}
+              onChange={e => attachRubric(e.target.value)}
+              style={{ marginLeft: 'auto', padding: '6px 8px', border: `1px solid ${C.border}`, borderRadius: 5, fontSize: 13 }}
+            >
+              <option value="">No rubric attached</option>
+              {courseRubrics.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}
+            </select>
+          )}
+        </div>
+
+        {!rubric ? (
+          <div style={{ fontSize: 13, color: C.muted, marginTop: 10 }}>
+            {isStaff ? 'Attach a rubric to grade this assignment criterion by criterion.' : 'No rubric for this assignment.'}
+          </div>
+        ) : (
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>{rubric.title}</div>
+            {rubric.description && <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{rubric.description}</div>}
+            <table style={{ width: '100%', marginTop: 10, borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: C.bg }}>
+                  <th style={{ textAlign: 'left', padding: 8, borderBottom: `1px solid ${C.border}` }}>Criterion</th>
+                  <th style={{ textAlign: 'right', padding: 8, borderBottom: `1px solid ${C.border}`, width: 90 }}>Points</th>
+                  {!isStaff && <th style={{ textAlign: 'right', padding: 8, borderBottom: `1px solid ${C.border}`, width: 90 }}>Earned</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {criteria.map(c => {
+                  const mine = user ? rubricScores[user.id]?.[c.id] : undefined;
+                  return (
+                    <tr key={c.id}>
+                      <td style={{ padding: 8, borderBottom: `1px solid ${C.border}` }}>
+                        <div style={{ fontWeight: 600 }}>{c.title}</div>
+                        {c.description && <div style={{ fontSize: 12, color: C.muted }}>{c.description}</div>}
+                        {!isStaff && mine?.comment && <div style={{ fontSize: 12, color: C.primary, marginTop: 3 }}>{mine.comment}</div>}
+                      </td>
+                      <td style={{ padding: 8, textAlign: 'right', borderBottom: `1px solid ${C.border}` }}>{c.points}</td>
+                      {!isStaff && (
+                        <td style={{ padding: 8, textAlign: 'right', borderBottom: `1px solid ${C.border}`, fontWeight: 700, color: mine ? C.success : C.muted }}>
+                          {mine ? mine.score : '—'}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td style={{ padding: 8, fontWeight: 700 }}>Total</td>
+                  <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>{criteria.reduce((s, c) => s + Number(c.points || 0), 0)}</td>
+                  {!isStaff && (
+                    <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>
+                      {user && rubricScores[user.id]
+                        ? Object.values(rubricScores[user.id]).reduce((s, v) => s + Number(v.score || 0), 0)
+                        : '—'}
+                    </td>
+                  )}
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+      </div>
+
       {/* ── STUDENT VIEW ── */}
       {!isStaff && (
         <div style={{ marginTop: 20, padding: 20, background: C.white, border: `1px solid ${C.border}`, borderRadius: 8 }}>
