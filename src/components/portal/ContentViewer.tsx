@@ -100,15 +100,30 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
     setOfficeFailed(false);
     setFrameBlocked(false);
     setIframeLoading(false);
+
+    // If we were handed a raw URL that actually points at a Supabase Storage
+    // object in a private bucket, transparently rewrite it to bucket+path so we
+    // generate a fresh signed URL. Prevents 400s from stale/public URLs that
+    // were saved when the bucket was still public.
+    let resolvedSource: ContentSource = source;
     if ("url" in source && source.url) {
-      setResolvedUrl(rewriteEmbeddable(source.url));
+      const m = source.url.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/]+)\/(.+?)(?:\?|$)/);
+      if (m) {
+        const bucket = m[1];
+        const path = decodeURIComponent(m[2]);
+        resolvedSource = { bucket, path };
+      }
+    }
+
+    if ("url" in resolvedSource && resolvedSource.url) {
+      setResolvedUrl(rewriteEmbeddable(resolvedSource.url));
       return;
     }
-    if ("bucket" in source && source.bucket && source.path) {
+    if ("bucket" in resolvedSource && resolvedSource.bucket && resolvedSource.path) {
       setLoading(true);
       supabase.storage
-        .from(source.bucket)
-        .createSignedUrl(source.path, 60 * 60 * 6) // 6h — enough for a viewing session
+        .from(resolvedSource.bucket)
+        .createSignedUrl(resolvedSource.path, 60 * 60 * 6) // 6h — enough for a viewing session
         .then(({ data, error }) => {
           if (error || !data?.signedUrl) {
             setErr(error?.message ?? "Could not generate viewing link");
