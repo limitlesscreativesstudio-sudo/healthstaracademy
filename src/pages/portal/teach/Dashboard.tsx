@@ -585,33 +585,45 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
         }
       }
 
-      if (filesRes.data?.length) {
-        const { data: newFiles, error: fileErr } = await supabase.from('lms_files').insert(
-          (filesRes.data as any[]).map(f => ({
-            course_id: newCourse.id,
-            name: f.name,
-            file_name: f.file_name,
-            file_type: f.file_type,
-            file_url: f.file_url,
-            file_size: f.file_size,
-            mime_type: f.mime_type,
-            size_bytes: f.size_bytes,
-            storage_provider: f.storage_provider,
-            storage_path: f.storage_path,
-            external_url: f.external_url,
-            drive_file_id: f.drive_file_id,
-            folder: f.folder,
-            folder_id: f.folder_id ? (folderMap.get(f.folder_id) ?? null) : null,
-            uploaded_by: user?.id ?? f.uploaded_by ?? null,
-            modified_by: user?.id ?? f.modified_by ?? null,
-          }))
-        ).select('id,name,file_name,storage_path');
+      // Files: copy the underlying storage objects into the new course folder so the
+      // duplicated course owns its content (storage access is scoped by course-id prefix).
+      for (const f of ((filesRes.data ?? []) as any[])) {
+        let newPath: string | null = f.storage_path ?? null;
+        let newUrl: string | null = f.file_url ?? null;
+
+        if (f.storage_path && f.storage_provider !== 'drive') {
+          const bucket = f.storage_path.startsWith('submissions/') ? 'course-assets' : 'course-files';
+          const tail = String(f.storage_path).split('/').slice(1).join('/') || String(f.storage_path);
+          const candidate = `${newCourse.id}/${tail}`;
+          const { error: copyErr } = await supabase.storage.from(bucket).copy(f.storage_path, candidate);
+          if (!copyErr) {
+            newPath = candidate;
+            newUrl = supabase.storage.from(bucket).getPublicUrl(candidate).data.publicUrl;
+          }
+        }
+
+        const { data: nf, error: fileErr } = await supabase.from('lms_files').insert({
+          course_id: newCourse.id,
+          name: f.name,
+          file_name: f.file_name,
+          file_type: f.file_type,
+          file_url: newUrl,
+          file_size: f.file_size,
+          mime_type: f.mime_type,
+          size_bytes: f.size_bytes,
+          storage_provider: f.storage_provider,
+          storage_path: newPath,
+          external_url: f.external_url,
+          drive_file_id: f.drive_file_id,
+          folder: f.folder,
+          folder_id: f.folder_id ? (folderMap.get(f.folder_id) ?? null) : null,
+          uploaded_by: user?.id ?? f.uploaded_by ?? null,
+          modified_by: user?.id ?? f.modified_by ?? null,
+        }).select('id').single();
         if (fileErr) throw fileErr;
-        (filesRes.data as any[]).forEach((oldFile, index) => {
-          const newFile = newFiles?.[index];
-          if (newFile) fileMap.set(oldFile.id, newFile.id);
-        });
+        if (nf) fileMap.set(f.id, nf.id);
       }
+
 
       for (const m of (modsRes.data ?? []) as any[]) {
         const { data: nm, error: modErr } = await supabase.from('modules').insert({
