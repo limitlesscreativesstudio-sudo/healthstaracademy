@@ -363,11 +363,22 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
             <table style={{ width:'100%', borderCollapse:'collapse', fontFamily:'sans-serif' }}>
               <thead>
                 <tr style={{ background:'#F0EDF7', borderBottom:`1px solid ${C.border}` }}>
-                  {['Name','Folder','Size','Date',''].map(h => (
-                    <th key={h} style={{ padding:'9px 14px', textAlign:'left', fontSize:11, fontWeight:700, color:C.text }}>{h}</th>
+                  {[
+                    { key:'name', label:'Name' },
+                    { key:'folder', label:'Folder' },
+                    { key:'size', label:'Size' },
+                    { key:'date', label:'Date' },
+                  ].map(h => (
+                    <th key={h.key}
+                      onClick={() => h.key !== 'folder' && toggleSort(h.key as any)}
+                      style={{ padding:'9px 14px', textAlign:'left', fontSize:11, fontWeight:700, color:C.text, cursor: h.key === 'folder' ? 'default' : 'pointer', userSelect:'none' }}>
+                      {h.label}{h.key !== 'folder' && sortArrow(h.key)}
+                    </th>
                   ))}
+                  <th style={{ padding:'9px 14px' }}></th>
                 </tr>
               </thead>
+
               <tbody>
                 {visible.map((f, i) => (
                   <tr key={f.id} style={{ borderBottom: i < visible.length-1 ? `1px solid ${C.border}` : 'none' }}
