@@ -366,7 +366,16 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
   );
 };
 
+const LoadingOverlay: React.FC<{ label: string }> = ({ label }) => (
+  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-neutral-950/95 text-white/80">
+    <Loader2 className="h-8 w-8 animate-spin" />
+    <div className="text-sm font-medium">{label}</div>
+    <div className="text-xs text-white/50">This may take a few moments</div>
+  </div>
+);
+
 const FallbackDownload: React.FC<{ url: string; fileName?: string }> = ({ url, fileName }) => (
+
   <div className="m-auto max-w-md text-center text-white p-8 rounded-lg bg-neutral-900 border border-white/10">
     <Download className="h-10 w-10 text-white/60 mx-auto mb-3" />
     <div className="font-semibold mb-1">Preview not available</div>
