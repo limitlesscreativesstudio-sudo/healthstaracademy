@@ -28,7 +28,7 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
   const [editing, setEditing] = useState<Quiz | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [showCreate, setShowCreate] = useState(false);
-  const [createForm, setCreateForm] = useState({ title:'', due_at:'', total_points:10 });
+  const [createForm, setCreateForm] = useState({ title:'', instructions:'', due_at:'', total_points:10 });
   const [taking, setTaking] = useState<Quiz | null>(null);
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [attemptQs, setAttemptQs] = useState<Question[]>([]);
