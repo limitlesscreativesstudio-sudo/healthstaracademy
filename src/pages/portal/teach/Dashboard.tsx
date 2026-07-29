@@ -457,7 +457,6 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
         supabase.from('modules').select('id,title,published,position').eq('course_id', src.id).order('position'),
       ]);
 
-      const sectionMap = new Map<string, string>();
       for (const s of (sectionsRes.data ?? []) as any[]) {
         const { data: ns, error } = await supabase.from('course_sections').insert({
           course_id: newCourse.id,
@@ -466,7 +465,6 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
           end_at: s.end_at,
         }).select('id').single();
         if (error) throw error;
-        if (ns) sectionMap.set(s.id, ns.id);
       }
 
       if (announcementsRes.data?.length) {
