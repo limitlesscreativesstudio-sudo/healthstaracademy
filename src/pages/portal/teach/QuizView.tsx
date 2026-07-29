@@ -379,7 +379,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     );
     return (
       <div style={{ padding:'20px 24px', maxWidth:1100, margin:'0 auto', fontFamily:'sans-serif' }}>
-        <button onClick={() => setViewing(null)} style={{ background:'none', border:'none', color:C.primary, cursor:'pointer', marginBottom:8, fontSize:13 }}>← Back to quizzes</button>
+        <button onClick={backToList} style={{ background:'none', border:'none', color:C.primary, cursor:'pointer', marginBottom:8, fontSize:13 }}>← {routeQuizId ? 'Back' : 'Back to quizzes'}</button>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:12, marginBottom:14, flexWrap:'wrap' }}>
           <h2 style={{ margin:0, fontSize:22, color:C.text }}>{q.title}</h2>
           {canEdit && (
