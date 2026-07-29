@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import PortalLayout from '@/components/portal/PortalLayout';
 import { Bell, CalendarDays, CalendarRange, BellOff, User as UserIcon, FileText, Settings as SettingsIcon, Share2, QrCode, Megaphone, Upload, Plus, Trash2, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import SaveStatus from '@/components/portal/SaveStatus';
 
 const C = {
   primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF',
