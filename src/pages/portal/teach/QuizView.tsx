@@ -46,6 +46,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   const [saveState, setSaveState] = useState<'idle'|'saving'|'saved'|'error'>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [stats, setStats] = useState<Record<string, Stats>>({});
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [viewing, setViewing] = useState<Quiz & { attempts_allowed?: number; time_limit_minutes?: number | null } | null>(null);
   const [viewQCount, setViewQCount] = useState(0);
   const [startedAt, setStartedAt] = useState<Date | null>(null);
@@ -804,52 +805,88 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
       {quizzes.length === 0 ? (
         <div style={{ padding:48, textAlign:'center', color:C.muted, background:C.white, borderRadius:8, border:`1px dashed ${C.border}` }}>No quizzes yet.</div>
-      ) : (
-        <div style={{ display:'grid', gap:10 }}>
-          {quizzes.map(q => {
-            const taken = attemptedIds.has(q.id);
-            const visible = canEdit || q.published;
-            if (!visible) return null;
-            const st = stats[q.id];
-            return (
-              <div key={q.id} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:'14px 18px' }}>
-                <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-                  <span style={{ fontSize:22 }}>❓</span>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div onClick={() => openDetails(q)} style={{ fontSize:14, fontWeight:600, color:C.primary, cursor:'pointer' }}>{q.title}</div>
-                    <div style={{ fontSize:12, color:C.muted }}>
-                      {q.due_at && `Due ${new Date(q.due_at).toLocaleDateString()} • `}{Number(q.total_points||0)} pts
-                      {!canEdit && taken && <span style={{ color:C.success, marginLeft:8, fontWeight:600 }}>✓ Submitted</span>}
+      ) : (() => {
+        const groupOf = (t: string): { key: string; label: string; order: number } => {
+          const s = String(t || '').trim();
+          if (/^final\s*exam/i.test(s)) return { key:'final', label:'Final Exam', order: 5 };
+          if (/^day\s*\d+/i.test(s)) return { key:'day', label:'Day Quizzes', order: 1 };
+          if (/^module\s*\d+/i.test(s)) return { key:'module', label:'Module Quizzes', order: 2 };
+          if (/case\s*study/i.test(s)) return { key:'case', label:'Case Study Quizzes', order: 3 };
+          return { key:'other', label:'Other Quizzes', order: 4 };
+        };
+        const groups: Record<string, { label:string; order:number; items: Quiz[] }> = {};
+        quizzes.forEach(q => {
+          const visible = canEdit || q.published;
+          if (!visible) return;
+          const g = groupOf(q.title);
+          if (!groups[g.key]) groups[g.key] = { label:g.label, order:g.order, items:[] };
+          groups[g.key].items.push(q);
+        });
+        const ordered = Object.entries(groups).sort((a,b) => a[1].order - b[1].order);
+        return (
+          <div style={{ display:'grid', gap:22 }}>
+            {ordered.map(([key, g]) => {
+              const collapsed = collapsedGroups.has(key);
+              return (
+                <section key={key}>
+                  <div
+                    onClick={() => setCollapsedGroups(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n; })}
+                    style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', background:'#EDE7F6', borderRadius:6, cursor:'pointer', marginBottom:8, userSelect:'none' }}
+                  >
+                    <span style={{ fontSize:12, color:C.muted }}>{collapsed ? '▸' : '▾'}</span>
+                    <span style={{ fontSize:13, fontWeight:700, color:C.text, textTransform:'uppercase', letterSpacing:0.4 }}>{g.label}</span>
+                    <span style={{ fontSize:12, color:C.muted, marginLeft:'auto' }}>{g.items.length} {g.items.length===1?'quiz':'quizzes'}</span>
+                  </div>
+                  {!collapsed && (
+                    <div style={{ display:'grid', gap:10 }}>
+                      {g.items.map(q => {
+                        const taken = attemptedIds.has(q.id);
+                        const st = stats[q.id];
+                        return (
+                          <div key={q.id} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:'14px 18px' }}>
+                            <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                              <span style={{ fontSize:22 }}>❓</span>
+                              <div style={{ flex:1, minWidth:0 }}>
+                                <div onClick={() => openDetails(q)} style={{ fontSize:14, fontWeight:600, color:C.primary, cursor:'pointer' }}>{q.title}</div>
+                                <div style={{ fontSize:12, color:C.muted }}>
+                                  {q.due_at && `Due ${new Date(q.due_at).toLocaleDateString()} • `}{Number(q.total_points||0)} pts
+                                  {!canEdit && taken && <span style={{ color:C.success, marginLeft:8, fontWeight:600 }}>✓ Submitted</span>}
+                                </div>
+                              </div>
+                              {canEdit ? (
+                                <>
+                                  <span onClick={() => togglePub(q)} style={{ fontSize:11, padding:'2px 10px', borderRadius:20, background:q.published?'#e8f5e9':'#f5f3fa', color:q.published?C.success:C.muted, cursor:'pointer' }}>
+                                    {q.published?'● Published':'○ Unpublished'}
+                                  </span>
+                                  <button onClick={() => startTake(q)} style={{ padding:'5px 12px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Preview</button>
+                                  <button onClick={() => startEdit(q)} style={{ padding:'5px 12px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Edit</button>
+                                  <button onClick={() => del(q)} style={{ padding:'5px 10px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer', color:C.error }}>✕</button>
+                                </>
+                              ) : (
+                                <button onClick={() => startTake(q)}
+                                  style={{ padding:'6px 14px', border:'none', borderRadius:5, background:taken?C.border:C.primary, color:'white', fontSize:13, cursor:'pointer' }}>
+                                  {taken ? 'Review' : 'Start Quiz'}
+                                </button>
+                              )}
+                            </div>
+                            {canEdit && st && (
+                              <div style={{ marginTop:10, paddingTop:10, borderTop:`1px dashed ${C.border}`, display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:12 }}>
+                                <Stat label="Attempts" value={st.attempts} />
+                                <Stat label="Completion" value={st.attempts ? `${Math.round((st.submitted/st.attempts)*100)}%` : '—'} sub={`${st.submitted}/${st.attempts}`} />
+                                <Stat label="Avg score" value={st.submitted ? `${st.avgPct}%` : '—'} />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
-                  {canEdit ? (
-                    <>
-                      <span onClick={() => togglePub(q)} style={{ fontSize:11, padding:'2px 10px', borderRadius:20, background:q.published?'#e8f5e9':'#f5f3fa', color:q.published?C.success:C.muted, cursor:'pointer' }}>
-                        {q.published?'● Published':'○ Unpublished'}
-                      </span>
-                      <button onClick={() => startTake(q)} style={{ padding:'5px 12px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Preview</button>
-                      <button onClick={() => startEdit(q)} style={{ padding:'5px 12px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Edit</button>
-                      <button onClick={() => del(q)} style={{ padding:'5px 10px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer', color:C.error }}>✕</button>
-                    </>
-                  ) : (
-                    <button onClick={() => startTake(q)}
-                      style={{ padding:'6px 14px', border:'none', borderRadius:5, background:taken?C.border:C.primary, color:'white', fontSize:13, cursor:'pointer' }}>
-                      {taken ? 'Review' : 'Start Quiz'}
-                    </button>
                   )}
-                </div>
-                {canEdit && st && (
-                  <div style={{ marginTop:10, paddingTop:10, borderTop:`1px dashed ${C.border}`, display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:12 }}>
-                    <Stat label="Attempts" value={st.attempts} />
-                    <Stat label="Completion" value={st.attempts ? `${Math.round((st.submitted/st.attempts)*100)}%` : '—'} sub={`${st.submitted}/${st.attempts}`} />
-                    <Stat label="Avg score" value={st.submitted ? `${st.avgPct}%` : '—'} />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+                </section>
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 };
