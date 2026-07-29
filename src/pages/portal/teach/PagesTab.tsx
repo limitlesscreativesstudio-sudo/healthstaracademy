@@ -93,6 +93,9 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [creating, setCreating] = useState(false);
   const [form,     setForm]     = useState({ title:'', body:'', published:false, front_page:false });
   const [saving,   setSaving]   = useState(false);
+  const [savedAt,  setSavedAt]  = useState<number | null>(null);
+  const [autoErr,  setAutoErr]  = useState<string | null>(null);
+  const [dirty,    setDirty]    = useState(false);
   const [uploading,setUploading]= useState(false);
   const [upError,  setUpError]  = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -100,6 +103,7 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [overId, setOverId] = useState<string | null>(null);
   const [viewerFile, setViewerFile] = useState<{ src: ContentSource; name: string; type: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const skipAutoRef = useRef(true);
 
   const openInFullViewer = (url: string, name: string, ext: string) => {
     const raw = url.split('/course-files/')[1];
