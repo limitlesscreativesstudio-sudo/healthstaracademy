@@ -53,7 +53,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
         .eq('course_id', courseId),
       supabase
         .from('pending_enrollments')
-        .select('id, email, section, status, invited_at')
+        .select('id, email, section, role, status, invited_at')
         .eq('course_id', courseId)
         .eq('status', 'pending'),
     ]);
@@ -84,7 +84,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
           profileId:      '',
           name:           row.email.split('@')[0],
           email:          row.email,
-          role:           'student',
+          role:           row.role ?? 'student',
           section:        row.section ?? '',
           pending:        true,
           avatarInitials: initials,
@@ -420,7 +420,9 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
                   style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5,
                     padding:'9px 10px', fontSize:13, fontFamily:'sans-serif' }}>
                   <option value="student">Student</option>
+                  <option value="ta">TA</option>
                   <option value="instructor">Instructor</option>
+                  <option value="teacher">Teacher</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>
