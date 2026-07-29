@@ -434,6 +434,18 @@ const QuizView: React.FC<Props> = ({ courseId, canEdit }) => {
               ⓘ Preview mode — attempts are still recorded.
             </div>
           )}
+          {!results && startedAt && (
+            <div style={{ fontSize:12, color:C.muted, marginBottom:8 }}>
+              Started: {startedAt.toLocaleString([], { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' })}
+            </div>
+          )}
+          {!results && (taking as any).instructions && (
+            <div style={{ marginBottom:14 }}>
+              <h3 style={{ fontSize:16, fontWeight:700, color:C.text, margin:'6px 0 8px' }}>Quiz Instructions</h3>
+              <div style={{ fontSize:13, color:C.text, whiteSpace:'pre-wrap' }}>{(taking as any).instructions}</div>
+              <hr style={{ border:0, borderTop:`1px solid ${C.border}`, marginTop:12 }} />
+            </div>
+          )}
           {results ? (
             <div>
               <div style={{ background:C.white, border:`2px solid ${C.success}`, borderRadius:8, padding:24, textAlign:'center', marginBottom:20 }}>
