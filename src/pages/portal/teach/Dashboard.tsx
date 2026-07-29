@@ -405,9 +405,34 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
     if (!newCode) return;
 
     try {
+      const { data: srcCourseFull } = await supabase.from('courses')
+        .select('description,term,color,image_url,cover_image_url,default_view,front_page_html,home_page_type,license,nav_order,nav_visibility,start_at,end_at,syllabus_html,syllabus_name,syllabus_show_summary,syllabus_url,time_zone,visibility')
+        .eq('id', src.id).maybeSingle();
+
       const { data: newCourse, error: cErr } = await supabase.from('courses').insert({
-        title: newName.trim(), code: newCode.trim(), description: (src as any).description ?? '',
-        term: src.term, color: src.color, image_url: src.image_url ?? null, instructor_id: user?.id, status: 'draft',
+        title: newName.trim(),
+        code: newCode.trim(),
+        description: (srcCourseFull as any)?.description ?? (src as any).description ?? '',
+        term: (srcCourseFull as any)?.term ?? src.term,
+        color: (srcCourseFull as any)?.color ?? src.color,
+        image_url: (srcCourseFull as any)?.image_url ?? src.image_url ?? null,
+        cover_image_url: (srcCourseFull as any)?.cover_image_url ?? null,
+        default_view: (srcCourseFull as any)?.default_view ?? 'modules',
+        front_page_html: (srcCourseFull as any)?.front_page_html ?? '',
+        home_page_type: (srcCourseFull as any)?.home_page_type ?? 'modules',
+        license: (srcCourseFull as any)?.license ?? null,
+        nav_order: (srcCourseFull as any)?.nav_order ?? [],
+        nav_visibility: (srcCourseFull as any)?.nav_visibility ?? {},
+        start_at: (srcCourseFull as any)?.start_at ?? null,
+        end_at: (srcCourseFull as any)?.end_at ?? null,
+        syllabus_html: (srcCourseFull as any)?.syllabus_html ?? '',
+        syllabus_name: (srcCourseFull as any)?.syllabus_name ?? null,
+        syllabus_show_summary: (srcCourseFull as any)?.syllabus_show_summary ?? true,
+        syllabus_url: (srcCourseFull as any)?.syllabus_url ?? null,
+        time_zone: (srcCourseFull as any)?.time_zone ?? null,
+        visibility: (srcCourseFull as any)?.visibility ?? 'private',
+        instructor_id: user?.id,
+        status: 'draft',
       }).select('id,title,code,color,image_url,status,term,description,created_at').single();
       if (cErr || !newCourse) throw new Error(cErr?.message ?? 'Failed to create course.');
 
@@ -419,7 +444,7 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
       const folderMap = new Map<string, string>();
       const fileMap = new Map<string, string>();
 
-      const [rubricsRes, pagesRes, quizzesRes, assignmentsRes, discussionsRes, foldersRes, filesRes, modsRes] = await Promise.all([
+      const [rubricsRes, pagesRes, quizzesRes, assignmentsRes, discussionsRes, foldersRes, filesRes, announcementsRes, sectionsRes, modsRes] = await Promise.all([
         supabase.from('rubrics').select('id,title,description,created_by').eq('course_id', src.id).order('created_at'),
         supabase.from('lms_pages').select('id,title,body_html,front_page,published,position').eq('course_id', src.id).order('position'),
         supabase.from('quizzes').select('id,title,instructions,due_at,total_points,published,attempts_allowed,time_limit_minutes').eq('course_id', src.id).order('created_at'),
@@ -427,8 +452,34 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
         supabase.from('discussions').select('id,title,body,author_id,pinned,locked').eq('course_id', src.id).order('created_at'),
         supabase.from('lms_folders').select('id,name,parent_id,position,created_by').eq('course_id', src.id).order('position'),
         supabase.from('lms_files').select('id,name,file_name,file_type,file_url,file_size,mime_type,size_bytes,storage_provider,storage_path,external_url,drive_file_id,folder,folder_id,uploaded_by,modified_by').eq('course_id', src.id).order('name'),
+        supabase.from('lms_announcements').select('title,body,posted_by').eq('course_id', src.id).order('posted_at'),
+        supabase.from('course_sections').select('id,name,start_at,end_at').eq('course_id', src.id).order('created_at'),
         supabase.from('modules').select('id,title,published,position').eq('course_id', src.id).order('position'),
       ]);
+
+      const sectionMap = new Map<string, string>();
+      for (const s of (sectionsRes.data ?? []) as any[]) {
+        const { data: ns, error } = await supabase.from('course_sections').insert({
+          course_id: newCourse.id,
+          name: s.name,
+          start_at: s.start_at,
+          end_at: s.end_at,
+        }).select('id').single();
+        if (error) throw error;
+        if (ns) sectionMap.set(s.id, ns.id);
+      }
+
+      if (announcementsRes.data?.length) {
+        const { error: annErr } = await supabase.from('lms_announcements').insert(
+          (announcementsRes.data as any[]).map(a => ({
+            course_id: newCourse.id,
+            title: a.title,
+            body: a.body,
+            posted_by: user?.id ?? a.posted_by ?? null,
+          }))
+        );
+        if (annErr) throw annErr;
+      }
 
       for (const r of (rubricsRes.data ?? []) as any[]) {
         const { data: nr, error } = await supabase.from('rubrics').insert({
@@ -611,7 +662,7 @@ const Dashboard: React.FC<Props> = ({ onEnterCourse }) => {
       }
 
       await loadCourses();
-      alert(`Created "${newName}" as a full sandbox copy with modules, files, pages, quizzes, assignments, discussions, and rubrics.`);
+      alert(`Created "${newName}" as a full sandbox copy with modules, files, pages, quizzes, assignments, discussions, announcements, sections, rubrics, and course settings.`);
     } catch (err: any) {
       alert('Course duplication could not be completed: ' + (err?.message ?? 'unknown error'));
     }
