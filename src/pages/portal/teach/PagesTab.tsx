@@ -377,9 +377,12 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
       {/* Editor */}
       {isEditorOpen && (
         <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:8, padding:24, marginBottom:20 }}>
-          <h3 style={{ margin:'0 0 16px', fontSize:16, fontFamily:'sans-serif', color:C.text }}>
-            {editing ? 'Edit Page' : 'New Page'}
-          </h3>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom:16 }}>
+            <h3 style={{ margin:0, fontSize:16, fontFamily:'sans-serif', color:C.text }}>
+              {editing ? 'Edit Page' : 'New Page'}
+            </h3>
+            {editing && <SaveStatus dirty={dirty} saving={saving} savedAt={savedAt} error={autoErr} />}
+          </div>
           <div style={{ marginBottom:12 }}>
             <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Title *</label>
             <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
