@@ -18,7 +18,10 @@ const C = {
 interface Assignment {
   id: string; course_id: string; title: string; instructions: string | null;
   points: number; due_at: string | null; submission_type: string; published: boolean;
+  rubric_id?: string | null;
 }
+interface RubricLite { id: string; title: string; description?: string | null; }
+interface Criterion { id: string; title: string; description: string | null; points: number; position: number; }
 interface Submission {
   id: string; assignment_id: string; user_id: string;
   body: string | null; file_url: string | null; file_name: string | null;
