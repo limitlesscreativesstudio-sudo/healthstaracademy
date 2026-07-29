@@ -517,6 +517,45 @@ const RosterRow: React.FC<{
               <Eye className="h-4 w-4" /> View {row.submission!.file_name}
             </button>
           )}
+          {criteria.length > 0 && (
+            <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 6, padding: 10, marginBottom: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Rubric grading</div>
+              {criteria.map(c => (
+                <div key={c.id} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 160, fontSize: 13 }}>{c.title}</div>
+                  <input
+                    type="number" min={0} max={c.points}
+                    value={critVals[c.id]?.score ?? 0}
+                    onChange={e => setCritVals(v => ({ ...v, [c.id]: { ...(v[c.id] ?? { comment: '' }), score: Math.min(Number(c.points), Math.max(0, Number(e.target.value) || 0)) } }))}
+                    style={{ width: 70, padding: '5px 6px', border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 13 }}
+                  />
+                  <span style={{ fontSize: 12, color: C.muted }}>/ {c.points}</span>
+                  <input
+                    placeholder="Comment"
+                    value={critVals[c.id]?.comment ?? ''}
+                    onChange={e => setCritVals(v => ({ ...v, [c.id]: { ...(v[c.id] ?? { score: 0 }), comment: e.target.value } }))}
+                    style={{ flex: 1, minWidth: 160, padding: '5px 6px', border: `1px solid ${C.border}`, borderRadius: 4, fontSize: 13 }}
+                  />
+                </div>
+              ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>Rubric total: {rubricTotal}</div>
+                <button
+                  disabled={saving}
+                  onClick={async () => {
+                    setSaving(true);
+                    const total = await onSaveRubric(row.user_id, critVals);
+                    setScore(String(total));
+                    await onSaveGrade(row.user_id, total, feedback);
+                    setSaving(false);
+                  }}
+                  style={{ padding: '6px 12px', border: 'none', borderRadius: 4, background: C.success, color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Save rubric &amp; grade
+                </button>
+              </div>
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
             <div>
               <label style={{ fontSize: 11, color: C.muted, display: 'block', marginBottom: 2 }}>Score / {points}</label>
