@@ -147,9 +147,13 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
     }
     // Skip providers that we know embed cleanly.
     if (/(youtu\.?be|vimeo|officeapps\.live|docs\.google|drive\.google|dropboxusercontent)/.test(resolvedUrl)) return;
-    const t = window.setTimeout(() => setFrameBlocked(true), 5000);
+    const t = window.setTimeout(() => {
+      setFrameBlocked(true);
+      setIframeLoading(false);
+    }, 5000);
     return () => window.clearTimeout(t);
   }, [open, resolvedUrl]);
+
 
   // ESC to close
   useEffect(() => {
