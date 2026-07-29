@@ -4,6 +4,7 @@ import { supabase } from './AuthContext';
 import { uploadViaXhr } from './uploadViaXhr';
 import RichTextEditor, { sanitizeHtml } from '@/components/portal/RichTextEditor';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
+import SaveStatus from '@/components/portal/SaveStatus';
 
 const fileIcon = (t: string) => ({ pdf:'📄', pptx:'📊', ppt:'📊', docx:'📝', doc:'📝', mp4:'🎥', mov:'🎥', jpg:'🖼️', png:'🖼️', xlsx:'📈' }[(t||'').toLowerCase()] ?? '📎');
 
@@ -92,6 +93,9 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [creating, setCreating] = useState(false);
   const [form,     setForm]     = useState({ title:'', body:'', published:false, front_page:false });
   const [saving,   setSaving]   = useState(false);
+  const [savedAt,  setSavedAt]  = useState<number | null>(null);
+  const [autoErr,  setAutoErr]  = useState<string | null>(null);
+  const [dirty,    setDirty]    = useState(false);
   const [uploading,setUploading]= useState(false);
   const [upError,  setUpError]  = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -99,6 +103,7 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [overId, setOverId] = useState<string | null>(null);
   const [viewerFile, setViewerFile] = useState<{ src: ContentSource; name: string; type: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const skipAutoRef = useRef(true);
 
   const openInFullViewer = (url: string, name: string, ext: string) => {
     const raw = url.split('/course-files/')[1];
@@ -164,7 +169,30 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     setEditing(null); setCreating(false);
     setForm({ title:'', body:'', published:false, front_page:false });
     setSaving(false);
+    setDirty(false);
+    setSavedAt(Date.now());
   };
+
+  // Debounced autosave — only for edits of an existing page.
+  useEffect(() => {
+    if (skipAutoRef.current) return;
+    if (!editing || !form.title.trim()) return;
+    setDirty(true);
+    const t = setTimeout(async () => {
+      setSaving(true);
+      setAutoErr(null);
+      const { data, error } = await supabase.from('lms_pages')
+        .update({ title:form.title, body_html:form.body, published:form.published, front_page:form.front_page, updated_at: new Date().toISOString() })
+        .eq('id', editing.id).select().single();
+      setSaving(false);
+      if (error) { setAutoErr('Autosave failed — will retry'); return; }
+      if (data) setPages(p => p.map(x => x.id === editing.id ? data : x));
+      setDirty(false);
+      setSavedAt(Date.now());
+    }, 1200);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.title, form.body, form.published, form.front_page]);
 
   const deletePage = async (id: string) => {
     if (!confirm('Delete this page?')) return;
@@ -173,9 +201,15 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   };
 
   const openEdit = (page: Page) => {
+    skipAutoRef.current = true;
     setEditing(page);
     setForm({ title:page.title, body:page.body_html || '', published:page.published, front_page:page.front_page });
     setCreating(true);
+    setDirty(false);
+    setSavedAt(null);
+    setAutoErr(null);
+    // Allow autosave after the initial form state settles.
+    setTimeout(() => { skipAutoRef.current = false; }, 300);
   };
 
   const togglePub = async (id: string, current: boolean) => {
@@ -343,9 +377,12 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
       {/* Editor */}
       {isEditorOpen && (
         <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:8, padding:24, marginBottom:20 }}>
-          <h3 style={{ margin:'0 0 16px', fontSize:16, fontFamily:'sans-serif', color:C.text }}>
-            {editing ? 'Edit Page' : 'New Page'}
-          </h3>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom:16 }}>
+            <h3 style={{ margin:0, fontSize:16, fontFamily:'sans-serif', color:C.text }}>
+              {editing ? 'Edit Page' : 'New Page'}
+            </h3>
+            {editing && <SaveStatus dirty={dirty} saving={saving} savedAt={savedAt} error={autoErr} />}
+          </div>
           <div style={{ marginBottom:12 }}>
             <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Title *</label>
             <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))}

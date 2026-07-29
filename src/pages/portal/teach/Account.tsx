@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import PortalLayout from '@/components/portal/PortalLayout';
 import { Bell, CalendarDays, CalendarRange, BellOff, User as UserIcon, FileText, Settings as SettingsIcon, Share2, QrCode, Megaphone, Upload, Plus, Trash2, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import SaveStatus from '@/components/portal/SaveStatus';
 
 const C = {
   primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF',
@@ -235,8 +236,32 @@ const ProfilePanel: React.FC = () => {
     const r = await updateProfile({ name: name.trim(), jobTitle: title.trim(), phone: phone.trim(), bio: bio.trim() });
     setLoading(false);
     setMsg(r.error ? { type:'error', text:r.error } : { type:'success', text:'Profile saved.' });
+    setSavedAt(Date.now());
+    setDirty(false);
     setTimeout(() => setMsg(null), 4000);
   };
+
+  // Autosave profile edits (debounced) once hydrated.
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [autoErr, setAutoErr] = useState<string | null>(null);
+  useEffect(() => {
+    if (!hydrated || !user?.id) return;
+    if (!name.trim()) return;
+    setDirty(true);
+    const t = setTimeout(async () => {
+      setLoading(true);
+      setAutoErr(null);
+      const r = await updateProfile({ name: name.trim(), jobTitle: title.trim(), phone: phone.trim(), bio: bio.trim() });
+      setLoading(false);
+      if (r.error) { setAutoErr('Autosave failed — will retry'); return; }
+      setDirty(false);
+      setSavedAt(Date.now());
+    }, 1200);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name, title, phone, bio, hydrated]);
+
   const changePw = async () => {
     const e: Record<string,string> = {};
     if (!curPass) e.curPass = 'Enter your current password.';
@@ -273,7 +298,10 @@ const ProfilePanel: React.FC = () => {
           <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, marginBottom:5 }}>Biography</label>
           <textarea rows={3} value={bio} onChange={e=>setBio(e.target.value)} style={{ width:'100%', border:`1.5px solid ${C.border}`, borderRadius:6, padding:'9px 12px', fontSize:13, color:C.text, outline:'none', boxSizing:'border-box', resize:'vertical' }}/>
         </div>
-        <PrimaryBtn onClick={save} disabled={loading || !hydrated}>{loading ? 'Saving…' : 'Save Profile'}</PrimaryBtn>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <PrimaryBtn onClick={save} disabled={loading || !hydrated}>{loading ? 'Saving…' : 'Save Profile'}</PrimaryBtn>
+          {hydrated && <SaveStatus dirty={dirty} saving={loading} savedAt={savedAt} error={autoErr} />}
+        </div>
       </Section>
 
       <Section title="Change Password" subtitle="You'll need the new password on your next sign-in.">
