@@ -41,6 +41,8 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   const [selected,     setSelected]     = useState<string[]>([]);
   const [cohortInfo,   setCohortInfo]   = useState<{ id: string; name: string; courseCount: number } | null>(null);
   const [enrollInCohort, setEnrollInCohort] = useState(true);
+  const [resendingId,  setResendingId]  = useState<string | null>(null);
+  const [resendMsg,    setResendMsg]    = useState<{ id: string; ok: boolean; text: string } | null>(null);
 
   // ── Load enrollments + pending invites ─────────────────────────────────────
   const load = async () => {
@@ -154,7 +156,34 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
     setAddingPeople(false);
   };
 
+  // ── Resend a pending invitation ────────────────────────────────────────────
+  const resendInvite = async (p: Person) => {
+    if (!courseId || !p.email) return;
+    setResendingId(p.enrollmentId);
+    setResendMsg(null);
+    const { data, error } = await supabase.functions.invoke('invite-student', {
+      body: {
+        courseId,
+        emails: [p.email],
+        section: p.section || null,
+        role: p.role,
+        cohortId: cohortInfo ? cohortInfo.id : null,
+        redirectTo: `${window.location.origin}/portal/teach/login`,
+      },
+    });
+    const result = (data?.results ?? [])[0];
+    if (error || (result && !result.ok)) {
+      setResendMsg({ id: p.enrollmentId, ok: false, text: error?.message || result?.message || 'Could not resend.' });
+    } else {
+      setResendMsg({ id: p.enrollmentId, ok: true, text: 'Invitation resent' });
+    }
+    setResendingId(null);
+    await load();
+    setTimeout(() => setResendMsg(null), 5000);
+  };
+
   // ── Remove (unenroll or cancel invite) ─────────────────────────────────────
+
   const removeOne = async (id: string) => {
     if (id.startsWith('pending:')) {
       const peId = id.slice('pending:'.length);
@@ -350,11 +379,29 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
 
                   {/* Actions */}
                   <td style={{ padding:'10px 14px' }}>
-                    <div style={{ display:'flex', gap:6 }}>
+                    <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
                       <button style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4,
                         background:C.white, fontSize:11, cursor:'pointer', color:C.text, fontFamily:'sans-serif' }}>
                         ✉ Message
                       </button>
+                      {canEdit && p.pending && (
+                        <button
+                          onClick={() => resendInvite(p)}
+                          disabled={resendingId === p.enrollmentId}
+                          title={`Resend invitation to ${p.email}`}
+                          style={{ padding:'4px 10px', border:`1px solid ${C.primary}44`, borderRadius:4,
+                            background:C.white, fontSize:11,
+                            cursor: resendingId === p.enrollmentId ? 'wait' : 'pointer',
+                            color:C.primary, fontWeight:600 }}>
+                          {resendingId === p.enrollmentId ? 'Resending…' : '↻ Resend invite'}
+                        </button>
+                      )}
+                      {resendMsg?.id === p.enrollmentId && (
+                        <span style={{ fontSize:11, color: resendMsg.ok ? '#1E7A34' : C.error }}>
+                          {resendMsg.text}
+                        </span>
+                      )}
+
                       {canEdit && (
                         <button onClick={() => {
                           if (confirm(`Remove ${p.name} from this course?`)) removePerson(p.enrollmentId);
