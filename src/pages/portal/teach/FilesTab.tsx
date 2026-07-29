@@ -287,29 +287,40 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
 
       {/* Main */}
       <div style={{ flex:1, padding:20, overflowY:'auto' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, gap:12, flexWrap:'wrap' }}>
           <h2 style={{ margin:0, fontSize:18, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>
             Files — {activeFolderName}
+            <span style={{ marginLeft:8, fontSize:12, color:C.muted, fontWeight:500 }}>({rawVisible.length})</span>
           </h2>
-          {canEdit && (
-            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              <select value={selFolder} onChange={e => setSelFolder(e.target.value)}
-                style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'6px 8px', fontSize:12, fontFamily:'sans-serif', maxWidth:200 }}>
-                {folderChoices.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-              </select>
-              <button onClick={createDoc}
-                style={{ padding:'7px 12px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
-                📝 New Doc
-              </button>
-              <button onClick={() => fileRef.current?.click()}
-                style={{ padding:'7px 14px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
-                📤 Upload
-              </button>
-              <input ref={fileRef} type="file" multiple style={{ display:'none' }}
-                onChange={e => uploadFiles(e.target.files)}/>
-            </div>
-          )}
+          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+            <input
+              type="search"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="🔍 Search files…"
+              style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'6px 10px', fontSize:12, fontFamily:'sans-serif', width:200, outline:'none' }}
+            />
+            {canEdit && (
+              <>
+                <select value={selFolder} onChange={e => setSelFolder(e.target.value)}
+                  style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'6px 8px', fontSize:12, fontFamily:'sans-serif', maxWidth:200 }}>
+                  {folderChoices.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+                <button onClick={createDoc}
+                  style={{ padding:'7px 12px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, color:C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
+                  📝 New Doc
+                </button>
+                <button onClick={() => fileRef.current?.click()}
+                  style={{ padding:'7px 14px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
+                  📤 Upload
+                </button>
+                <input ref={fileRef} type="file" multiple style={{ display:'none' }}
+                  onChange={e => uploadFiles(e.target.files)}/>
+              </>
+            )}
+          </div>
         </div>
+
 
         {error && (
           <div style={{ background:'#fdecea', border:'1px solid #f5c6c6', borderRadius:6, padding:'10px 14px', marginBottom:14, fontSize:12, color:C.error, fontFamily:'sans-serif' }}>{error}</div>
