@@ -83,7 +83,18 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     if (!courseId) { setLoading(false); return; }
     setLoading(true);
     const { data } = await supabase.from('quizzes').select('*').eq('course_id', courseId).order('created_at');
-    setQuizzes(data ?? []);
+    const sorted = (data ?? []).slice().sort((a: any, b: any) => {
+      const parse = (t: string) => {
+        const m = String(t || '').match(/^\s*(\d+)(?:\.(\d+))?/);
+        return m ? [parseInt(m[1], 10), m[2] ? parseInt(m[2], 10) : 0] : [Number.POSITIVE_INFINITY, 0];
+      };
+      const [a1, a2] = parse(a.title);
+      const [b1, b2] = parse(b.title);
+      if (a1 !== b1) return a1 - b1;
+      if (a2 !== b2) return a2 - b2;
+      return String(a.title).localeCompare(String(b.title));
+    });
+    setQuizzes(sorted);
     if (data?.length) {
       if (!canEdit && user?.id) {
         const { data: att } = await supabase.from('quiz_attempts')
