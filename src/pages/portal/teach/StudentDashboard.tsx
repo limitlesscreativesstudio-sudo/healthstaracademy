@@ -160,9 +160,26 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
     setAddingPeople(true);
     setAddError('');
 
-    const list = Array.from(new Set(
-      emails.split(/[,\n;\s]+/).map(e => e.trim().toLowerCase()).filter(Boolean)
-    ));
+    // Accepts "email", "Name <email>", or CSV lines like "First Last, email@x.com".
+    const names: Record<string, string> = {};
+    const list: string[] = [];
+    for (const rawLine of emails.split(/[\n;]+/)) {
+      const line = rawLine.trim();
+      if (!line) continue;
+      const found = line.match(/[^\s,<>"]+@[^\s,<>"]+\.[^\s,<>"]+/g) ?? [];
+      for (const addr of found) {
+        const em = addr.trim().toLowerCase();
+        if (!list.includes(em)) list.push(em);
+        const label = line.replace(addr, '').replace(/[,<>"]/g, ' ').trim();
+        if (label) names[em] = label;
+      }
+      if (found.length === 0) {
+        for (const token of line.split(/[,\s]+/)) {
+          const em = token.trim().toLowerCase();
+          if (em && !list.includes(em)) list.push(em);
+        }
+      }
+    }
     const bad = list.filter(e => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
     if (bad.length) {
       setAddError(`These don't look like valid email addresses: ${bad.join(', ')}`);
@@ -175,6 +192,8 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
         body: {
           courseId,
           emails: list,
+          names,
+          mode: instantMode ? 'instant' : 'invite',
           section: addSection,
           role: addRole,
           cohortId: enrollInCohort && cohortInfo ? cohortInfo.id : null,
@@ -187,17 +206,23 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
       } else if (data?.error) {
         setAddError(String(data.error));
       } else {
-        const failed = (data?.results ?? []).filter((r: any) => !r.ok);
+        const results = data?.results ?? [];
+        const failed = results.filter((r: any) => !r.ok);
+        const creds = results
+          .filter((r: any) => r.ok && r.tempPassword)
+          .map((r: any) => ({ email: r.email, password: r.tempPassword }));
+        if (creds.length) setCredentials(creds);
         if (failed.length > 0) {
           setAddError(failed.map((r: any) => `${r.email} — ${r.message}`).join('\n'));
         } else {
-          setShowModal(false);
+          if (!creds.length) setShowModal(false);
           setEmails('');
         }
       }
     } catch (e: any) {
       setAddError(e?.message || 'Failed to send invitations.');
     }
+
     await load();
     setAddingPeople(false);
   };
