@@ -409,6 +409,8 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
                   onMoveItem={moveItemToModule}
                   onMoveItemWithin={moveItemWithin}
                   onMoveModule={(where: "up" | "down" | "top" | "bottom") => moveModule(m, where)}
+                  onRenameModule={(t: string) => renameModule(m.id, t)}
+                  onRenameItem={(id: string, t: string) => renameItem(id, t)}
                 />
 
               ))}
