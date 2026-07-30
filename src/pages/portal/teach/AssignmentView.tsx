@@ -159,56 +159,8 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
         </div>
       </div>
 
-      {showForm && canEdit && (
-        <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:8, padding:20, marginBottom:20 }}>
-          <h3 style={{ margin:'0 0 16px', fontSize:15, fontFamily:'sans-serif', color:C.text }}>New Assignment</h3>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:12 }}>
-            <div style={{ gridColumn:'1/-1' }}>
-              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Name *</label>
-              <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
-                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', outline:'none' }}/>
-            </div>
-            <div>
-              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Type</label>
-              <select value={form.submission_type} onChange={e => setForm(p => ({ ...p, submission_type: e.target.value }))}
-                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 9px', fontSize:13, fontFamily:'sans-serif' }}>
-                {['assignment','quiz','exam','discussion'].map(o => <option key={o} value={o}>{o[0].toUpperCase()+o.slice(1)}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Group</label>
-              <select value={form.group_name} onChange={e => setForm(p => ({ ...p, group_name: e.target.value }))}
-                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 9px', fontSize:13, fontFamily:'sans-serif' }}>
-                {['Assignments','Quizzes','Clinical Skills','Exams','Written Assignments'].map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Points</label>
-              <input type="number" value={form.points} onChange={e => setForm(p => ({ ...p, points: e.target.value }))}
-                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 9px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', outline:'none' }}/>
-            </div>
-            <div>
-              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Due Date</label>
-              <input type="datetime-local" value={form.due_at} onChange={e => setForm(p => ({ ...p, due_at: e.target.value }))}
-                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 9px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box' }}/>
-            </div>
-          </div>
-          <label style={{ display:'flex', alignItems:'center', gap:8, fontSize:13, fontFamily:'sans-serif', marginTop:12, marginBottom:14, cursor:'pointer' }}>
-            <input type="checkbox" checked={form.published} onChange={e => setForm(p => ({ ...p, published: e.target.checked }))} style={{ accentColor:C.primary }}/>
-            Publish immediately
-          </label>
-          <div style={{ display:'flex', gap:8 }}>
-            <button onClick={save} disabled={saving}
-              style={{ padding:'8px 20px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer', opacity:saving?.7:1 }}>
-              {saving ? 'Saving…' : 'Save Assignment'}
-            </button>
-            <button onClick={() => setShowForm(false)}
-              style={{ padding:'8px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+
+
 
       {loading ? (
         <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Loading assignments…</div>
