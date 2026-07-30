@@ -851,7 +851,7 @@ const CourseView: React.FC = () => {
     files:         <FilesTab       courseId={cid} canEdit={canEdit} />,
     syllabus:      <SyllabusTab courseUuid={cid} canEdit={canEdit} />,
     attendance:    <AttendanceTab  courseId={cid} canEdit={canEdit} />,
-    clinical:      <ClinicalSkillsTab />,
+    clinical:      <ClinicalSkillsTab courseId={cid} canEdit={canEdit} />,
     readiness:     <ReadinessTab />,
     required:      <RequiredWork />,
     career:        <CareerPortal />,
