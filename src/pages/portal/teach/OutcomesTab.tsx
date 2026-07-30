@@ -229,7 +229,9 @@ const OutcomesTab: React.FC<Props> = ({ courseId, canEdit }) => {
                 <div style={{ display:'flex', alignItems:'flex-start', gap:12 }}>
                   <span style={{ fontSize:20 }} aria-hidden>🎯</span>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:14, fontWeight:600, color:C.text }}>{o.title}</div>
+                    <div style={{ fontSize:14, fontWeight:600, color:C.text }}>
+                      <InlineTitle value={o.title} disabled={!canEdit} label="outcome title" onSave={(t) => renameOutcome(o.id, t)} />
+                    </div>
                     <div style={{ fontSize:12, color:C.muted, marginTop:3 }}>
                       {o.category ? `${o.category} • ` : ''}Mastery at {o.mastery_threshold} of {o.points_possible} pts • {linked.length} linked criteri{linked.length===1?'on':'a'}
                     </div>
