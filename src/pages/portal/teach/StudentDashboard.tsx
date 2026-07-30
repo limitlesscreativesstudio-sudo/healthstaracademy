@@ -340,7 +340,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
             </button>
           )}
           {canEdit && (
-            <button onClick={() => { setShowModal(true); setAddError(''); }}
+            <button onClick={() => { setShowModal(true); setAddError(''); setCredentials([]); }}
               style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary,
                 color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
               + Add People
