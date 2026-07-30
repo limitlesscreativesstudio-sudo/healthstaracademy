@@ -48,6 +48,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
     setLoading(true);
+    setAddError('');
     const [enrRes, pendRes] = await Promise.all([
       supabase
         .from('enrollments')
@@ -59,6 +60,10 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
         .eq('course_id', courseId)
         .eq('status', 'pending'),
     ]);
+
+    if (enrRes.error || pendRes.error) {
+      setAddError(`Could not load the roster: ${(enrRes.error ?? pendRes.error)?.message}`);
+    }
 
     const built: Person[] = [];
     // Profiles are fetched separately (no FK relationship for a PostgREST embed).
@@ -128,29 +133,43 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
     setAddingPeople(true);
     setAddError('');
 
-    const list = emails.split(/[,\n]/).map(e => e.trim()).filter(Boolean);
+    const list = Array.from(new Set(
+      emails.split(/[,\n;\s]+/).map(e => e.trim().toLowerCase()).filter(Boolean)
+    ));
+    const bad = list.filter(e => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
+    if (bad.length) {
+      setAddError(`These don't look like valid email addresses: ${bad.join(', ')}`);
+      setAddingPeople(false);
+      return;
+    }
 
-    const { data, error } = await supabase.functions.invoke('invite-student', {
-      body: {
-        courseId,
-        emails: list,
-        section: addSection,
-        role: addRole,
-        cohortId: enrollInCohort && cohortInfo ? cohortInfo.id : null,
-        redirectTo: `${window.location.origin}/portal/teach/login`,
-      },
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('invite-student', {
+        body: {
+          courseId,
+          emails: list,
+          section: addSection,
+          role: addRole,
+          cohortId: enrollInCohort && cohortInfo ? cohortInfo.id : null,
+          redirectTo: `${window.location.origin}/portal/teach/login`,
+        },
+      });
 
-    if (error) {
-      setAddError(error.message || 'Failed to send invitations.');
-    } else {
-      const failed = (data?.results ?? []).filter((r: any) => !r.ok);
-      if (failed.length > 0) {
-        setAddError(failed.map((r: any) => `${r.email} — ${r.message}`).join('\n'));
+      if (error) {
+        setAddError(error.message || 'Failed to send invitations.');
+      } else if (data?.error) {
+        setAddError(String(data.error));
       } else {
-        setShowModal(false);
-        setEmails('');
+        const failed = (data?.results ?? []).filter((r: any) => !r.ok);
+        if (failed.length > 0) {
+          setAddError(failed.map((r: any) => `${r.email} — ${r.message}`).join('\n'));
+        } else {
+          setShowModal(false);
+          setEmails('');
+        }
       }
+    } catch (e: any) {
+      setAddError(e?.message || 'Failed to send invitations.');
     }
     await load();
     setAddingPeople(false);
@@ -187,15 +206,17 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   const removeOne = async (id: string) => {
     if (id.startsWith('pending:')) {
       const peId = id.slice('pending:'.length);
-      await supabase.from('pending_enrollments').delete().eq('id', peId);
-    } else {
-      await supabase.from('enrollments').delete().eq('id', id);
+      const { error } = await supabase.from('pending_enrollments').delete().eq('id', peId);
+      return error?.message ?? null;
     }
+    const { error } = await supabase.from('enrollments').delete().eq('id', id);
+    return error?.message ?? null;
   };
 
   const removePerson = async (enrollmentId: string) => {
     setPeople(p => p.filter(x => x.enrollmentId !== enrollmentId));
-    await removeOne(enrollmentId);
+    const err = await removeOne(enrollmentId);
+    if (err) { setAddError(`Could not remove: ${err}`); await load(); }
   };
 
   const removeSelected = async () => {
@@ -223,6 +244,14 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
 
   return (
     <div style={{ padding:24 }}>
+
+      {!showModal && addError && (
+        <div role="alert" style={{ background:'#fdecea', border:`1px solid ${C.error}`, borderRadius:6,
+          padding:'10px 14px', marginBottom:14, fontSize:12, color:C.error, fontFamily:'sans-serif', whiteSpace:'pre-line' }}>
+          {addError}
+        </div>
+      )}
+
 
       {/* Header */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
