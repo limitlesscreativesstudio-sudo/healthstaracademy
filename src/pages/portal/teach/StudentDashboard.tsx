@@ -556,8 +556,9 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
 
             <div style={{ background:'#EDE8F7', borderRadius:6, padding:'10px 14px', marginBottom:18,
               fontSize:12, color:C.text, fontFamily:'sans-serif', lineHeight:1.6 }}>
-              💡 Enter the student's email address. They will receive an invitation
-              email to create their account and access this course.
+              💡 Paste emails, or full rows like <em>Jane Doe, jane@example.com</em> (one per line).
+              You can also upload a CSV exported from your enrollment sheet.
+
             </div>
 
             {addError && (
