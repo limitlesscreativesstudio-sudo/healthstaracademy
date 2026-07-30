@@ -248,6 +248,8 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
                       </span>
                       <div onClick={e => { e.stopPropagation(); togglePub(a.id, a.published); }} title={a.published ? 'Published' : 'Unpublished'}
                         style={{ width:16, height:16, borderRadius:'50%', background: a.published ? C.success : C.border, cursor:'pointer', flexShrink:0 }}/>
+                      <button onClick={e => { e.stopPropagation(); setEditRow(a); setShowForm(true); }}
+                        style={{ padding:'3px 8px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:11, cursor:'pointer', color:C.primary }}>Edit</button>
                       <button onClick={e => { e.stopPropagation(); del(a.id); }}
                         style={{ padding:'3px 8px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:11, cursor:'pointer', color:C.error }}>✕</button>
                     </>
