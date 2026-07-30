@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase, useAuth } from './AuthContext';
 import { toast } from 'sonner';
+import InlineTitle from '@/components/portal/InlineTitle';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', error:'#C0392B', success:'#127A1B' } as const;
 
@@ -43,6 +44,14 @@ const RubricsTab: React.FC<Props> = ({ courseId, canEdit }) => {
   };
 
   useEffect(() => { load(); }, [courseId]);
+
+  const renameRubric = async (r: Rubric, title: string) => {
+    const { error } = await supabase.from('rubrics').update({ title }).eq('id', r.id);
+    if (error) return toast.error('Could not rename');
+    setRubrics(p => p.map(x => x.id === r.id ? { ...x, title } : x));
+    setOpen(o => (o && o.id === r.id ? { ...o, title } : o));
+    toast.success('Title updated');
+  };
 
   const openRubric = async (r: Rubric) => {
     setOpen(r);
