@@ -857,7 +857,7 @@ const CourseView: React.FC = () => {
     required:      <RequiredWork courseId={cid} canEdit={canEdit} />,
     career:        <CareerPortal />,
     discussions:   <DiscussionsTab courseId={cid} canEdit={canEdit} />,
-    outcomes:      <Placeholder title="Outcomes" />,
+    outcomes:      <OutcomesTab courseId={cid} canEdit={canEdit} />,
     rubrics:       <RubricsTab courseId={cid} canEdit={canEdit} />,
     analytics:     <AnalyticsTab courseId={cid} canEdit={canEdit} />,
     lucid:         <Placeholder title="Lucid (Whiteboard)" />,
