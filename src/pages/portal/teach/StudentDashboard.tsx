@@ -43,6 +43,10 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   const [enrollInCohort, setEnrollInCohort] = useState(true);
   const [resendingId,  setResendingId]  = useState<string | null>(null);
   const [resendMsg,    setResendMsg]    = useState<{ id: string; ok: boolean; text: string } | null>(null);
+  const [instantMode,  setInstantMode]  = useState(false);
+  const [credentials,  setCredentials]  = useState<Array<{ email: string; password: string }>>([]);
+  const [savingRoleId, setSavingRoleId] = useState<string | null>(null);
+
 
   // ── Load enrollments + pending invites ─────────────────────────────────────
   const load = async () => {
@@ -106,7 +110,30 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
         });
       }
     }
+    // Enrich enrolled rows with real email addresses (auth data, service-role only).
+    try {
+      const { data: rosterData } = await supabase.functions.invoke('course-roster', {
+        body: { action: 'list', courseId },
+      });
+      const byId: Record<string, any> = {};
+      for (const e of (rosterData?.enrollments ?? [])) byId[e.id] = e;
+      for (const person of built) {
+        const match = byId[person.enrollmentId];
+        if (match) {
+          person.email = match.email ?? '';
+          if (match.full_name) {
+            person.name = match.full_name;
+            person.avatarInitials = match.full_name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+          } else if (match.email) {
+            person.name = match.email.split('@')[0];
+            person.avatarInitials = match.email.slice(0, 2).toUpperCase();
+          }
+        }
+      }
+    } catch { /* roster enrichment is best-effort */ }
+
     setPeople(built);
+
     setLoading(false);
   };
 
@@ -133,9 +160,26 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
     setAddingPeople(true);
     setAddError('');
 
-    const list = Array.from(new Set(
-      emails.split(/[,\n;\s]+/).map(e => e.trim().toLowerCase()).filter(Boolean)
-    ));
+    // Accepts "email", "Name <email>", or CSV lines like "First Last, email@x.com".
+    const names: Record<string, string> = {};
+    const list: string[] = [];
+    for (const rawLine of emails.split(/[\n;]+/)) {
+      const line = rawLine.trim();
+      if (!line) continue;
+      const found = line.match(/[^\s,<>"]+@[^\s,<>"]+\.[^\s,<>"]+/g) ?? [];
+      for (const addr of found) {
+        const em = addr.trim().toLowerCase();
+        if (!list.includes(em)) list.push(em);
+        const label = line.replace(addr, '').replace(/[,<>"]/g, ' ').trim();
+        if (label) names[em] = label;
+      }
+      if (found.length === 0) {
+        for (const token of line.split(/[,\s]+/)) {
+          const em = token.trim().toLowerCase();
+          if (em && !list.includes(em)) list.push(em);
+        }
+      }
+    }
     const bad = list.filter(e => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
     if (bad.length) {
       setAddError(`These don't look like valid email addresses: ${bad.join(', ')}`);
@@ -148,6 +192,8 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
         body: {
           courseId,
           emails: list,
+          names,
+          mode: instantMode ? 'instant' : 'invite',
           section: addSection,
           role: addRole,
           cohortId: enrollInCohort && cohortInfo ? cohortInfo.id : null,
@@ -160,17 +206,23 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
       } else if (data?.error) {
         setAddError(String(data.error));
       } else {
-        const failed = (data?.results ?? []).filter((r: any) => !r.ok);
+        const results = data?.results ?? [];
+        const failed = results.filter((r: any) => !r.ok);
+        const creds = results
+          .filter((r: any) => r.ok && r.tempPassword)
+          .map((r: any) => ({ email: r.email, password: r.tempPassword }));
+        if (creds.length) setCredentials(creds);
         if (failed.length > 0) {
           setAddError(failed.map((r: any) => `${r.email} — ${r.message}`).join('\n'));
         } else {
-          setShowModal(false);
+          if (!creds.length) setShowModal(false);
           setEmails('');
         }
       }
     } catch (e: any) {
       setAddError(e?.message || 'Failed to send invitations.');
     }
+
     await load();
     setAddingPeople(false);
   };
@@ -213,7 +265,23 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
     return error?.message ?? null;
   };
 
+  // ── Change a person's course role ──────────────────────────────────────────
+  const changeRole = async (p: Person, role: string) => {
+    if (!courseId) return;
+    setSavingRoleId(p.enrollmentId);
+    setPeople(list => list.map(x => x.enrollmentId === p.enrollmentId ? { ...x, role } : x));
+    const { data, error } = await supabase.functions.invoke('course-roster', {
+      body: { action: 'set_role', courseId, enrollmentId: p.enrollmentId, role },
+    });
+    if (error || data?.error) {
+      setAddError(`Could not change role: ${error?.message || data?.error}`);
+      await load();
+    }
+    setSavingRoleId(null);
+  };
+
   const removePerson = async (enrollmentId: string) => {
+
     setPeople(p => p.filter(x => x.enrollmentId !== enrollmentId));
     const err = await removeOne(enrollmentId);
     if (err) { setAddError(`Could not remove: ${err}`); await load(); }
@@ -272,7 +340,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
             </button>
           )}
           {canEdit && (
-            <button onClick={() => { setShowModal(true); setAddError(''); }}
+            <button onClick={() => { setShowModal(true); setAddError(''); setCredentials([]); }}
               style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary,
                 color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
               + Add People
@@ -394,11 +462,27 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
 
                   {/* Role */}
                   <td style={{ padding:'10px 14px' }}>
-                    <span style={{ fontSize:11, padding:'3px 10px', borderRadius:20, fontWeight:600,
-                      background: roleColor(p.role) + '22', color: roleColor(p.role) }}>
-                      {p.role.charAt(0).toUpperCase() + p.role.slice(1)}
-                    </span>
+                    {canEdit && !p.pending ? (
+                      <select
+                        aria-label={`Role for ${p.name}`}
+                        value={p.role}
+                        disabled={savingRoleId === p.enrollmentId}
+                        onChange={e => changeRole(p, e.target.value)}
+                        style={{ fontSize:11, padding:'3px 8px', borderRadius:20, fontWeight:600,
+                          border:`1px solid ${roleColor(p.role)}55`, color: roleColor(p.role),
+                          background: roleColor(p.role) + '18', cursor:'pointer', fontFamily:'sans-serif' }}>
+                        {['student','ta','teacher','instructor','observer','designer'].map(r => (
+                          <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span style={{ fontSize:11, padding:'3px 10px', borderRadius:20, fontWeight:600,
+                        background: roleColor(p.role) + '22', color: roleColor(p.role) }}>
+                        {p.role.charAt(0).toUpperCase() + p.role.slice(1)}
+                      </span>
+                    )}
                   </td>
+
 
                   {/* Section */}
                   <td style={{ padding:'10px 14px', fontSize:12, color:C.muted }}>{p.section || '—'}</td>
@@ -472,8 +556,9 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
 
             <div style={{ background:'#EDE8F7', borderRadius:6, padding:'10px 14px', marginBottom:18,
               fontSize:12, color:C.text, fontFamily:'sans-serif', lineHeight:1.6 }}>
-              💡 Enter the student's email address. They will receive an invitation
-              email to create their account and access this course.
+              💡 Paste emails, or full rows like <em>Jane Doe, jane@example.com</em> (one per line).
+              You can also upload a CSV exported from your enrollment sheet.
+
             </div>
 
             {addError && (
@@ -495,6 +580,62 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
               <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif', marginTop:4 }}>
                 Separate multiple emails with a comma or new line.
               </div>
+
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginTop:10, flexWrap:'wrap' }}>
+                <label style={{ fontSize:12, fontWeight:600, color:C.primary, cursor:'pointer',
+                  border:`1px dashed ${C.primary}`, borderRadius:5, padding:'6px 12px', fontFamily:'sans-serif' }}>
+                  ⬆ Upload CSV
+                  <input type="file" accept=".csv,text/csv,text/plain" style={{ display:'none' }}
+                    onChange={async e => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const text = await file.text();
+                      const lines = text.split(/\r?\n/).filter(l => /@/.test(l));
+                      setEmails(prev => (prev ? prev + '\n' : '') + lines.join('\n'));
+                      e.currentTarget.value = '';
+                    }}/>
+                </label>
+                <span style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>
+                  Any CSV works — rows containing an email address are imported.
+                </span>
+              </div>
+
+              <label style={{ display:'flex', alignItems:'flex-start', gap:10, marginTop:12,
+                padding:'10px 12px', background:'#F4F2FA', border:`1px solid ${C.border}`,
+                borderRadius:6, cursor:'pointer', fontFamily:'sans-serif' }}>
+                <input type="checkbox" checked={instantMode}
+                  onChange={e => setInstantMode(e.target.checked)} style={{ marginTop:2 }}/>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:600, color:C.text }}>
+                    Create accounts instantly (no email needed)
+                  </div>
+                  <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>
+                    Accounts are created and enrolled right away, and you'll get a temporary
+                    password for each student to hand out. They can change it after signing in.
+                  </div>
+                </div>
+              </label>
+
+              {credentials.length > 0 && (
+                <div style={{ marginTop:12, padding:'12px 14px', background:'#E8F6EC',
+                  border:'1px solid #A9DCB8', borderRadius:6, fontFamily:'sans-serif' }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#127A1B', marginBottom:8 }}>
+                    ✅ Accounts created — save these temporary passwords now
+                  </div>
+                  <pre style={{ margin:0, fontSize:12, whiteSpace:'pre-wrap', color:C.text }}>
+{credentials.map(c => `${c.email}  →  ${c.password}`).join('\n')}
+                  </pre>
+                  <button
+                    onClick={() => navigator.clipboard?.writeText(
+                      credentials.map(c => `${c.email}\t${c.password}`).join('\n'))}
+                    style={{ marginTop:10, padding:'6px 12px', border:`1px solid ${C.primary}`,
+                      borderRadius:5, background:C.white, color:C.primary, fontSize:12,
+                      fontWeight:600, cursor:'pointer' }}>
+                    📋 Copy all
+                  </button>
+                </div>
+              )}
+
             </div>
 
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:20 }}>
