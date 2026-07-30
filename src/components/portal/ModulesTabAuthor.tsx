@@ -92,6 +92,11 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
     const { data: mods } = await modQuery;
     const sortedMods = (mods ?? []).sort((a, b) => a.position - b.position);
     setModules(sortedMods);
+    if (!initialCollapseDone.current) {
+      initialCollapseDone.current = true;
+      setCollapsed(new Set(sortedMods.map(m => m.id)));
+      setAllCollapsed(true);
+    }
     const ids = (mods ?? []).map(m => m.id);
     let allItems: ModuleItem[] = [];
     if (ids.length) {
