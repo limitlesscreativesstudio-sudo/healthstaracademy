@@ -40,7 +40,8 @@ interface CohortRow {
 const fetchCohorts = async (): Promise<CohortRow[]> => {
   const { data, error } = await supabase
     .from("cohorts")
-    .select("*")
+    // Only marketing-safe columns are readable publicly (internal notes/min_to_run are restricted)
+    .select("id, name, start_date, status, capacity, program_type, paid_in_full_link, payment_plan_link")
     .order("start_date", { ascending: true });
   if (error) throw error;
   return (data as CohortRow[]) || [];
