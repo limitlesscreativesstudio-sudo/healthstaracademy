@@ -25,13 +25,9 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
   const [rosterSize, setRosterSize] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [editRow, setEditRow] = useState<any | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all'|'published'|'unpublished'>('all');
-  const [form, setForm] = useState({
-    title:'', submission_type:'assignment', group_name:'Assignments',
-    points:'100', due_at:'', published: false,
-  });
   const natSort = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
   const load = async () => {
