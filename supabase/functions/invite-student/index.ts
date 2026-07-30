@@ -35,9 +35,22 @@ Deno.serve(async (req) => {
     const invitedBy = userData.user.id;
 
     const body = await req.json().catch(() => ({}));
-    const { courseId, emails, section, redirectTo, cohortId, role } = body ?? {};
+    const { courseId, emails, section, redirectTo, cohortId, role, mode, names } = body ?? {};
     const allowedRoles = ["student", "ta", "teacher", "observer", "designer"];
     const inviteRole = allowedRoles.includes(String(role)) ? String(role) : "student";
+    const instant = mode === "instant";
+    const nameMap: Record<string, string> = {};
+    if (names && typeof names === "object") {
+      for (const [k, v] of Object.entries(names)) nameMap[String(k).trim().toLowerCase()] = String(v);
+    }
+    const tempPassword = () => {
+      const words = ["Star", "Care", "Nurse", "Health", "Bright", "Aide"];
+      const bytes = new Uint8Array(3);
+      crypto.getRandomValues(bytes);
+      const n = Array.from(bytes).map((b) => (b % 10)).join("");
+      return `${words[bytes[0] % words.length]}${n}!hsa`;
+    };
+
 
     if (!courseId || !Array.isArray(emails) || emails.length === 0) {
       return json({ error: "courseId and emails[] are required" }, 400);
