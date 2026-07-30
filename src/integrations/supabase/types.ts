@@ -235,13 +235,22 @@ export type Database = {
       }
       assignments: {
         Row: {
+          allowed_attempts: number
+          anonymous_grading: boolean
+          available_from: string | null
+          available_until: string | null
           course_id: string
           created_at: string
+          display_grade_as: string
           due_at: string | null
           group_name: string
           id: string
           instructions: string | null
+          is_group_assignment: boolean
           module_item_id: string | null
+          omit_from_final_grade: boolean
+          online_entry_options: string[]
+          peer_reviews: boolean
           points: number
           published: boolean
           rubric_id: string | null
@@ -250,13 +259,22 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allowed_attempts?: number
+          anonymous_grading?: boolean
+          available_from?: string | null
+          available_until?: string | null
           course_id: string
           created_at?: string
+          display_grade_as?: string
           due_at?: string | null
           group_name?: string
           id?: string
           instructions?: string | null
+          is_group_assignment?: boolean
           module_item_id?: string | null
+          omit_from_final_grade?: boolean
+          online_entry_options?: string[]
+          peer_reviews?: boolean
           points?: number
           published?: boolean
           rubric_id?: string | null
@@ -265,13 +283,22 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allowed_attempts?: number
+          anonymous_grading?: boolean
+          available_from?: string | null
+          available_until?: string | null
           course_id?: string
           created_at?: string
+          display_grade_as?: string
           due_at?: string | null
           group_name?: string
           id?: string
           instructions?: string | null
+          is_group_assignment?: boolean
           module_item_id?: string | null
+          omit_from_final_grade?: boolean
+          online_entry_options?: string[]
+          peer_reviews?: boolean
           points?: number
           published?: boolean
           rubric_id?: string | null
