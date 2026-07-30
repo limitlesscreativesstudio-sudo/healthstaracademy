@@ -5,6 +5,8 @@ import { uploadViaXhr } from './uploadViaXhr';
 import RichTextEditor, { sanitizeHtml } from '@/components/portal/RichTextEditor';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
 import SaveStatus from '@/components/portal/SaveStatus';
+import InlineTitle from '@/components/portal/InlineTitle';
+import { toast } from 'sonner';
 
 const fileIcon = (t: string) => ({ pdf:'📄', pptx:'📊', ppt:'📊', docx:'📝', doc:'📝', mp4:'🎥', mov:'🎥', jpg:'🖼️', png:'🖼️', xlsx:'📈' }[(t||'').toLowerCase()] ?? '📎');
 
@@ -150,6 +152,14 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   }, [orderedPages, selectedId]);
 
   const selected = orderedPages.find(p => p.id === selectedId) || null;
+
+  const renamePage = async (id: string, title: string) => {
+    const { error } = await supabase.from('lms_pages')
+      .update({ title, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error) { toast.error('Could not rename page'); return; }
+    setPages(p => p.map(x => x.id === id ? { ...x, title } : x));
+    toast.success('Title updated');
+  };
 
   const savePage = async () => {
     if (!form.title.trim() || !courseId) return;
