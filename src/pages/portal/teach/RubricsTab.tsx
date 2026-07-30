@@ -222,7 +222,9 @@ const RubricsTab: React.FC<Props> = ({ courseId, canEdit }) => {
           onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
           <span style={{ fontSize:22 }}>📋</span>
           <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontSize:14, fontWeight:600, color:C.primary }}>{r.title}</div>
+            <div style={{ fontSize:14, fontWeight:600, color:C.primary }}>
+              <InlineTitle value={r.title} disabled={!canEdit} label="rubric title" onSave={(t) => renameRubric(r, t)} />
+            </div>
             <div style={{ fontSize:12, color:C.muted, marginTop:3 }}>
               {r.criteria_count} criteria • {r.total_points} points • created {new Date(r.created_at).toLocaleDateString()}
             </div>
