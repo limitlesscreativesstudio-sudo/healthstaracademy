@@ -91,6 +91,8 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
         built.push({
           enrollmentId:   row.id,
           profileId:      p?.id ?? '',
+          userId:         row.user_id,
+
           name,
           email:          '',
           role:           row.role ?? 'student',
