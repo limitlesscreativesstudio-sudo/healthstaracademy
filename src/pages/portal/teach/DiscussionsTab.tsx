@@ -143,6 +143,14 @@ const DiscussionsTab: React.FC<Props> = ({ courseId, canEdit }) => {
     onConfirm: () => { doDeleteDiscussion(d.id); setConfirm(null); },
   });
 
+  const renameDiscussion = async (d: Discussion, title: string) => {
+    const { error } = await supabase.from('discussions').update({ title }).eq('id', d.id);
+    if (error) return toast.error('Could not rename');
+    setItems(p => p.map(x => x.id === d.id ? { ...x, title } : x));
+    setOpen(o => (o && o.id === d.id ? { ...o, title } : o));
+    toast.success('Title updated');
+  };
+
   const togglePin = async (d: Discussion) => {
     const { error } = await supabase.from('discussions').update({ pinned: !d.pinned }).eq('id', d.id);
     if (error) return toast.error('Could not update');
