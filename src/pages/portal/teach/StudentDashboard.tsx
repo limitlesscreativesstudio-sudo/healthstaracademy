@@ -715,7 +715,18 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
           </div>
         </div>
       )}
+
+      {profilePerson && courseId && (
+        <StudentProfilePanel
+          userId={profilePerson.userId}
+          courseId={courseId}
+          name={profilePerson.name}
+          email={profilePerson.email}
+          onClose={() => setProfilePerson(null)}
+        />
+      )}
     </div>
+
   );
 };
 
