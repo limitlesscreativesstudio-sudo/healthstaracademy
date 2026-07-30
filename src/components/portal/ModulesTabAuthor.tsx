@@ -588,6 +588,7 @@ const SortableModule = ({
                     onEdit={() => onEditItem(i)}
                     onDelete={() => onDeleteItem(i)}
                     onDuplicate={() => onDuplicateItem(i)}
+                    onRename={onRenameItem}
                     onMoveTo={(targetId: string) => onMoveItem(i, targetId)}
                     onMoveWithin={(where: "up" | "down" | "top" | "bottom") => onMoveItemWithin(i, where)}
                   />
