@@ -48,6 +48,7 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
     setLoading(true);
+    setAddError('');
     const [enrRes, pendRes] = await Promise.all([
       supabase
         .from('enrollments')
@@ -59,6 +60,10 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
         .eq('course_id', courseId)
         .eq('status', 'pending'),
     ]);
+
+    if (enrRes.error || pendRes.error) {
+      setAddError(`Could not load the roster: ${(enrRes.error ?? pendRes.error)?.message}`);
+    }
 
     const built: Person[] = [];
     // Profiles are fetched separately (no FK relationship for a PostgREST embed).
