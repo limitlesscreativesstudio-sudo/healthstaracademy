@@ -456,7 +456,15 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
                       </div>
                       <div>
                         <div style={{ fontSize:13, fontWeight:600, color:C.primary, display:'flex', alignItems:'center', gap:6 }}>
-                          {p.name}
+                          {p.pending || !p.userId ? p.name : (
+                            <button onClick={() => setProfilePerson(p)}
+                              title={`View ${p.name}'s full record`}
+                              style={{ background:'none', border:'none', padding:0, cursor:'pointer',
+                                font:'inherit', color:C.primary, textDecoration:'underline' }}>
+                              {p.name}
+                            </button>
+                          )}
+
                           {p.pending && (
                             <span style={{ fontSize:10, padding:'2px 8px', borderRadius:20, fontWeight:700,
                               background:'#FFF3CD', color:'#8A6D00', border:'1px solid #FFE082' }}>
