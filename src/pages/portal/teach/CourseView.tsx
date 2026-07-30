@@ -18,6 +18,7 @@ import Dashboard         from './Dashboard';
 import SettingsTab       from './SettingsTab';
 import CalendarTab       from './CalendarTab';
 import RubricsTab        from './RubricsTab';
+import OutcomesTab       from './OutcomesTab';
 import StudentProgress   from './StudentProgress';
 import AnalyticsTab      from './AnalyticsTab';
 import Account           from './Account';
@@ -856,7 +857,7 @@ const CourseView: React.FC = () => {
     required:      <RequiredWork courseId={cid} canEdit={canEdit} />,
     career:        <CareerPortal />,
     discussions:   <DiscussionsTab courseId={cid} canEdit={canEdit} />,
-    outcomes:      <Placeholder title="Outcomes" />,
+    outcomes:      <OutcomesTab courseId={cid} canEdit={canEdit} />,
     rubrics:       <RubricsTab courseId={cid} canEdit={canEdit} />,
     analytics:     <AnalyticsTab courseId={cid} canEdit={canEdit} />,
     lucid:         <Placeholder title="Lucid (Whiteboard)" />,
