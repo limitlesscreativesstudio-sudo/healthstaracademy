@@ -112,6 +112,8 @@ const AdminDashboard = () => {
         {activeTab === "agents" && <AgentsHub />}
         {activeTab === "cohorts" && <CohortManager />}
         {activeTab === "cohort_hub" && <CohortOpsHub />}
+        {activeTab === "roster_import" && <CohortRosterImport />}
+
         {activeTab === "job_pipeline" && <JobPipelineTracker />}
         {activeTab === "emails" && <EmailLog />}
         {activeTab === "webhooks" && <WebhookInfo />}
