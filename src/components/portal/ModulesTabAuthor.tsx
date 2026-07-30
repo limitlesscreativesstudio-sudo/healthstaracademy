@@ -516,7 +516,9 @@ const SortableModule = ({
             <button type="button" onClick={onToggleCollapse} className="p-1 hover:bg-muted rounded" aria-label="Toggle module">
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
-        <div className="font-semibold flex-1 truncate">{m.title}</div>
+        <div className="font-semibold flex-1 min-w-0">
+          <InlineTitle value={m.title} disabled={!isInstructor} label="module title" onSave={(t) => onRenameModule?.(t)} />
+        </div>
         {isInstructor && !m.published && (
           <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1.5 py-0.5">Unpublished</span>
         )}
