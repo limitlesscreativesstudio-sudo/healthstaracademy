@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase, useAuth } from './AuthContext';
 import { toast } from 'sonner';
+import InlineTitle from '@/components/portal/InlineTitle';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', error:'#C0392B', success:'#127A1B', warn:'#B26A00' } as const;
 
@@ -84,6 +85,13 @@ const OutcomesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   useEffect(() => { load(); }, [courseId]);
 
   const resetForm = () => setForm({ title:'', description:'', category:'', mastery_threshold:3, points_possible:5 });
+
+  const renameOutcome = async (id: string, title: string) => {
+    const { error } = await supabase.from('outcomes').update({ title }).eq('id', id);
+    if (error) return toast.error('Could not rename');
+    setOutcomes(p => p.map(o => o.id === id ? { ...o, title } : o));
+    toast.success('Title updated');
+  };
 
   const saveOutcome = async () => {
     if (!form.title.trim() || !courseId) return;
