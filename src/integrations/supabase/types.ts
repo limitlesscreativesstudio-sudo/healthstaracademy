@@ -1844,6 +1844,92 @@ export type Database = {
         }
         Relationships: []
       }
+      outcome_criteria: {
+        Row: {
+          created_at: string
+          criterion_id: string
+          id: string
+          outcome_id: string
+        }
+        Insert: {
+          created_at?: string
+          criterion_id: string
+          id?: string
+          outcome_id: string
+        }
+        Update: {
+          created_at?: string
+          criterion_id?: string
+          id?: string
+          outcome_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outcome_criteria_criterion_id_fkey"
+            columns: ["criterion_id"]
+            isOneToOne: false
+            referencedRelation: "rubric_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outcome_criteria_outcome_id_fkey"
+            columns: ["outcome_id"]
+            isOneToOne: false
+            referencedRelation: "outcomes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outcomes: {
+        Row: {
+          category: string | null
+          course_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          mastery_threshold: number
+          points_possible: number
+          position: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          course_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          mastery_threshold?: number
+          points_possible?: number
+          position?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          course_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          mastery_threshold?: number
+          points_possible?: number
+          position?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outcomes_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pending_enrollments: {
         Row: {
           accepted_at: string | null
