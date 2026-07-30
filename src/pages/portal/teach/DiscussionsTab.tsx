@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase, useAuth } from './AuthContext';
 import { toast } from 'sonner';
+import InlineTitle from '@/components/portal/InlineTitle';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', error:'#C0392B', success:'#127A1B' } as const;
 
@@ -311,7 +312,9 @@ const DiscussionsTab: React.FC<Props> = ({ courseId, canEdit }) => {
             onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
             <span style={{ fontSize:22 }}>{d.locked ? '🔒' : d.pinned ? '📌' : '💬'}</span>
             <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:14, fontWeight:600, color:C.primary, fontFamily:'sans-serif' }}>{d.title}</div>
+            <div style={{ fontSize:14, fontWeight:600, color:C.primary, fontFamily:'sans-serif' }}>
+              <InlineTitle value={d.title} disabled={!canEdit} label="discussion title" onSave={(t) => renameDiscussion(d, t)} />
+            </div>
               <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', marginTop:3 }}>
                 by {d.author_name} • {d.reply_count} {d.reply_count===1?'reply':'replies'} • last activity {new Date(d.last_activity!).toLocaleDateString()}
               </div>
