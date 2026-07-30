@@ -1,6 +1,7 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth, supabase } from './AuthContext';
+import CourseToolsPanel from '@/components/portal/CourseToolsPanel';
 
 const C = {
   primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF',
@@ -8,7 +9,7 @@ const C = {
   success:'#127A1B', error:'#C0392B',
 } as const;
 
-const TABS = ['Course Details','Sections','Navigation','Apps','Feature Options','Integrations'] as const;
+const TABS = ['Course Details','Sections','Navigation','Course Tools','Apps','Feature Options','Integrations'] as const;
 type Tab = typeof TABS[number];
 
 const ACCEPTED_TYPES = ['image/jpeg','image/png','image/webp','image/gif'];
@@ -371,6 +372,7 @@ const SettingsTab: React.FC<{ courseId?: string }> = ({ courseId }) => {
 
       {activeTab === 'Sections'       && <Sections canEdit={canEdit}/>}
       {activeTab === 'Navigation'     && <Navigation/>}
+      {activeTab === 'Course Tools'   && <CourseToolsPanel courseId={courseId} canEdit={canEdit}/>}
       {activeTab === 'Apps'           && <div style={{ fontSize:14, color:C.muted, fontFamily:'sans-serif' }}>No external apps configured. Connect apps via LTI integration.</div>}
       {activeTab === 'Feature Options'&& <div style={{ fontSize:14, color:C.muted, fontFamily:'sans-serif' }}>Feature flags and experimental options will appear here.</div>}
       {activeTab === 'Integrations'   && <div style={{ fontSize:14, color:C.muted, fontFamily:'sans-serif' }}>Supabase, Zoom, and other integrations will be configured here.</div>}
