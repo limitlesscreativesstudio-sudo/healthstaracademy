@@ -262,6 +262,18 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
           </div>
         </div>
       ))}
+
+      {canEdit && (
+        <AssignmentEditorDialog
+          open={showForm}
+          courseId={courseId}
+          assignment={editRow}
+          onClose={() => { setShowForm(false); setEditRow(null); }}
+          onSaved={(row, isNew) => {
+            setAssignments(p => isNew ? [...p, row] : p.map(a => a.id === row.id ? row : a));
+          }}
+        />
+      )}
     </div>
   );
 };
