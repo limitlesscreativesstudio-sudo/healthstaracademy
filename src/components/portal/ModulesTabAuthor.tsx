@@ -486,6 +486,7 @@ const SortableModule = ({
   fileMap, pageMap, discussionMap, onOpenFile, onOpenPage,
   onToggleCollapse, onTogglePublish, onEdit, onDelete, onAddItem,
   onEditItem, onDeleteItem, onToggleItemPublish, onDuplicateItem, onMoveItem, onMoveItemWithin, onMoveModule,
+  onRenameModule, onRenameItem,
 }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: m.id,
