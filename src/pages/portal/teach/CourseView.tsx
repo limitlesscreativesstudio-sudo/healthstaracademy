@@ -18,6 +18,7 @@ import Dashboard         from './Dashboard';
 import SettingsTab       from './SettingsTab';
 import CalendarTab       from './CalendarTab';
 import RubricsTab        from './RubricsTab';
+import OutcomesTab       from './OutcomesTab';
 import StudentProgress   from './StudentProgress';
 import AnalyticsTab      from './AnalyticsTab';
 import Account           from './Account';
