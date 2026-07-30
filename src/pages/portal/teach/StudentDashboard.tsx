@@ -49,6 +49,8 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   const [instantMode,  setInstantMode]  = useState(false);
   const [credentials,  setCredentials]  = useState<Array<{ email: string; password: string }>>([]);
   const [savingRoleId, setSavingRoleId] = useState<string | null>(null);
+  const [profilePerson, setProfilePerson] = useState<Person | null>(null);
+
 
 
   // ── Load enrollments + pending invites ─────────────────────────────────────
