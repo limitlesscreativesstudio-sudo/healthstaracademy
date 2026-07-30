@@ -856,7 +856,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
           if (/^final\s*exam/i.test(s)) return { key:'final', label:'Final Exam', order: 5 };
           if (/^day\s*\d+/i.test(s)) return { key:'day', label:'Day Quizzes', order: 1 };
           if (/^module\s*\d+/i.test(s)) return { key:'module', label:'Module Quizzes', order: 2 };
-          if (/case\s*study/i.test(s)) return { key:'case', label:'Case Study Quizzes', order: 3 };
+          if (/case\s*study/i.test(s)) return { key:'case', label:'Assignment Quizzes', order: 3 };
           return { key:'other', label:'Other Quizzes', order: 4 };
         };
         const groups: Record<string, { label:string; order:number; items: Quiz[] }> = {};
