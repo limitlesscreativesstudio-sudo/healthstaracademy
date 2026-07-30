@@ -110,7 +110,30 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
         });
       }
     }
+    // Enrich enrolled rows with real email addresses (auth data, service-role only).
+    try {
+      const { data: rosterData } = await supabase.functions.invoke('course-roster', {
+        body: { action: 'list', courseId },
+      });
+      const byId: Record<string, any> = {};
+      for (const e of (rosterData?.enrollments ?? [])) byId[e.id] = e;
+      for (const person of built) {
+        const match = byId[person.enrollmentId];
+        if (match) {
+          person.email = match.email ?? '';
+          if (match.full_name) {
+            person.name = match.full_name;
+            person.avatarInitials = match.full_name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+          } else if (match.email) {
+            person.name = match.email.split('@')[0];
+            person.avatarInitials = match.email.slice(0, 2).toUpperCase();
+          }
+        }
+      }
+    } catch { /* roster enrichment is best-effort */ }
+
     setPeople(built);
+
     setLoading(false);
   };
 
