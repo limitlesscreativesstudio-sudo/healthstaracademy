@@ -73,8 +73,9 @@ Deno.serve(async (req) => {
     if (userErr || !userRes.user) return json({ error: "Unauthorized" }, 401);
     const caller = userRes.user;
 
-    const { action, courseId, email, enrollmentId, inviteId, origin } = await req.json();
+    const { action, courseId, email, enrollmentId, inviteId, origin, role } = await req.json();
     if (!courseId) return json({ error: "courseId required" }, 400);
+
 
     const admin = createClient(url, service);
 
