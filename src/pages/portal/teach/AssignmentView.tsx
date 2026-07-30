@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, useAuth } from './AuthContext';
 import { toast } from 'sonner';
+import InlineTitle from '@/components/portal/InlineTitle';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -91,6 +92,13 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
     setForm({ title:'', submission_type:'assignment', group_name:'Assignments', points:'100', due_at:'', published:false });
     setShowForm(false); setSaving(false);
     toast.success('Assignment saved');
+  };
+
+  const rename = async (id: string, title: string) => {
+    const { error } = await supabase.from('assignments').update({ title }).eq('id', id);
+    if (error) return toast.error('Could not rename');
+    setAssignments(p => p.map(a => a.id === id ? { ...a, title } : a));
+    toast.success('Title updated');
   };
 
   const togglePub = async (id: string, current: boolean) => {
