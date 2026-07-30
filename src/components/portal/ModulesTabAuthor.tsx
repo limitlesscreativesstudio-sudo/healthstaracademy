@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ContentViewer, { type ContentSource } from "@/components/portal/ContentViewer";
@@ -66,7 +66,8 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
   const [items, setItems] = useState<ModuleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-  const [allCollapsed, setAllCollapsed] = useState(false);
+  const [allCollapsed, setAllCollapsed] = useState(true);
+  const initialCollapseDone = useRef(false);
   const [fileMap, setFileMap] = useState<Record<string, { url: string; name: string; type: string }>>({});
   const [pageMap, setPageMap] = useState<Record<string, { title: string; body: string }>>({});
   const [discussionMap, setDiscussionMap] = useState<Record<string, { title: string; body: string }>>({});
@@ -91,6 +92,11 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
     const { data: mods } = await modQuery;
     const sortedMods = (mods ?? []).sort((a, b) => a.position - b.position);
     setModules(sortedMods);
+    if (!initialCollapseDone.current) {
+      initialCollapseDone.current = true;
+      setCollapsed(new Set(sortedMods.map(m => m.id)));
+      setAllCollapsed(true);
+    }
     const ids = (mods ?? []).map(m => m.id);
     let allItems: ModuleItem[] = [];
     if (ids.length) {

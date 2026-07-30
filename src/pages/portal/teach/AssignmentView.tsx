@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase, useAuth } from './AuthContext';
 import { toast } from 'sonner';
 import InlineTitle from '@/components/portal/InlineTitle';
+import AssignmentEditorDialog from '@/components/portal/AssignmentEditorDialog';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -24,13 +25,9 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
   const [rosterSize, setRosterSize] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [editRow, setEditRow] = useState<any | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all'|'published'|'unpublished'>('all');
-  const [form, setForm] = useState({
-    title:'', submission_type:'assignment', group_name:'Assignments',
-    points:'100', due_at:'', published: false,
-  });
   const natSort = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
   const load = async () => {
@@ -78,21 +75,8 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
 
   useEffect(() => { load(); }, [courseId, user?.id, canEdit]);
 
-  const save = async () => {
-    if (!form.title.trim() || !courseId) return;
-    setSaving(true);
-    const { data, error } = await supabase.from('assignments')
-      .insert({
-        course_id: courseId, title: form.title.trim(), submission_type: form.submission_type,
-        group_name: form.group_name, points: parseInt(form.points) || 0,
-        due_at: form.due_at || null, published: form.published,
-      }).select().single();
-    if (error) { toast.error('Could not create assignment'); setSaving(false); return; }
-    if (data) setAssignments(p => [...p, data]);
-    setForm({ title:'', submission_type:'assignment', group_name:'Assignments', points:'100', due_at:'', published:false });
-    setShowForm(false); setSaving(false);
-    toast.success('Assignment saved');
-  };
+
+
 
   const rename = async (id: string, title: string) => {
     const { error } = await supabase.from('assignments').update({ title }).eq('id', id);
@@ -150,7 +134,7 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
             </button>
           ))}
           {canEdit && (
-            <button onClick={() => setShowForm(!showForm)}
+            <button onClick={() => { setEditRow(null); setShowForm(true); }}
               style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
               + Assignment
             </button>
@@ -158,56 +142,8 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
         </div>
       </div>
 
-      {showForm && canEdit && (
-        <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:8, padding:20, marginBottom:20 }}>
-          <h3 style={{ margin:'0 0 16px', fontSize:15, fontFamily:'sans-serif', color:C.text }}>New Assignment</h3>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:12 }}>
-            <div style={{ gridColumn:'1/-1' }}>
-              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Name *</label>
-              <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
-                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', outline:'none' }}/>
-            </div>
-            <div>
-              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Type</label>
-              <select value={form.submission_type} onChange={e => setForm(p => ({ ...p, submission_type: e.target.value }))}
-                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 9px', fontSize:13, fontFamily:'sans-serif' }}>
-                {['assignment','quiz','exam','discussion'].map(o => <option key={o} value={o}>{o[0].toUpperCase()+o.slice(1)}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Group</label>
-              <select value={form.group_name} onChange={e => setForm(p => ({ ...p, group_name: e.target.value }))}
-                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 9px', fontSize:13, fontFamily:'sans-serif' }}>
-                {['Assignments','Quizzes','Clinical Skills','Exams','Written Assignments'].map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Points</label>
-              <input type="number" value={form.points} onChange={e => setForm(p => ({ ...p, points: e.target.value }))}
-                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 9px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box', outline:'none' }}/>
-            </div>
-            <div>
-              <label style={{ display:'block', fontSize:12, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:4 }}>Due Date</label>
-              <input type="datetime-local" value={form.due_at} onChange={e => setForm(p => ({ ...p, due_at: e.target.value }))}
-                style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 9px', fontSize:13, fontFamily:'sans-serif', boxSizing:'border-box' }}/>
-            </div>
-          </div>
-          <label style={{ display:'flex', alignItems:'center', gap:8, fontSize:13, fontFamily:'sans-serif', marginTop:12, marginBottom:14, cursor:'pointer' }}>
-            <input type="checkbox" checked={form.published} onChange={e => setForm(p => ({ ...p, published: e.target.checked }))} style={{ accentColor:C.primary }}/>
-            Publish immediately
-          </label>
-          <div style={{ display:'flex', gap:8 }}>
-            <button onClick={save} disabled={saving}
-              style={{ padding:'8px 20px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer', opacity:saving?.7:1 }}>
-              {saving ? 'Saving…' : 'Save Assignment'}
-            </button>
-            <button onClick={() => setShowForm(false)}
-              style={{ padding:'8px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+
+
 
       {loading ? (
         <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Loading assignments…</div>
@@ -215,7 +151,7 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
         <div style={{ padding:48, textAlign:'center', background:C.white, borderRadius:8, border:`1px dashed ${C.border}` }}>
           <div style={{ fontSize:40, marginBottom:12 }}>📝</div>
           <div style={{ fontSize:15, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:6 }}>No assignments yet</div>
-          {canEdit && <button onClick={() => setShowForm(true)} style={{ padding:'8px 20px', border:'none', borderRadius:6, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', marginTop:8 }}>+ Create Assignment</button>}
+          {canEdit && <button onClick={() => { setEditRow(null); setShowForm(true); }} style={{ padding:'8px 20px', border:'none', borderRadius:6, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', marginTop:8 }}>+ Create Assignment</button>}
         </div>
       ) : groups.map(group => (
         <div key={group} style={{ marginBottom:20 }}>
@@ -247,6 +183,8 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
                       </span>
                       <div onClick={e => { e.stopPropagation(); togglePub(a.id, a.published); }} title={a.published ? 'Published' : 'Unpublished'}
                         style={{ width:16, height:16, borderRadius:'50%', background: a.published ? C.success : C.border, cursor:'pointer', flexShrink:0 }}/>
+                      <button onClick={e => { e.stopPropagation(); setEditRow(a); setShowForm(true); }}
+                        style={{ padding:'3px 8px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:11, cursor:'pointer', color:C.primary }}>Edit</button>
                       <button onClick={e => { e.stopPropagation(); del(a.id); }}
                         style={{ padding:'3px 8px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:11, cursor:'pointer', color:C.error }}>✕</button>
                     </>
@@ -261,6 +199,18 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
           </div>
         </div>
       ))}
+
+      {canEdit && (
+        <AssignmentEditorDialog
+          open={showForm}
+          courseId={courseId}
+          assignment={editRow}
+          onClose={() => { setShowForm(false); setEditRow(null); }}
+          onSaved={(row, isNew) => {
+            setAssignments(p => isNew ? [...p, row] : p.map(a => a.id === row.id ? row : a));
+          }}
+        />
+      )}
     </div>
   );
 };
