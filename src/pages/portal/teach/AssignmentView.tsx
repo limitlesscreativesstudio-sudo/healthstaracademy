@@ -134,7 +134,7 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
             </button>
           ))}
           {canEdit && (
-            <button onClick={() => setShowForm(!showForm)}
+            <button onClick={() => { setEditRow(null); setShowForm(true); }}
               style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', fontWeight:600 }}>
               + Assignment
             </button>
@@ -151,7 +151,7 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
         <div style={{ padding:48, textAlign:'center', background:C.white, borderRadius:8, border:`1px dashed ${C.border}` }}>
           <div style={{ fontSize:40, marginBottom:12 }}>📝</div>
           <div style={{ fontSize:15, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:6 }}>No assignments yet</div>
-          {canEdit && <button onClick={() => setShowForm(true)} style={{ padding:'8px 20px', border:'none', borderRadius:6, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', marginTop:8 }}>+ Create Assignment</button>}
+          {canEdit && <button onClick={() => { setEditRow(null); setShowForm(true); }} style={{ padding:'8px 20px', border:'none', borderRadius:6, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', marginTop:8 }}>+ Create Assignment</button>}
         </div>
       ) : groups.map(group => (
         <div key={group} style={{ marginBottom:20 }}>
