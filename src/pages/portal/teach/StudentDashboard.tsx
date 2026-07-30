@@ -108,6 +108,8 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
         built.push({
           enrollmentId:   `pending:${row.id}`,
           profileId:      '',
+          userId:         '',
+
           name:           row.email.split('@')[0],
           email:          row.email,
           role:           row.role ?? 'student',
