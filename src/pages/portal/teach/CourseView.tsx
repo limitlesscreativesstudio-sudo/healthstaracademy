@@ -28,6 +28,7 @@ import ChooseHomePageDialog from '@/components/portal/ChooseHomePageDialog';
 import HomeRouter from '@/components/portal/HomeRouter';
 import ModulesTabAuthor from '@/components/portal/ModulesTabAuthor';
 import { toast, Toaster } from 'sonner';
+import { canEditTab } from '@/lib/portalPermissions';
 
 const useIsMobile = () => {
   const [m, setM] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
