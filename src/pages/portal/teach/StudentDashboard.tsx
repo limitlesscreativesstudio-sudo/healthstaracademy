@@ -265,7 +265,23 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
     return error?.message ?? null;
   };
 
+  // ── Change a person's course role ──────────────────────────────────────────
+  const changeRole = async (p: Person, role: string) => {
+    if (!courseId) return;
+    setSavingRoleId(p.enrollmentId);
+    setPeople(list => list.map(x => x.enrollmentId === p.enrollmentId ? { ...x, role } : x));
+    const { data, error } = await supabase.functions.invoke('course-roster', {
+      body: { action: 'set_role', courseId, enrollmentId: p.enrollmentId, role },
+    });
+    if (error || data?.error) {
+      setAddError(`Could not change role: ${error?.message || data?.error}`);
+      await load();
+    }
+    setSavingRoleId(null);
+  };
+
   const removePerson = async (enrollmentId: string) => {
+
     setPeople(p => p.filter(x => x.enrollmentId !== enrollmentId));
     const err = await removeOne(enrollmentId);
     if (err) { setAddError(`Could not remove: ${err}`); await load(); }
