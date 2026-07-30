@@ -206,15 +206,17 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   const removeOne = async (id: string) => {
     if (id.startsWith('pending:')) {
       const peId = id.slice('pending:'.length);
-      await supabase.from('pending_enrollments').delete().eq('id', peId);
-    } else {
-      await supabase.from('enrollments').delete().eq('id', id);
+      const { error } = await supabase.from('pending_enrollments').delete().eq('id', peId);
+      return error?.message ?? null;
     }
+    const { error } = await supabase.from('enrollments').delete().eq('id', id);
+    return error?.message ?? null;
   };
 
   const removePerson = async (enrollmentId: string) => {
     setPeople(p => p.filter(x => x.enrollmentId !== enrollmentId));
-    await removeOne(enrollmentId);
+    const err = await removeOne(enrollmentId);
+    if (err) { setAddError(`Could not remove: ${err}`); await load(); }
   };
 
   const removeSelected = async () => {
