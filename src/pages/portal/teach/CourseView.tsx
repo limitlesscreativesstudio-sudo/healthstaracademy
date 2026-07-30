@@ -28,6 +28,7 @@ import ChooseHomePageDialog from '@/components/portal/ChooseHomePageDialog';
 import HomeRouter from '@/components/portal/HomeRouter';
 import ModulesTabAuthor from '@/components/portal/ModulesTabAuthor';
 import { toast, Toaster } from 'sonner';
+import { canEditTab } from '@/lib/portalPermissions';
 
 const useIsMobile = () => {
   const [m, setM] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
@@ -831,41 +832,45 @@ const CourseView: React.FC = () => {
 
   const switcherCourses = courseOptions.length ? courseOptions : (activeCourse.uuid ? [activeCourse] : COURSES);
 
-  // Build sections map inside component so canEdit is available
+  // Build sections map inside component so canEdit is available.
+  // Per-tab authorization: students never edit; instructors only edit the tabs
+  // they are authorized for; admins can edit everything.
   const cid = activeCourse?.uuid;
+  const tabCan = (tab: string) => canEdit && canEditTab(authUser?.role as never, tab);
   const SECTIONS: Record<string, React.ReactNode> = {
     home:          <HomeRouter
                       type={homePageType}
                       courseId={cid}
-                      modules={cid ? <ModulesTabAuthor courseId={cid} isInstructor={canEdit} openAddOnMount={openAddModule} /> : <ModulesHome canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />}
-                      syllabus={<SyllabusTab courseUuid={cid} canEdit={canEdit} />}
-                      assignments={<AssignmentView courseId={cid} canEdit={canEdit} />}
-                      activity={<AnnouncementsPanel canEdit={canEdit} courseId={cid} />}
+                      modules={cid ? <ModulesTabAuthor courseId={cid} isInstructor={tabCan('modules')} openAddOnMount={openAddModule} /> : <ModulesHome canEdit={tabCan('modules')} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />}
+                      syllabus={<SyllabusTab courseUuid={cid} canEdit={tabCan('syllabus')} />}
+                      assignments={<AssignmentView courseId={cid} canEdit={tabCan('assignments')} />}
+                      activity={<AnnouncementsPanel canEdit={tabCan('announcements')} courseId={cid} />}
                    />,
-    modules:       cid ? <ModulesTabAuthor courseId={cid} isInstructor={canEdit} openAddOnMount={openAddModule} /> : <ModulesHome canEdit={canEdit} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
-    announcements: <AnnouncementsPanel canEdit={canEdit} courseId={cid} />,
-    assignments:   <AssignmentView courseId={cid} canEdit={canEdit} />,
-    quizzes:       <QuizView courseId={cid} canEdit={canEdit} />,
-    grades:        <StudentGrades  courseId={cid} canEdit={canEdit} />,
-    people:        <StudentDashboard courseId={cid} canEdit={canEdit} />,
-    pages:         <PagesTab       courseId={cid} canEdit={canEdit} />,
-    files:         <FilesTab       courseId={cid} canEdit={canEdit} />,
-    syllabus:      <SyllabusTab courseUuid={cid} canEdit={canEdit} />,
-    attendance:    <AttendanceTab  courseId={cid} canEdit={canEdit} />,
-    clinical:      <ClinicalSkillsTab courseId={cid} canEdit={canEdit} />,
-    readiness:     <ReadinessTab courseId={cid} canEdit={canEdit} />,
-    required:      <RequiredWork courseId={cid} canEdit={canEdit} />,
+    modules:       cid ? <ModulesTabAuthor courseId={cid} isInstructor={tabCan('modules')} openAddOnMount={openAddModule} /> : <ModulesHome canEdit={tabCan('modules')} courseUuid={cid} openAddOnMount={openAddModule} onCourseAction={handleCourseAction} />,
+    announcements: <AnnouncementsPanel canEdit={tabCan('announcements')} courseId={cid} />,
+    assignments:   <AssignmentView courseId={cid} canEdit={tabCan('assignments')} />,
+    quizzes:       <QuizView courseId={cid} canEdit={tabCan('quizzes')} />,
+    grades:        <StudentGrades  courseId={cid} canEdit={tabCan('grades')} />,
+    people:        <StudentDashboard courseId={cid} canEdit={tabCan('people')} />,
+    pages:         <PagesTab       courseId={cid} canEdit={tabCan('pages')} />,
+    files:         <FilesTab       courseId={cid} canEdit={tabCan('files')} />,
+    syllabus:      <SyllabusTab courseUuid={cid} canEdit={tabCan('syllabus')} />,
+    attendance:    <AttendanceTab  courseId={cid} canEdit={tabCan('attendance')} />,
+    clinical:      <ClinicalSkillsTab courseId={cid} canEdit={tabCan('clinical')} />,
+    readiness:     <ReadinessTab courseId={cid} canEdit={tabCan('readiness')} />,
+    required:      <RequiredWork courseId={cid} canEdit={tabCan('required')} />,
     career:        <CareerPortal />,
-    discussions:   <DiscussionsTab courseId={cid} canEdit={canEdit} />,
-    outcomes:      <OutcomesTab courseId={cid} canEdit={canEdit} />,
-    rubrics:       <RubricsTab courseId={cid} canEdit={canEdit} />,
-    analytics:     <AnalyticsTab courseId={cid} canEdit={canEdit} />,
+    discussions:   <DiscussionsTab courseId={cid} canEdit={tabCan('discussions')} />,
+    outcomes:      <OutcomesTab courseId={cid} canEdit={tabCan('outcomes')} />,
+    rubrics:       <RubricsTab courseId={cid} canEdit={tabCan('rubrics')} />,
+    analytics:     <AnalyticsTab courseId={cid} canEdit={tabCan('analytics')} />,
     lucid:         <Placeholder title="Lucid (Whiteboard)" />,
     settings:      <SettingsTab courseId={cid} />,
     account:       <Account onBackToDashboard={() => { setActiveTab('home'); setShowDashboard(true); }} isAdmin={authUser?.role === 'admin'} />,
     progress:      <StudentProgress courseId={cid} />,
-    calendar:      <CalendarTab courseId={cid} canEdit={canEdit} />,
+    calendar:      <CalendarTab courseId={cid} canEdit={tabCan('calendar')} />,
   };
+
 
   return (
     <div style={{ display:'flex', minHeight:'100vh', background:C.bg }}>
