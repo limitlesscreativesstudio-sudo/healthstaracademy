@@ -245,6 +245,14 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   return (
     <div style={{ padding:24 }}>
 
+      {!showModal && addError && (
+        <div role="alert" style={{ background:'#fdecea', border:`1px solid ${C.error}`, borderRadius:6,
+          padding:'10px 14px', marginBottom:14, fontSize:12, color:C.error, fontFamily:'sans-serif', whiteSpace:'pre-line' }}>
+          {addError}
+        </div>
+      )}
+
+
       {/* Header */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
         <div>
