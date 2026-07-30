@@ -163,7 +163,18 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    if (action === "set_role") {
+      if (!enrollmentId || !role) return json({ error: "enrollmentId and role required" }, 400);
+      const allowed = ["student", "ta", "teacher", "observer", "designer", "instructor"];
+      if (!allowed.includes(String(role))) return json({ error: "Invalid role" }, 400);
+      const { error } = await admin.from("enrollments")
+        .update({ role: String(role) }).eq("id", enrollmentId).eq("course_id", courseId);
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
     return json({ error: "Unknown action" }, 400);
+
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
