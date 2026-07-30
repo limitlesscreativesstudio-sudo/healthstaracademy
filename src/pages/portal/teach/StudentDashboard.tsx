@@ -43,6 +43,10 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   const [enrollInCohort, setEnrollInCohort] = useState(true);
   const [resendingId,  setResendingId]  = useState<string | null>(null);
   const [resendMsg,    setResendMsg]    = useState<{ id: string; ok: boolean; text: string } | null>(null);
+  const [instantMode,  setInstantMode]  = useState(false);
+  const [credentials,  setCredentials]  = useState<Array<{ email: string; password: string }>>([]);
+  const [savingRoleId, setSavingRoleId] = useState<string | null>(null);
+
 
   // ── Load enrollments + pending invites ─────────────────────────────────────
   const load = async () => {
