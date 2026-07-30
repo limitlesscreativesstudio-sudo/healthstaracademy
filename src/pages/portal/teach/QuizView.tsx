@@ -289,7 +289,13 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       if (error) return toast.error('Failed to save questions');
     }
     const total = rows.reduce((a,r) => a + Number(r.points||0), 0);
-    await supabase.from('quizzes').update({ total_points: total }).eq('id', editing.id);
+    const { error: metaErr } = await supabase.from('quizzes').update({
+      total_points: total,
+      title: (editing.title || '').trim() || 'Untitled Quiz',
+      instructions: (editing.instructions || '').trim() || null,
+      due_at: editing.due_at || null,
+    }).eq('id', editing.id);
+    if (metaErr) return toast.error('Failed to save quiz details');
     setEditing(null);
     toast.success('Quiz saved');
     load();
