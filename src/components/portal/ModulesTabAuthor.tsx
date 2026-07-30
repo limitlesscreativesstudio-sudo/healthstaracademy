@@ -611,7 +611,7 @@ const SortableModule = ({
 
 
 // ============ Sortable Item ============
-const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, pageMap, discussionMap, onOpenFile, onOpenPage, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin }: any) => {
+const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, pageMap, discussionMap, onOpenFile, onOpenPage, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin, onRename }: any) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -667,12 +667,19 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, 
       )}
       {!isHeader && itemIcon(i.item_type)}
       {isHeader ? (
-        <div className="flex-1 text-sm font-bold uppercase tracking-wide text-muted-foreground select-none">{i.title}</div>
+        <div className="flex-1 min-w-0 text-sm font-bold uppercase tracking-wide text-muted-foreground select-none">
+          <InlineTitle value={i.title} disabled={!isInstructor} label="header title" onSave={(t) => onRename?.(i.id, t)} />
+        </div>
       ) : (
-        <button type="button" onClick={openItem} className="flex-1 text-left text-sm hover:underline">
-          {i.title}
-          {i.description ? <div className="text-xs text-muted-foreground font-normal mt-0.5 line-clamp-1">{i.description}</div> : null}
-        </button>
+        <div className="flex-1 min-w-0 flex items-center gap-1">
+          <button type="button" onClick={openItem} className="min-w-0 flex-1 text-left text-sm hover:underline">
+            <span className="truncate block">{i.title}</span>
+            {i.description ? <div className="text-xs text-muted-foreground font-normal mt-0.5 line-clamp-1">{i.description}</div> : null}
+          </button>
+          {isInstructor && (
+            <InlineTitle value={i.title} label="item title" className="sr-only" onSave={(t) => onRename?.(i.id, t)} />
+          )}
+        </div>
       )}
       {isInstructor && !i.published && (
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1 py-0.5">Hidden</span>
