@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ContentViewer, { type ContentSource } from "@/components/portal/ContentViewer";
+import InlineTitle from "@/components/portal/InlineTitle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,6 +147,18 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
   const togglePublishItem = async (i: ModuleItem) => {
     await supabase.from("module_items").update({ published: !i.published }).eq("id", i.id);
     load();
+  };
+
+  const renameModule = async (id: string, title: string) => {
+    const { error } = await supabase.from("modules").update({ title }).eq("id", id);
+    if (error) { toast({ title: "Rename failed", description: error.message, variant: "destructive" }); return; }
+    setModules(p => p.map(m => m.id === id ? { ...m, title } : m));
+  };
+
+  const renameItem = async (id: string, title: string) => {
+    const { error } = await supabase.from("module_items").update({ title }).eq("id", id);
+    if (error) { toast({ title: "Rename failed", description: error.message, variant: "destructive" }); return; }
+    setItems(p => p.map(i => i.id === id ? { ...i, title } : i));
   };
 
   const deleteModule = async (m: Module) => {
@@ -409,6 +422,8 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
                   onMoveItem={moveItemToModule}
                   onMoveItemWithin={moveItemWithin}
                   onMoveModule={(where: "up" | "down" | "top" | "bottom") => moveModule(m, where)}
+                  onRenameModule={(t: string) => renameModule(m.id, t)}
+                  onRenameItem={(id: string, t: string) => renameItem(id, t)}
                 />
 
               ))}
@@ -471,6 +486,7 @@ const SortableModule = ({
   fileMap, pageMap, discussionMap, onOpenFile, onOpenPage,
   onToggleCollapse, onTogglePublish, onEdit, onDelete, onAddItem,
   onEditItem, onDeleteItem, onToggleItemPublish, onDuplicateItem, onMoveItem, onMoveItemWithin, onMoveModule,
+  onRenameModule, onRenameItem,
 }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: m.id,
@@ -500,7 +516,9 @@ const SortableModule = ({
             <button type="button" onClick={onToggleCollapse} className="p-1 hover:bg-muted rounded" aria-label="Toggle module">
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
-        <div className="font-semibold flex-1 truncate">{m.title}</div>
+        <div className="font-semibold flex-1 min-w-0">
+          <InlineTitle value={m.title} disabled={!isInstructor} label="module title" onSave={(t) => onRenameModule?.(t)} />
+        </div>
         {isInstructor && !m.published && (
           <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1.5 py-0.5">Unpublished</span>
         )}
@@ -570,6 +588,7 @@ const SortableModule = ({
                     onEdit={() => onEditItem(i)}
                     onDelete={() => onDeleteItem(i)}
                     onDuplicate={() => onDuplicateItem(i)}
+                    onRename={onRenameItem}
                     onMoveTo={(targetId: string) => onMoveItem(i, targetId)}
                     onMoveWithin={(where: "up" | "down" | "top" | "bottom") => onMoveItemWithin(i, where)}
                   />
@@ -593,7 +612,7 @@ const SortableModule = ({
 
 
 // ============ Sortable Item ============
-const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, pageMap, discussionMap, onOpenFile, onOpenPage, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin }: any) => {
+const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, pageMap, discussionMap, onOpenFile, onOpenPage, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin, onRename }: any) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -649,12 +668,19 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, 
       )}
       {!isHeader && itemIcon(i.item_type)}
       {isHeader ? (
-        <div className="flex-1 text-sm font-bold uppercase tracking-wide text-muted-foreground select-none">{i.title}</div>
+        <div className="flex-1 min-w-0 text-sm font-bold uppercase tracking-wide text-muted-foreground select-none">
+          <InlineTitle value={i.title} disabled={!isInstructor} label="header title" onSave={(t) => onRename?.(i.id, t)} />
+        </div>
       ) : (
-        <button type="button" onClick={openItem} className="flex-1 text-left text-sm hover:underline">
-          {i.title}
-          {i.description ? <div className="text-xs text-muted-foreground font-normal mt-0.5 line-clamp-1">{i.description}</div> : null}
-        </button>
+        <div className="flex-1 min-w-0 flex items-center gap-1">
+          <button type="button" onClick={openItem} className="min-w-0 flex-1 text-left text-sm hover:underline">
+            <span className="truncate block">{i.title}</span>
+            {i.description ? <div className="text-xs text-muted-foreground font-normal mt-0.5 line-clamp-1">{i.description}</div> : null}
+          </button>
+          {isInstructor && (
+            <InlineTitle value={i.title} label="item title" className="sr-only" onSave={(t) => onRename?.(i.id, t)} />
+          )}
+        </div>
       )}
       {isInstructor && !i.published && (
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1 py-0.5">Hidden</span>

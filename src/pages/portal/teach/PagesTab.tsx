@@ -5,6 +5,8 @@ import { uploadViaXhr } from './uploadViaXhr';
 import RichTextEditor, { sanitizeHtml } from '@/components/portal/RichTextEditor';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
 import SaveStatus from '@/components/portal/SaveStatus';
+import InlineTitle from '@/components/portal/InlineTitle';
+import { toast } from 'sonner';
 
 const fileIcon = (t: string) => ({ pdf:'📄', pptx:'📊', ppt:'📊', docx:'📝', doc:'📝', mp4:'🎥', mov:'🎥', jpg:'🖼️', png:'🖼️', xlsx:'📈' }[(t||'').toLowerCase()] ?? '📎');
 
@@ -150,6 +152,14 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
   }, [orderedPages, selectedId]);
 
   const selected = orderedPages.find(p => p.id === selectedId) || null;
+
+  const renamePage = async (id: string, title: string) => {
+    const { error } = await supabase.from('lms_pages')
+      .update({ title, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error) { toast.error('Could not rename page'); return; }
+    setPages(p => p.map(x => x.id === id ? { ...x, title } : x));
+    toast.success('Title updated');
+  };
 
   const savePage = async () => {
     if (!form.title.trim() || !courseId) return;
@@ -457,9 +467,9 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
                   {canEdit && <span style={{ color:C.muted, fontSize:14, cursor:'grab' }} title="Drag to reorder">⋮⋮</span>}
                   <span style={{ fontSize:11, color:C.muted, width:20, textAlign:'right', fontFamily:'monospace', flexShrink:0 }}>{i + 1}.</span>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:13, fontWeight:600, color: isSel ? C.primary : C.text, fontFamily:'sans-serif', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    <div style={{ fontSize:13, fontWeight:600, color: isSel ? C.primary : C.text, fontFamily:'sans-serif', display:'flex', alignItems:'center', gap:4, minWidth:0 }}>
                       {page.front_page && <span style={{ fontSize:9, background:'#EDE8F7', color:C.primary, padding:'1px 5px', borderRadius:20, marginRight:5, fontWeight:700 }}>FRONT</span>}
-                      {page.title}
+                      <InlineTitle value={page.title} disabled={!canEdit} label="page title" onSave={(t) => renamePage(page.id, t)} />
                     </div>
                     <div style={{ fontSize:10, color:C.muted, fontFamily:'sans-serif', marginTop:2 }}>
                       {new Date(page.updated_at).toLocaleDateString()}

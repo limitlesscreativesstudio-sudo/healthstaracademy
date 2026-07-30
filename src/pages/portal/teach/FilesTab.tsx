@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase, useAuth } from './AuthContext';
 import { uploadViaXhr } from './uploadViaXhr';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
+import InlineTitle from '@/components/portal/InlineTitle';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -194,6 +195,18 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     if (fileRef.current) fileRef.current.value = '';
   };
 
+  const renameFile = async (id: string, name: string) => {
+    const { error } = await supabase.from('lms_files').update({ file_name: name, name }).eq('id', id);
+    if (error) { setError(`Rename failed: ${error.message}`); return; }
+    setFiles(p => p.map(f => f.id === id ? { ...f, file_name: name } : f));
+  };
+
+  const renameFolder = async (id: string, name: string) => {
+    const { error } = await supabase.from('lms_folders').update({ name }).eq('id', id);
+    if (error) { setError(`Rename failed: ${error.message}`); return; }
+    setFolders(p => p.map(f => f.id === id ? { ...f, name } : f));
+  };
+
   const deleteFile = async (id: string, fileUrl: string) => {
     if (!confirm('Delete this file? This cannot be undone.')) return;
     setFiles(p => p.filter(f => f.id !== id));
@@ -257,7 +270,9 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
             <span onClick={() => setFolder(f.id)} style={{ flex:1, display:'flex', alignItems:'center', gap:6, minWidth:0 }}>
               {canEdit && <span title="Drag to reorder" style={{ color:C.muted, cursor:'grab' }}>⋮⋮</span>}
               <span>📂</span>
-              <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{f.name}</span>
+              <span style={{ overflow:'hidden', whiteSpace:'nowrap', flex:1, minWidth:0 }}>
+                <InlineTitle value={f.name} disabled={!canEdit} label="folder name" onSave={(t) => renameFolder(f.id, t)} />
+              </span>
               <span style={{ fontSize:10, color:C.muted }}>{countFor(f.id)}</span>
             </span>
             {canEdit && (
@@ -393,6 +408,10 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
                           onMouseLeave={e => (e.currentTarget as HTMLElement).style.textDecoration = 'none'}>
                           {f.file_name}
                         </button>
+                        {canEdit && (
+                          <InlineTitle value={f.file_name} label="file name" className="sr-only"
+                            onSave={(t) => renameFile(f.id, t)} />
+                        )}
                       </div>
                     </td>
                     <td style={{ padding:'10px 14px', fontSize:11, color:C.muted, maxWidth:160 }}>

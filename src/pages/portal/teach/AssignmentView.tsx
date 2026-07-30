@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, useAuth } from './AuthContext';
 import { toast } from 'sonner';
+import InlineTitle from '@/components/portal/InlineTitle';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -91,6 +92,13 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
     setForm({ title:'', submission_type:'assignment', group_name:'Assignments', points:'100', due_at:'', published:false });
     setShowForm(false); setSaving(false);
     toast.success('Assignment saved');
+  };
+
+  const rename = async (id: string, title: string) => {
+    const { error } = await supabase.from('assignments').update({ title }).eq('id', id);
+    if (error) return toast.error('Could not rename');
+    setAssignments(p => p.map(a => a.id === id ? { ...a, title } : a));
+    toast.success('Title updated');
   };
 
   const togglePub = async (id: string, current: boolean) => {
@@ -223,7 +231,9 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = C.white}>
                   <span style={{ fontSize:18 }}>{typeIcon(a.submission_type)}</span>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:13, fontWeight:600, color:C.primary, fontFamily:'sans-serif' }}>{a.title}</div>
+                    <div style={{ fontSize:13, fontWeight:600, color:C.primary, fontFamily:'sans-serif' }}>
+                      <InlineTitle value={a.title} disabled={!canEdit} label="assignment title" onSave={(t) => rename(a.id, t)} />
+                    </div>
                     <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif', marginTop:2 }}>
                       {a.points} pts
                       {a.due_at && ` • Due ${new Date(a.due_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}`}
