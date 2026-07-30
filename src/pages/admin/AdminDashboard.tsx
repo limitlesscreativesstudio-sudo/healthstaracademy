@@ -64,6 +64,8 @@ const AdminDashboard = () => {
     { id: "agents" as Tab, label: "Agents", icon: Bot },
     { id: "cohorts" as Tab, label: "Cohorts", icon: GraduationCap },
     { id: "cohort_hub" as Tab, label: "Cohort Hub", icon: LayoutDashboard },
+    { id: "roster_import" as Tab, label: "Class Import", icon: UserPlus },
+
     { id: "job_pipeline" as Tab, label: "Job Pipeline", icon: Briefcase },
     { id: "emails" as Tab, label: "Email Log", icon: Mail },
     { id: "webhooks" as Tab, label: "Zapier Setup", icon: Activity },
