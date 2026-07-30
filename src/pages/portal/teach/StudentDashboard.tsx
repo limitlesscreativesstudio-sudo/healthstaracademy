@@ -446,11 +446,27 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
 
                   {/* Role */}
                   <td style={{ padding:'10px 14px' }}>
-                    <span style={{ fontSize:11, padding:'3px 10px', borderRadius:20, fontWeight:600,
-                      background: roleColor(p.role) + '22', color: roleColor(p.role) }}>
-                      {p.role.charAt(0).toUpperCase() + p.role.slice(1)}
-                    </span>
+                    {canEdit && !p.pending ? (
+                      <select
+                        aria-label={`Role for ${p.name}`}
+                        value={p.role}
+                        disabled={savingRoleId === p.enrollmentId}
+                        onChange={e => changeRole(p, e.target.value)}
+                        style={{ fontSize:11, padding:'3px 8px', borderRadius:20, fontWeight:600,
+                          border:`1px solid ${roleColor(p.role)}55`, color: roleColor(p.role),
+                          background: roleColor(p.role) + '18', cursor:'pointer', fontFamily:'sans-serif' }}>
+                        {['student','ta','teacher','instructor','observer','designer'].map(r => (
+                          <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span style={{ fontSize:11, padding:'3px 10px', borderRadius:20, fontWeight:600,
+                        background: roleColor(p.role) + '22', color: roleColor(p.role) }}>
+                        {p.role.charAt(0).toUpperCase() + p.role.slice(1)}
+                      </span>
+                    )}
                   </td>
+
 
                   {/* Section */}
                   <td style={{ padding:'10px 14px', fontSize:12, color:C.muted }}>{p.section || '—'}</td>
