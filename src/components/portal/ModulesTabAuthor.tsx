@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ContentViewer, { type ContentSource } from "@/components/portal/ContentViewer";
+import InlineTitle from "@/components/portal/InlineTitle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
