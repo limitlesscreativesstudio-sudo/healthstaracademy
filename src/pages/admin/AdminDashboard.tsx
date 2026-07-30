@@ -3,17 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Users, GraduationCap, Mail, Activity, RefreshCw, LayoutDashboard, Briefcase, ShieldCheck, Bot } from "lucide-react";
+import { LogOut, Users, GraduationCap, Mail, Activity, RefreshCw, LayoutDashboard, Briefcase, ShieldCheck, Bot, UserPlus } from "lucide-react";
 import StudentPipeline from "./components/StudentPipeline";
 import CohortManager from "./components/CohortManager";
 import CohortOpsHub from "./components/CohortOpsHub";
+import CohortRosterImport from "./components/CohortRosterImport";
 import JobPipelineTracker from "./components/JobPipelineTracker";
 import EmailLog from "./components/EmailLog";
 import WebhookInfo from "./components/WebhookInfo";
 import AuthAuditLog from "./components/AuthAuditLog";
 import AgentsHub from "./components/AgentsHub";
 
-type Tab = "pipeline" | "cohorts" | "cohort_hub" | "job_pipeline" | "emails" | "webhooks" | "audit" | "agents";
+type Tab = "pipeline" | "cohorts" | "cohort_hub" | "roster_import" | "job_pipeline" | "emails" | "webhooks" | "audit" | "agents";
+
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<Tab>("pipeline");
