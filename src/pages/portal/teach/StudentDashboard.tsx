@@ -133,29 +133,43 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
     setAddingPeople(true);
     setAddError('');
 
-    const list = emails.split(/[,\n]/).map(e => e.trim()).filter(Boolean);
+    const list = Array.from(new Set(
+      emails.split(/[,\n;\s]+/).map(e => e.trim().toLowerCase()).filter(Boolean)
+    ));
+    const bad = list.filter(e => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
+    if (bad.length) {
+      setAddError(`These don't look like valid email addresses: ${bad.join(', ')}`);
+      setAddingPeople(false);
+      return;
+    }
 
-    const { data, error } = await supabase.functions.invoke('invite-student', {
-      body: {
-        courseId,
-        emails: list,
-        section: addSection,
-        role: addRole,
-        cohortId: enrollInCohort && cohortInfo ? cohortInfo.id : null,
-        redirectTo: `${window.location.origin}/portal/teach/login`,
-      },
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('invite-student', {
+        body: {
+          courseId,
+          emails: list,
+          section: addSection,
+          role: addRole,
+          cohortId: enrollInCohort && cohortInfo ? cohortInfo.id : null,
+          redirectTo: `${window.location.origin}/portal/teach/login`,
+        },
+      });
 
-    if (error) {
-      setAddError(error.message || 'Failed to send invitations.');
-    } else {
-      const failed = (data?.results ?? []).filter((r: any) => !r.ok);
-      if (failed.length > 0) {
-        setAddError(failed.map((r: any) => `${r.email} — ${r.message}`).join('\n'));
+      if (error) {
+        setAddError(error.message || 'Failed to send invitations.');
+      } else if (data?.error) {
+        setAddError(String(data.error));
       } else {
-        setShowModal(false);
-        setEmails('');
+        const failed = (data?.results ?? []).filter((r: any) => !r.ok);
+        if (failed.length > 0) {
+          setAddError(failed.map((r: any) => `${r.email} — ${r.message}`).join('\n'));
+        } else {
+          setShowModal(false);
+          setEmails('');
+        }
       }
+    } catch (e: any) {
+      setAddError(e?.message || 'Failed to send invitations.');
     }
     await load();
     setAddingPeople(false);
