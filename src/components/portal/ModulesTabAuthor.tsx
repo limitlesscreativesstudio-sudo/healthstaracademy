@@ -148,6 +148,18 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
     load();
   };
 
+  const renameModule = async (id: string, title: string) => {
+    const { error } = await supabase.from("modules").update({ title }).eq("id", id);
+    if (error) { toast({ title: "Rename failed", description: error.message, variant: "destructive" }); return; }
+    setModules(p => p.map(m => m.id === id ? { ...m, title } : m));
+  };
+
+  const renameItem = async (id: string, title: string) => {
+    const { error } = await supabase.from("module_items").update({ title }).eq("id", id);
+    if (error) { toast({ title: "Rename failed", description: error.message, variant: "destructive" }); return; }
+    setItems(p => p.map(i => i.id === id ? { ...i, title } : i));
+  };
+
   const deleteModule = async (m: Module) => {
     if (!confirm(`Delete module "${m.title}" and all its items?`)) return;
     await supabase.from("module_items").delete().eq("module_id", m.id);
