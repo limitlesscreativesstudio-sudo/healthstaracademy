@@ -270,7 +270,9 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
             <span onClick={() => setFolder(f.id)} style={{ flex:1, display:'flex', alignItems:'center', gap:6, minWidth:0 }}>
               {canEdit && <span title="Drag to reorder" style={{ color:C.muted, cursor:'grab' }}>⋮⋮</span>}
               <span>📂</span>
-              <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{f.name}</span>
+              <span style={{ overflow:'hidden', whiteSpace:'nowrap', flex:1, minWidth:0 }}>
+                <InlineTitle value={f.name} disabled={!canEdit} label="folder name" onSave={(t) => renameFolder(f.id, t)} />
+              </span>
               <span style={{ fontSize:10, color:C.muted }}>{countFor(f.id)}</span>
             </span>
             {canEdit && (
