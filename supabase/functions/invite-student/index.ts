@@ -126,11 +126,75 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // 2) Try to send the Supabase auth invite email.
+      const displayName = nameMap[email] || email.split("@")[0];
+
+      // 2a) Instant mode: create the account right away with a temporary password
+      //     so the roster works even when email delivery is unavailable.
+      if (instant) {
+        const pwd = tempPassword();
+        const { data: created, error: createErr } = await admin.auth.admin.createUser({
+          email,
+          password: pwd,
+          email_confirm: true,
+          user_metadata: { role: inviteRole, full_name: displayName },
+        });
+
+        let uid = created?.user?.id ?? null;
+        let existed = false;
+        if (createErr) {
+          const m = (createErr.message || "").toLowerCase();
+          if (m.includes("already") && m.includes("register") || m.includes("already exists")) {
+            existed = true;
+            let page = 1;
+            while (page < 20) {
+              const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+              if (error) break;
+              const match = data.users.find((u) => u.email?.toLowerCase() === email);
+              if (match) { uid = match.id; break; }
+              if (data.users.length < 200) break;
+              page++;
+            }
+          } else {
+            results.push({ email, ok: false, message: createErr.message });
+            continue;
+          }
+        }
+
+        if (!uid) {
+          results.push({ email, ok: false, message: "Could not create the account." });
+          continue;
+        }
+
+        await admin.from("profiles").upsert({ user_id: uid, full_name: displayName }, { onConflict: "user_id" });
+        await admin.from("user_roles").upsert({ user_id: uid, role: "student" }, { onConflict: "user_id,role" });
+
+        let enrolledCount = 0;
+        for (const cid of targetCourseIds) {
+          const { error: enrErr } = await admin
+            .from("enrollments").insert({ course_id: cid, user_id: uid, role: inviteRole });
+          if (!enrErr || enrErr.code === "23505") enrolledCount++;
+          await admin.from("pending_enrollments")
+            .update({ status: "accepted", accepted_at: new Date().toISOString() })
+            .eq("course_id", cid).eq("email", email);
+        }
+        if (cohortId) await admin.from("students").update({ cohort_id: cohortId }).eq("email", email);
+
+        results.push({
+          email, ok: true,
+          tempPassword: existed ? null : pwd,
+          message: existed
+            ? `Already had an account — enrolled in ${enrolledCount} course${enrolledCount === 1 ? "" : "s"}.`
+            : `Account created and enrolled in ${enrolledCount} course${enrolledCount === 1 ? "" : "s"}.`,
+        } as any);
+        continue;
+      }
+
+      // 2b) Try to send the Supabase auth invite email.
       const { data: inviteData, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
-        data: { role: inviteRole, full_name: email.split("@")[0] },
+        data: { role: inviteRole, full_name: displayName },
         redirectTo: finalRedirect,
       });
+
 
       let userAlreadyExists = false;
       let existingUserId: string | null = null;
