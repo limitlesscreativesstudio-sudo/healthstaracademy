@@ -687,13 +687,32 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   if (editing) {
     return (
       <div style={{ padding:24, maxWidth:820, margin:'0 auto', fontFamily:'sans-serif' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
-          <h2 style={{ margin:0, fontSize:18, fontWeight:700, color:C.text }}>{editing.title}</h2>
-          <div style={{ display:'flex', gap:8 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12, marginBottom:16 }}>
+          <div style={{ flex:1 }}>
+            <label htmlFor="quiz-title" style={{ display:'block', fontSize:11, fontWeight:700, color:C.muted, marginBottom:4, textTransform:'uppercase', letterSpacing:.4 }}>Quiz name</label>
+            <input id="quiz-title" value={editing.title} onChange={e => setEditing(prev => prev ? { ...prev, title: e.target.value } : prev)}
+              placeholder="Quiz name"
+              style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:5, padding:'8px 10px', fontSize:16, fontWeight:700, color:C.text, boxSizing:'border-box', outline:'none' }}/>
+          </div>
+          <div style={{ display:'flex', gap:8, paddingTop:22 }}>
             <button onClick={() => setEditing(null)} style={{ padding:'7px 16px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, cursor:'pointer' }}>Cancel</button>
             <button onClick={saveQuestions} style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, cursor:'pointer' }}>Save Quiz</button>
           </div>
         </div>
+
+        <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:16, marginBottom:16 }}>
+          <label htmlFor="quiz-instructions" style={{ display:'block', fontSize:11, fontWeight:700, color:C.muted, marginBottom:4, textTransform:'uppercase', letterSpacing:.4 }}>Instructions</label>
+          <textarea id="quiz-instructions" value={editing.instructions || ''} rows={3}
+            onChange={e => setEditing(prev => prev ? { ...prev, instructions: e.target.value } : prev)}
+            placeholder="Quiz instructions students will see…"
+            style={{ width:'100%', border:`1px solid ${C.border}`, borderRadius:4, padding:'8px 10px', fontSize:13, boxSizing:'border-box', resize:'vertical', outline:'none', marginBottom:10 }}/>
+          <label htmlFor="quiz-due" style={{ display:'block', fontSize:11, fontWeight:700, color:C.muted, marginBottom:4, textTransform:'uppercase', letterSpacing:.4 }}>Due date</label>
+          <input id="quiz-due" type="datetime-local"
+            value={editing.due_at ? new Date(editing.due_at).toISOString().slice(0,16) : ''}
+            onChange={e => setEditing(prev => prev ? { ...prev, due_at: e.target.value ? new Date(e.target.value).toISOString() : null } : prev)}
+            style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:'6px 9px', fontSize:13, outline:'none' }}/>
+        </div>
+
 
         {questions.map((q, qi) => (
           <div key={qi} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:16, marginBottom:12 }}>
