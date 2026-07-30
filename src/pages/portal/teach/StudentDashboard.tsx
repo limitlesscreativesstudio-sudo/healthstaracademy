@@ -1,6 +1,7 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect } from 'react';
 import { supabase } from './AuthContext';
+import StudentProfilePanel from '@/components/portal/StudentProfilePanel';
 
 const C = {
   primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF',
@@ -11,6 +12,7 @@ const C = {
 interface Person {
   enrollmentId: string;
   profileId:    string;
+  userId:       string;
   name:         string;
   email:        string;
   role:         string;
@@ -18,6 +20,7 @@ interface Person {
   pending:      boolean;
   avatarInitials: string;
 }
+
 
 interface Props {
   courseId?: string;
