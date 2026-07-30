@@ -580,6 +580,62 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
               <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif', marginTop:4 }}>
                 Separate multiple emails with a comma or new line.
               </div>
+
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginTop:10, flexWrap:'wrap' }}>
+                <label style={{ fontSize:12, fontWeight:600, color:C.primary, cursor:'pointer',
+                  border:`1px dashed ${C.primary}`, borderRadius:5, padding:'6px 12px', fontFamily:'sans-serif' }}>
+                  ⬆ Upload CSV
+                  <input type="file" accept=".csv,text/csv,text/plain" style={{ display:'none' }}
+                    onChange={async e => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const text = await file.text();
+                      const lines = text.split(/\r?\n/).filter(l => /@/.test(l));
+                      setEmails(prev => (prev ? prev + '\n' : '') + lines.join('\n'));
+                      e.currentTarget.value = '';
+                    }}/>
+                </label>
+                <span style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>
+                  Any CSV works — rows containing an email address are imported.
+                </span>
+              </div>
+
+              <label style={{ display:'flex', alignItems:'flex-start', gap:10, marginTop:12,
+                padding:'10px 12px', background:'#F4F2FA', border:`1px solid ${C.border}`,
+                borderRadius:6, cursor:'pointer', fontFamily:'sans-serif' }}>
+                <input type="checkbox" checked={instantMode}
+                  onChange={e => setInstantMode(e.target.checked)} style={{ marginTop:2 }}/>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:600, color:C.text }}>
+                    Create accounts instantly (no email needed)
+                  </div>
+                  <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>
+                    Accounts are created and enrolled right away, and you'll get a temporary
+                    password for each student to hand out. They can change it after signing in.
+                  </div>
+                </div>
+              </label>
+
+              {credentials.length > 0 && (
+                <div style={{ marginTop:12, padding:'12px 14px', background:'#E8F6EC',
+                  border:'1px solid #A9DCB8', borderRadius:6, fontFamily:'sans-serif' }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#127A1B', marginBottom:8 }}>
+                    ✅ Accounts created — save these temporary passwords now
+                  </div>
+                  <pre style={{ margin:0, fontSize:12, whiteSpace:'pre-wrap', color:C.text }}>
+{credentials.map(c => `${c.email}  →  ${c.password}`).join('\n')}
+                  </pre>
+                  <button
+                    onClick={() => navigator.clipboard?.writeText(
+                      credentials.map(c => `${c.email}\t${c.password}`).join('\n'))}
+                    style={{ marginTop:10, padding:'6px 12px', border:`1px solid ${C.primary}`,
+                      borderRadius:5, background:C.white, color:C.primary, fontSize:12,
+                      fontWeight:600, cursor:'pointer' }}>
+                    📋 Copy all
+                  </button>
+                </div>
+              )}
+
             </div>
 
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:20 }}>
