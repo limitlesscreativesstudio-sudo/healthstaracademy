@@ -79,21 +79,8 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
 
   useEffect(() => { load(); }, [courseId, user?.id, canEdit]);
 
-  const save = async () => {
-    if (!form.title.trim() || !courseId) return;
-    setSaving(true);
-    const { data, error } = await supabase.from('assignments')
-      .insert({
-        course_id: courseId, title: form.title.trim(), submission_type: form.submission_type,
-        group_name: form.group_name, points: parseInt(form.points) || 0,
-        due_at: form.due_at || null, published: form.published,
-      }).select().single();
-    if (error) { toast.error('Could not create assignment'); setSaving(false); return; }
-    if (data) setAssignments(p => [...p, data]);
-    setForm({ title:'', submission_type:'assignment', group_name:'Assignments', points:'100', due_at:'', published:false });
-    setShowForm(false); setSaving(false);
-    toast.success('Assignment saved');
-  };
+
+
 
   const rename = async (id: string, title: string) => {
     const { error } = await supabase.from('assignments').update({ title }).eq('id', id);
