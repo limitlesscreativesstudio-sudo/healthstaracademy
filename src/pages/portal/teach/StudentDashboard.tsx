@@ -1,6 +1,7 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect } from 'react';
 import { supabase } from './AuthContext';
+import StudentProfilePanel from '@/components/portal/StudentProfilePanel';
 
 const C = {
   primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF',
@@ -11,6 +12,7 @@ const C = {
 interface Person {
   enrollmentId: string;
   profileId:    string;
+  userId:       string;
   name:         string;
   email:        string;
   role:         string;
@@ -18,6 +20,7 @@ interface Person {
   pending:      boolean;
   avatarInitials: string;
 }
+
 
 interface Props {
   courseId?: string;
@@ -46,6 +49,8 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
   const [instantMode,  setInstantMode]  = useState(false);
   const [credentials,  setCredentials]  = useState<Array<{ email: string; password: string }>>([]);
   const [savingRoleId, setSavingRoleId] = useState<string | null>(null);
+  const [profilePerson, setProfilePerson] = useState<Person | null>(null);
+
 
 
   // ── Load enrollments + pending invites ─────────────────────────────────────
@@ -86,6 +91,8 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
         built.push({
           enrollmentId:   row.id,
           profileId:      p?.id ?? '',
+          userId:         row.user_id,
+
           name,
           email:          '',
           role:           row.role ?? 'student',
@@ -101,6 +108,8 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
         built.push({
           enrollmentId:   `pending:${row.id}`,
           profileId:      '',
+          userId:         '',
+
           name:           row.email.split('@')[0],
           email:          row.email,
           role:           row.role ?? 'student',
@@ -447,7 +456,15 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
                       </div>
                       <div>
                         <div style={{ fontSize:13, fontWeight:600, color:C.primary, display:'flex', alignItems:'center', gap:6 }}>
-                          {p.name}
+                          {p.pending || !p.userId ? p.name : (
+                            <button onClick={() => setProfilePerson(p)}
+                              title={`View ${p.name}'s full record`}
+                              style={{ background:'none', border:'none', padding:0, cursor:'pointer',
+                                font:'inherit', color:C.primary, textDecoration:'underline' }}>
+                              {p.name}
+                            </button>
+                          )}
+
                           {p.pending && (
                             <span style={{ fontSize:10, padding:'2px 8px', borderRadius:20, fontWeight:700,
                               background:'#FFF3CD', color:'#8A6D00', border:'1px solid #FFE082' }}>
@@ -698,7 +715,18 @@ const StudentDashboard: React.FC<Props> = ({ courseId, canEdit }) => {
           </div>
         </div>
       )}
+
+      {profilePerson && courseId && (
+        <StudentProfilePanel
+          userId={profilePerson.userId}
+          courseId={courseId}
+          name={profilePerson.name}
+          email={profilePerson.email}
+          onClose={() => setProfilePerson(null)}
+        />
+      )}
     </div>
+
   );
 };
 
