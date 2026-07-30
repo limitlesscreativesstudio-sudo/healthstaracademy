@@ -883,43 +883,46 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                     <span style={{ fontSize:12, color:C.muted, marginLeft:'auto' }}>{g.items.length} {g.items.length===1?'quiz':'quizzes'}</span>
                   </div>
                   {!collapsed && (
-                    <div style={{ display:'grid', gap:10 }}>
-                      {g.items.map(q => {
+                    <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, overflow:'hidden' }}>
+                      {g.items.map((q, qi) => {
                         const taken = attemptedIds.has(q.id);
                         const st = stats[q.id];
                         return (
-                          <div key={q.id} style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:'14px 18px' }}>
-                            <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-                              <span style={{ fontSize:22 }}>❓</span>
-                              <div style={{ flex:1, minWidth:0 }}>
-                                <div onClick={() => openDetails(q)} style={{ fontSize:14, fontWeight:600, color:C.primary, cursor:'pointer' }}>{q.title}</div>
-                                <div style={{ fontSize:12, color:C.muted }}>
-                                  {q.due_at && `Due ${new Date(q.due_at).toLocaleDateString()} • `}{Number(q.total_points||0)} pts
-                                  {!canEdit && taken && <span style={{ color:C.success, marginLeft:8, fontWeight:600 }}>✓ Submitted</span>}
-                                </div>
+                          <div key={q.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px', borderTop: qi === 0 ? 'none' : `1px solid ${C.border}` }}>
+                            <span aria-hidden style={{ width:6, height:6, borderRadius:'50%', flexShrink:0, background: q.published ? C.success : C.border }} />
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div
+                                onClick={() => openDetails(q)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetails(q); } }}
+                                style={{ fontSize:13.5, fontWeight:600, color:C.primary, cursor:'pointer', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}
+                              >{q.title}</div>
+                              <div style={{ fontSize:11.5, color:C.muted, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                                {Number(q.total_points||0)} pts
+                                {q.due_at && ` • Due ${new Date(q.due_at).toLocaleDateString()}`}
+                                {canEdit && st && ` • ${st.attempts} attempt${st.attempts===1?'':'s'}`}
+                                {canEdit && st && st.submitted ? ` • avg ${st.avgPct}%` : ''}
+                                {!canEdit && taken && <span style={{ color:C.success, marginLeft:6, fontWeight:600 }}>✓ Submitted</span>}
                               </div>
-                              {canEdit ? (
-                                <>
-                                  <span onClick={() => togglePub(q)} style={{ fontSize:11, padding:'2px 10px', borderRadius:20, background:q.published?'#e8f5e9':'#f5f3fa', color:q.published?C.success:C.muted, cursor:'pointer' }}>
-                                    {q.published?'● Published':'○ Unpublished'}
-                                  </span>
-                                  <button onClick={() => startTake(q)} style={{ padding:'5px 12px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Preview</button>
-                                  <button onClick={() => startEdit(q)} style={{ padding:'5px 12px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Edit</button>
-                                  <button onClick={() => del(q)} style={{ padding:'5px 10px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer', color:C.error }}>✕</button>
-                                </>
-                              ) : (
-                                <button onClick={() => startTake(q)}
-                                  style={{ padding:'6px 14px', border:'none', borderRadius:5, background:taken?C.border:C.primary, color:'white', fontSize:13, cursor:'pointer' }}>
-                                  {taken ? 'Review' : 'Start Quiz'}
-                                </button>
-                              )}
                             </div>
-                            {canEdit && st && (
-                              <div style={{ marginTop:10, paddingTop:10, borderTop:`1px dashed ${C.border}`, display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:12 }}>
-                                <Stat label="Attempts" value={st.attempts} />
-                                <Stat label="Completion" value={st.attempts ? `${Math.round((st.submitted/st.attempts)*100)}%` : '—'} sub={`${st.submitted}/${st.attempts}`} />
-                                <Stat label="Avg score" value={st.submitted ? `${st.avgPct}%` : '—'} />
+                            {canEdit ? (
+                              <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+                                <button onClick={() => togglePub(q)} title={q.published ? 'Published — click to unpublish' : 'Unpublished — click to publish'}
+                                  style={{ fontSize:11, padding:'3px 9px', borderRadius:20, border:'none', background:q.published?'#e8f5e9':'#f5f3fa', color:q.published?C.success:C.muted, cursor:'pointer' }}>
+                                  {q.published?'Published':'Draft'}
+                                </button>
+                                <button onClick={() => startEdit(q)} style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Edit</button>
+                                <button onClick={() => startTake(q)} title="Preview quiz" aria-label={`Preview ${q.title}`}
+                                  style={{ padding:'4px 8px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer', color:C.muted }}>👁</button>
+                                <button onClick={() => del(q)} title="Delete quiz" aria-label={`Delete ${q.title}`}
+                                  style={{ padding:'4px 8px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer', color:C.error }}>✕</button>
                               </div>
+                            ) : (
+                              <button onClick={() => startTake(q)}
+                                style={{ padding:'5px 13px', border:'none', borderRadius:5, background:taken?C.border:C.primary, color:'white', fontSize:12.5, cursor:'pointer', flexShrink:0 }}>
+                                {taken ? 'Review' : 'Start'}
+                              </button>
                             )}
                           </div>
                         );
