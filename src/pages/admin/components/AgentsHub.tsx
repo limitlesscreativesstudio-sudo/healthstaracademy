@@ -381,13 +381,22 @@ const AgentsHub = () => {
 
       {tab === "gbp" && (
         <div className="space-y-3">
+          <div className="flex gap-2">
+            {(["gbp", "facebook"] as const).map(ch => (
+              <Button key={ch} size="sm" variant={socialChannel === ch ? "default" : "outline"} onClick={() => setSocialChannel(ch)}>
+                {ch === "gbp" ? "Google Business Profile" : "Facebook"} ({posts.filter(p => (p.channel ?? "gbp") === ch).length})
+              </Button>
+            ))}
+          </div>
           <div className="text-xs text-muted-foreground p-3 border rounded-lg bg-muted/30">
-            <strong>Hands-off mode:</strong> if a <code className="bg-background px-1 rounded">GBP_WEBHOOK_URL</code> secret is set (Zapier/Make/n8n → Google Business Profile),
-            clicking <b>Publish</b> posts to GBP automatically. Without it, use <b>Copy</b> + <b>Open GBP</b> to paste manually, then <b>Mark posted</b>.
+            <strong>Hands-off mode:</strong> if a{" "}
+            <code className="bg-background px-1 rounded">{socialChannel === "facebook" ? "FACEBOOK_WEBHOOK_URL" : "GBP_WEBHOOK_URL"}</code> secret is set
+            (Zapier/Make/n8n → {socialChannel === "facebook" ? "Facebook Page" : "Google Business Profile"}),
+            clicking <b>Publish</b> posts automatically. Without it, use <b>Copy</b> + <b>Open {socialChannel === "facebook" ? "Facebook" : "GBP"}</b> to paste manually, then <b>Mark posted</b>.
             You'll get an email when a new draft is ready and if a publish attempt fails.
           </div>
-          {posts.length === 0 && <div className="text-sm text-muted-foreground p-4 border rounded-lg">No GBP drafts yet. Click Run on the Broadcaster card above.</div>}
-          {posts.map(p => (
+          {visiblePosts.length === 0 && <div className="text-sm text-muted-foreground p-4 border rounded-lg">No {socialChannel === "facebook" ? "Facebook" : "GBP"} drafts yet. Click Run on the Broadcaster card above.</div>}
+          {visiblePosts.map(p => (
             <div key={p.id} className="border rounded-lg p-4 bg-background">
               <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                 <span className="font-medium">{p.title ?? "Untitled"}</span>
