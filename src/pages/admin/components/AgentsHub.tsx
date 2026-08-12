@@ -78,7 +78,7 @@ const AgentsHub = () => {
     const [{ data: f }, { data: r }, { data: g }, { data: b }, { data: cfg }, { data: cfg2 }, { data: cp }, { data: sc }] = await Promise.all([
       supabase.from("agent_findings").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(50),
       supabase.from("agent_runs").select("*").order("started_at", { ascending: false }).limit(20),
-      supabase.from("gbp_posts").select("*").order("created_at", { ascending: false }).limit(10),
+      supabase.from("gbp_posts").select("*").order("created_at", { ascending: false }).limit(30),
       supabase.from("blog_drafts").select("*").order("created_at", { ascending: false }).limit(50),
       supabase.from("agent_config").select("auto_publish").eq("agent", "scribe").maybeSingle(),
       supabase.from("agent_config").select("auto_publish").eq("agent", "scout").maybeSingle(),
@@ -217,7 +217,7 @@ const AgentsHub = () => {
             {t === "findings" && `Findings (${findings.length})`}
             {t === "runs" && "Recent runs"}
             {t === "chat" && "Chat with an agent"}
-            {t === "gbp" && `GBP drafts (${posts.length})`}
+            {t === "gbp" && `Social drafts (${posts.length})`}
           </button>
         ))}
       </div>
@@ -414,9 +414,9 @@ const AgentsHub = () => {
                       const { data, error } = await supabase.functions.invoke("publish-gbp-post", { body: { id: p.id, action: "publish" } });
                       if (error) throw error;
                       if (data?.mode === "manual") {
-                        toast({ title: "Manual publish", description: "No webhook configured — use Copy + Open GBP, then Mark posted." });
+                        toast({ title: "Manual publish", description: `No webhook configured — use Copy + Open ${socialChannel === "facebook" ? "Facebook" : "GBP"}, then Mark posted.` });
                       } else {
-                        toast({ title: "Published to GBP" });
+                        toast({ title: `Published to ${socialChannel === "facebook" ? "Facebook" : "GBP"}` });
                       }
                       await load();
                     } catch (e: any) { toast({ title: "Publish failed", description: e.message, variant: "destructive" }); }
@@ -427,7 +427,14 @@ const AgentsHub = () => {
                   toast({ title: "Copied to clipboard" });
                 }}>Copy</Button>
                 <Button size="sm" variant="outline" asChild>
-                  <a href="https://business.google.com/" target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3 w-3 mr-1" />Open GBP</a>
+                  <a
+                    href={socialChannel === "facebook" ? "https://www.facebook.com/healthstaracademy" : "https://business.google.com/"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    {socialChannel === "facebook" ? "Open Facebook" : "Open GBP"}
+                  </a>
                 </Button>
                 {p.status !== "published" && (
                   <Button size="sm" variant="ghost" onClick={async () => {
