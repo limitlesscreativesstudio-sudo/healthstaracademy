@@ -97,6 +97,8 @@ const AgentsHub = () => {
   };
   useEffect(() => { load(); }, []);
 
+  const visiblePosts = posts.filter(p => (p.channel ?? "gbp") === socialChannel);
+
   const toggleAutoPublish = async (agent: "scribe" | "scout", next: boolean) => {
     setSavingAuto(true);
     try {
