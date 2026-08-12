@@ -70,6 +70,7 @@ Deno.serve(async (req) => {
           cta_label: post.cta_label,
           cta_url: post.cta_url,
           scheduled_for: post.scheduled_for,
+          channel,
           source: "hsa-broadcaster",
         }),
       });
@@ -78,14 +79,15 @@ Deno.serve(async (req) => {
         throw new Error(`Webhook returned ${res.status}: ${t}`);
       }
       await supabase.from("gbp_posts").update({ status: "published", published_at: new Date().toISOString() }).eq("id", id);
-      return json({ ok: true, status: "published", mode: "webhook" });
+      return json({ ok: true, status: "published", mode: "webhook", channel });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
+      const label = channel === "facebook" ? "Facebook" : "Google Business Profile";
       await notifyAdmin(
-        "GBP auto-publish failed",
-        `<p>The GBP post <b>${escape(post.title ?? "(untitled)")}</b> failed to publish via webhook.</p>
+        `${label} auto-publish failed`,
+        `<p>The ${label} post <b>${escape(post.title ?? "(untitled)")}</b> failed to publish via webhook.</p>
          <p><b>Error:</b> ${escape(msg)}</p>
-         <p>Open the Agents Hub → GBP tab and post it manually.</p>`,
+         <p>Open the Agents Hub → Social drafts tab and post it manually.</p>`,
       );
       return json({ ok: false, error: msg, mode: "webhook_failed" }, 500);
     }
