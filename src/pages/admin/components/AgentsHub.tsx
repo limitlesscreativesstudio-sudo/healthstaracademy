@@ -67,6 +67,7 @@ const AgentsHub = () => {
   const [running, setRunning] = useState<string | null>(null);
   const [tab, setTab] = useState<"findings" | "runs" | "chat" | "gbp" | "blog" | "compare">("blog");
   const [chatAgent, setChatAgent] = useState<"advocate" | "mentor">("mentor");
+  const [socialChannel, setSocialChannel] = useState<"gbp" | "facebook">("gbp");
   const [editing, setEditing] = useState<BlogDraft | null>(null);
   const [saving, setSaving] = useState(false);
   const [scribeAutoPublish, setScribeAutoPublish] = useState(false);
