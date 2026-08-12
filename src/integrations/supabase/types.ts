@@ -1340,6 +1340,7 @@ export type Database = {
         Row: {
           agent: string
           body: string
+          channel: string
           created_at: string
           cta_label: string | null
           cta_url: string | null
@@ -1354,6 +1355,7 @@ export type Database = {
         Insert: {
           agent?: string
           body: string
+          channel?: string
           created_at?: string
           cta_label?: string | null
           cta_url?: string | null
@@ -1368,6 +1370,7 @@ export type Database = {
         Update: {
           agent?: string
           body?: string
+          channel?: string
           created_at?: string
           cta_label?: string | null
           cta_url?: string | null

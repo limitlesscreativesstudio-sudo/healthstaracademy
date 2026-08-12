@@ -40,13 +40,22 @@ Deno.serve(async (req) => {
     }
 
     // action === "publish"
-    const webhook = Deno.env.get("GBP_WEBHOOK_URL");
+    const channel = (post as any).channel === "facebook" ? "facebook" : "gbp";
+    const webhook = channel === "facebook"
+      ? Deno.env.get("FACEBOOK_WEBHOOK_URL")
+      : Deno.env.get("GBP_WEBHOOK_URL");
+    const composer = channel === "facebook"
+      ? "https://www.facebook.com/healthstaracademy"
+      : "https://business.google.com/";
     if (!webhook) {
       return json({
         ok: false,
         mode: "manual",
-        message: "No GBP_WEBHOOK_URL configured. Copy the post and paste into Google Business Profile, then click 'Mark as posted'.",
-        gbp_composer: "https://business.google.com/",
+        channel,
+        message: channel === "facebook"
+          ? "No FACEBOOK_WEBHOOK_URL configured. Copy the post and paste it on your Facebook Page, then click 'Mark as posted'."
+          : "No GBP_WEBHOOK_URL configured. Copy the post and paste into Google Business Profile, then click 'Mark as posted'.",
+        gbp_composer: composer,
         post: { title: post.title, body: post.body, cta_label: post.cta_label, cta_url: post.cta_url },
       }, 200);
     }
@@ -61,6 +70,7 @@ Deno.serve(async (req) => {
           cta_label: post.cta_label,
           cta_url: post.cta_url,
           scheduled_for: post.scheduled_for,
+          channel,
           source: "hsa-broadcaster",
         }),
       });
@@ -69,14 +79,15 @@ Deno.serve(async (req) => {
         throw new Error(`Webhook returned ${res.status}: ${t}`);
       }
       await supabase.from("gbp_posts").update({ status: "published", published_at: new Date().toISOString() }).eq("id", id);
-      return json({ ok: true, status: "published", mode: "webhook" });
+      return json({ ok: true, status: "published", mode: "webhook", channel });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
+      const label = channel === "facebook" ? "Facebook" : "Google Business Profile";
       await notifyAdmin(
-        "GBP auto-publish failed",
-        `<p>The GBP post <b>${escape(post.title ?? "(untitled)")}</b> failed to publish via webhook.</p>
+        `${label} auto-publish failed`,
+        `<p>The ${label} post <b>${escape(post.title ?? "(untitled)")}</b> failed to publish via webhook.</p>
          <p><b>Error:</b> ${escape(msg)}</p>
-         <p>Open the Agents Hub → GBP tab and post it manually.</p>`,
+         <p>Open the Agents Hub → Social drafts tab and post it manually.</p>`,
       );
       return json({ ok: false, error: msg, mode: "webhook_failed" }, 500);
     }
