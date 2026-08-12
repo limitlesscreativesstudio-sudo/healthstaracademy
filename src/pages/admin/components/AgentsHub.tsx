@@ -14,7 +14,7 @@ import { Link } from "react-router-dom";
 
 type Finding = { id: string; agent: string; severity: string; title: string; detail: string | null; suggested_fix: string | null; status: string; created_at: string; };
 type Run = { id: string; agent: string; status: string; started_at: string; finished_at: string | null; summary: string | null };
-type GbpPost = { id: string; title: string | null; body: string; status: string; scheduled_for: string | null; created_at: string };
+type GbpPost = { id: string; title: string | null; body: string; status: string; scheduled_for: string | null; created_at: string; channel?: string | null };
 type BlogDraft = {
   id: string; agent: string; title: string; slug: string; meta_description: string | null;
   tldr: string | null; category: string | null; read_time: string | null;
