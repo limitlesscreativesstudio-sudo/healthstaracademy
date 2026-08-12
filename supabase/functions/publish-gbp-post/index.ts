@@ -40,13 +40,22 @@ Deno.serve(async (req) => {
     }
 
     // action === "publish"
-    const webhook = Deno.env.get("GBP_WEBHOOK_URL");
+    const channel = (post as any).channel === "facebook" ? "facebook" : "gbp";
+    const webhook = channel === "facebook"
+      ? Deno.env.get("FACEBOOK_WEBHOOK_URL")
+      : Deno.env.get("GBP_WEBHOOK_URL");
+    const composer = channel === "facebook"
+      ? "https://www.facebook.com/healthstaracademy"
+      : "https://business.google.com/";
     if (!webhook) {
       return json({
         ok: false,
         mode: "manual",
-        message: "No GBP_WEBHOOK_URL configured. Copy the post and paste into Google Business Profile, then click 'Mark as posted'.",
-        gbp_composer: "https://business.google.com/",
+        channel,
+        message: channel === "facebook"
+          ? "No FACEBOOK_WEBHOOK_URL configured. Copy the post and paste it on your Facebook Page, then click 'Mark as posted'."
+          : "No GBP_WEBHOOK_URL configured. Copy the post and paste into Google Business Profile, then click 'Mark as posted'.",
+        gbp_composer: composer,
         post: { title: post.title, body: post.body, cta_label: post.cta_label, cta_url: post.cta_url },
       }, 200);
     }
