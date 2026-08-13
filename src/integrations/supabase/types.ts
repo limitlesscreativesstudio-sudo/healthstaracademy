@@ -696,6 +696,38 @@ export type Database = {
         }
         Relationships: []
       }
+      cohort_deadline_reminders: {
+        Row: {
+          cohort_id: string
+          email: string
+          id: string
+          milestone_days: number
+          sent_at: string
+        }
+        Insert: {
+          cohort_id: string
+          email: string
+          id?: string
+          milestone_days: number
+          sent_at?: string
+        }
+        Update: {
+          cohort_id?: string
+          email?: string
+          id?: string
+          milestone_days?: number
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cohort_deadline_reminders_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cohorts: {
         Row: {
           capacity: number
@@ -2880,6 +2912,7 @@ export type Database = {
       }
       is_enrolled_in: { Args: { _course_id: string }; Returns: boolean }
       is_instructor_of: { Args: { _course_id: string }; Returns: boolean }
+      user_id_by_email: { Args: { _email: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user" | "student" | "instructor"
