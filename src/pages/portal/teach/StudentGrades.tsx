@@ -490,6 +490,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
                 );
               })}
             </tbody>
+            {!selfOnly && (
             <tfoot>
               <tr style={{ background:'#F0EDF7', fontWeight:700 }}>
                 <td style={{ padding:'10px 14px', fontSize:12, color:C.text, borderTop:`2px solid ${C.border}`, borderRight:`1px solid ${C.border}`, position:'sticky', left:0, background:'#F0EDF7', zIndex:5 }}>
