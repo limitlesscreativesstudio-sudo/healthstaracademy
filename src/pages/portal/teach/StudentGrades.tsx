@@ -279,12 +279,15 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
   return (
     <div style={{ padding:24 }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, gap:12, flexWrap:'wrap' }}>
-        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Gradebook</h2>
+        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>{selfOnly ? 'My Grades' : 'Gradebook'}</h2>
         <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+          {!selfOnly && (<>
           <label htmlFor="gb-student-search" className="sr-only">Search students</label>
           <input id="gb-student-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search students…"
             style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, fontFamily:'sans-serif', minWidth:160 }} />
+          </>)}
           <label htmlFor="gb-col-search" className="sr-only">Search assignments</label>
+
           <input id="gb-col-search" value={colSearch} onChange={e => setColSearch(e.target.value)} placeholder="Search assignments…"
             style={{ padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, fontFamily:'sans-serif', minWidth:180 }} />
           {(['all','assignment','quiz'] as const).map(f => (
@@ -299,10 +302,13 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
               ⚡ Bulk entry &amp; policies
             </button>
           )}
+          {!selfOnly && (<>
           <button onClick={exportCsv} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>📤 Export CSV</button>
           <button onClick={() => setShowRejects(v => !v)} style={{ padding:'7px 14px', border:`1px solid ${rejects.length?C.error:C.border}`, borderRadius:5, background:rejects.length?'#FDECEA':C.white, color:rejects.length?C.error:C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
             ⚠️ Rejected edits{rejects.length ? ` (${rejects.length})` : ''}
           </button>
+          </>)}
+
           <button onClick={load} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>🔄 Refresh</button>
         </div>
       </div>
@@ -484,6 +490,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
                 );
               })}
             </tbody>
+            {!selfOnly && (
             <tfoot>
               <tr style={{ background:'#F0EDF7', fontWeight:700 }}>
                 <td style={{ padding:'10px 14px', fontSize:12, color:C.text, borderTop:`2px solid ${C.border}`, borderRight:`1px solid ${C.border}`, position:'sticky', left:0, background:'#F0EDF7', zIndex:5 }}>
@@ -510,6 +517,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
                 </td>
               </tr>
             </tfoot>
+            )}
           </table>
         </div>
       )}

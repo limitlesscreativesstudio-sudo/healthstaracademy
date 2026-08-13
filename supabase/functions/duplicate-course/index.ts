@@ -205,6 +205,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Files (copy storage objects so the new course owns its content)
+    const copiedPaths = new Map<string, { path: string; url: string }>();
     const { data: files } = await db.from("lms_files").select("*").eq("course_id", sourceCourseId).order("name");
     for (const f of files ?? []) {
       let newPath: string | null = f.storage_path ?? null;
@@ -214,15 +215,29 @@ Deno.serve(async (req) => {
         const bucket = String(f.storage_path).startsWith("submissions/") ? "course-assets" : "course-files";
         const tail = String(f.storage_path).split("/").slice(1).join("/") || String(f.storage_path);
         const candidate = `${newCourseId}/${tail}`;
-        const { error: copyErr } = await db.storage.from(bucket).copy(f.storage_path, candidate);
-        if (!copyErr) {
-          newPath = candidate;
-          newUrl = db.storage.from(bucket).getPublicUrl(candidate).data.publicUrl;
-          if (f.file_url) urlMap.set(f.file_url, newUrl);
-          urlMap.set(f.storage_path, candidate);
-          bump("storage_objects");
+
+        // The same document can be attached in several folders. Copy the object
+        // once, then reuse it for every later row that points at it.
+        const already = copiedPaths.get(String(f.storage_path));
+        if (already) {
+          newPath = already.path;
+          newUrl = already.url;
+          if (f.file_url) urlMap.set(f.file_url, already.url);
+        } else {
+          const { error: copyErr } = await db.storage.from(bucket).copy(f.storage_path, candidate);
+          const publicUrl = db.storage.from(bucket).getPublicUrl(candidate).data.publicUrl;
+          // A duplicate-path error means the object is already in the new course.
+          if (!copyErr || /exist/i.test(String(copyErr.message ?? ""))) {
+            newPath = candidate;
+            newUrl = publicUrl;
+            if (f.file_url) urlMap.set(f.file_url, newUrl);
+            urlMap.set(f.storage_path, candidate);
+            copiedPaths.set(String(f.storage_path), { path: candidate, url: publicUrl });
+            bump("storage_objects");
+          }
         }
       }
+
 
       const { data: nf } = await db.from("lms_files").insert({
         ...strip(f),

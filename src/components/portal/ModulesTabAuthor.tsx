@@ -150,10 +150,37 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
     await supabase.from("modules").update({ published: !m.published }).eq("id", m.id);
     load();
   };
+  /**
+   * Publishing a module item must also publish the underlying content row,
+   * otherwise RLS keeps the quiz/assignment/page invisible to students and the
+   * item looks published but won't open. Unpublishing cascades the same way, so
+   * an instructor can release one quiz/exam at a time without opening up any
+   * other course area.
+   */
+  const cascadePublish = async (i: ModuleItem, next: boolean) => {
+    if (!i.content_ref) return;
+    const table =
+      i.item_type === "quiz" ? "quizzes" :
+      i.item_type === "assignment" ? "assignments" :
+      i.item_type === "page" ? "lms_pages" : null;
+    if (!table) return;
+    await supabase.from(table as any).update({ published: next }).eq("id", i.content_ref);
+  };
+
   const togglePublishItem = async (i: ModuleItem) => {
-    await supabase.from("module_items").update({ published: !i.published }).eq("id", i.id);
+    const next = !i.published;
+    const { error } = await supabase.from("module_items").update({ published: next }).eq("id", i.id);
+    if (error) { toast({ title: "Could not update", description: error.message, variant: "destructive" }); return; }
+    await cascadePublish(i, next);
+    toast({
+      title: next ? `“${i.title}” released to students` : `“${i.title}” hidden from students`,
+      description: next
+        ? "Students can open this item from their Modules tab."
+        : "Students can no longer see or open this item.",
+    });
     load();
   };
+
 
   const renameModule = async (id: string, title: string) => {
     const { error } = await supabase.from("modules").update({ title }).eq("id", id);
@@ -366,9 +393,16 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
                 await supabase.from("modules").update({ published: true }).eq("course_id", courseId);
                 const ids = modules.map(m => m.id);
                 if (ids.length) await supabase.from("module_items").update({ published: true }).in("module_id", ids);
+                // Cascade to the underlying content so students can actually open it.
+                await Promise.all([
+                  supabase.from("quizzes").update({ published: true }).eq("course_id", courseId),
+                  supabase.from("assignments").update({ published: true }).eq("course_id", courseId),
+                  supabase.from("lms_pages").update({ published: true }).eq("course_id", courseId),
+                ]);
                 toast({ title: "All modules and items published" });
                 load();
               }}
+
             >
               <Eye className="h-4 w-4 mr-1" /> Publish All
             </Button>
