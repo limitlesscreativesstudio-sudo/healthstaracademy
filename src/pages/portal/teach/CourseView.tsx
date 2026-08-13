@@ -353,13 +353,17 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
       <div style={{ flex:1, padding:24 }}>
         {!courseUuid ? (
           <div style={{ marginBottom:16, padding:'10px 14px', background:'#FFF8E1', border:'1px solid #FFE082', borderRadius:6, fontSize:13, color:'#7B4DB5', fontFamily:'sans-serif' }}>
-            Open a saved course from the Dashboard before adding modules.
+            {canEdit
+              ? 'Open a saved course from the Dashboard before adding modules.'
+              : 'Your course content isn’t available yet. Your instructor will publish it shortly.'}
           </div>
         ) : (
           <ModulesTabAuthor courseId={courseUuid} isInstructor={canEdit} openAddOnMount={openAddOnMount} />
         )}
       </div>
+      {canEdit && (
       <div style={{ width:200, flexShrink:0, padding:'24px 12px', borderLeft:`1px solid ${C.border}` }}>
+
         <div style={{ marginBottom:16 }}>
           <h3 style={{ fontSize:12, fontWeight:700, color:C.text, fontFamily:'sans-serif', margin:'0 0 10px', textTransform:'uppercase', letterSpacing:0.5 }}>Course Status</h3>
           <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:10 }}>
