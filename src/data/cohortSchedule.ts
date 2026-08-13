@@ -8,12 +8,12 @@ export interface CohortSchedule {
 }
 
 /**
- * Priority "Apply by" date = 21 days before start (7 days earlier than final cutoff).
- * Creates a first urgency spike; final cutoff at 14 days is the hard stop.
+ * "Apply by" is the FINAL submission date = 14 days before the cohort start.
+ * (e.g. Aug 31, 2026 start → apply by Aug 17, 2026.)
  */
 export function getApplyByISO(startISO: string): string {
   const d = new Date(startISO + "T00:00:00");
-  d.setDate(d.getDate() - 21);
+  d.setDate(d.getDate() - 14);
   return d.toISOString().slice(0, 10);
 }
 
