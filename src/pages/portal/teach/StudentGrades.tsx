@@ -302,10 +302,13 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
               ⚡ Bulk entry &amp; policies
             </button>
           )}
+          {!selfOnly && (<>
           <button onClick={exportCsv} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>📤 Export CSV</button>
           <button onClick={() => setShowRejects(v => !v)} style={{ padding:'7px 14px', border:`1px solid ${rejects.length?C.error:C.border}`, borderRadius:5, background:rejects.length?'#FDECEA':C.white, color:rejects.length?C.error:C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
             ⚠️ Rejected edits{rejects.length ? ` (${rejects.length})` : ''}
           </button>
+          </>)}
+
           <button onClick={load} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>🔄 Refresh</button>
         </div>
       </div>
