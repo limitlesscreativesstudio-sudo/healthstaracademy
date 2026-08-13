@@ -393,9 +393,16 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
                 await supabase.from("modules").update({ published: true }).eq("course_id", courseId);
                 const ids = modules.map(m => m.id);
                 if (ids.length) await supabase.from("module_items").update({ published: true }).in("module_id", ids);
+                // Cascade to the underlying content so students can actually open it.
+                await Promise.all([
+                  supabase.from("quizzes").update({ published: true }).eq("course_id", courseId),
+                  supabase.from("assignments").update({ published: true }).eq("course_id", courseId),
+                  supabase.from("lms_pages").update({ published: true }).eq("course_id", courseId),
+                ]);
                 toast({ title: "All modules and items published" });
                 load();
               }}
+
             >
               <Eye className="h-4 w-4 mr-1" /> Publish All
             </Button>
