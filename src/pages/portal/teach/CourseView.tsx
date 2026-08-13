@@ -400,7 +400,9 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
           </button>
         </div>
       </div>
+      )}
     </div>
+
   );
 
   return (
