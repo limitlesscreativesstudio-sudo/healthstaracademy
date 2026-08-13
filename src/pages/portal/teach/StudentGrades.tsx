@@ -517,6 +517,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
                 </td>
               </tr>
             </tfoot>
+            )}
           </table>
         </div>
       )}
