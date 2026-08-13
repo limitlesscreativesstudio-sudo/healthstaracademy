@@ -1,0 +1,1 @@
+UPDATE public.courses SET status = 'published' WHERE id = '917c5cbd-38e4-4c41-a812-c9e6cafc110b' AND status <> 'published';
