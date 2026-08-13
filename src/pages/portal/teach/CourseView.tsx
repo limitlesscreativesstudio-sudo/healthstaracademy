@@ -28,7 +28,7 @@ import ChooseHomePageDialog from '@/components/portal/ChooseHomePageDialog';
 import HomeRouter from '@/components/portal/HomeRouter';
 import ModulesTabAuthor from '@/components/portal/ModulesTabAuthor';
 import { toast, Toaster } from 'sonner';
-import { canEditTab } from '@/lib/portalPermissions';
+import { canEditTab, canViewTab } from '@/lib/portalPermissions';
 
 const useIsMobile = () => {
   const [m, setM] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
@@ -836,7 +836,10 @@ const CourseView: React.FC = () => {
   // Per-tab authorization: students never edit; instructors only edit the tabs
   // they are authorized for; admins can edit everything.
   const cid = activeCourse?.uuid;
+  const asStudent = authUser?.role === 'student' || studentView;
   const tabCan = (tab: string) => canEdit && canEditTab(authUser?.role as never, tab);
+  const tabVisible = (tab: string) => !asStudent || canViewTab('student', tab);
+  const navItems = NAV_ITEMS.filter(i => i.type === 'divider' ? !asStudent : tabVisible(i.id as string));
   const SECTIONS: Record<string, React.ReactNode> = {
     home:          <HomeRouter
                       type={homePageType}
@@ -850,7 +853,7 @@ const CourseView: React.FC = () => {
     announcements: <AnnouncementsPanel canEdit={tabCan('announcements')} courseId={cid} />,
     assignments:   <AssignmentView courseId={cid} canEdit={tabCan('assignments')} />,
     quizzes:       <QuizView courseId={cid} canEdit={tabCan('quizzes')} />,
-    grades:        <StudentGrades  courseId={cid} canEdit={tabCan('grades')} />,
+    grades:        <StudentGrades  courseId={cid} canEdit={tabCan('grades')} selfOnly={asStudent} />,
     people:        <StudentDashboard courseId={cid} canEdit={tabCan('people')} />,
     pages:         <PagesTab       courseId={cid} canEdit={tabCan('pages')} />,
     files:         <FilesTab       courseId={cid} canEdit={tabCan('files')} />,
@@ -883,9 +886,9 @@ const CourseView: React.FC = () => {
         {[
           { icon:'🏠', title:'Home',     onClick:openDashboard },
           { icon:'📚', title:'Courses',  onClick:() => { openCourse(activeCourse, 'home'); setShowCourses(true); } },
-          { icon:'📅', title:'Calendar', onClick:() => { setActiveTab('calendar');     setMobileNavOpen(false); setShowDashboard(false); setShowProfile(false); } },
+          ...(asStudent ? [] : [{ icon:'📅', title:'Calendar', onClick:() => { setActiveTab('calendar');     setMobileNavOpen(false); setShowDashboard(false); setShowProfile(false); } }]),
           { icon:'👤', title:'Account',  onClick:() => { setActiveTab('account');      setMobileNavOpen(false); setShowDashboard(false); setShowProfile(false); } },
-          { icon:'💼', title:'Career',   onClick:() => { setActiveTab('career');       setMobileNavOpen(false); setShowDashboard(false); setShowProfile(false); } },
+          ...(asStudent ? [] : [{ icon:'💼', title:'Career',   onClick:() => { setActiveTab('career');       setMobileNavOpen(false); setShowDashboard(false); setShowProfile(false); } }]),
         ].map(({ icon, title, onClick }) => (
           <div key={title} onClick={onClick} title={title}
             style={{ width:52, height:48, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:17, borderLeft:'3px solid transparent' }}
@@ -1053,7 +1056,7 @@ const CourseView: React.FC = () => {
           {/* Course sidebar nav (desktop) or drawer (mobile) */}
           {!isMobile && (
             <div style={{ width:200, background:C.white, borderRight:`1px solid ${C.border}`, flexShrink:0, minHeight:'calc(100vh - 76px)', overflowY:'auto' }}>
-              {NAV_ITEMS.map((item, idx) => {
+              {navItems.map((item, idx) => {
                 if (item.type === 'divider') {
                   return <div key={`divider-${idx}`} style={{ height:12, margin:'4px 14px', borderTop:`1px solid ${C.border}` }} />;
                 }
@@ -1080,7 +1083,7 @@ const CourseView: React.FC = () => {
                   <span style={{ fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>Course Menu</span>
                   <button onClick={() => setMobileNavOpen(false)} style={{ background:'none', border:'none', fontSize:18, cursor:'pointer' }}>✕</button>
                 </div>
-                {NAV_ITEMS.map((item, idx) => {
+                {navItems.map((item, idx) => {
                   if (item.type === 'divider') {
                     return <div key={`m-divider-${idx}`} style={{ height:12, margin:'4px 16px', borderTop:`1px solid ${C.border}` }} />;
                   }
@@ -1098,7 +1101,9 @@ const CourseView: React.FC = () => {
 
           {/* Tab content */}
           <div style={{ flex:1, background:C.bg, overflowY:'auto', paddingBottom: isMobile ? 64 : 0 }}>
-            {SECTIONS[activeTab] ?? <Placeholder title={activeTab} />}
+            {tabVisible(activeTab)
+              ? (SECTIONS[activeTab] ?? <Placeholder title={activeTab} />)
+              : <Placeholder title="Not available" />}
           </div>
         </div>
 
@@ -1107,10 +1112,10 @@ const CourseView: React.FC = () => {
           <div style={{ position:'fixed', bottom:0, left:52, right:0, height:56, background:C.white, borderTop:`1px solid ${C.border}`, display:'flex', zIndex:150, boxShadow:'0 -2px 10px rgba(0,0,0,0.08)' }}>
             {[
               { id:'home', icon:'🏠', label:'Home' },
-              { id:'people', icon:'👥', label:'People' },
+              { id: asStudent ? 'modules' : 'people', icon: asStudent ? '📦' : '👥', label: asStudent ? 'Modules' : 'People' },
               { id:'grades', icon:'📊', label:'Grades' },
               { id:'attendance', icon:'✔️', label:'Attend' },
-              { id:'settings', icon:'⚙️', label:'More' },
+              { id: asStudent ? 'quizzes' : 'settings', icon: asStudent ? '❓' : '⚙️', label: asStudent ? 'Quizzes' : 'More' },
             ].map(t => {
               const active = activeTab === t.id || (t.id==='home' && activeTab==='modules');
               return (

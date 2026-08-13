@@ -8,12 +8,12 @@ const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', 
 const letter = (p: number) => p>=93?'A':p>=90?'A-':p>=87?'B+':p>=83?'B':p>=80?'B-':p>=77?'C+':p>=73?'C':p>=70?'C-':'F';
 const gColor = (p: number) => p>=80?C.success:p>=70?C.warn:C.error;
 
-interface Props { courseId?: string; canEdit?: boolean; }
+interface Props { courseId?: string; canEdit?: boolean; /** Students only ever see their own row */ selfOnly?: boolean; }
 interface Student { id: string; name: string; initials: string; }
 interface Column { id: string; name: string; points: number; kind: 'assignment' | 'quiz'; }
 type GradeMap = Record<string, Record<string, number | null>>;
 
-const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
+const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
   const [students,    setStudents]    = useState<Student[]>([]);
   const [columns,     setColumns]     = useState<Column[]>([]);
   const [grades,      setGrades]      = useState<GradeMap>({});
@@ -45,9 +45,15 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
     setLoading(true);
 
     // 1) Enrollments (students only) — do NOT rely on nested embed
-    const { data: enrs } = await supabase.from('enrollments')
-      .select('user_id, role').eq('course_id', courseId).eq('role', 'student');
-    const userIds = (enrs ?? []).map((e: any) => e.user_id);
+    let userIds: string[] = [];
+    if (selfOnly) {
+      const { data: auth } = await supabase.auth.getUser();
+      userIds = auth?.user?.id ? [auth.user.id] : [];
+    } else {
+      const { data: enrs } = await supabase.from('enrollments')
+        .select('user_id, role').eq('course_id', courseId).eq('role', 'student');
+      userIds = (enrs ?? []).map((e: any) => e.user_id);
+    }
 
     // 2) Profiles for those users
     let studs: Student[] = [];
@@ -110,7 +116,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit }) => {
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [courseId]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [courseId, selfOnly]);
 
   const logReject = (target: { s: string; a: string }, value: string, reason: string) => {
     const student = students.find(x => x.id === target.s)?.name ?? target.s;
