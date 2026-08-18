@@ -15,7 +15,7 @@ const PreQualSchema = z.object({
   has_ssn: z.boolean(),
   can_pass_background: z.boolean(),
   has_health_proof: z.boolean(),
-  has_transportation: z.boolean(),
+  has_transportation: z.boolean().optional().default(true),
   can_pay_fee: z.boolean().optional().default(true),
   selected_cohort_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   address: z.string().max(500).optional().default(""),
