@@ -379,6 +379,7 @@ Deno.serve(async (req) => {
           can_pass_background: payload.can_pass_background,
           has_health_proof: payload.has_health_proof,
           has_transportation: payload.has_transportation,
+          can_pay_fee: payload.can_pay_fee !== false,
           selected_cohort_date: payload.selected_cohort_date,
           orientation_date: orientationDate,
           qualification_status: qualification.status,
