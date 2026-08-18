@@ -326,6 +326,7 @@ Deno.serve(async (req) => {
 
       if (GOOGLE_SERVICE_ACCOUNT_KEY) {
         try {
+          // Column order mirrors the on-screen questionnaire exactly.
           const row = [
             new Date().toISOString(),                                              // A: Timestamp
             sanitizeForSheets(`${payload.first_name} ${payload.last_name}`),       // B: Name
@@ -334,20 +335,21 @@ Deno.serve(async (req) => {
             sanitizeForSheets(payload.address || ""),                              // E: Address
             sanitizeForSheets(payload.phone || ""),                                // F: Phone
             payload.is_over_18 ? "Yes" : "No",                                    // G: Over 18
-            payload.has_diploma ? "Yes" : "No",                                   // H: Diploma
-            payload.has_valid_id ? "Yes" : "No",                                  // I: Valid ID
-            payload.has_ssn ? "Yes" : "No",                                       // J: SSN
-            payload.can_pass_background ? "Yes" : "No",                           // K: Background
-            payload.has_health_proof ? "Yes" : "No",                              // L: Health Proof
+            payload.has_valid_id ? "Yes" : "No",                                  // H: Valid ID
+            payload.has_ssn ? "Yes" : "No",                                       // I: SSN Card
+            payload.can_pass_background ? "Yes" : "No",                           // J: Background
+            payload.has_health_proof ? "Yes" : "No",                              // K: Health Proof
+            payload.has_diploma ? "Yes" : "No",                                   // L: Diploma
             payload.has_transportation ? "Yes" : "No",                            // M: Transportation
-            sanitizeForSheets(payload.selected_cohort_date),                       // N: Cohort Selected
-            "Yes",                                                                 // O: Understands false info disclaimer
-            sanitizeForSheets(payload.referral_source || "Website"),                // P: How Did You Hear
-            "Yes",                                                                 // Q: Consent
-            qualification.status === "qualified" ? "Qualified" : "Disqualified",   // R: Qualification Category
-            qualification.needsConsent ? "Yes" : "No",                             // S: Parental Consent Needed
-            qualification.needsExam ? "Yes" : "No",                                // T: Entrance Exam Needed
-            qualification.status === "disqualified" ? qualification.notes : "",     // U: Missing Disqualifying Items
+            payload.can_pay_fee === false ? "No" : "Yes",                          // N: Can Pay $175 Fee
+            sanitizeForSheets(payload.selected_cohort_date),                       // O: Cohort Selected
+            "Yes",                                                                 // P: Understands false info disclaimer
+            sanitizeForSheets(payload.referral_source || "Website"),                // Q: How Did You Hear
+            "Yes",                                                                 // R: Consent
+            qualification.status === "qualified" ? "Qualified" : "Disqualified",   // S: Qualification Category
+            qualification.needsConsent ? "Yes" : "No",                             // T: Parental Consent Needed
+            qualification.needsExam ? "Yes" : "No",                                // U: Entrance Exam Needed
+            qualification.status === "disqualified" ? qualification.notes : "",     // V: Missing Disqualifying Items
           ];
           await appendToGoogleSheet(GOOGLE_SERVICE_ACCOUNT_KEY, SPREADSHEET_ID, [row]);
           sheetSynced = true;
