@@ -102,7 +102,7 @@ async function appendToGoogleSheet(
   }
 
   // Append row to Sheet1
-  const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("2025 Responses")}!A:U:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("2025 Responses")}!A:V:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
   const appendRes = await fetch(sheetsUrl, {
     method: "POST",
     headers: {
