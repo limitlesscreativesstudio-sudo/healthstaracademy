@@ -188,7 +188,7 @@ function qualifyStudent(data: PreQualData): {
   if (!has_ssn) return { status: "disqualified", notes: "Missing Social Security Card", needsExam: false, needsConsent: false };
   if (!can_pass_background) return { status: "disqualified", notes: "Cannot pass background check", needsExam: false, needsConsent: false };
   if (!has_health_proof) return { status: "disqualified", notes: "Missing proof of good health", needsExam: false, needsConsent: false };
-  if (!has_transportation) return { status: "disqualified", notes: "No reliable transportation", needsExam: false, needsConsent: false };
+  void has_transportation; // no longer collected — never disqualifying
 
   let needsExam = false;
   let needsConsent = false;
