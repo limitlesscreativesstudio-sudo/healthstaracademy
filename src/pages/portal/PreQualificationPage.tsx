@@ -242,6 +242,7 @@ const PreQualificationPage = () => {
     { key: "has_health_proof" as const, label: "Can you provide proof of good health?", note: "Physical exam, PPD TB Test, or Chest X-ray" },
     { key: "has_diploma" as const, label: "Do you have a GED or High School Diploma?", note: "If no, you can qualify by passing an entrance exam (75%+)" },
     { key: "has_transportation" as const, label: "Do you have reliable transportation to clinical sites?", note: "Stockton, Lodi, or Hayward" },
+    { key: "can_pay_fee" as const, label: "Are you able to pay the $175 non-refundable program application fee if you qualify for enrollment?", note: "Answering no will not disqualify you — our admissions team will go over payment options with you" },
   ];
 
   // Success / disqualified screens
