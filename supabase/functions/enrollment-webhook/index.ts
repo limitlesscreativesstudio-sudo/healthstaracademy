@@ -16,6 +16,7 @@ const PreQualSchema = z.object({
   can_pass_background: z.boolean(),
   has_health_proof: z.boolean(),
   has_transportation: z.boolean(),
+  can_pay_fee: z.boolean().optional().default(true),
   selected_cohort_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   address: z.string().max(500).optional().default(""),
   referral_source: z.string().max(100).optional().default(""),
@@ -141,7 +142,9 @@ interface PreQualData {
   can_pass_background: boolean;
   has_health_proof: boolean;
   has_transportation: boolean;
-  // Column N
+  // Column N — informational only, never disqualifying
+  can_pay_fee: boolean;
+  // Column O
   selected_cohort_date: string;
   // Optional fields
   referral_source?: string;
