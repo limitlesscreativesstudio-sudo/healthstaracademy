@@ -340,16 +340,14 @@ Deno.serve(async (req) => {
             payload.can_pass_background ? "Yes" : "No",                           // J: Background
             payload.has_health_proof ? "Yes" : "No",                              // K: Health Proof
             payload.has_diploma ? "Yes" : "No",                                   // L: Diploma
-            payload.has_transportation ? "Yes" : "No",                            // M: Transportation
-            payload.can_pay_fee === false ? "No" : "Yes",                          // N: Can Pay $175 Fee
-            sanitizeForSheets(payload.selected_cohort_date),                       // O: Cohort Selected
-            "Yes",                                                                 // P: Understands false info disclaimer
-            sanitizeForSheets(payload.referral_source || "Website"),                // Q: How Did You Hear
-            "Yes",                                                                 // R: Consent
-            qualification.status === "qualified" ? "Qualified" : "Disqualified",   // S: Qualification Category
-            qualification.needsConsent ? "Yes" : "No",                             // T: Parental Consent Needed
-            qualification.needsExam ? "Yes" : "No",                                // U: Entrance Exam Needed
-            qualification.status === "disqualified" ? qualification.notes : "",     // V: Missing Disqualifying Items
+            payload.can_pay_fee === false ? "No" : "Yes",                          // M: Can Pay $175 Fee
+            sanitizeForSheets(payload.selected_cohort_date),                       // N: Cohort Selected
+            sanitizeForSheets(payload.referral_source || "Website"),                // O: How Did You Hear
+            "Yes",                                                                 // P: Consent
+            qualification.status === "qualified" ? "Qualified" : "Disqualified",   // Q: Qualification Category
+            qualification.needsConsent ? "Yes" : "No",                             // R: Parental Consent Needed
+            qualification.needsExam ? "Yes" : "No",                                // S: Entrance Exam Needed
+            qualification.status === "disqualified" ? qualification.notes : "",     // T: Missing Disqualifying Items
           ];
           await appendToGoogleSheet(GOOGLE_SERVICE_ACCOUNT_KEY, SPREADSHEET_ID, [row]);
           sheetSynced = true;
