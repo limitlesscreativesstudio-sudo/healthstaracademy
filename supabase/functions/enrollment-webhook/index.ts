@@ -141,7 +141,7 @@ interface PreQualData {
   has_ssn: boolean;
   can_pass_background: boolean;
   has_health_proof: boolean;
-  has_transportation: boolean;
+  has_transportation?: boolean;
   // Column N — informational only, never disqualifying
   can_pay_fee: boolean;
   // Column O
@@ -376,7 +376,7 @@ Deno.serve(async (req) => {
           has_ssn: payload.has_ssn,
           can_pass_background: payload.can_pass_background,
           has_health_proof: payload.has_health_proof,
-          has_transportation: payload.has_transportation,
+          has_transportation: payload.has_transportation !== false,
           can_pay_fee: payload.can_pay_fee !== false,
           selected_cohort_date: payload.selected_cohort_date,
           orientation_date: orientationDate,
