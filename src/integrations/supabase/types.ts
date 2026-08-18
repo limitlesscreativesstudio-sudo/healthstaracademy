@@ -2616,6 +2616,7 @@ export type Database = {
       students: {
         Row: {
           can_pass_background: boolean | null
+          can_pay_fee: boolean | null
           cohort_id: string | null
           created_at: string
           date_of_birth: string | null
@@ -2649,6 +2650,7 @@ export type Database = {
         }
         Insert: {
           can_pass_background?: boolean | null
+          can_pay_fee?: boolean | null
           cohort_id?: string | null
           created_at?: string
           date_of_birth?: string | null
@@ -2682,6 +2684,7 @@ export type Database = {
         }
         Update: {
           can_pass_background?: boolean | null
+          can_pay_fee?: boolean | null
           cohort_id?: string | null
           created_at?: string
           date_of_birth?: string | null
