@@ -75,7 +75,6 @@ interface EligibilityInfo {
   can_pass_background: string;
   has_health_proof: string;
   has_diploma: string;
-  has_transportation: string;
   can_pay_fee: string;
 }
 
@@ -139,7 +138,6 @@ const PreQualificationPage = () => {
     can_pass_background: "",
     has_health_proof: "",
     has_diploma: "",
-    has_transportation: "",
     can_pay_fee: "",
   });
 
@@ -185,7 +183,6 @@ const PreQualificationPage = () => {
         can_pass_background: eligibility.can_pass_background === "yes",
         has_health_proof: eligibility.has_health_proof === "yes",
         has_diploma: eligibility.has_diploma === "yes",
-        has_transportation: eligibility.has_transportation === "yes",
         can_pay_fee: eligibility.can_pay_fee === "yes",
         selected_cohort_date: selectedCohort,
         referral_source: personal.referral_source,
@@ -241,7 +238,6 @@ const PreQualificationPage = () => {
     { key: "can_pass_background" as const, label: "Can you pass a criminal background check (LiveScan)?", note: "" },
     { key: "has_health_proof" as const, label: "Can you provide proof of good health?", note: "Physical exam, PPD TB Test, or Chest X-ray" },
     { key: "has_diploma" as const, label: "Do you have a GED or High School Diploma?", note: "If no, you can qualify by passing an entrance exam (75%+)" },
-    { key: "has_transportation" as const, label: "Do you have reliable transportation to clinical sites?", note: "Stockton, Lodi, or Hayward" },
     { key: "can_pay_fee" as const, label: "Are you able to pay the $175 non-refundable program application fee if you qualify for enrollment?", note: "Answering no will not disqualify you — our admissions team will go over payment options with you" },
   ];
 
@@ -380,13 +376,6 @@ const PreQualificationPage = () => {
         title: "Proof of Good Health",
         description: "A physical exam, PPD TB test, or Chest X-ray is required for clinical rotations.",
         resolution: "Schedule a physical at your doctor or a walk-in clinic. Many community health centers offer low-cost or free exams.",
-      });
-    }
-    if (eligibility.has_transportation === "no") {
-      disqualReasons.push({
-        title: "Reliable Transportation",
-        description: "Reliable transportation to clinical sites in Stockton, Lodi, or Hayward is required.",
-        resolution: "Consider carpooling with classmates, public transit (San Joaquin RTD), ride-shares, or family/friends during the 6-week program.",
       });
     }
 

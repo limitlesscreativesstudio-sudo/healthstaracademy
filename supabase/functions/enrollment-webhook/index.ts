@@ -15,7 +15,7 @@ const PreQualSchema = z.object({
   has_ssn: z.boolean(),
   can_pass_background: z.boolean(),
   has_health_proof: z.boolean(),
-  has_transportation: z.boolean(),
+  has_transportation: z.boolean().optional().default(true),
   can_pay_fee: z.boolean().optional().default(true),
   selected_cohort_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   address: z.string().max(500).optional().default(""),
@@ -102,7 +102,7 @@ async function appendToGoogleSheet(
   }
 
   // Append row to Sheet1
-  const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("2025 Responses")}!A:V:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("2025 Responses")}!A:T:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
   const appendRes = await fetch(sheetsUrl, {
     method: "POST",
     headers: {
@@ -141,7 +141,7 @@ interface PreQualData {
   has_ssn: boolean;
   can_pass_background: boolean;
   has_health_proof: boolean;
-  has_transportation: boolean;
+  has_transportation?: boolean;
   // Column N — informational only, never disqualifying
   can_pay_fee: boolean;
   // Column O
@@ -188,7 +188,7 @@ function qualifyStudent(data: PreQualData): {
   if (!has_ssn) return { status: "disqualified", notes: "Missing Social Security Card", needsExam: false, needsConsent: false };
   if (!can_pass_background) return { status: "disqualified", notes: "Cannot pass background check", needsExam: false, needsConsent: false };
   if (!has_health_proof) return { status: "disqualified", notes: "Missing proof of good health", needsExam: false, needsConsent: false };
-  if (!has_transportation) return { status: "disqualified", notes: "No reliable transportation", needsExam: false, needsConsent: false };
+  void has_transportation; // no longer collected — never disqualifying
 
   let needsExam = false;
   let needsConsent = false;
@@ -340,16 +340,14 @@ Deno.serve(async (req) => {
             payload.can_pass_background ? "Yes" : "No",                           // J: Background
             payload.has_health_proof ? "Yes" : "No",                              // K: Health Proof
             payload.has_diploma ? "Yes" : "No",                                   // L: Diploma
-            payload.has_transportation ? "Yes" : "No",                            // M: Transportation
-            payload.can_pay_fee === false ? "No" : "Yes",                          // N: Can Pay $175 Fee
-            sanitizeForSheets(payload.selected_cohort_date),                       // O: Cohort Selected
-            "Yes",                                                                 // P: Understands false info disclaimer
-            sanitizeForSheets(payload.referral_source || "Website"),                // Q: How Did You Hear
-            "Yes",                                                                 // R: Consent
-            qualification.status === "qualified" ? "Qualified" : "Disqualified",   // S: Qualification Category
-            qualification.needsConsent ? "Yes" : "No",                             // T: Parental Consent Needed
-            qualification.needsExam ? "Yes" : "No",                                // U: Entrance Exam Needed
-            qualification.status === "disqualified" ? qualification.notes : "",     // V: Missing Disqualifying Items
+            payload.can_pay_fee === false ? "No" : "Yes",                          // M: Can Pay $175 Fee
+            sanitizeForSheets(payload.selected_cohort_date),                       // N: Cohort Selected
+            sanitizeForSheets(payload.referral_source || "Website"),                // O: How Did You Hear
+            "Yes",                                                                 // P: Consent
+            qualification.status === "qualified" ? "Qualified" : "Disqualified",   // Q: Qualification Category
+            qualification.needsConsent ? "Yes" : "No",                             // R: Parental Consent Needed
+            qualification.needsExam ? "Yes" : "No",                                // S: Entrance Exam Needed
+            qualification.status === "disqualified" ? qualification.notes : "",     // T: Missing Disqualifying Items
           ];
           await appendToGoogleSheet(GOOGLE_SERVICE_ACCOUNT_KEY, SPREADSHEET_ID, [row]);
           sheetSynced = true;
@@ -378,7 +376,7 @@ Deno.serve(async (req) => {
           has_ssn: payload.has_ssn,
           can_pass_background: payload.can_pass_background,
           has_health_proof: payload.has_health_proof,
-          has_transportation: payload.has_transportation,
+          has_transportation: payload.has_transportation !== false,
           can_pay_fee: payload.can_pay_fee !== false,
           selected_cohort_date: payload.selected_cohort_date,
           orientation_date: orientationDate,
