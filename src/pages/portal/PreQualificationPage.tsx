@@ -76,6 +76,7 @@ interface EligibilityInfo {
   has_health_proof: string;
   has_diploma: string;
   has_transportation: string;
+  can_pay_fee: string;
 }
 
 const formatCohortDate = (dateStr: string) => {
@@ -139,6 +140,7 @@ const PreQualificationPage = () => {
     has_health_proof: "",
     has_diploma: "",
     has_transportation: "",
+    can_pay_fee: "",
   });
 
   const [selectedCohort, setSelectedCohort] = useState("");
@@ -184,6 +186,7 @@ const PreQualificationPage = () => {
         has_health_proof: eligibility.has_health_proof === "yes",
         has_diploma: eligibility.has_diploma === "yes",
         has_transportation: eligibility.has_transportation === "yes",
+        can_pay_fee: eligibility.can_pay_fee === "yes",
         selected_cohort_date: selectedCohort,
         referral_source: personal.referral_source,
         event_type: "pre_qualification",
