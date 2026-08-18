@@ -202,6 +202,10 @@ function qualifyStudent(data: PreQualData): {
     needsConsent = true;
     notes.push("Needs parent consent (under 18)");
   }
+  if (data.can_pay_fee === false) {
+    // Informational only — does not affect qualification
+    notes.push("Cannot pay the $175 application fee up front — discuss payment options");
+  }
 
   return {
     status: "qualified",
