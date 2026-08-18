@@ -45,8 +45,8 @@ export const cohortSchedule: CohortSchedule[] = [
   {
     startDate: "August 31, 2026",
     endDate: "October 12, 2026",
-    deadline: "Monday, August 17, 2026",
-    deadlineISO: "2026-08-17",
+    deadline: "Sunday, August 23, 2026",
+    deadlineISO: "2026-08-23",
     startISO: "2026-08-31",
   },
   {
