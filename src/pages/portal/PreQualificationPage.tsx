@@ -814,7 +814,7 @@ const PreQualificationPage = () => {
                           })
                       ) : (
                         weekendCohortDates
-                          .filter((w) => new Date(getApplyByISO(w.startISO) + "T23:59:59") >= new Date())
+                          .filter((w) => new Date(getCohortApplyByISO(w) + "T23:59:59") >= new Date())
                           .map((w) => {
                             const dl = getCohortDeadlines(w);
                             return (
