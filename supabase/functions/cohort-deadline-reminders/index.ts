@@ -1,8 +1,9 @@
 // Sends apply-by deadline reminders for upcoming cohorts.
-// Apply-by = cohort start date minus 14 days (e.g. Aug 31, 2026 start -> Aug 17, 2026).
+// Apply-by = the cohort's stored enrollment_deadline (11:59 PM), falling back to start - 14 days.
 // Fires at T-14, T-7, T-3, T-1 and T-0 days before the apply-by date.
 // Scheduled daily via pg_cron; also callable manually (?dry=1 to preview).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
+import { resolveApplyByISO, formatDeadlineLabel, daysBetween } from "../_shared/cohort-deadline.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -13,23 +14,13 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FROM = "Health Star Academy <info@healthstaracademy.org>";
 const ADMIN_EMAIL = Deno.env.get("ADMIN_ALERT_EMAIL") ?? "Healthstaracademy01@gmail.com";
 const MILESTONES = [14, 7, 3, 1, 0];
-const APPLY_BY_OFFSET_DAYS = 14;
 
+// Start date: plain friendly date. Deadline: always includes the 11:59 PM cutoff.
 const fmt = (iso: string) =>
   new Date(iso + "T00:00:00").toLocaleDateString("en-US", {
     weekday: "long", month: "long", day: "numeric", year: "numeric",
   });
-
-const addDays = (iso: string, n: number) => {
-  const d = new Date(iso + "T00:00:00");
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
-};
-
-const daysBetween = (fromISO: string, toISO: string) =>
-  Math.round(
-    (new Date(toISO + "T00:00:00").getTime() - new Date(fromISO + "T00:00:00").getTime()) / 86400000,
-  );
+const fmtDeadline = (iso: string) => formatDeadlineLabel(iso);
 
 async function sendEmail(to: string, subject: string, html: string) {
   if (!RESEND_API_KEY) { console.warn("[deadline-reminders] RESEND_API_KEY missing; skipping", to); return false; }
@@ -47,7 +38,7 @@ const studentHtml = (name: string, cohortName: string, startISO: string, applyBy
     <h2 style="color:#7C4DFF;margin-bottom:4px">${daysLeft === 0 ? "Today is the final day to apply" : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left to apply`}</h2>
     <p>Hi ${name || "there"},</p>
     <p>Enrollment for our <strong>${cohortName}</strong> CNA cohort closes on
-    <strong>${fmt(applyByISO)}</strong> — that's the final submission date, 14 days before classes begin on
+    <strong>${fmtDeadline(applyByISO)}</strong> — that's the final submission deadline. Classes begin on
     <strong>${fmt(startISO)}</strong>.</p>
     <p>To hold your seat, make sure your application, enrollment fee, and required documents
     (physical original government ID) are submitted before the deadline.</p>
@@ -84,9 +75,7 @@ Deno.serve(async (req) => {
 
     for (const c of cohorts ?? []) {
       const startISO = String(c.start_date).slice(0, 10);
-      const applyByISO = (c.enrollment_deadline
-        ? String(c.enrollment_deadline).slice(0, 10)
-        : addDays(startISO, -APPLY_BY_OFFSET_DAYS));
+      const applyByISO = resolveApplyByISO(startISO, c.enrollment_deadline);
       const daysLeft = daysBetween(today, applyByISO);
       if (!MILESTONES.includes(daysLeft)) continue;
 
@@ -104,7 +93,7 @@ Deno.serve(async (req) => {
 
       const subject = daysLeft === 0
         ? `Final day to apply — ${c.name} starts ${fmt(startISO)}`
-        : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left: apply by ${fmt(applyByISO)}`;
+        : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left: apply by ${fmtDeadline(applyByISO)}`;
 
       let emailed = 0;
       let notified = 0;
@@ -134,7 +123,7 @@ Deno.serve(async (req) => {
             user_id: profile,
             kind: "deadline",
             title: subject,
-            body: `Enrollment for ${c.name} closes ${fmt(applyByISO)}. Classes start ${fmt(startISO)}.`,
+            body: `Enrollment for ${c.name} closes ${fmtDeadline(applyByISO)}. Classes start ${fmt(startISO)}.`,
             link: "/pre-qualification",
           });
           notified++;
@@ -145,8 +134,8 @@ Deno.serve(async (req) => {
       if (!dry && pending.length) {
         await sendEmail(
           ADMIN_EMAIL,
-          `[HSA] ${c.name}: ${daysLeft} day(s) to apply-by (${fmt(applyByISO)})`,
-          `<p><strong>${c.name}</strong> apply-by is ${fmt(applyByISO)} (start ${fmt(startISO)}).</p>
+          `[HSA] ${c.name}: ${daysLeft} day(s) to apply-by (${fmtDeadline(applyByISO)})`,
+          `<p><strong>${c.name}</strong> apply-by is ${fmtDeadline(applyByISO)} (start ${fmt(startISO)}).</p>
            <p>${pending.length} applicant(s) still incomplete:</p>
            <ul>${pending.map((s) => `<li>${s.first_name ?? ""} ${s.last_name ?? ""} — ${s.email} (${s.enrollment_status})</li>`).join("")}</ul>`,
         );

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveApplyByISO, formatDeadlineLabel } from "../_shared/cohort-deadline.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,8 @@ interface EmailRequest {
   student_email: string;
   student_name: string;
   cohort_date?: string;
+  /** Stored cohort enrollment deadline (wins over the legacy start-minus-14 rule). */
+  cohort_deadline?: string;
   orientation_date?: string;
   needs_entrance_exam?: boolean;
   needs_parent_consent?: boolean;
@@ -435,11 +438,7 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
       const oldCohort = (data as unknown as { previous_cohort_date?: string }).previous_cohort_date;
       const oldFormatted = oldCohort ? formatDate(oldCohort) : "";
       const deadlineDate = data.cohort_date
-        ? (() => {
-            const d = new Date(data.cohort_date + "T00:00:00");
-            d.setDate(d.getDate() - 14);
-            return d.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-          })()
+        ? formatDeadlineLabel(resolveApplyByISO(data.cohort_date, data.cohort_deadline))
         : "";
       return {
         subject: `Important: Updated Cohort Dates — New Start ${cohortFormatted}`,
