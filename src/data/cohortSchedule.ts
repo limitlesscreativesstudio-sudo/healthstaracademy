@@ -22,8 +22,16 @@ export function formatFriendlyDate(iso: string): string {
   return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
 
+/**
+ * Cohort-aware apply-by date. The cohort's own stored deadline wins (it may be
+ * extended past the default 14-day rule); otherwise fall back to start - 14 days.
+ */
+export function getCohortApplyByISO(cohort: { startISO: string; deadlineISO?: string }): string {
+  return cohort.deadlineISO || getApplyByISO(cohort.startISO);
+}
+
 export function getCohortDeadlines(cohort: { startISO: string; deadline: string; deadlineISO: string }) {
-  const applyByISO = getApplyByISO(cohort.startISO);
+  const applyByISO = getCohortApplyByISO(cohort);
   return {
     applyByISO,
     applyBy: formatFriendlyDate(applyByISO),
@@ -31,6 +39,7 @@ export function getCohortDeadlines(cohort: { startISO: string; deadline: string;
     finalCutoff: cohort.deadline,
   };
 }
+
 
 
 export const cohortSchedule: CohortSchedule[] = [

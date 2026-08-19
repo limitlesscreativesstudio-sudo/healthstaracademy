@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCohortsByType, getCohortDeadlines, getApplyByISO, type CohortSchedule } from "@/data/cohortSchedule";
+import { getCohortsByType, getCohortDeadlines, getCohortApplyByISO, type CohortSchedule } from "@/data/cohortSchedule";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -774,13 +774,14 @@ const PreQualificationPage = () => {
                       {programTrack === "daytime" ? (
                         daytimeCohortDates
                           .filter((d) => {
-                            // Hide cohorts past the priority "Apply by" (21 days) — creates urgency
-                            const applyBy = new Date(getApplyByISO(d.startISO) + "T23:59:59");
+                            // Hide cohorts past their apply-by deadline (11:59 PM)
+                            const applyBy = new Date(getCohortApplyByISO(d) + "T23:59:59");
                             if (applyBy < new Date()) return false;
                             const dbRow = cohorts.find(c => c.start_date === d.startISO);
                             if (dbRow && dbRow.status === "closed") return false;
                             return true;
                           })
+
                           .map((d) => {
                             const dl = getCohortDeadlines(d);
                             return (
@@ -813,7 +814,7 @@ const PreQualificationPage = () => {
                           })
                       ) : (
                         weekendCohortDates
-                          .filter((w) => new Date(getApplyByISO(w.startISO) + "T23:59:59") >= new Date())
+                          .filter((w) => new Date(getCohortApplyByISO(w) + "T23:59:59") >= new Date())
                           .map((w) => {
                             const dl = getCohortDeadlines(w);
                             return (
