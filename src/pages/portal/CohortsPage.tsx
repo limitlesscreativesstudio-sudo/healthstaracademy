@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
-import { getNextUpcomingCohort, getCohortsByType } from "@/data/cohortSchedule";
+import { getNextUpcomingCohort, getCohortsByType, resolveApplyByISO, isDeadlinePassed, formatDeadlineLabel } from "@/data/cohortSchedule";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 import cohortStudentFemale3 from "@/assets/cohort-student-female-3.jpg";
 import cohortStudentFemale4 from "@/assets/cohort-student-female-4.jpg";
@@ -33,6 +33,7 @@ interface CohortRow {
   status: string;
   capacity: number;
   program_type: string;
+  enrollment_deadline: string | null;
   paid_in_full_link: string;
   payment_plan_link: string;
 }
@@ -41,7 +42,7 @@ const fetchCohorts = async (): Promise<CohortRow[]> => {
   const { data, error } = await supabase
     .from("cohorts")
     // Only marketing-safe columns are readable publicly (internal notes/min_to_run are restricted)
-    .select("id, name, start_date, status, capacity, program_type, paid_in_full_link, payment_plan_link")
+    .select("id, name, start_date, status, capacity, program_type, enrollment_deadline, paid_in_full_link, payment_plan_link")
     .order("start_date", { ascending: true });
   if (error) throw error;
   return (data as CohortRow[]) || [];
@@ -58,12 +59,9 @@ const getEndDate = (startDateStr: string, isWeekend: boolean) => {
   return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 };
 
-const getDeadline = (startDateStr: string, isWeekend: boolean) => {
-  const d = new Date(startDateStr + "T00:00:00");
-  d.setDate(d.getDate() - 14);
-  const dayName = d.toLocaleDateString("en-US", { weekday: "long" });
-  return `${dayName}, ${d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`;
-};
+// Deadline text always comes from the shared config (stored cohort deadline wins).
+const getDeadline = (startDateStr: string, storedDeadline?: string | null) =>
+  formatDeadlineLabel(resolveApplyByISO(startDateStr, storedDeadline), true);
 
 const CohortsPage = () => {
   const denefitsLink = "https://request.denefits.com/finance-panel?product_code=pc_f28b592da1a9&auth_token=e8e50ae34c588f3dbea2c194d7e8440a";
@@ -73,15 +71,13 @@ const CohortsPage = () => {
     queryFn: fetchCohorts,
   });
 
-  // Hide cohorts whose start date has already passed; auto-close cohorts past their 14-day deadline
+  // Hide cohorts whose start date has already passed; auto-close cohorts past their stored deadline
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const allCohorts = allCohortsRaw
     .filter(c => new Date(c.start_date + "T00:00:00") >= today)
     .map(c => {
-      const deadline = new Date(c.start_date + "T00:00:00");
-      deadline.setDate(deadline.getDate() - 14);
-      const pastDeadline = deadline < today;
+      const pastDeadline = isDeadlinePassed(c.start_date, c.enrollment_deadline);
       return pastDeadline && c.status !== "closed" ? { ...c, status: "closed" } : c;
     });
 
@@ -109,7 +105,7 @@ const CohortsPage = () => {
     const image = cohortImages[index % cohortImages.length];
     const startDateFormatted = formatDate(cohort.start_date);
     const endDateFormatted = getEndDate(cohort.start_date, isWeekend);
-    const deadline = getDeadline(cohort.start_date, isWeekend);
+    const deadline = getDeadline(cohort.start_date, cohort.enrollment_deadline);
 
     return (
       <div
@@ -222,7 +218,7 @@ const CohortsPage = () => {
     <>
       <SEO
         title="CNA Cohorts & Pricing | Daytime & Weekend | Health Star"
-        description="Pick your CNA cohort: 6-week daytime or 8-weekend track. Tuition $2,499 — pay in full or finance with Denefits. Apply 14 days before start."
+        description="Pick your CNA cohort: 6-week daytime or 8-weekend track. Tuition $2,499 — pay in full or finance with Denefits. Apply by the posted cohort deadline."
         canonical="/programs/cohorts"
         keywords="CNA cohort schedule Stockton, CNA class start dates, weekend CNA program California, CNA tuition $2499, CNA payment plan, daytime CNA classes"
         structuredData={buildBreadcrumbSchema([{ name: "Programs", path: "/programs" }, { name: "Cohorts & Pricing", path: "/programs/cohorts" }])}
