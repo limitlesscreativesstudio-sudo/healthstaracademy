@@ -6,7 +6,7 @@ import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import studentBloodPressure from "@/assets/student-blood-pressure.jpg";
 import { useState, useMemo } from "react";
-import { getNextUpcomingCohort } from "@/data/cohortSchedule";
+import { getNextUpcomingCohort, getCohortDeadlines } from "@/data/cohortSchedule";
 
 const ENROLLMENT_LINK = "/pre-qualification";
 
@@ -16,9 +16,9 @@ const AdmissionsPage = () => {
 
   const enrollmentSteps = [
     { step: 1, icon: ClipboardCheck, title: "Pre-Qualification Questionnaire", description: "Complete our pre-qualification questionnaire to ensure you have everything needed to start the program. If anything is missing, you'll need to obtain it and resubmit before moving to the next step.", link: "/pre-qualification" },
-    { step: 2, icon: FileText, title: "Enrollment Application & Application Fee", description: `Complete and sign the enrollment application by ${nextCohort.deadline} for the ${nextCohort.startDate} cohort. Submit necessary documents and pay the $175 non-refundable application fee to secure your spot.` },
+    { step: 2, icon: FileText, title: "Enrollment Application & Application Fee", description: `Complete and sign the enrollment application by ${getCohortDeadlines(nextCohort).applyByLabel} for the ${nextCohort.startDate} cohort. Submit necessary documents and pay the $175 non-refundable application fee to secure your spot.` },
     { step: 3, icon: UserCheck, title: "LiveScan Background Check", description: "You'll receive an email with instructions to complete your LiveScan background check at an approved location." },
-    { step: 4, icon: CalendarCheck, title: "Select Cohort & Pay Tuition", description: `Choose your preferred cohort start date (next available: ${nextCohort.startDate}) and complete tuition payment. All required documents must be submitted by ${nextCohort.deadline}.` },
+    { step: 4, icon: CalendarCheck, title: "Select Cohort & Pay Tuition", description: `Choose your preferred cohort start date (next available: ${nextCohort.startDate}) and complete tuition payment. All required documents must be submitted by ${getCohortDeadlines(nextCohort).applyByLabel}.` },
     { step: 5, icon: GraduationCap, title: "Enrollment, Handbook Review & Orientation", description: "Once payment is complete, you're enrolled in Canvas LMS. You'll receive the student handbook to review and sign, then attend orientation where you'll receive all tools needed—including a Chromebook provided for use during the program—to access course materials." },
   ];
 
@@ -44,7 +44,7 @@ const AdmissionsPage = () => {
     { question: "How long is the program?", answer: "The program is 160 total hours: 60 hours online theory + 100 hours clinical. Our daytime program takes 6 weeks." },
     { question: "Where are the clinical sites?", answer: "Clinical training is held at approved healthcare facilities in Stockton, Lodi, and Hayward—with plans to expand throughout California." },
     { question: "Do I get any equipment or materials?", answer: "Yes! All students are provided a Chromebook to use during the program for accessing course materials (must be returned upon completion). Your tuition also includes textbooks, workbook, uniform, BP cuff/stethoscope, and lab supplies." },
-    { question: `What is the deadline for the ${nextCohort.startDate} cohort, and what happens if my documents are submitted late?`, answer: `The application deadline for the ${nextCohort.startDate} cohort is ${nextCohort.deadline} — exactly 14 days before the start date. All required documents, enrollment application, and tuition payment must be completed by this date. If your documents are submitted after the deadline, your enrollment may be deferred to the next available cohort. We cannot guarantee a spot in your preferred cohort if materials are received late. Contact us at (209) 323-4169 if you need assistance meeting the deadline.` },
+    { question: `What is the deadline for the ${nextCohort.startDate} cohort, and what happens if my documents are submitted late?`, answer: `The application deadline for the ${nextCohort.startDate} cohort is ${getCohortDeadlines(nextCohort).applyByLabel}. All required documents, enrollment application, and tuition payment must be completed by this date. If your documents are submitted after the deadline, your enrollment may be deferred to the next available cohort. We cannot guarantee a spot in your preferred cohort if materials are received late. Contact us at (209) 323-4169 if you need assistance meeting the deadline.` },
   ];
 
   const faqStructuredData = {

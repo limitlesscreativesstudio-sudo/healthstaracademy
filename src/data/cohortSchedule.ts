@@ -8,12 +8,21 @@ export interface CohortSchedule {
 }
 
 /**
- * "Apply by" is the FINAL submission date = 14 days before the cohort start.
- * (e.g. Aug 31, 2026 start → apply by Aug 17, 2026.)
+ * SINGLE SOURCE OF TRUTH for enrollment deadlines.
+ *
+ * A cohort's stored deadline (`deadlineISO` here, `cohorts.enrollment_deadline`
+ * in the database) always wins. The legacy "start date minus 14 days" rule is
+ * only a fallback for cohorts that have no stored deadline yet.
+ * Deadlines always expire at 11:59 PM local time on the deadline date.
  */
+export const DEFAULT_APPLY_BY_OFFSET_DAYS = 14;
+export const DEADLINE_TIME_LABEL = "11:59 PM";
+export const DEADLINE_END_OF_DAY = "T23:59:59";
+
+/** Fallback only: final submission date = 14 days before the cohort start. */
 export function getApplyByISO(startISO: string): string {
   const d = new Date(startISO + "T00:00:00");
-  d.setDate(d.getDate() - 14);
+  d.setDate(d.getDate() - DEFAULT_APPLY_BY_OFFSET_DAYS);
   return d.toISOString().slice(0, 10);
 }
 
@@ -22,12 +31,38 @@ export function formatFriendlyDate(iso: string): string {
   return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
 
+/** "August 23, 2026 at 11:59 PM" */
+export function formatDeadlineLabel(iso: string, withWeekday = false): string {
+  const d = new Date(iso + "T00:00:00");
+  const date = d.toLocaleDateString("en-US", {
+    ...(withWeekday ? { weekday: "long" as const } : {}),
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  return `${date} at ${DEADLINE_TIME_LABEL}`;
+}
+
+/** Exact moment a cohort closes (11:59 PM on the deadline date). */
+export function getDeadlineDate(iso: string): Date {
+  return new Date(iso + DEADLINE_END_OF_DAY);
+}
+
+/** Stored deadline wins; otherwise fall back to start - 14 days. */
+export function resolveApplyByISO(startISO: string, storedDeadlineISO?: string | null): string {
+  return storedDeadlineISO ? String(storedDeadlineISO).slice(0, 10) : getApplyByISO(startISO);
+}
+
+export function isDeadlinePassed(startISO: string, storedDeadlineISO?: string | null, now: Date = new Date()): boolean {
+  return getDeadlineDate(resolveApplyByISO(startISO, storedDeadlineISO)) < now;
+}
+
 /**
  * Cohort-aware apply-by date. The cohort's own stored deadline wins (it may be
  * extended past the default 14-day rule); otherwise fall back to start - 14 days.
  */
 export function getCohortApplyByISO(cohort: { startISO: string; deadlineISO?: string }): string {
-  return cohort.deadlineISO || getApplyByISO(cohort.startISO);
+  return resolveApplyByISO(cohort.startISO, cohort.deadlineISO);
 }
 
 export function getCohortDeadlines(cohort: { startISO: string; deadline: string; deadlineISO: string }) {
@@ -35,10 +70,13 @@ export function getCohortDeadlines(cohort: { startISO: string; deadline: string;
   return {
     applyByISO,
     applyBy: formatFriendlyDate(applyByISO),
+    applyByLabel: formatDeadlineLabel(applyByISO),
+    applyByAt: getDeadlineDate(applyByISO),
     finalCutoffISO: cohort.deadlineISO,
     finalCutoff: cohort.deadline,
   };
 }
+
 
 
 

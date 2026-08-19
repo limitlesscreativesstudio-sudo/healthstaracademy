@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCohortsByType, getCohortDeadlines, getCohortApplyByISO, type CohortSchedule } from "@/data/cohortSchedule";
+import { getCohortsByType, getCohortDeadlines, getCohortApplyByISO, getDeadlineDate, isDeadlinePassed, type CohortSchedule } from "@/data/cohortSchedule";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -40,20 +40,22 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 const COHORT_OPTIONS_QUERY = async () => {
-  // Only show cohorts whose 14-day enrollment deadline hasn't passed yet
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() + 14);
-  const cutoffISO = cutoff.toISOString().slice(0, 10);
+  // Only show cohorts whose stored enrollment deadline hasn't passed yet
+  // (stored deadline wins over the legacy start-minus-14 rule).
+  const todayISO = new Date().toISOString().slice(0, 10);
 
   const { data, error } = await supabase
     .from("cohorts")
-    .select("id, name, start_date, status, capacity, program_type")
+    .select("id, name, start_date, status, capacity, program_type, enrollment_deadline")
     .eq("status", "open")
     .eq("program_type", "daytime")
-    .gte("start_date", cutoffISO)
+    .gte("start_date", todayISO)
     .order("start_date", { ascending: true });
   if (error) throw error;
-  return data;
+  return (data ?? []).filter(
+    (c: { start_date: string; enrollment_deadline: string | null }) =>
+      !isDeadlinePassed(c.start_date, c.enrollment_deadline),
+  );
 };
 
 type FormStep = 1 | 2 | 3;
@@ -775,7 +777,7 @@ const PreQualificationPage = () => {
                         daytimeCohortDates
                           .filter((d) => {
                             // Hide cohorts past their apply-by deadline (11:59 PM)
-                            const applyBy = new Date(getCohortApplyByISO(d) + "T23:59:59");
+                            const applyBy = getDeadlineDate(getCohortApplyByISO(d));
                             if (applyBy < new Date()) return false;
                             const dbRow = cohorts.find(c => c.start_date === d.startISO);
                             if (dbRow && dbRow.status === "closed") return false;
@@ -803,7 +805,7 @@ const PreQualificationPage = () => {
                                     Ends {getEndDate(d.startISO)} · 6 weeks · Mon–Thu
                                   </p>
                                   <p className="text-xs text-purple font-bold mt-1">
-                                    ⏰ Apply by: {dl.applyBy}
+                                    ⏰ Apply by: {dl.applyByLabel}
                                   </p>
                                   <p className="text-[11px] text-muted-foreground">
                                     Final enrollment cutoff: {dl.finalCutoff}
@@ -814,7 +816,7 @@ const PreQualificationPage = () => {
                           })
                       ) : (
                         weekendCohortDates
-                          .filter((w) => new Date(getCohortApplyByISO(w) + "T23:59:59") >= new Date())
+                          .filter((w) => getDeadlineDate(getCohortApplyByISO(w)) >= new Date())
                           .map((w) => {
                             const dl = getCohortDeadlines(w);
                             return (
@@ -836,7 +838,7 @@ const PreQualificationPage = () => {
                                     8 weekends · Sat & Sun 6 AM – 6 PM
                                   </p>
                                   <p className="text-xs text-cyan-deep font-bold mt-1">
-                                    ⏰ Apply by: {dl.applyBy}
+                                    ⏰ Apply by: {dl.applyByLabel}
                                   </p>
                                   <p className="text-[11px] text-muted-foreground">
                                     Final enrollment cutoff: {dl.finalCutoff}

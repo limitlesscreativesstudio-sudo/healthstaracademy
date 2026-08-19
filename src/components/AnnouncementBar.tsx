@@ -59,8 +59,8 @@ const AnnouncementBar = () => {
   const nextWeekend = useMemo(() => getNextUpcomingCohort("weekend"), []);
   const daytimeDeadlines = useMemo(() => getCohortDeadlines(nextDaytime), [nextDaytime]);
   const weekendDeadlines = useMemo(() => getCohortDeadlines(nextWeekend), [nextWeekend]);
-  // Countdown targets the "Apply by" (21-day) date for urgency, not final cutoff.
-  const deadlineDate = useMemo(() => new Date(daytimeDeadlines.applyByISO + 'T23:59:59'), [daytimeDeadlines]);
+  // Countdown targets the cohort's stored apply-by deadline at 11:59 PM.
+  const deadlineDate = useMemo(() => daytimeDeadlines.applyByAt, [daytimeDeadlines]);
 
   const stripDay = (d: string) => d.replace(/^Monday, |^Tuesday, |^Wednesday, |^Thursday, |^Friday, |^Saturday, |^Sunday, /, '');
 
@@ -71,9 +71,9 @@ const AnnouncementBar = () => {
     const label = kind === 'daytime' ? 'Daytime Cohort' : 'Weekend Cohort';
     const suffix = kind === 'weekend' ? ' (8 Weekends, Sat & Sun)' : '';
     if (variant === 'B') {
-      return `${label}: Apply by ${stripDay(dl.applyBy)} — Starts ${c.startDate}${suffix}`;
+      return `${label}: Apply by ${dl.applyByLabel} — Starts ${c.startDate}${suffix}`;
     }
-    return `${label} Starts ${c.startDate} — Apply by ${stripDay(dl.applyBy)}${suffix}`;
+    return `${label} Starts ${c.startDate} — Apply by ${dl.applyByLabel}${suffix}`;
   };
 
   const announcements = useMemo(() => {
@@ -95,7 +95,7 @@ const AnnouncementBar = () => {
         icon: Calendar,
         title: buildTitle('daytime'),
         startDate: nextDaytime.startDate,
-        deadline: stripDay(daytimeDeadlines.applyBy),
+        deadline: daytimeDeadlines.applyByLabel,
         ctaText: 'View Cohorts',
         ctaLink: '/programs/cohorts',
         hasCountdown: true,
@@ -109,7 +109,7 @@ const AnnouncementBar = () => {
         icon: Sparkles,
         title: buildTitle('weekend'),
         startDate: nextWeekend.startDate,
-        deadline: stripDay(weekendDeadlines.applyBy),
+        deadline: weekendDeadlines.applyByLabel,
         ctaText: 'Weekend Info',
         ctaLink: '/programs/cohorts',
         hasCountdown: false,

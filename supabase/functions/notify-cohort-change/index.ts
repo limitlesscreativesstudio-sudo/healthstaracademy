@@ -116,6 +116,16 @@ Deno.serve(async (req) => {
     const newCohortDate: string = body.new_cohort_date || nextDaytimeStart();
     const dryRun: boolean = !!body.dry_run;
 
+    // Stored deadline for the new cohort is the source of truth for "Apply by".
+    const { data: newCohortRow } = await supabase
+      .from("cohorts")
+      .select("enrollment_deadline")
+      .eq("start_date", newCohortDate)
+      .maybeSingle();
+    const newCohortDeadline: string | undefined = newCohortRow?.enrollment_deadline
+      ? String(newCohortRow.enrollment_deadline).slice(0, 10)
+      : undefined;
+
     const rows = await readSheet(GOOGLE_SERVICE_ACCOUNT_KEY);
 
     // Sheet columns: A timestamp, B name, C dob, D email, E addr, F phone, ..., N cohort selected
@@ -172,6 +182,7 @@ Deno.serve(async (req) => {
             student_email: t.email,
             student_name: t.name || t.email.split("@")[0],
             cohort_date: newCohortDate,
+            cohort_deadline: newCohortDeadline,
             previous_cohort_date: t.prevCohort || undefined,
           }),
         });
