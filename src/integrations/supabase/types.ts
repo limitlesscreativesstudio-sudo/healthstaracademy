@@ -165,6 +165,33 @@ export type Database = {
           },
         ]
       }
+      agent_job_state: {
+        Row: {
+          job_name: string
+          last_error: string | null
+          last_run_at: string | null
+          lease_until: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          job_name: string
+          last_error?: string | null
+          last_run_at?: string | null
+          lease_until?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          job_name?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          lease_until?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       agent_messages: {
         Row: {
           content: string
@@ -1906,6 +1933,33 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_reminder_log: {
+        Row: {
+          channel: string
+          id: string
+          milestone_days: number
+          pending_steps: Json | null
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          id?: string
+          milestone_days: number
+          pending_steps?: Json | null
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          id?: string
+          milestone_days?: number
+          pending_steps?: Json | null
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       outcome_criteria: {
         Row: {
           created_at: string
@@ -2547,6 +2601,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      student_onboarding_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          dismissed: boolean
+          started_at: string
+          steps: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          dismissed?: boolean
+          started_at?: string
+          steps?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          dismissed?: boolean
+          started_at?: string
+          steps?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       student_skill_signoffs: {
         Row: {
