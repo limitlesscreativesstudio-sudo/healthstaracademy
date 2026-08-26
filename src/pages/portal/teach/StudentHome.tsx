@@ -157,6 +157,11 @@ const StudentHome: React.FC = () => {
           <p className="text-muted-foreground">Here's what's coming up in your CNA program.</p>
         </section>
 
+        {!loadingData && (
+          <OnboardingChecklist userId={user?.id} courseId={courses[0]?.id} />
+        )}
+
+
         <section>
           <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" /> My Courses
