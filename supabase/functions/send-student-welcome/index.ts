@@ -145,28 +145,37 @@ Deno.serve(async (req) => {
       return json({ success: false, logged: true, error: "Email provider not configured" }, 200);
     }
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "Health Star Academy <healthstaracademy01@gmail.com>",
-        to: [email],
-        reply_to: "healthstaracademy01@gmail.com",
-        subject: "Welcome to Health Star Academy — your Student Portal login",
-        html,
-      }),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("Resend error", res.status, text);
-      return json({ success: false, error: text }, 502);
+    // Try verified sender domains in order, falling back to Resend's shared domain.
+    const senders = [
+      "Health Star Academy <info@healthstaracademy.org>",
+      "Health Star Academy <no-reply@healthstaracademy.org>",
+      "Health Star Academy <onboarding@resend.dev>",
+    ];
+    let lastError = "";
+    for (const from of senders) {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from,
+          to: [email],
+          reply_to: "healthstaracademy01@gmail.com",
+          subject: "Welcome to Health Star Academy — your Student Portal login",
+          html,
+        }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        return json({ success: true, id: result.id, from });
+      }
+      lastError = await res.text();
+      console.error("Resend error", from, res.status, lastError);
     }
-    const result = await res.json();
-    return json({ success: true, id: result.id });
+    return json({ success: false, error: lastError }, 502);
+
   } catch (e) {
     console.error(e);
     return json({ error: (e as Error).message }, 500);
