@@ -130,7 +130,7 @@ const PortalLogin: React.FC = () => {
           <img src="/hsa-logo.png" alt="Health Star Academy"
             style={{ width:60, height:60, borderRadius:'50%', objectFit:'cover', margin:'0 auto 14px', display:'block', filter:'drop-shadow(0 6px 18px rgba(91,200,232,0.5))' }}/>
           <h1 style={{ margin:0, fontSize:23, fontWeight:800, color:C.text, fontFamily:'sans-serif' }}>Health Star Academy</h1>
-          <p style={{ margin:'5px 0 0', color:C.muted, fontSize:13, fontFamily:'sans-serif' }}>Instructor Portal — HSA LMS</p>
+          <p style={{ margin:'5px 0 0', color:C.muted, fontSize:13, fontFamily:'sans-serif' }}>HSA LMS — Student & Instructor Portal</p>
         </div>
 
         {/* Email */}
