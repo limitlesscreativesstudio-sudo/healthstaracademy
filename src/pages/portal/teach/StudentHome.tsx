@@ -5,6 +5,7 @@ import { usePortalAuth } from '@/hooks/usePortalAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import OnboardingChecklist from '@/components/portal/OnboardingChecklist';
 import { BookOpen, Calendar, Bell, Briefcase, User, LogOut, GraduationCap } from 'lucide-react';
 
 interface CourseRow {
@@ -155,6 +156,11 @@ const StudentHome: React.FC = () => {
           </h1>
           <p className="text-muted-foreground">Here's what's coming up in your CNA program.</p>
         </section>
+
+        {!loadingData && (
+          <OnboardingChecklist userId={user?.id} courseId={courses[0]?.id} />
+        )}
+
 
         <section>
           <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
