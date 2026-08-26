@@ -155,6 +155,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   };
 
   const startTake = async (q: Quiz) => {
+    if (!canEdit && !q.published) { toast.info('This quiz is locked until your instructor opens it.'); return; }
     setTaking(q);
     setResults(null);
     setAttemptId(null);
@@ -383,8 +384,15 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         <div style={{ padding:'32px 24px', maxWidth:700, margin:'0 auto', fontFamily:'sans-serif' }}>
           <button onClick={backToList} style={{ background:'none', border:'none', color:C.primary, cursor:'pointer', marginBottom:12, fontSize:13 }}>← Back</button>
           <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:'20px 24px' }}>
-            <div style={{ fontWeight:700, fontSize:16, marginBottom:6, color:C.text }}>Not available yet</div>
-            <div style={{ fontSize:13, color:C.muted }}>Your instructor has not released this quiz. It will appear here once it is opened for your cohort.</div>
+            <div style={{ fontWeight:700, fontSize:16, marginBottom:6, color:C.text }}>🔒 Locked — {q.title}</div>
+            <div style={{ fontSize:13, color:C.muted, marginBottom:10 }}>
+              Your instructor has not opened this {/case\s*study|assignment\s*quiz/i.test(q.title) ? 'case study' : 'quiz'} yet. It will unlock here automatically once it is released to your cohort.
+            </div>
+            <div style={{ fontSize:12.5, color:C.text, background:C.bg, borderRadius:5, padding:'8px 12px' }}>
+              {q.due_at
+                ? <>Expected to open before the due date: <strong>{new Date(q.due_at).toLocaleString('en-US', { month:'long', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' })}</strong></>
+                : <>No open date has been scheduled yet — check back or ask your instructor.</>}
+            </div>
           </div>
         </div>
       );
@@ -872,8 +880,6 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         };
         const groups: Record<string, { label:string; order:number; items: Quiz[] }> = {};
         quizzes.forEach(q => {
-          const visible = canEdit || q.published;
-          if (!visible) return;
           const g = groupOf(q.title);
           if (!groups[g.key]) groups[g.key] = { label:g.label, order:g.order, items:[] };
           groups[g.key].items.push(q);
@@ -898,8 +904,9 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                       {g.items.map((q, qi) => {
                         const taken = attemptedIds.has(q.id);
                         const st = stats[q.id];
+                        const locked = !canEdit && !q.published;
                         return (
-                          <div key={q.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px', borderTop: qi === 0 ? 'none' : `1px solid ${C.border}` }}>
+                          <div key={q.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px', borderTop: qi === 0 ? 'none' : `1px solid ${C.border}`, background: locked ? '#fafafa' : undefined }}>
                             <span aria-hidden style={{ width:6, height:6, borderRadius:'50%', flexShrink:0, background: q.published ? C.success : C.border }} />
                             <div style={{ flex:1, minWidth:0 }}>
                               <div
@@ -907,14 +914,20 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                                 role="button"
                                 tabIndex={0}
                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetails(q); } }}
-                                style={{ fontSize:13.5, fontWeight:600, color:C.primary, cursor:'pointer', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}
-                              >{q.title}</div>
+                                style={{ fontSize:13.5, fontWeight:600, color: locked ? C.muted : C.primary, cursor:'pointer', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}
+                              >{locked ? '🔒 ' : ''}{q.title}</div>
                               <div style={{ fontSize:11.5, color:C.muted, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
-                                {Number(q.total_points||0)} pts
-                                {q.due_at && ` • Due ${new Date(q.due_at).toLocaleDateString()}`}
-                                {canEdit && st && ` • ${st.attempts} attempt${st.attempts===1?'':'s'}`}
-                                {canEdit && st && st.submitted ? ` • avg ${st.avgPct}%` : ''}
-                                {!canEdit && taken && <span style={{ color:C.success, marginLeft:6, fontWeight:600 }}>✓ Submitted</span>}
+                                {locked
+                                  ? (q.due_at
+                                      ? `Locked — expected to open before ${new Date(q.due_at).toLocaleDateString('en-US',{ month:'short', day:'numeric' })}`
+                                      : 'Locked — your instructor will open this quiz')
+                                  : <>
+                                      {Number(q.total_points||0)} pts
+                                      {q.due_at && ` • Due ${new Date(q.due_at).toLocaleDateString()}`}
+                                      {canEdit && st && ` • ${st.attempts} attempt${st.attempts===1?'':'s'}`}
+                                      {canEdit && st && st.submitted ? ` • avg ${st.avgPct}%` : ''}
+                                      {!canEdit && taken && <span style={{ color:C.success, marginLeft:6, fontWeight:600 }}>✓ Submitted</span>}
+                                    </>}
                               </div>
                             </div>
                             {canEdit ? (
@@ -929,6 +942,8 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                                 <button onClick={() => del(q)} title="Delete quiz" aria-label={`Delete ${q.title}`}
                                   style={{ padding:'4px 8px', border:`1px solid ${C.error}33`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer', color:C.error }}>✕</button>
                               </div>
+                            ) : locked ? (
+                              <span style={{ padding:'4px 11px', borderRadius:20, background:'#f5f3fa', color:C.muted, fontSize:11.5, fontWeight:600, flexShrink:0 }}>Locked</span>
                             ) : (
                               <button onClick={() => startTake(q)}
                                 style={{ padding:'5px 13px', border:'none', borderRadius:5, background:taken?C.border:C.primary, color:'white', fontSize:12.5, cursor:'pointer', flexShrink:0 }}>
