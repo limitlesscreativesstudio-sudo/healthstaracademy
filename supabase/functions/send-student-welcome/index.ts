@@ -77,15 +77,33 @@ Deno.serve(async (req) => {
     const url = Deno.env.get("SUPABASE_URL")!;
     const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+    const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const admin = createClient(url, service);
+
+    // Authorize: service-role call, or a signed-in admin/instructor.
     const authHeader = req.headers.get("authorization") ?? "";
-    if (!authHeader.includes(service)) return json({ error: "Unauthorized" }, 401);
+    let authorized = authHeader.includes(service);
+    if (!authorized) {
+      const userClient = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
+      const { data: userData } = await userClient.auth.getUser();
+      const callerId = userData?.user?.id;
+      if (callerId) {
+        const [{ data: roles }, { count: taught }] = await Promise.all([
+          admin.from("user_roles").select("role").eq("user_id", callerId),
+          admin.from("courses").select("id", { count: "exact", head: true }).eq("instructor_id", callerId),
+        ]);
+        const roleNames = (roles ?? []).map((r: any) => r.role);
+        authorized =
+          roleNames.includes("admin") || roleNames.includes("instructor") || (taught ?? 0) > 0;
+      }
+    }
+    if (!authorized) return json({ error: "Unauthorized" }, 401);
 
     const body = await req.json().catch(() => ({}));
     const email = String(body?.email ?? "").trim().toLowerCase();
     const tempPassword = body?.tempPassword ? String(body.tempPassword) : null;
     if (!email || !email.includes("@")) return json({ error: "Valid email is required" }, 400);
 
-    const admin = createClient(url, service);
 
     const { data: link, error: linkErr } = await admin.auth.admin.generateLink({
       type: "recovery",
