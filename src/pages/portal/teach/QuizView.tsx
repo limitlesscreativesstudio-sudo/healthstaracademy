@@ -155,6 +155,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   };
 
   const startTake = async (q: Quiz) => {
+    if (!canEdit && !q.published) { toast.info('This quiz is locked until your instructor opens it.'); return; }
     setTaking(q);
     setResults(null);
     setAttemptId(null);
