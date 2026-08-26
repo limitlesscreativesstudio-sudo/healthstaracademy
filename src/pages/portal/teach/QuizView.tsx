@@ -872,8 +872,6 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         };
         const groups: Record<string, { label:string; order:number; items: Quiz[] }> = {};
         quizzes.forEach(q => {
-          const visible = canEdit || q.published;
-          if (!visible) return;
           const g = groupOf(q.title);
           if (!groups[g.key]) groups[g.key] = { label:g.label, order:g.order, items:[] };
           groups[g.key].items.push(q);
