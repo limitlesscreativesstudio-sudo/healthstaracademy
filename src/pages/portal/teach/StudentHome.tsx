@@ -132,7 +132,13 @@ const StudentHome: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <header className="bg-background border-b border-border">
+      {/* Student-only portal strip — mirrors the instructor portal's mode banner */}
+      <div className="bg-[#319795] text-white text-xs font-sans px-4 py-1.5 flex items-center gap-2">
+        <span aria-hidden="true">🎓</span>
+        <strong className="uppercase tracking-wide text-[11px]">Student Portal</strong>
+        <span className="opacity-85">· Your modules, quizzes, grades and attendance</span>
+      </div>
+      <header className="bg-background border-b-2 border-[#319795]">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <img src="/hsa-logo.png" alt="Health Star Academy" className="w-9 h-9 rounded-full object-cover" />
