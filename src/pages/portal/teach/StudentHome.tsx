@@ -5,6 +5,7 @@ import { usePortalAuth } from '@/hooks/usePortalAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import OnboardingChecklist from '@/components/portal/OnboardingChecklist';
 import { BookOpen, Calendar, Bell, Briefcase, User, LogOut, GraduationCap } from 'lucide-react';
 
 interface CourseRow {
