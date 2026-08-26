@@ -953,6 +953,25 @@ const CourseView: React.FC = () => {
       {/* Main content area */}
       <div style={{ marginLeft:52, flex:1, display:'flex', flexDirection:'column' }}>
 
+        {/* Portal mode strip — visually separates the Student Portal from the Instructor Portal */}
+        {(() => {
+          const mode = !realCanEdit ? 'student' : (studentView ? 'preview' : 'instructor');
+          const cfg = {
+            student:    { bg:'#319795', icon:'🎓', label:'Student Portal', sub:'Your modules, quizzes, grades and attendance' },
+            instructor: { bg:'#3D1B6E', icon:'🧑‍🏫', label:'Instructor Portal', sub:'Teaching tools: authoring, grading and rosters' },
+            preview:    { bg:'#ED8936', icon:'👁', label:'Student Preview', sub:'You are viewing this course exactly as a student sees it' },
+          }[mode];
+          return (
+            <div style={{ background:cfg.bg, color:'white', padding:'6px 20px', display:'flex', alignItems:'center', gap:10, fontFamily:'sans-serif', fontSize:12 }}>
+              <span aria-hidden="true">{cfg.icon}</span>
+              <strong style={{ letterSpacing:0.3, textTransform:'uppercase', fontSize:11 }}>{cfg.label}</strong>
+              <span style={{ opacity:0.85 }}>· {cfg.sub}</span>
+            </div>
+          );
+        })()}
+
+
+
         {/* Course header bar */}
         <div style={{ background:activeCourse.color, borderBottom:`1px solid ${C.border}`, padding:'14px 20px 0', position:'sticky', top:0, zIndex:50 }}>
           <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
