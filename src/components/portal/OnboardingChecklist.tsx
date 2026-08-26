@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -21,6 +22,8 @@ interface OnboardingChecklistProps {
   courseId?: string;
 }
 
+const STEP_IDS = ['password', 'modules', 'attendance', 'grades'];
+
 const storageKey = (userId?: string) => `hsa.onboarding.${userId ?? 'anon'}`;
 
 const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({ userId, courseId }) => {
@@ -29,20 +32,44 @@ const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({ userId, cours
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey(userId));
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setDone(parsed.done ?? {});
-        setDismissed(Boolean(parsed.dismissed));
-      } else {
-        setDone({});
-        setDismissed(false);
+    let cancelled = false;
+    const load = async () => {
+      let nextDone: Record<string, boolean> = {};
+      let nextDismissed = false;
+      try {
+        const raw = localStorage.getItem(storageKey(userId));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          nextDone = parsed.done ?? {};
+          nextDismissed = Boolean(parsed.dismissed);
+        }
+      } catch {
+        /* ignore malformed state */
       }
-    } catch {
-      /* ignore malformed state */
-    }
-    setReady(true);
+      if (userId) {
+        const { data } = await supabase
+          .from('student_onboarding_progress')
+          .select('steps, dismissed')
+          .eq('user_id', userId)
+          .maybeSingle();
+        if (data) {
+          nextDone = { ...nextDone, ...((data.steps as Record<string, boolean>) ?? {}) };
+          nextDismissed = nextDismissed || Boolean(data.dismissed);
+        } else {
+          await supabase.from('student_onboarding_progress').upsert({
+            user_id: userId,
+            steps: nextDone,
+            dismissed: nextDismissed,
+          }, { onConflict: 'user_id' });
+        }
+      }
+      if (cancelled) return;
+      setDone(nextDone);
+      setDismissed(nextDismissed);
+      setReady(true);
+    };
+    void load();
+    return () => { cancelled = true; };
   }, [userId]);
 
   const persist = useCallback((next: Record<string, boolean>, nextDismissed: boolean) => {
@@ -51,6 +78,15 @@ const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({ userId, cours
     } catch {
       /* storage unavailable */
     }
+    if (!userId) return;
+    const allDone = STEP_IDS.every(id => next[id]);
+    // Saved server-side so automated onboarding reminders know what's still open.
+    void supabase.from('student_onboarding_progress').upsert({
+      user_id: userId,
+      steps: next,
+      dismissed: nextDismissed,
+      completed_at: allDone ? new Date().toISOString() : null,
+    }, { onConflict: 'user_id' });
   }, [userId]);
 
   const steps: Step[] = [
