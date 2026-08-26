@@ -378,6 +378,17 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   // Quiz details (Canvas-style summary)
   if (viewing && !taking && !editing) {
     const q = viewing;
+    if (!canEdit && !q.published) {
+      return (
+        <div style={{ padding:'32px 24px', maxWidth:700, margin:'0 auto', fontFamily:'sans-serif' }}>
+          <button onClick={backToList} style={{ background:'none', border:'none', color:C.primary, cursor:'pointer', marginBottom:12, fontSize:13 }}>← Back</button>
+          <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:'20px 24px' }}>
+            <div style={{ fontWeight:700, fontSize:16, marginBottom:6, color:C.text }}>Not available yet</div>
+            <div style={{ fontSize:13, color:C.muted }}>Your instructor has not released this quiz. It will appear here once it is opened for your cohort.</div>
+          </div>
+        </div>
+      );
+    }
     const fmtDate = (d: string | null) => d ? new Date(d).toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' }) : '—';
     const row = (label:string, value:React.ReactNode) => (
       <div style={{ display:'grid', gridTemplateColumns:'220px 1fr', padding:'8px 0', borderBottom:`1px solid ${C.border}` }}>
