@@ -164,9 +164,11 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           from,
-          to: [email],
+          to: [deliverTo ?? email],
           reply_to: "healthstaracademy01@gmail.com",
-          subject: "Welcome to Health Star Academy — your Student Portal login",
+          subject: deliverTo
+            ? `[Forward to ${email}] Welcome to Health Star Academy — Student Portal login`
+            : "Welcome to Health Star Academy — your Student Portal login",
           html,
         }),
       });
