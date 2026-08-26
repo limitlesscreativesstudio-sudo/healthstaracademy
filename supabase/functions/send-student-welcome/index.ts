@@ -102,6 +102,9 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const email = String(body?.email ?? "").trim().toLowerCase();
     const tempPassword = body?.tempPassword ? String(body.tempPassword) : null;
+    // Optional: deliver the student's welcome email to a staff mailbox for forwarding
+    const deliverToRaw = String(body?.deliverTo ?? "").trim().toLowerCase();
+    const deliverTo = deliverToRaw && deliverToRaw.includes("@") ? deliverToRaw : null;
     if (!email || !email.includes("@")) return json({ error: "Valid email is required" }, 400);
 
 
