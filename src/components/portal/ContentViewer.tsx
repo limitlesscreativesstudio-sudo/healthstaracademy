@@ -91,7 +91,7 @@ const vimeoEmbed = (url: string) => {
 const officeEmbed = (url: string) =>
   `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
 
-const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileType, title }) => {
+const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileType, title, onPrev, onNext, prevLabel, nextLabel, positionLabel }) => {
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -369,6 +369,31 @@ const ContentViewer: React.FC<Props> = ({ open, onClose, source, fileName, fileT
         )}
 
       </div>
+
+      {(onPrev || onNext) && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="bg-neutral-900 text-white border-t border-white/10 px-3 py-2 flex items-center gap-2"
+        >
+          <button
+            onClick={onPrev}
+            disabled={!onPrev}
+            className="inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20 transition disabled:opacity-40 disabled:hover:bg-white/10 max-w-[42%]"
+          >
+            <ChevronLeft className="h-4 w-4 shrink-0" />
+            <span className="truncate">{prevLabel ?? "Previous"}</span>
+          </button>
+          <div className="flex-1 text-center text-xs text-white/50">{positionLabel}</div>
+          <button
+            onClick={onNext}
+            disabled={!onNext}
+            className="inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-md bg-white/15 hover:bg-white/25 transition disabled:opacity-40 disabled:hover:bg-white/15 max-w-[42%]"
+          >
+            <span className="truncate">{nextLabel ?? "Next"}</span>
+            <ChevronRight className="h-4 w-4 shrink-0" />
+          </button>
+        </div>
+      )}
 
       {kind === "office" && !officeFailed && !loading && (
         <div
