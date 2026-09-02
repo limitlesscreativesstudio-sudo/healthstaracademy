@@ -870,6 +870,9 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
             <button onClick={() => setShowCreate(v => !v)} style={{ padding:'7px 16px', border:'none', borderRadius:5, background:C.primary, color:'white', fontSize:13, cursor:'pointer' }}>+ New Quiz</button>
           </div>
         )}
+      </div>
+
+
 
 
       {showCreate && canEdit && (
