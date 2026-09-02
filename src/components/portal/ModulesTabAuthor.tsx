@@ -208,6 +208,70 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
     load();
   };
 
+  // ----- Sequential navigation: flat, ordered list of openable items -----
+  const flatItems = useMemo(() => {
+    const order = new Map(modules.map((m, idx) => [m.id, idx]));
+    return items
+      .filter(i => i.item_type !== "header" && order.has(i.module_id))
+      .sort((a, b) =>
+        (order.get(a.module_id)! - order.get(b.module_id)!) || (a.position - b.position)
+      );
+  }, [modules, items]);
+
+  const activeIdx = activeItemId ? flatItems.findIndex(i => i.id === activeItemId) : -1;
+  const prevItem = activeIdx > 0 ? flatItems[activeIdx - 1] : null;
+  const nextItem = activeIdx >= 0 && activeIdx < flatItems.length - 1 ? flatItems[activeIdx + 1] : null;
+
+  /**
+   * Opens a module item in place. Files/pages/discussions/links render in the
+   * overlay so the learner never leaves the Modules tab; quizzes and
+   * assignments still route to their dedicated views but remember where they
+   * came from. Tracking activeItemId is what powers Previous/Next.
+   */
+  const openItemById = (itemId: string) => {
+    const i = items.find(x => x.id === itemId);
+    if (!i) return;
+    setActiveItemId(i.id);
+    const t = i.item_type;
+    const moduleReturnPath = `${location.pathname}${location.search || `?course=${courseId}&tab=modules`}`;
+    if (t === "assignment" && i.content_ref) {
+      setViewer(null); setPageView(null);
+      return navigate(`/portal/courses/${courseId}/assignments/${i.content_ref}`, { state: { from: moduleReturnPath } });
+    }
+    if (t === "quiz" && i.content_ref) {
+      setViewer(null); setPageView(null);
+      return navigate(`/portal/courses/${courseId}/quizzes/${i.content_ref}`, { state: { from: moduleReturnPath } });
+    }
+    if (t === "file") {
+      const f = fileMap?.[i.content_ref ?? ""];
+      const fileUrl = f?.url || i.url;
+      if (!fileUrl) { toast({ title: "File not found", variant: "destructive" }); return; }
+      const parts = fileUrl.split("/course-files/");
+      setPageView(null);
+      if (parts.length === 2) {
+        setViewer({ src: { bucket: "course-files", path: decodeURIComponent(parts[1].split("?")[0]) }, name: f?.name || i.title, type: f?.type || "", title: i.title });
+      } else {
+        setViewer({ src: { url: fileUrl }, name: f?.name || i.title, type: f?.type || "", title: i.title });
+      }
+      return;
+    }
+    if (t === "page" || t === "discussion") {
+      const src = t === "page" ? pageMap?.[i.content_ref ?? ""] : discussionMap?.[i.content_ref ?? ""];
+      setViewer(null);
+      setPageView(src ?? { title: i.title, body: "" });
+      return;
+    }
+    if (i.url) {
+      setPageView(null);
+      setViewer({ src: { url: i.url }, name: i.title, type: "", title: i.title });
+      return;
+    }
+    toast({ title: "Nothing to open for this item" });
+  };
+
+  const closeViewers = () => { setViewer(null); setPageView(null); setActiveItemId(null); };
+
+
   // ----- Unified drag handler (modules + cross-module items) -----
   const onDragEnd = async (e: DragEndEvent) => {
     const { active, over } = e;
