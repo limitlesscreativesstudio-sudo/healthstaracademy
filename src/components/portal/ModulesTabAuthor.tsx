@@ -570,20 +570,39 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
       )}
       <ContentViewer
         open={!!viewer}
-        onClose={() => setViewer(null)}
+        onClose={closeViewers}
         source={viewer?.src ?? null}
         fileName={viewer?.name}
         fileType={viewer?.type}
         title={viewer?.title}
+        onPrev={prevItem ? () => openItemById(prevItem.id) : undefined}
+        onNext={nextItem ? () => openItemById(nextItem.id) : undefined}
+        prevLabel={prevItem?.title}
+        nextLabel={nextItem?.title}
+        positionLabel={activeIdx >= 0 ? `${activeIdx + 1} of ${flatItems.length}` : undefined}
       />
-      <Dialog open={!!pageView} onOpenChange={(o) => !o && setPageView(null)}>
+      <Dialog open={!!pageView} onOpenChange={(o) => !o && closeViewers()}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{pageView?.title}</DialogTitle>
           </DialogHeader>
           <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: pageView?.body || "<p class='text-muted-foreground'>Empty page.</p>" }} />
+          {activeIdx >= 0 && (
+            <DialogFooter className="mt-4 border-t border-border pt-3 sm:justify-between gap-2">
+              <Button variant="outline" size="sm" disabled={!prevItem} onClick={() => prevItem && openItemById(prevItem.id)}>
+                <ArrowLeftIcon className="h-4 w-4 mr-1" />
+                <span className="truncate max-w-[9rem]">{prevItem ? prevItem.title : "Previous"}</span>
+              </Button>
+              <span className="text-xs text-muted-foreground self-center">{activeIdx + 1} of {flatItems.length}</span>
+              <Button size="sm" disabled={!nextItem} onClick={() => nextItem && openItemById(nextItem.id)}>
+                <span className="truncate max-w-[9rem]">{nextItem ? nextItem.title : "Next"}</span>
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
+
     </div>
   );
 };
