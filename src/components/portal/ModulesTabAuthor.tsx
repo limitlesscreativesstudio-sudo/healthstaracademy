@@ -739,8 +739,6 @@ const SortableModule = ({
 
 // ============ Sortable Item ============
 const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onOpenItem, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin, onRename }: any) => {
-  const navigate = useNavigate();
-  const location = useLocation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: i.id,
     data: { type: "item", moduleId: i.module_id },
@@ -750,37 +748,9 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onOpenIte
 
   const isHeader = i.item_type === "header";
 
-  const openItem = () => {
-    const t = i.item_type;
-    const moduleReturnPath = `${location.pathname}${location.search || `?course=${courseId}&tab=modules`}`;
-    if (t === "assignment" && i.content_ref) return navigate(`/portal/courses/${courseId}/assignments/${i.content_ref}`, { state: { from: moduleReturnPath } });
-    if (t === "quiz" && i.content_ref) return navigate(`/portal/courses/${courseId}/quizzes/${i.content_ref}`, { state: { from: moduleReturnPath } });
-    if (t === "file") {
-      const f = fileMap?.[i.content_ref];
-      const fileUrl = f?.url || i.url || i.file_url;
-      if (!fileUrl) return toast({ title: "File not found", variant: "destructive" });
-      const parts = fileUrl.split("/course-files/");
-      if (parts.length === 2) {
-        return onOpenFile?.({ bucket: "course-files", path: decodeURIComponent(parts[1].split("?")[0]) }, f?.name || i.title, f?.type || "", i.title);
-      }
-      return onOpenFile?.({ url: fileUrl }, f?.name || i.title, f?.type || "", i.title);
-    }
-    if (t === "page") {
-      const p = pageMap?.[i.content_ref];
-      return onOpenPage?.(p ?? { title: i.title, body: "" });
-    }
-    if (t === "discussion") {
-      const d = discussionMap?.[i.content_ref];
-      return onOpenPage?.(d ?? { title: i.title, body: "" });
-    }
-    // link / video / external_tool / anything with a url — always preview inline
-    // so students stay on the course page instead of leaving to a new tab.
-    const url: string | undefined = i.url;
-    if (url) {
-      return onOpenFile?.({ url }, i.title, "", i.title);
-    }
-    toast({ title: "Nothing to open for this item" });
-  };
+  // Opening is handled by the parent so Previous/Next can walk the whole course.
+  const openItem = () => onOpenItem?.(i);
+
 
   return (
     <div
