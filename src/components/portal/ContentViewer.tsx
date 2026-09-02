@@ -15,7 +15,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { X, Download, ExternalLink, Loader2, AlertCircle } from "lucide-react";
+import { X, Download, ExternalLink, Loader2, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 
 export type ContentSource =
   | { url: string; bucket?: never; path?: never }
@@ -28,6 +28,12 @@ interface Props {
   fileName?: string;
   fileType?: string; // extension (pdf, pptx…) or mime — best-effort
   title?: string;
+  /** Optional sequential navigation across module items */
+  onPrev?: () => void;
+  onNext?: () => void;
+  prevLabel?: string;
+  nextLabel?: string;
+  positionLabel?: string;
 }
 
 type Kind = "pdf" | "office" | "video" | "audio" | "image" | "youtube" | "vimeo" | "html" | "other";
