@@ -2999,6 +2999,10 @@ export type Database = {
       }
       is_enrolled_in: { Args: { _course_id: string }; Returns: boolean }
       is_instructor_of: { Args: { _course_id: string }; Returns: boolean }
+      shares_course_as_instructor: {
+        Args: { _student_user_id: string }
+        Returns: boolean
+      }
       user_id_by_email: { Args: { _email: string }; Returns: string }
     }
     Enums: {
