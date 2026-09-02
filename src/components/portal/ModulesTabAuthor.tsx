@@ -22,7 +22,7 @@ import {
   ChevronRight, ChevronDown, Eye, EyeOff, MoreVertical, Plus, GripVertical,
   FileText, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap,
   Trash2, Pencil, BarChart3, X, ArrowRightLeft, ArrowUp, ArrowDown,
-  ChevronsUp, ChevronsDown, Type, CheckCircle2, Copy, MessageSquare, Plug,
+  ChevronsUp, ChevronsDown, Type, ArrowLeft as ArrowLeftIcon, CheckCircle2, Copy, MessageSquare, Plug,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -62,7 +62,11 @@ const itemIcon = (t: string) => {
 };
 
 const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId: string; isInstructor: boolean; openAddOnMount?: number }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
+
   const [items, setItems] = useState<ModuleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -207,6 +211,70 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
     await supabase.from("module_items").delete().eq("id", i.id);
     load();
   };
+
+  // ----- Sequential navigation: flat, ordered list of openable items -----
+  const flatItems = useMemo(() => {
+    const order = new Map(modules.map((m, idx) => [m.id, idx]));
+    return items
+      .filter(i => i.item_type !== "header" && order.has(i.module_id))
+      .sort((a, b) =>
+        (order.get(a.module_id)! - order.get(b.module_id)!) || (a.position - b.position)
+      );
+  }, [modules, items]);
+
+  const activeIdx = activeItemId ? flatItems.findIndex(i => i.id === activeItemId) : -1;
+  const prevItem = activeIdx > 0 ? flatItems[activeIdx - 1] : null;
+  const nextItem = activeIdx >= 0 && activeIdx < flatItems.length - 1 ? flatItems[activeIdx + 1] : null;
+
+  /**
+   * Opens a module item in place. Files/pages/discussions/links render in the
+   * overlay so the learner never leaves the Modules tab; quizzes and
+   * assignments still route to their dedicated views but remember where they
+   * came from. Tracking activeItemId is what powers Previous/Next.
+   */
+  const openItemById = (itemId: string) => {
+    const i = items.find(x => x.id === itemId);
+    if (!i) return;
+    setActiveItemId(i.id);
+    const t = i.item_type;
+    const moduleReturnPath = `${location.pathname}${location.search || `?course=${courseId}&tab=modules`}`;
+    if (t === "assignment" && i.content_ref) {
+      setViewer(null); setPageView(null);
+      return navigate(`/portal/courses/${courseId}/assignments/${i.content_ref}`, { state: { from: moduleReturnPath } });
+    }
+    if (t === "quiz" && i.content_ref) {
+      setViewer(null); setPageView(null);
+      return navigate(`/portal/courses/${courseId}/quizzes/${i.content_ref}`, { state: { from: moduleReturnPath } });
+    }
+    if (t === "file") {
+      const f = fileMap?.[i.content_ref ?? ""];
+      const fileUrl = f?.url || i.url;
+      if (!fileUrl) { toast({ title: "File not found", variant: "destructive" }); return; }
+      const parts = fileUrl.split("/course-files/");
+      setPageView(null);
+      if (parts.length === 2) {
+        setViewer({ src: { bucket: "course-files", path: decodeURIComponent(parts[1].split("?")[0]) }, name: f?.name || i.title, type: f?.type || "", title: i.title });
+      } else {
+        setViewer({ src: { url: fileUrl }, name: f?.name || i.title, type: f?.type || "", title: i.title });
+      }
+      return;
+    }
+    if (t === "page" || t === "discussion") {
+      const src = t === "page" ? pageMap?.[i.content_ref ?? ""] : discussionMap?.[i.content_ref ?? ""];
+      setViewer(null);
+      setPageView(src ?? { title: i.title, body: "" });
+      return;
+    }
+    if (i.url) {
+      setPageView(null);
+      setViewer({ src: { url: i.url }, name: i.title, type: "", title: i.title });
+      return;
+    }
+    toast({ title: "Nothing to open for this item" });
+  };
+
+  const closeViewers = () => { setViewer(null); setPageView(null); setActiveItemId(null); };
+
 
   // ----- Unified drag handler (modules + cross-module items) -----
   const onDragEnd = async (e: DragEndEvent) => {
@@ -448,8 +516,8 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
                   fileMap={fileMap}
                   pageMap={pageMap}
                   discussionMap={discussionMap}
-                  onOpenFile={(src, name, type, title) => setViewer({ src, name, type, title })}
-                  onOpenPage={(p) => setPageView(p)}
+                  onOpenItem={(it: ModuleItem) => openItemById(it.id)}
+
                   onToggleCollapse={() => toggleCollapse(m.id)}
                   onTogglePublish={() => togglePublishModule(m)}
                   onEdit={() => setModuleDlg({ open: true, module: m })}
@@ -502,20 +570,39 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
       )}
       <ContentViewer
         open={!!viewer}
-        onClose={() => setViewer(null)}
+        onClose={closeViewers}
         source={viewer?.src ?? null}
         fileName={viewer?.name}
         fileType={viewer?.type}
         title={viewer?.title}
+        onPrev={prevItem ? () => openItemById(prevItem.id) : undefined}
+        onNext={nextItem ? () => openItemById(nextItem.id) : undefined}
+        prevLabel={prevItem?.title}
+        nextLabel={nextItem?.title}
+        positionLabel={activeIdx >= 0 ? `${activeIdx + 1} of ${flatItems.length}` : undefined}
       />
-      <Dialog open={!!pageView} onOpenChange={(o) => !o && setPageView(null)}>
+      <Dialog open={!!pageView} onOpenChange={(o) => !o && closeViewers()}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{pageView?.title}</DialogTitle>
           </DialogHeader>
           <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: pageView?.body || "<p class='text-muted-foreground'>Empty page.</p>" }} />
+          {activeIdx >= 0 && (
+            <DialogFooter className="mt-4 border-t border-border pt-3 sm:justify-between gap-2">
+              <Button variant="outline" size="sm" disabled={!prevItem} onClick={() => prevItem && openItemById(prevItem.id)}>
+                <ArrowLeftIcon className="h-4 w-4 mr-1" />
+                <span className="truncate max-w-[9rem]">{prevItem ? prevItem.title : "Previous"}</span>
+              </Button>
+              <span className="text-xs text-muted-foreground self-center">{activeIdx + 1} of {flatItems.length}</span>
+              <Button size="sm" disabled={!nextItem} onClick={() => nextItem && openItemById(nextItem.id)}>
+                <span className="truncate max-w-[9rem]">{nextItem ? nextItem.title : "Next"}</span>
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
+
     </div>
   );
 };
@@ -523,7 +610,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
 // ============ Sortable Module ============
 const SortableModule = ({
   module: m, items, allModules, collapsed, isInstructor, courseId,
-  fileMap, pageMap, discussionMap, onOpenFile, onOpenPage,
+  fileMap, pageMap, discussionMap, onOpenItem,
   onToggleCollapse, onTogglePublish, onEdit, onDelete, onAddItem,
   onEditItem, onDeleteItem, onToggleItemPublish, onDuplicateItem, onMoveItem, onMoveItemWithin, onMoveModule,
   onRenameModule, onRenameItem,
@@ -620,8 +707,7 @@ const SortableModule = ({
                     fileMap={fileMap}
                     pageMap={pageMap}
                     discussionMap={discussionMap}
-                    onOpenFile={onOpenFile}
-                    onOpenPage={onOpenPage}
+                    onOpenItem={onOpenItem}
                     isFirst={idx2 === 0}
                     isLast={idx2 === items.length - 1}
                     onTogglePublish={() => onToggleItemPublish(i)}
@@ -652,9 +738,7 @@ const SortableModule = ({
 
 
 // ============ Sortable Item ============
-const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, pageMap, discussionMap, onOpenFile, onOpenPage, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin, onRename }: any) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onOpenItem, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin, onRename }: any) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: i.id,
     data: { type: "item", moduleId: i.module_id },
@@ -664,37 +748,9 @@ const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, 
 
   const isHeader = i.item_type === "header";
 
-  const openItem = () => {
-    const t = i.item_type;
-    const moduleReturnPath = `${location.pathname}${location.search || `?course=${courseId}&tab=modules`}`;
-    if (t === "assignment" && i.content_ref) return navigate(`/portal/courses/${courseId}/assignments/${i.content_ref}`, { state: { from: moduleReturnPath } });
-    if (t === "quiz" && i.content_ref) return navigate(`/portal/courses/${courseId}/quizzes/${i.content_ref}`, { state: { from: moduleReturnPath } });
-    if (t === "file") {
-      const f = fileMap?.[i.content_ref];
-      const fileUrl = f?.url || i.url || i.file_url;
-      if (!fileUrl) return toast({ title: "File not found", variant: "destructive" });
-      const parts = fileUrl.split("/course-files/");
-      if (parts.length === 2) {
-        return onOpenFile?.({ bucket: "course-files", path: decodeURIComponent(parts[1].split("?")[0]) }, f?.name || i.title, f?.type || "", i.title);
-      }
-      return onOpenFile?.({ url: fileUrl }, f?.name || i.title, f?.type || "", i.title);
-    }
-    if (t === "page") {
-      const p = pageMap?.[i.content_ref];
-      return onOpenPage?.(p ?? { title: i.title, body: "" });
-    }
-    if (t === "discussion") {
-      const d = discussionMap?.[i.content_ref];
-      return onOpenPage?.(d ?? { title: i.title, body: "" });
-    }
-    // link / video / external_tool / anything with a url — always preview inline
-    // so students stay on the course page instead of leaving to a new tab.
-    const url: string | undefined = i.url;
-    if (url) {
-      return onOpenFile?.({ url }, i.title, "", i.title);
-    }
-    toast({ title: "Nothing to open for this item" });
-  };
+  // Opening is handled by the parent so Previous/Next can walk the whole course.
+  const openItem = () => onOpenItem?.(i);
+
 
   return (
     <div
