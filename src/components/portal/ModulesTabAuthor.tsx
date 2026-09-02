@@ -22,7 +22,7 @@ import {
   ChevronRight, ChevronDown, Eye, EyeOff, MoreVertical, Plus, GripVertical,
   FileText, FileIcon, Link as LinkIcon, Video, ClipboardList, GraduationCap,
   Trash2, Pencil, BarChart3, X, ArrowRightLeft, ArrowUp, ArrowDown,
-  ChevronsUp, ChevronsDown, Type, CheckCircle2, Copy, MessageSquare, Plug,
+  ChevronsUp, ChevronsDown, Type, ArrowLeft as ArrowLeftIcon, CheckCircle2, Copy, MessageSquare, Plug,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -610,7 +610,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
 // ============ Sortable Module ============
 const SortableModule = ({
   module: m, items, allModules, collapsed, isInstructor, courseId,
-  fileMap, pageMap, discussionMap, onOpenFile, onOpenPage,
+  fileMap, pageMap, discussionMap, onOpenItem,
   onToggleCollapse, onTogglePublish, onEdit, onDelete, onAddItem,
   onEditItem, onDeleteItem, onToggleItemPublish, onDuplicateItem, onMoveItem, onMoveItemWithin, onMoveModule,
   onRenameModule, onRenameItem,
@@ -707,8 +707,7 @@ const SortableModule = ({
                     fileMap={fileMap}
                     pageMap={pageMap}
                     discussionMap={discussionMap}
-                    onOpenFile={onOpenFile}
-                    onOpenPage={onOpenPage}
+                    onOpenItem={onOpenItem}
                     isFirst={idx2 === 0}
                     isLast={idx2 === items.length - 1}
                     onTogglePublish={() => onToggleItemPublish(i)}
@@ -739,7 +738,7 @@ const SortableModule = ({
 
 
 // ============ Sortable Item ============
-const SortableItem = ({ item: i, courseId, isInstructor, otherModules, fileMap, pageMap, discussionMap, onOpenFile, onOpenPage, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin, onRename }: any) => {
+const SortableItem = ({ item: i, courseId, isInstructor, otherModules, onOpenItem, isFirst, isLast, onTogglePublish, onEdit, onDelete, onDuplicate, onMoveTo, onMoveWithin, onRename }: any) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
