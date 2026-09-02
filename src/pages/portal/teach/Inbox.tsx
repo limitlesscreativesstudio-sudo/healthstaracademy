@@ -52,9 +52,9 @@ const Inbox: React.FC = () => {
 
     // fetch participant emails
     const uids = Array.from(new Set((allParts ?? []).map(p => p.user_id)));
-    const { data: profs } = await supabase.from('profiles').select('id,email,full_name').in('id', uids);
+    const { data: profs } = await supabase.from('profiles').select('user_id,full_name').in('user_id', uids);
     const profMap: Record<string,{email:string; full_name:string|null}> = {};
-    (profs ?? []).forEach((p:any) => profMap[p.id] = { email: p.email, full_name: p.full_name });
+    (profs ?? []).forEach((p:any) => profMap[p.user_id] = { email: '', full_name: p.full_name });
 
     const mine = new Map((parts ?? []).map(p => [p.conversation_id, p]));
     const withParts: Convo[] = (cs ?? []).map(c => {
@@ -88,8 +88,8 @@ const Inbox: React.FC = () => {
         const { data: mates } = await supabase.from('enrollments').select('user_id').in('course_id', cids);
         const mateIds = Array.from(new Set((mates ?? []).map((m:any) => m.user_id))).filter(id => id !== u.user.id);
         if (mateIds.length) {
-          const { data: profs } = await supabase.from('profiles').select('id,email,full_name').in('id', mateIds);
-          setDirectory((profs ?? []) as any);
+          const { data: profs } = await supabase.from('profiles').select('user_id,full_name').in('user_id', mateIds);
+          setDirectory((profs ?? []).map((p:any) => ({ id: p.user_id, email: '', full_name: p.full_name })) as any);
         }
       }
     })();
@@ -101,8 +101,8 @@ const Inbox: React.FC = () => {
     const { data: msgs } = await supabase.from('portal_messages')
       .select('*').eq('conversation_id', id).order('created_at', { ascending: true });
     const uids = Array.from(new Set((msgs ?? []).map((m:any) => m.sender_id)));
-    const { data: profs } = await supabase.from('profiles').select('id,email').in('id', uids);
-    const pmap: Record<string,string> = {}; (profs ?? []).forEach((p:any) => pmap[p.id] = p.email);
+    const { data: profs } = await supabase.from('profiles').select('user_id,full_name').in('user_id', uids);
+    const pmap: Record<string,string> = {}; (profs ?? []).forEach((p:any) => pmap[p.user_id] = p.full_name || 'User');
     setMessages((msgs ?? []).map((m:any) => ({ ...m, sender_email: pmap[m.sender_id] })));
     if (me) {
       await supabase.from('portal_conversation_participants').update({ last_read_at: new Date().toISOString() })
@@ -182,7 +182,7 @@ const Inbox: React.FC = () => {
 
   const selected = selectedId ? convos.find(c => c.id === selectedId) : null;
   const otherNames = (c: Convo) => c.participants.filter(p => p.user_id !== me?.id)
-    .map(p => p.full_name || p.email || 'User').join(', ');
+    .map(p => p.full_name || 'User').join(', ');
 
   return (
     <PortalLayout>
@@ -252,7 +252,7 @@ const Inbox: React.FC = () => {
                   <div style={{ fontSize:12, color:C.muted, marginBottom:4 }}>To:</div>
                   <select aria-label="Recipients" multiple value={newRecipients} onChange={e => setNewRecipients(Array.from(e.target.selectedOptions).map(o => o.value))}
                     style={{ padding:'8px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13, width:'100%', minHeight:100 }}>
-                    {directory.map(p => <option key={p.id} value={p.id}>{p.full_name || p.email}</option>)}
+                    {directory.map(p => <option key={p.id} value={p.id}>{p.full_name || 'Course member'}</option>)}
                   </select>
                   <div style={{ fontSize:10, color:C.muted, marginTop:4 }}>Hold Cmd/Ctrl to select multiple</div>
                 </div>

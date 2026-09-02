@@ -419,7 +419,7 @@ const ProfileSummary: React.FC = () => {
     full_name:'', display_name:'', sortable:'', pronouns:'', language:'English (United States)', timezone:'Pacific Time (US & Canada)'
   });
   useEffect(() => { if(!user?.id) return; (async () => {
-    const { data } = await supabase.from('profiles').select('full_name,display_name,pronouns,language,timezone').eq('user_id', user.id).maybeSingle();
+    const { data } = await supabase.from('profiles').select('full_name').eq('user_id', user.id).maybeSingle();
     if (data) setP(s => ({
       ...s,
       full_name: (data as any).full_name ?? user.name ?? '',
