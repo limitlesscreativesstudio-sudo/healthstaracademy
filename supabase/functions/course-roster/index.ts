@@ -91,10 +91,29 @@ Deno.serve(async (req) => {
       const { data: enrollments } = await admin
         .from("enrollments").select("id, user_id, role, enrolled_at")
         .eq("course_id", courseId);
-      const enriched = await Promise.all((enrollments ?? []).map(async (e) => {
-        const { data: u } = await admin.auth.admin.getUserById(e.user_id);
-        const { data: p } = await admin.from("profiles").select("full_name").eq("user_id", e.user_id).maybeSingle();
-        return { ...e, email: u.user?.email ?? null, full_name: p?.full_name ?? null };
+      const rows = enrollments ?? [];
+      const ids = rows.map((e) => e.user_id).filter(Boolean);
+
+      // Batch lookups instead of one auth call per enrollment (much faster).
+      const emailById: Record<string, string | null> = {};
+      let page = 1;
+      while (page < 20) {
+        const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+        if (error) break;
+        for (const u of data.users) emailById[u.id] = u.email ?? null;
+        if (data.users.length < 200) break;
+        page++;
+      }
+      const nameById: Record<string, string | null> = {};
+      if (ids.length) {
+        const { data: profs } = await admin
+          .from("profiles").select("user_id, full_name").in("user_id", ids);
+        for (const p of profs ?? []) nameById[p.user_id] = p.full_name ?? null;
+      }
+      const enriched = rows.map((e) => ({
+        ...e,
+        email: emailById[e.user_id] ?? null,
+        full_name: nameById[e.user_id] ?? null,
       }));
       const { data: invites } = await admin
         .from("course_invites")
@@ -104,6 +123,7 @@ Deno.serve(async (req) => {
         .order("created_at", { ascending: false });
       return json({ enrollments: enriched, invites: invites ?? [] });
     }
+
 
     if (action === "invite") {
       if (!email) return json({ error: "email required" }, 400);
