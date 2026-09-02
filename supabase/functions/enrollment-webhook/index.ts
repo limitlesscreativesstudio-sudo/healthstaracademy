@@ -394,6 +394,14 @@ Deno.serve(async (req) => {
           .single();
         if (upsertErr) {
           console.error("Students upsert failed:", upsertErr.message);
+          // Make the failure visible instead of silently losing the applicant
+          await supabase.from("webhook_logs").insert({
+            source: "enrollment-webhook",
+            event_type: "student_persist_failed",
+            payload: { email: payload.email, error: upsertErr.message },
+            processed: false,
+            error_message: upsertErr.message,
+          });
         } else {
           studentId = upserted?.id ?? null;
         }
@@ -413,7 +421,9 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             email_type: emailType,
+            student_id: studentId,
             student_email: payload.email,
+
             student_name: `${payload.first_name} ${payload.last_name}`,
             cohort_date: payload.selected_cohort_date,
             orientation_date: orientationDate,
