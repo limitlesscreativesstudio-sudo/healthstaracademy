@@ -89,6 +89,10 @@ Deno.serve(async (req) => {
         if (Number(ans) === Number(q.correct_answer)) score += pts;
       } else if (q.question_type === "true_false") {
         if (String(ans) === String(q.correct_answer)) score += pts;
+      } else if (q.question_type === "multiple_answers") {
+        const exp = Array.isArray(q.correct_answer) ? [...q.correct_answer].map(Number).sort() : [];
+        const got = Array.isArray(ans) ? [...ans].map(Number).sort() : [];
+        if (exp.length > 0 && exp.length === got.length && exp.every((v, i) => v === got[i])) score += pts;
       } else if (q.question_type === "short_answer") {
         if (q.correct_answer && String(ans).trim().toLowerCase() === String(q.correct_answer).trim().toLowerCase()) {
           score += pts;
@@ -107,10 +111,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    await admin.from("grades").insert({
-      course_id: quiz.course_id, user_id: userId, quiz_attempt_id: attemptId,
-      score, max_score: max, feedback: "Auto-graded",
-    });
+    // Record the grade once per attempt (idempotent if the client retries).
+    const { data: existingGrade } = await admin
+      .from("grades").select("id").eq("quiz_attempt_id", attemptId).maybeSingle();
+    if (existingGrade) {
+      await admin.from("grades")
+        .update({ score, max_score: max, feedback: "Auto-graded" })
+        .eq("id", existingGrade.id);
+    } else {
+      const { error: gErr } = await admin.from("grades").insert({
+        course_id: quiz.course_id, user_id: userId, quiz_attempt_id: attemptId,
+        score, max_score: max, feedback: "Auto-graded",
+      });
+      if (gErr) console.error("grade insert failed", gErr);
+    }
 
     return new Response(JSON.stringify({ success: true, score, max_score: max }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
