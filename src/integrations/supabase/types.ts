@@ -3003,6 +3003,7 @@ export type Database = {
         Args: { _student_user_id: string }
         Returns: boolean
       }
+      shares_course_with: { Args: { _other: string }; Returns: boolean }
       user_id_by_email: { Args: { _email: string }; Returns: string }
     }
     Enums: {
