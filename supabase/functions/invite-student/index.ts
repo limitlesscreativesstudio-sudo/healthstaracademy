@@ -65,7 +65,15 @@ Deno.serve(async (req) => {
     ]);
     const isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
     if (!course) return json({ error: "Course not found" }, 404);
-    if (!isAdmin && course.instructor_id !== invitedBy) {
+    // Course owner, admin, or any enrolled staff member (instructor/teacher/TA)
+    // can invite students without needing an admin.
+    const { data: myEnrollment } = await admin
+      .from("enrollments").select("role")
+      .eq("course_id", courseId).eq("user_id", invitedBy).maybeSingle();
+    const isCourseStaff = ["instructor", "teacher", "ta", "designer"].includes(
+      String(myEnrollment?.role ?? ""),
+    );
+    if (!isAdmin && course.instructor_id !== invitedBy && !isCourseStaff) {
       return json({ error: "Not authorized for this course" }, 403);
     }
 

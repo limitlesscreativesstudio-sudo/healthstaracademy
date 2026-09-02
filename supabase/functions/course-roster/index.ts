@@ -85,7 +85,14 @@ Deno.serve(async (req) => {
     const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", caller.id);
     const isAdmin = (roles ?? []).some((r) => r.role === "admin");
     const isOwner = course.instructor_id === caller.id;
-    if (!isAdmin && !isOwner) return json({ error: "Forbidden" }, 403);
+    // Co-teachers / TAs enrolled in the course may manage the roster too, so an
+    // instructor never needs an admin to add students.
+    const { data: myEnrollment } = await admin
+      .from("enrollments").select("role")
+      .eq("course_id", courseId).eq("user_id", caller.id).maybeSingle();
+    const staffRoles = ["instructor", "teacher", "ta", "designer"];
+    const isCourseStaff = staffRoles.includes(String(myEnrollment?.role ?? ""));
+    if (!isAdmin && !isOwner && !isCourseStaff) return json({ error: "Forbidden" }, 403);
 
     if (action === "list") {
       const { data: enrollments } = await admin
