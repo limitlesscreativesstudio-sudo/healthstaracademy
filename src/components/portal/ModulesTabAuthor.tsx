@@ -516,8 +516,8 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
                   fileMap={fileMap}
                   pageMap={pageMap}
                   discussionMap={discussionMap}
-                  onOpenFile={(src, name, type, title) => setViewer({ src, name, type, title })}
-                  onOpenPage={(p) => setPageView(p)}
+                  onOpenItem={(it: ModuleItem) => openItemById(it.id)}
+
                   onToggleCollapse={() => toggleCollapse(m.id)}
                   onTogglePublish={() => togglePublishModule(m)}
                   onEdit={() => setModuleDlg({ open: true, module: m })}
