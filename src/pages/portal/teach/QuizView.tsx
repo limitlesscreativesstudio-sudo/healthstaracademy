@@ -357,15 +357,25 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       if (auto && ok) score += q.points;
       perQ.push({ qid:q.id!, correct:ok, user:a, expected:q.correct_answer, auto });
     });
-    const { error } = await supabase.from('quiz_attempts').update({
-      answers, score, max_score: max, submitted_at: new Date().toISOString(),
-    }).eq('id', attemptId);
-    if (error) return toast.error('Could not submit');
+    // Submit through the server so the attempt is scored and recorded even
+    // though students may not write score/submitted_at directly (RLS).
+    const { data: res, error } = await supabase.functions.invoke('submit-quiz-attempt', {
+      body: { attempt_id: attemptId, answers },
+    });
+    const serverErr = (res as any)?.error;
+    if (error || serverErr) {
+      console.error('submit-quiz-attempt failed', error, serverErr);
+      toast.error(`Could not submit: ${serverErr || error?.message || 'unknown error'}`);
+      return;
+    }
+    const finalScore = typeof (res as any)?.score === 'number' ? (res as any).score : score;
+    const finalMax = typeof (res as any)?.max_score === 'number' ? (res as any).max_score : max;
     clearLocalDraft(taking.id);
-    setResults({ score, max, perQ });
+    setResults({ score: finalScore, max: finalMax, perQ });
     setAttemptedIds(s => new Set(s).add(taking.id));
-    toast.success('Quiz submitted');
+    toast.success('Quiz submitted and saved');
   };
+
 
   const downloadReview = () => {
     if (!taking || !results) return;
