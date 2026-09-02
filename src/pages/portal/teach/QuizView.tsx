@@ -140,6 +140,16 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
 
   const loadQuestions = async (quizId: string): Promise<Question[]> => {
+    if (!canEdit) {
+      // Students cannot select quiz_questions directly (correct answers are hidden by RLS).
+      const { data, error } = await supabase.rpc('get_quiz_questions_for_student', { _quiz_id: quizId });
+      if (error) { toast.error('Could not load questions. Ask your instructor to open this quiz.'); return []; }
+      return (data ?? []).map((q: any) => ({
+        id: q.id, position: q.position, question_type: q.question_type,
+        prompt: q.prompt, options: q.options ?? [], correct_answer: null,
+        points: Number(q.points ?? 1),
+      }));
+    }
     const { data } = await supabase.from('quiz_questions')
       .select('*').eq('quiz_id', quizId).order('position');
     return (data ?? []).map(q => ({
@@ -148,6 +158,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       points: Number(q.points ?? 1),
     }));
   };
+
 
   const startEdit = async (q: Quiz) => {
     setEditing(q);
