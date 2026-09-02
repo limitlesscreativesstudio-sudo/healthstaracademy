@@ -302,12 +302,33 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     load();
   };
 
-  const togglePub = async (q: Quiz) => {
-    const { error } = await supabase.from('quizzes').update({ published: !q.published }).eq('id', q.id);
-    if (error) return toast.error('Failed');
-    setQuizzes(p => p.map(x => x.id===q.id ? { ...x, published: !x.published } : x));
-    toast.success(q.published ? 'Unpublished' : 'Published');
+  // Keep the module item that points at this quiz in sync, so unlocking a quiz
+  // also unlocks the way students reach it from their modules.
+  const syncModuleItem = async (quizId: string, published: boolean) => {
+    await supabase.from('module_items').update({ published }).eq('content_ref', quizId);
   };
+
+  const togglePub = async (q: Quiz) => {
+    const next = !q.published;
+    const { error } = await supabase.from('quizzes').update({ published: next }).eq('id', q.id);
+    if (error) return toast.error(`Could not ${next ? 'unlock' : 'lock'} this quiz: ${error.message}`);
+    await syncModuleItem(q.id, next);
+    setQuizzes(p => p.map(x => x.id===q.id ? { ...x, published: next } : x));
+    toast.success(next ? 'Unlocked for students' : 'Locked for students');
+  };
+
+  const setAllPublished = async (published: boolean) => {
+    if (!courseId) return;
+    if (!confirm(published
+      ? 'Unlock every quiz in this course for students?'
+      : 'Lock every quiz in this course so students cannot open them?')) return;
+    const { error } = await supabase.from('quizzes').update({ published }).eq('course_id', courseId);
+    if (error) return toast.error(`Could not update: ${error.message}`);
+    await Promise.all(quizzes.map(q => syncModuleItem(q.id, published)));
+    setQuizzes(p => p.map(x => ({ ...x, published })));
+    toast.success(published ? 'All quizzes unlocked for students' : 'All quizzes locked');
+  };
+
 
   const del = async (q: Quiz) => {
     if (!confirm('Delete this quiz?')) return;
