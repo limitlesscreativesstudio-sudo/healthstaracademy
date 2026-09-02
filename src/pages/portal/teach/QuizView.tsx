@@ -80,9 +80,15 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   const openDetails = async (q: Quiz) => {
     const { data: full } = await supabase.from('quizzes').select('*').eq('id', q.id).maybeSingle();
     setViewing(full ?? q as any);
+    if (!canEdit) {
+      const { data } = await supabase.rpc('get_quiz_questions_for_student', { _quiz_id: q.id });
+      setViewQCount((data ?? []).length);
+      return;
+    }
     const { count } = await supabase.from('quiz_questions').select('id', { count:'exact', head:true }).eq('quiz_id', q.id);
     setViewQCount(count ?? 0);
   };
+
 
   const load = async () => {
     if (!courseId) { setLoading(false); return; }
