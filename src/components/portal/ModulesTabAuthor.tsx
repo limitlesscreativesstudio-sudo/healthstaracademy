@@ -62,7 +62,11 @@ const itemIcon = (t: string) => {
 };
 
 const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId: string; isInstructor: boolean; openAddOnMount?: number }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
+
   const [items, setItems] = useState<ModuleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
