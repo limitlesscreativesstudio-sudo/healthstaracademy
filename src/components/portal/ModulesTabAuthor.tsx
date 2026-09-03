@@ -91,10 +91,15 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
 
   const load = async () => {
     setLoading(true);
-    let modQuery = supabase.from("modules").select("*").eq("course_id", courseId).order("position");
+    let modQuery = supabase.from("modules").select("*").eq("course_id", courseId)
+      .order("position").order("created_at");
     if (!isInstructor) modQuery = modQuery.eq("published", true);
     const { data: mods } = await modQuery;
-    const sortedMods = (mods ?? []).sort((a, b) => a.position - b.position);
+    // Stable tiebreak on created_at so two rows sharing a position never swap
+    // places between loads (that is what made the LMS look "out of sync").
+    const sortedMods = (mods ?? []).sort(
+      (a, b) => a.position - b.position || String(a.created_at).localeCompare(String(b.created_at)),
+    );
     setModules(sortedMods);
     if (!initialCollapseDone.current) {
       initialCollapseDone.current = true;
