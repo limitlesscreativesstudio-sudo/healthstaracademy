@@ -413,7 +413,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         prompt: x.prompt, options: x.options ?? [], correct_answer: x.correct_answer,
         points: Number(x.points ?? 1),
       })),
-      rows: (atts ?? []).map((a: any) => ({
+      rows: atts.map((a: any) => ({
         id: a.id, user_id: a.user_id, name: nameMap[a.user_id] ?? 'Student',
         answers: (a.answers as any) ?? {}, score: a.score === null ? null : Number(a.score),
         max: a.max_score === null ? null : Number(a.max_score),
