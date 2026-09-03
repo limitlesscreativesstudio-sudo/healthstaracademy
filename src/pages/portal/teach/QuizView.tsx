@@ -231,6 +231,19 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     }
   };
 
+  /** Instructor-only: change how many attempts students get on a quiz. */
+  const setAllowedAttempts = async (q: any) => {
+    const current = allowedFor(q);
+    const input = window.prompt(`Attempts allowed for "${q.title}" (students get 1 by default):`, String(current));
+    if (input === null) return;
+    const n = Math.max(1, Math.floor(Number(input)));
+    if (!Number.isFinite(n)) { toast.error('Enter a whole number of attempts'); return; }
+    const { error } = await supabase.from('quizzes').update({ attempts_allowed: n }).eq('id', q.id);
+    if (error) { toast.error(error.message); return; }
+    setQuizzes(prev => prev.map(x => x.id === q.id ? { ...x, attempts_allowed: n } as any : x));
+    toast.success(n === 1 ? 'Students get 1 attempt' : `Students now get ${n} attempts`);
+  };
+
   const flushSave = async () => {
     if (!attemptId || inFlight.current) return;
     const snapshot = answersRef.current;
