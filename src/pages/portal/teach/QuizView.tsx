@@ -354,6 +354,68 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     toast.success(published ? 'All quizzes unlocked for students' : 'All quizzes locked');
   };
 
+  /**
+   * Instructor view of what each student actually answered. RLS already lets
+   * course instructors read quiz_attempts and quiz_questions (with the correct
+   * answers), so this simply joins the two plus the student's profile name.
+   */
+  const openResponses = async (q: Quiz) => {
+    if (!canEdit) return;
+    setRespLoading(true);
+    setExpandedAttempts(new Set());
+    setResponses({ quiz: q, qs: [], rows: [] });
+    const [{ data: qs }, { data: atts }] = await Promise.all([
+      supabase.from('quiz_questions').select('*').eq('quiz_id', q.id).order('position'),
+      supabase.from('quiz_attempts').select('id, user_id, answers, score, max_score, submitted_at, started_at')
+        .eq('quiz_id', q.id).order('submitted_at', { ascending: false, nullsFirst: false }),
+    ]);
+    const ids = Array.from(new Set((atts ?? []).map((a: any) => a.user_id)));
+    const nameMap: Record<string, string> = {};
+    if (ids.length) {
+      const { data: profs } = await supabase.from('profiles').select('user_id, full_name').in('user_id', ids);
+      (profs ?? []).forEach((p: any) => { nameMap[p.user_id] = p.full_name || 'Student'; });
+    }
+    setResponses({
+      quiz: q,
+      qs: (qs ?? []).map((x: any) => ({
+        id: x.id, position: x.position, question_type: x.question_type,
+        prompt: x.prompt, options: x.options ?? [], correct_answer: x.correct_answer,
+        points: Number(x.points ?? 1),
+      })),
+      rows: (atts ?? []).map((a: any) => ({
+        id: a.id, user_id: a.user_id, name: nameMap[a.user_id] ?? 'Student',
+        answers: (a.answers as any) ?? {}, score: a.score === null ? null : Number(a.score),
+        max: a.max_score === null ? null : Number(a.max_score),
+        submitted_at: a.submitted_at, started_at: a.started_at,
+      })),
+    });
+    setRespLoading(false);
+  };
+
+  /** Human-readable rendering of a stored answer value. */
+  const answerText = (q: Question, val: any): string => {
+    if (val === undefined || val === null || val === '') return '(no answer)';
+    if (q.question_type === 'multiple_choice') return (q.options as any[])?.[Number(val)]?.text ?? String(val);
+    if (q.question_type === 'true_false') return Number(val) === 0 ? 'True' : 'False';
+    if (q.question_type === 'multiple_answers') {
+      return Array.isArray(val)
+        ? val.map((i: number) => (q.options as any[])?.[i]?.text ?? i).join('; ')
+        : String(val);
+    }
+    return String(val);
+  };
+
+  const isCorrect = (q: Question, val: any): boolean | null => {
+    if (q.question_type === 'short_answer' || q.question_type === 'essay') return null;
+    if (val === undefined || val === null) return false;
+    if (q.question_type === 'multiple_answers') {
+      const exp = Array.isArray(q.correct_answer) ? [...q.correct_answer].map(Number).sort() : [];
+      const got = Array.isArray(val) ? [...val].map(Number).sort() : [];
+      return exp.length > 0 && exp.length === got.length && exp.every((v, i) => v === got[i]);
+    }
+    return Number(val) === Number(q.correct_answer);
+  };
+
 
   const del = async (q: Quiz) => {
     if (!confirm('Delete this quiz?')) return;
