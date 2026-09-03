@@ -122,7 +122,11 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       if (!canEdit && user?.id) {
         const { data: att } = await supabase.from('quiz_attempts')
           .select('quiz_id,submitted_at').in('quiz_id', data.map(q => q.id)).eq('user_id', user.id);
-        setAttemptedIds(new Set((att ?? []).filter(a => a.submitted_at).map(a => a.quiz_id)));
+        const submitted = (att ?? []).filter(a => a.submitted_at);
+        setAttemptedIds(new Set(submitted.map(a => a.quiz_id)));
+        const counts: Record<string, number> = {};
+        submitted.forEach(a => { counts[a.quiz_id] = (counts[a.quiz_id] ?? 0) + 1; });
+        setMyAttemptCounts(counts);
       }
       if (canEdit) {
         // load analytics for instructors
