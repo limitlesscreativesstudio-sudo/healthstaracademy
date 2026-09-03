@@ -244,7 +244,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
       setDbError('');
       const { data: modRows } = await supabase
         .from('modules').select('id,title,published,position')
-        .eq('course_id', courseUuid).order('position');
+        .eq('course_id', courseUuid).order('position').order('created_at');
       if (!modRows) { setMods([]); setDbLoading(false); return; }
       const moduleIds = modRows.map(m => m.id);
       const { data: itemRows, error: itemErr } = moduleIds.length
@@ -252,7 +252,7 @@ const ModulesHome: React.FC<{ canEdit: boolean; courseUuid?: string; openAddOnMo
           .from('module_items')
           .select('id,module_id,item_type,title,published,position,file_url,file_name,file_type,content_ref,url')
           .in('module_id', moduleIds)
-          .order('position')
+          .order('position').order('created_at')
         : { data: [], error: null } as any;
       if (itemErr) setDbError(itemErr.message);
       setMods(modRows.map(m => ({
