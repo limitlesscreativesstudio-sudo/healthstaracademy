@@ -47,6 +47,10 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [results, setResults] = useState<{ score:number; max:number; perQ:{qid:string; correct:boolean; user:any; expected:any; auto:boolean}[] } | null>(null);
   const [attemptedIds, setAttemptedIds] = useState<Set<string>>(new Set());
+  // Submitted attempt count per quiz for the signed-in student (attempt-limit enforcement).
+  const [myAttemptCounts, setMyAttemptCounts] = useState<Record<string, number>>({});
+  const allowedFor = (q: any) => Math.max(1, Number(q?.attempts_allowed ?? 1) || 1);
+  const attemptsLeft = (q: any) => allowedFor(q) - (myAttemptCounts[q.id] ?? 0);
   const [saveState, setSaveState] = useState<'idle'|'saving'|'saved'|'error'>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [stats, setStats] = useState<Record<string, Stats>>({});
@@ -118,7 +122,11 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       if (!canEdit && user?.id) {
         const { data: att } = await supabase.from('quiz_attempts')
           .select('quiz_id,submitted_at').in('quiz_id', data.map(q => q.id)).eq('user_id', user.id);
-        setAttemptedIds(new Set((att ?? []).filter(a => a.submitted_at).map(a => a.quiz_id)));
+        const submitted = (att ?? []).filter(a => a.submitted_at);
+        setAttemptedIds(new Set(submitted.map(a => a.quiz_id)));
+        const counts: Record<string, number> = {};
+        submitted.forEach(a => { counts[a.quiz_id] = (counts[a.quiz_id] ?? 0) + 1; });
+        setMyAttemptCounts(counts);
       }
       if (canEdit) {
         // load analytics for instructors
@@ -181,6 +189,10 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
   const startTake = async (q: Quiz) => {
     if (!canEdit && !q.published) { toast.info('This quiz is locked until your instructor opens it.'); return; }
+    if (!canEdit && attemptsLeft(q) <= 0) {
+      toast.info(`You've used your ${allowedFor(q)} allowed attempt${allowedFor(q) === 1 ? '' : 's'}. Ask your instructor to allow another attempt.`);
+      return;
+    }
     setTaking(q);
     setResults(null);
     setAttemptId(null);
@@ -217,6 +229,19 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       if (made) setAttemptId(made.id);
       setStartedAt(new Date(startIso));
     }
+  };
+
+  /** Instructor-only: change how many attempts students get on a quiz. */
+  const setAllowedAttempts = async (q: any) => {
+    const current = allowedFor(q);
+    const input = window.prompt(`Attempts allowed for "${q.title}" (students get 1 by default):`, String(current));
+    if (input === null) return;
+    const n = Math.max(1, Math.floor(Number(input)));
+    if (!Number.isFinite(n)) { toast.error('Enter a whole number of attempts'); return; }
+    const { error } = await supabase.from('quizzes').update({ attempts_allowed: n }).eq('id', q.id);
+    if (error) { toast.error(error.message); return; }
+    setQuizzes(prev => prev.map(x => x.id === q.id ? { ...x, attempts_allowed: n } as any : x));
+    toast.success(n === 1 ? 'Students get 1 attempt' : `Students now get ${n} attempts`);
   };
 
   const flushSave = async () => {
@@ -578,11 +603,18 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         </div>
 
         <div style={{ textAlign:'center', marginBottom:20 }}>
-          <button onClick={() => { const cur = q; setViewing(null); startTake(cur as any); }}
-            style={{ padding:'10px 28px', border:'none', borderRadius:5, background:C.accent, color:C.text, fontSize:14, fontWeight:700, cursor:'pointer' }}>
-            {canEdit ? 'Preview' : (attemptedIds.has(q.id) ? 'Review' : 'Take the Quiz')}
-          </button>
+          {!canEdit && attemptsLeft(q) <= 0 ? (
+            <div style={{ display:'inline-block', padding:'10px 20px', borderRadius:6, background:'#f5f3fa', color:C.muted, fontSize:13, fontWeight:600 }}>
+              You've used your {allowedFor(q)} allowed attempt{allowedFor(q)===1?'':'s'}. Ask your instructor to allow another attempt.
+            </div>
+          ) : (
+            <button onClick={() => { const cur = q; setViewing(null); startTake(cur as any); }}
+              style={{ padding:'10px 28px', border:'none', borderRadius:5, background:C.accent, color:C.text, fontSize:14, fontWeight:700, cursor:'pointer' }}>
+              {canEdit ? 'Preview' : (attemptedIds.has(q.id) ? 'Retake' : 'Take the Quiz')}
+            </button>
+          )}
         </div>
+
 
         {canEdit && (
           <>
@@ -1053,9 +1085,13 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                                   : <>
                                       {Number(q.total_points||0)} pts
                                       {q.due_at && ` • Due ${new Date(q.due_at).toLocaleDateString()}`}
+                                      {canEdit && ` • ${allowedFor(q)} attempt${allowedFor(q)===1?'':'s'} allowed`}
                                       {canEdit && st && ` • ${st.attempts} attempt${st.attempts===1?'':'s'}`}
                                       {canEdit && st && st.submitted ? ` • avg ${st.avgPct}%` : ''}
                                       {!canEdit && taken && <span style={{ color:C.success, marginLeft:6, fontWeight:600 }}>✓ Submitted</span>}
+                                      {!canEdit && taken && (attemptsLeft(q) > 0
+                                        ? <span style={{ marginLeft:6 }}>• {attemptsLeft(q)} attempt{attemptsLeft(q)===1?'':'s'} left</span>
+                                        : <span style={{ marginLeft:6 }}>• no attempts left</span>)}
                                     </>}
                               </div>
                             </div>
@@ -1064,6 +1100,10 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                                 <button onClick={() => togglePub(q)} title={q.published ? 'Published — click to unpublish' : 'Unpublished — click to publish'}
                                   style={{ fontSize:11, padding:'3px 9px', borderRadius:20, border:'none', background:q.published?'#e8f5e9':'#f5f3fa', color:q.published?C.success:C.muted, cursor:'pointer' }}>
                                   {q.published?'Published':'Draft'}
+                                </button>
+                                <button onClick={() => setAllowedAttempts(q)} title="Change how many attempts students get"
+                                  style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>
+                                  Attempts: {allowedFor(q)}
                                 </button>
                                 <button onClick={() => openResponses(q)} title="View student responses and answers"
                                   style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>
@@ -1077,10 +1117,13 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                               </div>
                             ) : locked ? (
                               <span style={{ padding:'4px 11px', borderRadius:20, background:'#f5f3fa', color:C.muted, fontSize:11.5, fontWeight:600, flexShrink:0 }}>Locked</span>
+                            ) : taken && attemptsLeft(q) <= 0 ? (
+                              <span title="Your attempt is used. Ask your instructor to allow another attempt."
+                                style={{ padding:'4px 11px', borderRadius:20, background:'#f5f3fa', color:C.muted, fontSize:11.5, fontWeight:600, flexShrink:0 }}>Attempt used</span>
                             ) : (
                               <button onClick={() => startTake(q)}
-                                style={{ padding:'5px 13px', border:'none', borderRadius:5, background:taken?C.border:C.primary, color:'white', fontSize:12.5, cursor:'pointer', flexShrink:0 }}>
-                                {taken ? 'Review' : 'Start'}
+                                style={{ padding:'5px 13px', border:'none', borderRadius:5, background:taken?C.warn:C.primary, color:'white', fontSize:12.5, cursor:'pointer', flexShrink:0 }}>
+                                {taken ? 'Retake' : 'Start'}
                               </button>
                             )}
                           </div>
