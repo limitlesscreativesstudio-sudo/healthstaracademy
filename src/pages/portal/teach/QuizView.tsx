@@ -389,17 +389,23 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     setRespLoading(true);
     setExpandedAttempts(new Set());
     setResponses({ quiz: q, qs: [], rows: [] });
-    const [{ data: qs }, { data: atts }] = await Promise.all([
+    const [{ data: qs }, { data: rawAtts }, { data: enrs }] = await Promise.all([
       supabase.from('quiz_questions').select('*').eq('quiz_id', q.id).order('position'),
       supabase.from('quiz_attempts').select('id, user_id, answers, score, max_score, submitted_at, started_at')
         .eq('quiz_id', q.id).order('submitted_at', { ascending: false, nullsFirst: false }),
+      supabase.from('enrollments').select('user_id').eq('course_id', courseId).eq('role', 'student'),
     ]);
-    const ids = Array.from(new Set((atts ?? []).map((a: any) => a.user_id)));
+    // Only students actually enrolled in this course belong in the responses
+    // panel — staff/practice accounts must never surface as students.
+    const studentIds = new Set((enrs ?? []).map((e: any) => e.user_id));
+    const atts = (rawAtts ?? []).filter((a: any) => studentIds.has(a.user_id));
+    const ids = Array.from(new Set(atts.map((a: any) => a.user_id)));
     const nameMap: Record<string, string> = {};
     if (ids.length) {
       const { data: profs } = await supabase.from('profiles').select('user_id, full_name').in('user_id', ids);
       (profs ?? []).forEach((p: any) => { nameMap[p.user_id] = p.full_name || 'Student'; });
     }
+
     setResponses({
       quiz: q,
       qs: (qs ?? []).map((x: any) => ({
@@ -407,7 +413,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         prompt: x.prompt, options: x.options ?? [], correct_answer: x.correct_answer,
         points: Number(x.points ?? 1),
       })),
-      rows: (atts ?? []).map((a: any) => ({
+      rows: atts.map((a: any) => ({
         id: a.id, user_id: a.user_id, name: nameMap[a.user_id] ?? 'Student',
         answers: (a.answers as any) ?? {}, score: a.score === null ? null : Number(a.score),
         max: a.max_score === null ? null : Number(a.max_score),
