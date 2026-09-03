@@ -1094,6 +1094,84 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
           </div>
         );
       })()}
+
+      {canEdit && responses && (
+        <div
+          onClick={() => setResponses(null)}
+          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.5)', zIndex:200, display:'flex', alignItems:'flex-start', justifyContent:'center', padding:'4vh 12px', overflow:'auto' }}
+        >
+          <div onClick={(e) => e.stopPropagation()}
+            style={{ background:C.white, borderRadius:8, width:'min(900px, 100%)', maxHeight:'90vh', overflow:'auto', border:`1px solid ${C.border}` }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px', borderBottom:`1px solid ${C.border}`, position:'sticky', top:0, background:C.white }}>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontWeight:700, fontSize:14, color:C.text }}>{responses.quiz.title} — Student responses</div>
+                <div style={{ fontSize:11.5, color:C.muted }}>
+                  {responses.rows.length} attempt{responses.rows.length === 1 ? '' : 's'} • {responses.qs.length} questions
+                </div>
+              </div>
+              <button onClick={() => setResponses(null)} style={{ border:'none', background:'transparent', fontSize:18, cursor:'pointer', color:C.muted }}>✕</button>
+            </div>
+
+            <div style={{ padding:'8px 12px 16px' }}>
+              {respLoading && <div style={{ padding:24, textAlign:'center', color:C.muted, fontSize:13 }}>Loading responses…</div>}
+              {!respLoading && responses.rows.length === 0 && (
+                <div style={{ padding:24, textAlign:'center', color:C.muted, fontSize:13 }}>No student has taken this quiz yet.</div>
+              )}
+              {!respLoading && responses.rows.map(r => {
+                const open = expandedAttempts.has(r.id);
+                const pct = r.score !== null && r.max ? Math.round((r.score / r.max) * 100) : null;
+                return (
+                  <div key={r.id} style={{ border:`1px solid ${C.border}`, borderRadius:6, marginTop:8, overflow:'hidden' }}>
+                    <div
+                      onClick={() => setExpandedAttempts(prev => { const n = new Set(prev); n.has(r.id) ? n.delete(r.id) : n.add(r.id); return n; })}
+                      style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', cursor:'pointer', background:C.bg }}
+                    >
+                      <span style={{ fontSize:12, color:C.muted }}>{open ? '▾' : '▸'}</span>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontSize:13, fontWeight:600, color:C.text }}>{r.name}</div>
+                        <div style={{ fontSize:11.5, color:C.muted }}>
+                          {r.submitted_at
+                            ? `Submitted ${new Date(r.submitted_at).toLocaleString()}`
+                            : `In progress — started ${new Date(r.started_at).toLocaleString()}`}
+                        </div>
+                      </div>
+                      <div style={{ fontSize:13, fontWeight:700, color: pct === null ? C.muted : pct >= 75 ? C.success : C.error }}>
+                        {r.score !== null && r.max !== null ? `${r.score}/${r.max}${pct !== null ? ` (${pct}%)` : ''}` : 'Not graded'}
+                      </div>
+                    </div>
+                    {open && (
+                      <div style={{ padding:'6px 12px 12px' }}>
+                        {responses.qs.map((q, qi) => {
+                          const val = r.answers?.[q.id!];
+                          const ok = isCorrect(q, val);
+                          return (
+                            <div key={q.id} style={{ padding:'8px 0', borderTop: qi === 0 ? 'none' : `1px solid ${C.border}` }}>
+                              <div style={{ fontSize:12.5, fontWeight:600, color:C.text, marginBottom:4 }}>Q{qi + 1}. {q.prompt}</div>
+                              <div style={{ fontSize:12.5, color:C.text }}>
+                                <strong>Answer:</strong> {answerText(q, val)}{' '}
+                                {ok === null
+                                  ? <span style={{ color:C.muted }}>⧗ manual grading</span>
+                                  : ok
+                                    ? <span style={{ color:C.success, fontWeight:700 }}>✓</span>
+                                    : <span style={{ color:C.error, fontWeight:700 }}>✗</span>}
+                              </div>
+                              {ok === false && (
+                                <div style={{ fontSize:12, color:C.muted }}>
+                                  <strong>Correct:</strong> {answerText(q, q.correct_answer)}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
