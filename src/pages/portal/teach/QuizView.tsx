@@ -603,11 +603,18 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         </div>
 
         <div style={{ textAlign:'center', marginBottom:20 }}>
-          <button onClick={() => { const cur = q; setViewing(null); startTake(cur as any); }}
-            style={{ padding:'10px 28px', border:'none', borderRadius:5, background:C.accent, color:C.text, fontSize:14, fontWeight:700, cursor:'pointer' }}>
-            {canEdit ? 'Preview' : (attemptedIds.has(q.id) ? 'Review' : 'Take the Quiz')}
-          </button>
+          {!canEdit && attemptsLeft(q) <= 0 ? (
+            <div style={{ display:'inline-block', padding:'10px 20px', borderRadius:6, background:'#f5f3fa', color:C.muted, fontSize:13, fontWeight:600 }}>
+              You've used your {allowedFor(q)} allowed attempt{allowedFor(q)===1?'':'s'}. Ask your instructor to allow another attempt.
+            </div>
+          ) : (
+            <button onClick={() => { const cur = q; setViewing(null); startTake(cur as any); }}
+              style={{ padding:'10px 28px', border:'none', borderRadius:5, background:C.accent, color:C.text, fontSize:14, fontWeight:700, cursor:'pointer' }}>
+              {canEdit ? 'Preview' : (attemptedIds.has(q.id) ? 'Retake' : 'Take the Quiz')}
+            </button>
+          )}
         </div>
+
 
         {canEdit && (
           <>
