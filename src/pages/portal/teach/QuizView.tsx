@@ -47,6 +47,10 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [results, setResults] = useState<{ score:number; max:number; perQ:{qid:string; correct:boolean; user:any; expected:any; auto:boolean}[] } | null>(null);
   const [attemptedIds, setAttemptedIds] = useState<Set<string>>(new Set());
+  // Submitted attempt count per quiz for the signed-in student (attempt-limit enforcement).
+  const [myAttemptCounts, setMyAttemptCounts] = useState<Record<string, number>>({});
+  const allowedFor = (q: any) => Math.max(1, Number(q?.attempts_allowed ?? 1) || 1);
+  const attemptsLeft = (q: any) => allowedFor(q) - (myAttemptCounts[q.id] ?? 0);
   const [saveState, setSaveState] = useState<'idle'|'saving'|'saved'|'error'>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [stats, setStats] = useState<Record<string, Stats>>({});
