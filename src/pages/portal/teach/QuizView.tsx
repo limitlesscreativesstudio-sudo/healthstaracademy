@@ -1065,6 +1065,10 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                                   style={{ fontSize:11, padding:'3px 9px', borderRadius:20, border:'none', background:q.published?'#e8f5e9':'#f5f3fa', color:q.published?C.success:C.muted, cursor:'pointer' }}>
                                   {q.published?'Published':'Draft'}
                                 </button>
+                                <button onClick={() => openResponses(q)} title="View student responses and answers"
+                                  style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>
+                                  Responses{st?.attempts ? ` (${st.attempts})` : ''}
+                                </button>
                                 <button onClick={() => startEdit(q)} style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Edit</button>
                                 <button onClick={() => startTake(q)} title="Preview quiz" aria-label={`Preview ${q.title}`}
                                   style={{ padding:'4px 8px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer', color:C.muted }}>👁</button>
