@@ -36,6 +36,8 @@ export const STUDENT_VISIBLE_TABS = [
   "modules",
   "quizzes",
   "grades",
+  "quizgrades",
+
   "attendance",
   "account",
 ] as const;

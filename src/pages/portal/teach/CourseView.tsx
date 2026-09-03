@@ -12,6 +12,7 @@ import ReadinessTab      from './ReadinessTab';
 import RequiredWork      from './RequiredWork';
 import StudentDashboard  from './StudentDashboard';
 import StudentGrades     from './StudentGrades';
+import QuizGradebook     from './QuizGradebook';
 import SyllabusTab       from './SyllabusTab';
 import AssignmentView    from './AssignmentView';
 import Dashboard         from './Dashboard';
@@ -625,6 +626,7 @@ const NAV_ITEMS = [
   { id:'quizzes',       label:'Quizzes',            icon:'❓' },
   { id:'discussions',   label:'Discussions',        icon:'💬' },
   { id:'grades',        label:'Grades',             icon:'📊' },
+  { id:'quizgrades',    label:'Quiz Gradebook',     icon:'🧮' },
   { id:'calendar',      label:'Calendar',           icon:'📅' },
   { id:'attendance',    label:'Attendance',         icon:'✔️' },
   { type:'divider' },
@@ -860,6 +862,7 @@ const CourseView: React.FC = () => {
     assignments:   <AssignmentView courseId={cid} canEdit={tabCan('assignments')} />,
     quizzes:       <QuizView courseId={cid} canEdit={tabCan('quizzes')} />,
     grades:        <StudentGrades  courseId={cid} canEdit={tabCan('grades')} selfOnly={asStudent} />,
+    quizgrades:    <QuizGradebook  courseId={cid} canEdit={tabCan('grades')} selfOnly={asStudent} />,
     people:        <StudentDashboard courseId={cid} canEdit={tabCan('people')} />,
     pages:         <PagesTab       courseId={cid} canEdit={tabCan('pages')} />,
     files:         <FilesTab       courseId={cid} canEdit={tabCan('files')} />,
