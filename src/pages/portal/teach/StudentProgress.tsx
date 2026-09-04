@@ -164,7 +164,7 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
       setRows(built);
       setLoading(false);
     })();
-  }, [courseId]);
+  }, [courseId, tick]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
