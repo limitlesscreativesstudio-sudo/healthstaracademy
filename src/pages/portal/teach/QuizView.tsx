@@ -13,7 +13,7 @@ interface Question {
   options: { text:string }[]; correct_answer: any; points: number;
 }
 interface Quiz { id:string; title:string; due_at:string|null; total_points:number; published:boolean; instructions?: string; }
-interface Stats { attempts:number; submitted:number; avgPct:number; }
+interface Stats { attempts:number; submitted:number; inProgress:number; avgPct:number; }
 
 interface Props { courseId?: string; canEdit?: boolean; }
 
@@ -133,11 +133,12 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         const { data: allAtt } = await supabase.from('quiz_attempts')
           .select('quiz_id,score,max_score,submitted_at').in('quiz_id', data.map(q => q.id));
         const s: Record<string, Stats> = {};
-        data.forEach(q => { s[q.id] = { attempts:0, submitted:0, avgPct:0 }; });
+        data.forEach(q => { s[q.id] = { attempts:0, submitted:0, inProgress:0, avgPct:0 }; });
         const sums: Record<string, {sum:number; n:number}> = {};
         (allAtt ?? []).forEach(a => {
           const st = s[a.quiz_id]; if (!st) return;
           st.attempts++;
+          if (!a.submitted_at) st.inProgress++;
           if (a.submitted_at && a.max_score) {
             st.submitted++;
             const acc = sums[a.quiz_id] ?? {sum:0, n:0};
@@ -1092,7 +1093,8 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                                       {Number(q.total_points||0)} pts
                                       {q.due_at && ` • Due ${new Date(q.due_at).toLocaleDateString()}`}
                                       {canEdit && ` • ${allowedFor(q)} attempt${allowedFor(q)===1?'':'s'} allowed`}
-                                      {canEdit && st && ` • ${st.attempts} attempt${st.attempts===1?'':'s'}`}
+                                      {canEdit && st && ` • ${st.submitted} submitted`}
+                                      {canEdit && st && st.inProgress ? <span style={{ color:C.warn, fontWeight:600 }}>{` • ${st.inProgress} in progress`}</span> : ''}
                                       {canEdit && st && st.submitted ? ` • avg ${st.avgPct}%` : ''}
                                       {!canEdit && taken && <span style={{ color:C.success, marginLeft:6, fontWeight:600 }}>✓ Submitted</span>}
                                       {!canEdit && taken && (attemptsLeft(q) > 0
@@ -1113,7 +1115,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                                 </button>
                                 <button onClick={() => openResponses(q)} title="View student responses and answers"
                                   style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>
-                                  Responses{st?.attempts ? ` (${st.attempts})` : ''}
+                                  Responses{st?.attempts ? ` (${st.attempts})` : ''}{st?.inProgress ? ' ⚠️' : ''}
                                 </button>
                                 <button onClick={() => startEdit(q)} style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Edit</button>
                                 <button onClick={() => startTake(q)} title="Preview quiz" aria-label={`Preview ${q.title}`}
