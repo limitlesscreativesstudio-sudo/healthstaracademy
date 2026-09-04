@@ -207,6 +207,10 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
               {f === 'all' ? 'All' : f === 'atRisk' ? 'At Risk' : 'On Track'}
             </button>
           ))}
+          <button onClick={() => setTick(t => t + 1)}
+            style={{ padding:'5px 12px', border:`1px solid ${C.border}`, borderRadius:20, background:C.white, color:C.text, fontSize:11, cursor:'pointer' }}>
+            ↻ Refresh
+          </button>
         </div>
       </div>
 
