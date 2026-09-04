@@ -685,6 +685,34 @@ const CourseView: React.FC = () => {
   const [homePageType, setHomePageType] = useState<string>('modules');
   const [hasFrontPage, setHasFrontPage] = useState(false);
   const [homePageDlgOpen, setHomePageDlgOpen] = useState(false);
+  const [syncTick, setSyncTick] = useState(0);
+
+  // Live sync: when ANY instructor saves a change to this course's content,
+  // every other open session (instructors and students) refreshes the active
+  // tab automatically so everyone always sees the latest version.
+  useEffect(() => {
+    const courseId = activeCourse?.uuid;
+    if (!courseId) return;
+    const tables = [
+      'modules', 'lms_pages', 'lms_files', 'lms_folders', 'lms_announcements',
+      'quizzes', 'assignments', 'discussions', 'enrollments', 'rubrics',
+      'outcomes', 'attendance', 'course_sections',
+    ];
+    const channel = supabase.channel(`course-sync-${courseId}`);
+    tables.forEach(t => {
+      channel.on('postgres_changes',
+        { event: '*', schema: 'public', table: t, filter: `course_id=eq.${courseId}` },
+        () => setSyncTick(n => n + 1));
+    });
+    // module_items / quiz_questions / quiz_attempts don't carry course_id — listen unfiltered
+    ['module_items', 'quiz_questions', 'quiz_attempts', 'submissions', 'grades'].forEach(t => {
+      channel.on('postgres_changes',
+        { event: '*', schema: 'public', table: t },
+        () => setSyncTick(n => n + 1));
+    });
+    channel.subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [activeCourse?.uuid]);
 
   const openDashboard = () => {
     setShowDashboard(true);
@@ -1130,7 +1158,7 @@ const CourseView: React.FC = () => {
           {/* Tab content */}
           <div style={{ flex:1, background:C.bg, overflowY:'auto', paddingBottom: isMobile ? 64 : 0 }}>
             {tabVisible(activeTab)
-              ? (SECTIONS[activeTab] ?? <Placeholder title={activeTab} />)
+              ? <React.Fragment key={`${activeTab}-${syncTick}`}>{SECTIONS[activeTab] ?? <Placeholder title={activeTab} />}</React.Fragment>
               : <Placeholder title="Not available" />}
           </div>
         </div>
