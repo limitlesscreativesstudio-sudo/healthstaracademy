@@ -208,6 +208,11 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     setAnswers(local);
     answersRef.current = local;
     const qs = await loadQuestions(q.id);
+    if (!canEdit && qs.length === 0) {
+      setTaking(null);
+      toast.info('This quiz has no questions yet. Your instructor is still building it.');
+      return;
+    }
     setAttemptQs(qs);
     if (!user?.id) { setStartedAt(new Date()); return; }
     // Resume open attempt or create a new one
