@@ -61,9 +61,14 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   const [responses, setResponses] = useState<{
     quiz: Quiz;
     qs: Question[];
-    rows: { id:string; user_id:string; name:string; answers:Record<string, any>; score:number|null; max:number|null; submitted_at:string|null; started_at:string }[];
+    rows: {
+      id:string; user_id:string; name:string; answers:Record<string, any>;
+      score:number|null; max:number|null; submitted_at:string|null; started_at:string;
+      grading_status:string; question_scores:Record<string, any>; instructor_feedback:string;
+    }[];
   } | null>(null);
   const [respLoading, setRespLoading] = useState(false);
+  const [savingGrade, setSavingGrade] = useState<string | null>(null);
   const [expandedAttempts, setExpandedAttempts] = useState<Set<string>>(new Set());
   const [startedAt, setStartedAt] = useState<Date | null>(null);
   const [nowTick, setNowTick] = useState<number>(Date.now());
