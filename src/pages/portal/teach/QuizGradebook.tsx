@@ -184,9 +184,12 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
         </div>
       </div>
 
-      {!selfOnly && needsAttention > 0 && (
+      {!selfOnly && (needsAttention > 0 || awaitingGrading > 0) && (
         <div style={{ marginBottom:12, padding:'9px 13px', background:'#FFF6E8', border:`1px solid ${C.warn}55`, borderRadius:6, fontSize:12.5, color:C.text }}>
-          ⚠️ Needs attention: <strong>{needsAttention}</strong> unfinished attempt{needsAttention === 1 ? '' : 's'} still in progress. Open the quiz&rsquo;s Responses panel to review or submit on the student&rsquo;s behalf.
+          ⚠️ Needs attention:{' '}
+          {awaitingGrading > 0 && <><strong>{awaitingGrading}</strong> submission{awaitingGrading === 1 ? '' : 's'} awaiting your grading. </>}
+          {needsAttention > 0 && <><strong>{needsAttention}</strong> unfinished attempt{needsAttention === 1 ? '' : 's'} still in progress. </>}
+          Open the quiz&rsquo;s Grade panel to score and release results.
         </div>
       )}
 
