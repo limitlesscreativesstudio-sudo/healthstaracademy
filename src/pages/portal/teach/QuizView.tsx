@@ -575,30 +575,16 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   };
 
 
-  /** Instructor: close out a student's unfinished attempt and score what they answered. */
+  /** Instructor: close out a student's unfinished attempt so it can be graded. */
   const forceSubmit = async (row: { id: string; user_id: string; answers: any }) => {
     if (!responses || !canEdit) return;
-    if (!window.confirm('Submit this in-progress attempt on the student\'s behalf? It will be scored on the answers saved so far.')) return;
-    let score = 0, max = 0;
-    responses.qs.forEach(q => {
-      max += Number(q.points ?? 1);
-      if (isCorrect(q, row.answers?.[q.id!]) === true) score += Number(q.points ?? 1);
-    });
+    if (!window.confirm('Close out this in-progress attempt on the student\'s behalf? It will move to your grading queue with the answers saved so far.')) return;
     const submitted_at = new Date().toISOString();
     const { error } = await supabase.from('quiz_attempts')
-      .update({ submitted_at, score, max_score: max }).eq('id', row.id);
+      .update({ submitted_at, grading_status: 'awaiting' }).eq('id', row.id);
     if (error) { toast.error('Could not submit: ' + error.message); return; }
-    const { data: g } = await supabase.from('grades').select('id').eq('quiz_attempt_id', row.id).maybeSingle();
-    if (g?.id) {
-      await supabase.from('grades').update({ score, max_score: max, graded_at: submitted_at, feedback: 'Submitted by instructor' }).eq('id', g.id);
-    } else if (courseId) {
-      await supabase.from('grades').insert({
-        course_id: courseId, user_id: row.user_id, quiz_attempt_id: row.id,
-        score, max_score: max, feedback: 'Submitted by instructor',
-      });
-    }
-    toast.success('Attempt submitted and scored');
-    setResponses(prev => prev ? { ...prev, rows: prev.rows.map(r => r.id === row.id ? { ...r, submitted_at, score, max } : r) } : prev);
+    toast.success('Attempt closed out — it is now awaiting your grading');
+    patchRow(row.id, { submitted_at, grading_status: 'awaiting' });
     load();
   };
 
