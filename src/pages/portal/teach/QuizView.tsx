@@ -798,13 +798,16 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
           )}
           {results ? (
             <div>
-              <div style={{ background:C.white, border:`2px solid ${C.success}`, borderRadius:8, padding:24, textAlign:'center', marginBottom:20 }}>
-                <div style={{ fontSize:48, marginBottom:10 }}>🎉</div>
-                <div style={{ fontSize:22, fontWeight:700, color:C.text, marginBottom:6 }}>{results.score} / {results.max}</div>
-                <div style={{ fontSize:14, color:C.muted, marginBottom:14 }}>{Math.round((results.score/Math.max(results.max,1))*100)}% • {results.perQ.filter(p=>p.auto&&p.correct).length} correct of {results.perQ.filter(p=>p.auto).length} auto-graded</div>
-                <button onClick={downloadReview} style={{ padding:'8px 18px', border:`1px solid ${C.primary}`, borderRadius:5, background:C.white, color:C.primary, fontSize:13, cursor:'pointer', fontWeight:600 }}>⬇ Download review</button>
+              <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:8, padding:24, textAlign:'center', marginBottom:20 }}>
+                <div style={{ fontSize:48, marginBottom:10 }}>✅</div>
+                <div style={{ fontSize:20, fontWeight:700, color:C.text, marginBottom:6 }}>Submitted — awaiting grading</div>
+                <div style={{ fontSize:13.5, color:C.muted, marginBottom:14 }}>
+                  Your answers are saved and recorded. Your instructor grades this work by hand —
+                  your score will appear in Grades once it is released. Worth {results.max} point{results.max === 1 ? '' : 's'}.
+                </div>
+                <button onClick={downloadReview} style={{ padding:'8px 18px', border:`1px solid ${C.primary}`, borderRadius:5, background:C.white, color:C.primary, fontSize:13, cursor:'pointer', fontWeight:600 }}>⬇ Download my answers</button>
               </div>
-              <h3 style={{ fontSize:15, color:C.text, marginBottom:10 }}>Question review</h3>
+              <h3 style={{ fontSize:15, color:C.text, marginBottom:10 }}>Your submitted answers</h3>
               {attemptQs.map((q, qi) => {
                 const r = results.perQ.find(x => x.qid === q.id!);
                 const badgeBg = !r?.auto ? '#FEF3C7' : r.correct ? '#E8F5E9' : '#FDECEA';
