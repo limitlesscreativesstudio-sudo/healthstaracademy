@@ -625,7 +625,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
   const downloadReview = () => {
     if (!taking || !results) return;
-    const lines = [`Quiz: ${taking.title}`, `Score: ${results.score} / ${results.max} (${Math.round((results.score/Math.max(results.max,1))*100)}%)`, ''];
+    const lines = [`Quiz: ${taking.title}`, `Submitted — awaiting instructor grading (worth ${results.max} points)`, ''];
     attemptQs.forEach((q, i) => {
       const r = results.perQ.find(x => x.qid === q.id!);
       lines.push(`Q${i+1} (${q.points} pt): ${q.prompt}`);
@@ -634,13 +634,8 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         : q.question_type === 'true_false' ? (uAns===0?'True':uAns===1?'False':'(no answer)')
         : q.question_type === 'multiple_answers' ? (Array.isArray(uAns) && uAns.length ? uAns.map((i:number)=>q.options[i]?.text).filter(Boolean).join('; ') : '(no answer)')
         : (uAns ?? '(no answer)');
-      const eText = q.question_type === 'multiple_choice' ? q.options[q.correct_answer]?.text
-        : q.question_type === 'true_false' ? (q.correct_answer===0?'True':'False')
-        : q.question_type === 'multiple_answers' ? (Array.isArray(q.correct_answer) ? q.correct_answer.map((i:number)=>q.options[i]?.text).filter(Boolean).join('; ') : '')
-        : '(manually graded)';
       lines.push(`  Your answer: ${uText}`);
-      lines.push(`  Correct:     ${eText}`);
-      lines.push(`  ${r?.auto ? (r.correct ? '✓ Correct' : '✗ Incorrect') : '⧗ Pending grading'}`);
+      lines.push('  ⧗ Awaiting instructor grading');
       lines.push('');
     });
     const blob = new Blob([lines.join('\n')], { type:'text/plain' });
