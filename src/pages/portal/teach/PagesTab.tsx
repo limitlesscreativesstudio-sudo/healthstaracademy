@@ -321,7 +321,7 @@ const PagesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     // Fallback: render HTML body (covers Video Conference info, custom-written pages).
     return (
       <div style={{ padding:'28px 32px', overflow:'auto', height:'100%' }}>
-        <div className="prose max-w-none"
+        <div className="prose max-w-none lms-rich-content"
           style={{ fontFamily:'sans-serif', color:C.text, lineHeight:1.7, fontSize:15 }}
           dangerouslySetInnerHTML={{ __html: renderBody(page.body_html) }}/>
       </div>
