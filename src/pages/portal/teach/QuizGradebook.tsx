@@ -10,7 +10,7 @@ const pctColor = (p: number) => p >= 80 ? C.success : p >= 70 ? C.warn : C.error
 interface Props { courseId?: string; canEdit?: boolean; selfOnly?: boolean; }
 interface Quiz { id: string; title: string; total_points: number; attempts_allowed: number; }
 interface Student { id: string; name: string; }
-interface Cell { attemptId: string | null; score: number | null; max: number | null; used: number; inProgress: number; startedAt: string | null; }
+interface Cell { attemptId: string | null; score: number | null; max: number | null; used: number; inProgress: number; awaiting: number; startedAt: string | null; }
 
 const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
   const [quizzes, setQuizzes]   = useState<Quiz[]>([]);
