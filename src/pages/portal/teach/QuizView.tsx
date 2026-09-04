@@ -449,6 +449,33 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   };
 
 
+  /** Instructor: close out a student's unfinished attempt and score what they answered. */
+  const forceSubmit = async (row: { id: string; user_id: string; answers: any }) => {
+    if (!responses || !canEdit) return;
+    if (!window.confirm('Submit this in-progress attempt on the student\'s behalf? It will be scored on the answers saved so far.')) return;
+    let score = 0, max = 0;
+    responses.qs.forEach(q => {
+      max += Number(q.points ?? 1);
+      if (isCorrect(q, row.answers?.[q.id!]) === true) score += Number(q.points ?? 1);
+    });
+    const submitted_at = new Date().toISOString();
+    const { error } = await supabase.from('quiz_attempts')
+      .update({ submitted_at, score, max_score: max }).eq('id', row.id);
+    if (error) { toast.error('Could not submit: ' + error.message); return; }
+    const { data: g } = await supabase.from('grades').select('id').eq('quiz_attempt_id', row.id).maybeSingle();
+    if (g?.id) {
+      await supabase.from('grades').update({ score, max_score: max, graded_at: submitted_at, feedback: 'Submitted by instructor' }).eq('id', g.id);
+    } else if (courseId) {
+      await supabase.from('grades').insert({
+        course_id: courseId, user_id: row.user_id, quiz_attempt_id: row.id,
+        score, max_score: max, feedback: 'Submitted by instructor',
+      });
+    }
+    toast.success('Attempt submitted and scored');
+    setResponses(prev => prev ? { ...prev, rows: prev.rows.map(r => r.id === row.id ? { ...r, submitted_at, score, max } : r) } : prev);
+    load();
+  };
+
   const del = async (q: Quiz) => {
     if (!confirm('Delete this quiz?')) return;
     const { error } = await supabase.from('quizzes').delete().eq('id', q.id);
@@ -1189,6 +1216,13 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                       <div style={{ fontSize:13, fontWeight:700, color: pct === null ? C.muted : pct >= 75 ? C.success : C.error }}>
                         {r.score !== null && r.max !== null ? `${r.score}/${r.max}${pct !== null ? ` (${pct}%)` : ''}` : 'Not graded'}
                       </div>
+                      {!r.submitted_at && (
+                        <button onClick={(e) => { e.stopPropagation(); forceSubmit(r); }}
+                          title="Submit and score this unfinished attempt"
+                          style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer', color:C.warn, fontWeight:600, flexShrink:0 }}>
+                          Submit for student
+                        </button>
+                      )}
                     </div>
                     {open && (
                       <div style={{ padding:'6px 12px 12px' }}>
