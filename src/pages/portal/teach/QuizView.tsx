@@ -1293,9 +1293,21 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
               {!respLoading && responses.rows.length === 0 && (
                 <div style={{ padding:24, textAlign:'center', color:C.muted, fontSize:13 }}>No student has taken this quiz yet.</div>
               )}
+              {!respLoading && (responses.quiz as any).answer_key_status === 'unkeyed' && responses.rows.length > 0 && (
+                <div style={{ margin:'8px 0', padding:'9px 12px', background:'#FFF6E8', border:`1px solid ${C.warn}55`, borderRadius:6, fontSize:12.5, color:C.text }}>
+                  ⚠️ This quiz has no valid answer key on file, so nothing can be auto-checked. Award points for each question yourself.
+                </div>
+              )}
               {!respLoading && responses.rows.map(r => {
                 const open = expandedAttempts.has(r.id);
-                const pct = r.score !== null && r.max ? Math.round((r.score / r.max) * 100) : null;
+                const t = gradeTotals(r);
+                const released = r.grading_status === 'released';
+                const pct = released && r.score !== null && r.max ? Math.round((r.score / r.max) * 100) : null;
+                const statusLabel = !r.submitted_at ? 'In progress'
+                  : released ? 'Graded & released'
+                  : r.grading_status === 'in_review' ? 'Grading started'
+                  : 'Awaiting grading';
+                const statusCol = !r.submitted_at ? C.warn : released ? C.success : C.error;
                 return (
                   <div key={r.id} style={{ border:`1px solid ${C.border}`, borderRadius:6, marginTop:8, overflow:'hidden' }}>
                     <div
@@ -1311,14 +1323,15 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                             : `In progress — started ${new Date(r.started_at).toLocaleString()}`}
                         </div>
                       </div>
-                      <div style={{ fontSize:13, fontWeight:700, color: pct === null ? C.muted : pct >= 75 ? C.success : C.error }}>
-                        {r.score !== null && r.max !== null ? `${r.score}/${r.max}${pct !== null ? ` (${pct}%)` : ''}` : 'Not graded'}
+                      <span style={{ fontSize:11, fontWeight:700, color:statusCol, flexShrink:0 }}>{statusLabel}</span>
+                      <div style={{ fontSize:13, fontWeight:700, color: pct === null ? C.muted : pct >= 75 ? C.success : C.error, flexShrink:0 }}>
+                        {released && r.score !== null ? `${r.score}/${r.max}${pct !== null ? ` (${pct}%)` : ''}` : '—'}
                       </div>
                       {!r.submitted_at && (
                         <button onClick={(e) => { e.stopPropagation(); forceSubmit(r); }}
-                          title="Submit and score this unfinished attempt"
+                          title="Close out this unfinished attempt so you can grade it"
                           style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer', color:C.warn, fontWeight:600, flexShrink:0 }}>
-                          Submit for student
+                          Close out
                         </button>
                       )}
                     </div>
@@ -1326,26 +1339,69 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                       <div style={{ padding:'6px 12px 12px' }}>
                         {responses.qs.map((q, qi) => {
                           const val = r.answers?.[q.id!];
-                          const ok = isCorrect(q, val);
+                          const keyed = (responses.quiz as any).answer_key_status !== 'unkeyed';
+                          const ok = keyed ? isCorrect(q, val) : null;
+                          const raw = r.question_scores?.[q.id!];
                           return (
                             <div key={q.id} style={{ padding:'8px 0', borderTop: qi === 0 ? 'none' : `1px solid ${C.border}` }}>
                               <div style={{ fontSize:12.5, fontWeight:600, color:C.text, marginBottom:4 }}>Q{qi + 1}. {q.prompt}</div>
-                              <div style={{ fontSize:12.5, color:C.text }}>
-                                <strong>Answer:</strong> {answerText(q, val)}{' '}
-                                {ok === null
-                                  ? <span style={{ color:C.muted }}>⧗ manual grading</span>
-                                  : ok
+                              <div style={{ display:'flex', gap:10, alignItems:'flex-start', flexWrap:'wrap' }}>
+                                <div style={{ fontSize:12.5, color:C.text, flex:1, minWidth:200, whiteSpace:'pre-wrap' }}>
+                                  <strong>Answer:</strong> {answerText(q, val)}{' '}
+                                  {ok === null ? null : ok
                                     ? <span style={{ color:C.success, fontWeight:700 }}>✓</span>
                                     : <span style={{ color:C.error, fontWeight:700 }}>✗</span>}
-                              </div>
-                              {ok === false && (
-                                <div style={{ fontSize:12, color:C.muted }}>
-                                  <strong>Correct:</strong> {answerText(q, q.correct_answer)}
+                                  {keyed && ok === false && (
+                                    <div style={{ fontSize:12, color:C.muted }}>
+                                      <strong>Key:</strong> {answerText(q, q.correct_answer)}
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                                <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
+                                  <input
+                                    value={raw === undefined || raw === null ? '' : String(raw)}
+                                    inputMode="decimal"
+                                    placeholder="—"
+                                    onChange={e => setQScore(r.id, q.id!, e.target.value)}
+                                    aria-label={`Points for question ${qi + 1}`}
+                                    style={{ width:56, padding:'4px 6px', border:`1px solid ${C.border}`, borderRadius:4, fontSize:12.5, textAlign:'right' }} />
+                                  <span style={{ fontSize:12, color:C.muted }}>/ {q.points}</span>
+                                </div>
+                              </div>
                             </div>
                           );
                         })}
+
+                        <div style={{ marginTop:12, paddingTop:10, borderTop:`1px solid ${C.border}` }}>
+                          <label style={{ fontSize:12, fontWeight:700, color:C.text, display:'block', marginBottom:4 }}>Feedback for the student</label>
+                          <textarea
+                            value={r.instructor_feedback}
+                            onChange={e => patchRow(r.id, { instructor_feedback: e.target.value })}
+                            rows={2}
+                            placeholder="Optional comments shown with the released grade"
+                            style={{ width:'100%', padding:'7px 9px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:12.5, fontFamily:'inherit', resize:'vertical' }} />
+                          <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:10, flexWrap:'wrap' }}>
+                            <div style={{ fontSize:13, fontWeight:700, color:C.text, marginRight:'auto' }}>
+                              Total: {t.earned} / {t.possible}
+                              <span style={{ fontSize:11.5, fontWeight:400, color:C.muted, marginLeft:8 }}>{t.graded} of {t.total} questions scored</span>
+                            </div>
+                            {(responses.quiz as any).answer_key_status !== 'unkeyed' && (
+                              <button onClick={() => suggestPoints(r)}
+                                style={{ padding:'6px 12px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:12.5, cursor:'pointer' }}>
+                                Suggest points from key
+                              </button>
+                            )}
+                            <button onClick={() => saveGradeDraft(r)} disabled={savingGrade === r.id}
+                              style={{ padding:'6px 12px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:12.5, cursor:'pointer' }}>
+                              {savingGrade === r.id ? 'Saving…' : 'Save draft'}
+                            </button>
+                            <button onClick={() => releaseGrade(r)} disabled={savingGrade === r.id || !r.submitted_at}
+                              title={!r.submitted_at ? 'Close out this attempt first' : 'Publish this grade to the student'}
+                              style={{ padding:'6px 14px', border:'none', borderRadius:5, background: r.submitted_at ? C.primary : C.border, color:'white', fontSize:12.5, fontWeight:700, cursor: r.submitted_at ? 'pointer' : 'not-allowed' }}>
+                              {released ? 'Update released grade' : 'Release grade'}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
