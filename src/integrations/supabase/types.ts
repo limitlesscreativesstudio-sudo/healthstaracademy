@@ -2262,8 +2262,13 @@ export type Database = {
         Row: {
           answers: Json
           created_at: string
+          graded_at: string | null
+          graded_by: string | null
+          grading_status: string
           id: string
+          instructor_feedback: string | null
           max_score: number | null
+          question_scores: Json
           quiz_id: string
           score: number | null
           started_at: string
@@ -2273,8 +2278,13 @@ export type Database = {
         Insert: {
           answers?: Json
           created_at?: string
+          graded_at?: string | null
+          graded_by?: string | null
+          grading_status?: string
           id?: string
+          instructor_feedback?: string | null
           max_score?: number | null
+          question_scores?: Json
           quiz_id: string
           score?: number | null
           started_at?: string
@@ -2284,8 +2294,13 @@ export type Database = {
         Update: {
           answers?: Json
           created_at?: string
+          graded_at?: string | null
+          graded_by?: string | null
+          grading_status?: string
           id?: string
+          instructor_feedback?: string | null
           max_score?: number | null
+          question_scores?: Json
           quiz_id?: string
           score?: number | null
           started_at?: string
@@ -2348,6 +2363,7 @@ export type Database = {
       }
       quizzes: {
         Row: {
+          answer_key_status: string
           attempts_allowed: number
           course_id: string
           created_at: string
@@ -2362,6 +2378,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          answer_key_status?: string
           attempts_allowed?: number
           course_id: string
           created_at?: string
@@ -2376,6 +2393,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          answer_key_status?: string
           attempts_allowed?: number
           course_id?: string
           created_at?: string
