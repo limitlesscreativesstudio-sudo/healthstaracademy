@@ -13,7 +13,7 @@ interface Question {
   options: { text:string }[]; correct_answer: any; points: number;
 }
 interface Quiz { id:string; title:string; due_at:string|null; total_points:number; published:boolean; instructions?: string; }
-interface Stats { attempts:number; submitted:number; inProgress:number; avgPct:number; }
+interface Stats { attempts:number; submitted:number; inProgress:number; awaiting:number; released:number; avgPct:number; }
 
 interface Props { courseId?: string; canEdit?: boolean; }
 
