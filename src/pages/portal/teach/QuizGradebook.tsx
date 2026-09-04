@@ -10,7 +10,7 @@ const pctColor = (p: number) => p >= 80 ? C.success : p >= 70 ? C.warn : C.error
 interface Props { courseId?: string; canEdit?: boolean; selfOnly?: boolean; }
 interface Quiz { id: string; title: string; total_points: number; attempts_allowed: number; }
 interface Student { id: string; name: string; }
-interface Cell { attemptId: string | null; score: number | null; max: number | null; used: number; }
+interface Cell { attemptId: string | null; score: number | null; max: number | null; used: number; inProgress: number; startedAt: string | null; }
 
 const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
   const [quizzes, setQuizzes]   = useState<Quiz[]>([]);
@@ -61,17 +61,21 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
     const map: Record<string, Cell> = {};
     if (qList.length && studs.length) {
       const { data: attempts } = await supabase.from('quiz_attempts')
-        .select('id,user_id,quiz_id,score,max_score,submitted_at')
+        .select('id,user_id,quiz_id,score,max_score,submitted_at,started_at')
         .in('quiz_id', qList.map(q => q.id))
-        .not('submitted_at', 'is', null)
-        .order('submitted_at');
+        .order('started_at');
       for (const a of (attempts ?? [])) {
         const k = key(a.user_id, a.quiz_id);
-        const cur = map[k] ?? { attemptId: null, score: null, max: null, used: 0 };
+        const cur = map[k] ?? { attemptId: null, score: null, max: null, used: 0, inProgress: 0, startedAt: null };
         cur.used += 1;
-        const s = a.score == null ? null : Number(a.score);
-        if (cur.score == null || (s != null && s > cur.score)) {
-          cur.score = s; cur.max = a.max_score == null ? null : Number(a.max_score); cur.attemptId = a.id;
+        if (!a.submitted_at) {
+          cur.inProgress += 1;
+          if (!cur.startedAt || a.started_at < cur.startedAt) cur.startedAt = a.started_at;
+        } else {
+          const s = a.score == null ? null : Number(a.score);
+          if (cur.score == null || (s != null && s > cur.score)) {
+            cur.score = s; cur.max = a.max_score == null ? null : Number(a.max_score); cur.attemptId = a.id;
+          }
         }
         map[k] = cur;
       }
@@ -81,6 +85,11 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [courseId, selfOnly]);
+
+  const needsAttention = useMemo(
+    () => Object.values(cells).reduce((n, c) => n + (c.inProgress || 0), 0),
+    [cells]
+  );
 
   const visibleStudents = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -167,6 +176,12 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
         </div>
       </div>
 
+      {!selfOnly && needsAttention > 0 && (
+        <div style={{ marginBottom:12, padding:'9px 13px', background:'#FFF6E8', border:`1px solid ${C.warn}55`, borderRadius:6, fontSize:12.5, color:C.text }}>
+          ⚠️ Needs attention: <strong>{needsAttention}</strong> unfinished attempt{needsAttention === 1 ? '' : 's'} still in progress. Open the quiz&rsquo;s Responses panel to review or submit on the student&rsquo;s behalf.
+        </div>
+      )}
+
       {(!quizzes.length || !students.length) ? (
         <div style={{ padding:36, textAlign:'center', color:C.muted, background:C.white, border:`1px solid ${C.border}`, borderRadius:8 }}>
           {quizzes.length ? 'No students enrolled in this course yet.' : 'No quizzes in this course yet.'}
@@ -219,6 +234,12 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
                               <div style={{ fontSize:11, color: left === 0 ? C.error : C.muted }}>
                                 {used} used · {left} left
                               </div>
+                              {c?.inProgress ? (
+                                <div style={{ fontSize:11, color:C.warn, fontWeight:600 }}
+                                  title={c.startedAt ? `Started ${new Date(c.startedAt).toLocaleString()}` : undefined}>
+                                  ⏳ in progress
+                                </div>
+                              ) : null}
                             </button>
                           )}
                         </td>
