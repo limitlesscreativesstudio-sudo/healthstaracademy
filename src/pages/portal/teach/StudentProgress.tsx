@@ -238,7 +238,11 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
       ) : (
         <div style={{ display:'grid', gap:10 }}>
           {filtered.map(r => (
-            <div key={r.userId} style={{ background:C.white, border:`1px solid ${C.border}`, borderLeft:`4px solid ${r.atRisk ? C.error : pctColor(r.overallPct)}`, borderRadius:8, padding:16 }}>
+            <div key={r.userId} role="button" tabIndex={0}
+              onClick={() => setSelected({ userId: r.userId, name: r.name })}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setSelected({ userId: r.userId, name: r.name }); }}
+              title="Open full student record"
+              style={{ background:C.white, border:`1px solid ${C.border}`, borderLeft:`4px solid ${r.atRisk ? C.error : pctColor(r.overallPct)}`, borderRadius:8, padding:16, cursor:'pointer' }}>
               <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
                 <div style={{ width:36, height:36, borderRadius:'50%', background:'#9B6DD0', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, flexShrink:0 }}>{r.initials}</div>
                 <div style={{ flex:1 }}>
