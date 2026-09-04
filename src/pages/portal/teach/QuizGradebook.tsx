@@ -61,16 +61,20 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
     const map: Record<string, Cell> = {};
     if (qList.length && studs.length) {
       const { data: attempts } = await supabase.from('quiz_attempts')
-        .select('id,user_id,quiz_id,score,max_score,submitted_at,started_at')
+        .select('id,user_id,quiz_id,score,max_score,submitted_at,started_at,grading_status')
         .in('quiz_id', qList.map(q => q.id))
         .order('started_at');
       for (const a of (attempts ?? [])) {
         const k = key(a.user_id, a.quiz_id);
-        const cur = map[k] ?? { attemptId: null, score: null, max: null, used: 0, inProgress: 0, startedAt: null };
+        const cur = map[k] ?? { attemptId: null, score: null, max: null, used: 0, inProgress: 0, awaiting: 0, startedAt: null };
         cur.used += 1;
         if (!a.submitted_at) {
           cur.inProgress += 1;
           if (!cur.startedAt || a.started_at < cur.startedAt) cur.startedAt = a.started_at;
+        } else if (a.grading_status !== 'released') {
+          // Submitted but the instructor has not released a grade yet.
+          cur.awaiting += 1;
+          if (!cur.attemptId) cur.attemptId = a.id;
         } else {
           const s = a.score == null ? null : Number(a.score);
           if (cur.score == null || (s != null && s > cur.score)) {
