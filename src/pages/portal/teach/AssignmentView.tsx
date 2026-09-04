@@ -149,14 +149,14 @@ const AssignmentView: React.FC<Props> = ({ courseId, canEdit }) => {
         <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Loading assignments…</div>
       ) : assignments.length === 0 ? (
         <div style={{ padding:48, textAlign:'center', background:C.white, borderRadius:8, border:`1px dashed ${C.border}` }}>
-          <div style={{ fontSize:40, marginBottom:12 }}>📝</div>
-          <div style={{ fontSize:15, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:6 }}>No assignments yet</div>
-          <div style={{ fontSize:12.5, color:C.muted, fontFamily:'sans-serif', maxWidth:440, margin:'0 auto', lineHeight:1.6 }}>
+          <div style={{ fontSize:40, marginBottom:12 }}>📓</div>
+          <div style={{ fontSize:15, fontWeight:600, color:C.text, fontFamily:'sans-serif', marginBottom:6 }}>Assignments are completed in the physical workbook</div>
+          <div style={{ fontSize:12.5, color:C.muted, fontFamily:'sans-serif', maxWidth:480, margin:'0 auto', lineHeight:1.6 }}>
             {canEdit
-              ? 'Graded student work in this course is currently delivered through quizzes and case study quizzes, so nothing appears here yet. Create an assignment when you want students to upload a file or type a written response.'
-              : 'Your instructor has not posted any assignments here. Quizzes and case studies are in the Quizzes tab.'}
+              ? 'This course\'s assignments are completed by students in their physical workbooks and graded in person — so nothing is expected to appear here. To grade workbook work, use the Quiz Gradebook\'s manual grade entry. Create an online assignment only if you want students to upload a file or type a written response.'
+              : 'Your assignments are completed in your physical workbook and graded by your instructor in person. Online graded work (quizzes and case studies) is in the Quizzes tab.'}
           </div>
-          {canEdit && <button onClick={() => { setEditRow(null); setShowForm(true); }} style={{ padding:'8px 20px', border:'none', borderRadius:6, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', marginTop:14 }}>+ Create Assignment</button>}
+          {canEdit && <button onClick={() => { setEditRow(null); setShowForm(true); }} style={{ padding:'8px 20px', border:'none', borderRadius:6, background:C.primary, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:'pointer', marginTop:14 }}>+ Create Online Assignment</button>}
         </div>
       ) : groups.map(group => (
         <div key={group} style={{ marginBottom:20 }}>
