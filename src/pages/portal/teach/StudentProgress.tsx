@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from './AuthContext';
+import StudentProfilePanel from '@/components/portal/StudentProfilePanel';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', warn:'#E67E22', error:'#C0392B' } as const;
 
@@ -44,6 +45,8 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all'|'atRisk'|'onTrack'>('all');
+  const [tick, setTick] = useState(0);
+  const [selected, setSelected] = useState<{ userId: string; name: string } | null>(null);
 
   useEffect(() => {
     if (!courseId) { setLoading(false); return; }
@@ -88,27 +91,31 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
         if (bestByUserQuiz[k] == null || s > bestByUserQuiz[k]) bestByUserQuiz[k] = s;
       });
 
-      // attendance
-      const { data: att } = await supabase.from('attendance').select('user_id, status').eq('course_id', courseId);
+      // attendance (column is student_id)
+      const { data: att } = await supabase.from('attendance').select('student_id, status').eq('course_id', courseId);
       const attByUser: Record<string, { present: number; total: number }> = {};
       (att ?? []).forEach(a => {
-        const b = attByUser[a.user_id] ?? { present:0, total:0 };
+        const b = attByUser[a.student_id] ?? { present:0, total:0 };
         b.total += 1;
         if (a.status === 'present' || a.status === 'late') b.present += 1;
-        attByUser[a.user_id] = b;
+        attByUser[a.student_id] = b;
       });
 
-      // clinical hours
-      const { data: chs } = await supabase.from('clinical_hours').select('user_id, hours').in('user_id', uids);
+      // clinical hours (column is student_user_id)
+      const { data: chs } = await supabase.from('clinical_hours')
+        .select('student_user_id, hours').in('student_user_id', uids);
       const clinicalByUser: Record<string, number> = {};
-      (chs ?? []).forEach(c => { clinicalByUser[c.user_id] = (clinicalByUser[c.user_id] ?? 0) + Number(c.hours ?? 0); });
+      (chs ?? []).forEach(c => {
+        clinicalByUser[c.student_user_id] = (clinicalByUser[c.student_user_id] ?? 0) + Number(c.hours ?? 0);
+      });
 
-      // skill signoffs (student_skill_signoffs preferred)
-      const { data: sks } = await supabase.from('student_skill_signoffs').select('user_id, status').in('user_id', uids);
+      // skill signoffs (column is student_user_id)
+      const { data: sks } = await supabase.from('student_skill_signoffs')
+        .select('student_user_id, status').in('student_user_id', uids);
       const skillsByUser: Record<string, number> = {};
       (sks ?? []).forEach(s => {
         if (s.status === 'signed' || s.status === 'completed' || s.status === 'passed') {
-          skillsByUser[s.user_id] = (skillsByUser[s.user_id] ?? 0) + 1;
+          skillsByUser[s.student_user_id] = (skillsByUser[s.student_user_id] ?? 0) + 1;
         }
       });
 
@@ -158,7 +165,7 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
       setRows(built);
       setLoading(false);
     })();
-  }, [courseId]);
+  }, [courseId, tick]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -201,6 +208,10 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
               {f === 'all' ? 'All' : f === 'atRisk' ? 'At Risk' : 'On Track'}
             </button>
           ))}
+          <button onClick={() => setTick(t => t + 1)}
+            style={{ padding:'5px 12px', border:`1px solid ${C.border}`, borderRadius:20, background:C.white, color:C.text, fontSize:11, cursor:'pointer' }}>
+            ↻ Refresh
+          </button>
         </div>
       </div>
 
@@ -228,7 +239,11 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
       ) : (
         <div style={{ display:'grid', gap:10 }}>
           {filtered.map(r => (
-            <div key={r.userId} style={{ background:C.white, border:`1px solid ${C.border}`, borderLeft:`4px solid ${r.atRisk ? C.error : pctColor(r.overallPct)}`, borderRadius:8, padding:16 }}>
+            <div key={r.userId} role="button" tabIndex={0}
+              onClick={() => setSelected({ userId: r.userId, name: r.name })}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setSelected({ userId: r.userId, name: r.name }); }}
+              title="Open full student record"
+              style={{ background:C.white, border:`1px solid ${C.border}`, borderLeft:`4px solid ${r.atRisk ? C.error : pctColor(r.overallPct)}`, borderRadius:8, padding:16, cursor:'pointer' }}>
               <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:10 }}>
                 <div style={{ width:36, height:36, borderRadius:'50%', background:'#9B6DD0', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, flexShrink:0 }}>{r.initials}</div>
                 <div style={{ flex:1 }}>
@@ -261,6 +276,15 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
             </div>
           ))}
         </div>
+      )}
+
+      {selected && (
+        <StudentProfilePanel
+          userId={selected.userId}
+          courseId={courseId}
+          name={selected.name}
+          onClose={() => { setSelected(null); setTick(t => t + 1); }}
+        />
       )}
     </div>
   );

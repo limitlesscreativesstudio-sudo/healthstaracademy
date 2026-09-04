@@ -131,6 +131,21 @@ const JobPipelineTracker = () => {
     }
     setPipeline(prev => ({ ...prev, [studentId]: data as PipelineRow }));
     toast({ title: "Pipeline updated" });
+
+    // Sync portal account + course enrollment with the new pipeline stage
+    if (patch.stage) {
+      try {
+        const { data: sync, error: syncErr } = await supabase.functions.invoke("pipeline-sync", {
+          body: { student_id: studentId },
+        });
+        if (syncErr) throw syncErr;
+        const action = (sync as any)?.action;
+        if (action === "synced") toast({ title: "Portal enrollment synced" });
+        if (action === "unenrolled") toast({ title: "Portal access removed", description: "Records were kept." });
+      } catch (err: any) {
+        toast({ title: "Portal sync failed", description: err?.message ?? String(err), variant: "destructive" });
+      }
+    }
   };
 
   const kpis = useMemo(() => {

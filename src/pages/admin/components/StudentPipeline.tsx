@@ -155,13 +155,21 @@ const StudentPipeline = () => {
       return;
     }
     toast({ title: "Status updated" });
-    // Auto-provision portal access when admin marks the student as enrolled
-    if (newStatus === "enrolled") {
-      const s = students.find(x => x.id === studentId);
-      if (s && !s.provisioned_at) {
-        await provisionPortal(studentId);
-        return;
+
+    // Keep the portal account + course enrollment in sync with the pipeline
+    try {
+      const { data, error: syncErr } = await supabase.functions.invoke("pipeline-sync", {
+        body: { student_id: studentId },
+      });
+      if (syncErr) throw syncErr;
+      const action = (data as any)?.action;
+      if (action === "synced") {
+        toast({ title: "Portal updated", description: "Student account and course enrollment are active." });
+      } else if (action === "unenrolled") {
+        toast({ title: "Portal access removed", description: "Course enrollment removed; records were kept." });
       }
+    } catch (err: any) {
+      toast({ title: "Portal sync failed", description: err?.message ?? String(err), variant: "destructive" });
     }
     fetchStudents();
   };
