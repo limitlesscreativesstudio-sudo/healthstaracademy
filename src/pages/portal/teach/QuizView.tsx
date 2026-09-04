@@ -415,7 +415,8 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     setResponses({ quiz: q, qs: [], rows: [] });
     const [{ data: qs }, { data: rawAtts }, { data: enrs }] = await Promise.all([
       supabase.from('quiz_questions').select('*').eq('quiz_id', q.id).order('position'),
-      supabase.from('quiz_attempts').select('id, user_id, answers, score, max_score, submitted_at, started_at')
+      supabase.from('quiz_attempts')
+        .select('id, user_id, answers, score, max_score, submitted_at, started_at, grading_status, question_scores, instructor_feedback')
         .eq('quiz_id', q.id).order('submitted_at', { ascending: false, nullsFirst: false }),
       supabase.from('enrollments').select('user_id').eq('course_id', courseId).eq('role', 'student'),
     ]);
@@ -442,9 +443,111 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         answers: (a.answers as any) ?? {}, score: a.score === null ? null : Number(a.score),
         max: a.max_score === null ? null : Number(a.max_score),
         submitted_at: a.submitted_at, started_at: a.started_at,
+        grading_status: a.grading_status ?? (a.submitted_at ? 'awaiting' : 'not_submitted'),
+        question_scores: (a.question_scores as any) ?? {},
+        instructor_feedback: a.instructor_feedback ?? '',
       })),
     });
     setRespLoading(false);
+  };
+
+  /** Update one row of the grading panel in place. */
+  const patchRow = (rowId: string, patch: Record<string, any>) =>
+    setResponses(prev => prev ? { ...prev, rows: prev.rows.map(r => r.id === rowId ? { ...r, ...patch } : r) } : prev);
+
+  const setQScore = (rowId: string, qid: string, raw: string) =>
+    setResponses(prev => prev ? {
+      ...prev,
+      rows: prev.rows.map(r => r.id === rowId
+        ? { ...r, question_scores: { ...r.question_scores, [qid]: raw } }
+        : r),
+    } : prev);
+
+  const gradeTotals = (row: { question_scores: Record<string, any> }) => {
+    const qs = responses?.qs ?? [];
+    const possible = qs.reduce((a, q) => a + Number(q.points ?? 1), 0);
+    const earned = qs.reduce((a, q) => {
+      const v = Number(row.question_scores?.[q.id!]);
+      return a + (isFinite(v) ? v : 0);
+    }, 0);
+    const graded = qs.filter(q => {
+      const v = row.question_scores?.[q.id!];
+      return v !== undefined && v !== null && String(v) !== '';
+    }).length;
+    return { earned: Math.round(earned * 100) / 100, possible, graded, total: qs.length };
+  };
+
+  /** Pre-fill points from the answer key, only for quizzes that actually have one. */
+  const suggestPoints = (row: { id: string; answers: any }) => {
+    if (!responses) return;
+    if ((responses.quiz as any).answer_key_status === 'unkeyed') {
+      toast.info('This quiz has no valid answer key — grade each question manually.');
+      return;
+    }
+    const next: Record<string, any> = {};
+    responses.qs.forEach(q => {
+      const ok = isCorrect(q, row.answers?.[q.id!]);
+      if (ok === null) return; // short answer / essay — instructor decides
+      next[q.id!] = ok ? Number(q.points ?? 1) : 0;
+    });
+    patchRow(row.id, { question_scores: { ...(responses.rows.find(r => r.id === row.id)?.question_scores ?? {}), ...next } });
+    toast.info('Suggested points filled in — review before releasing.');
+  };
+
+  /** Save grading progress without showing anything to the student. */
+  const saveGradeDraft = async (row: any) => {
+    setSavingGrade(row.id);
+    const { error } = await supabase.from('quiz_attempts').update({
+      question_scores: row.question_scores,
+      instructor_feedback: row.instructor_feedback || null,
+      grading_status: row.grading_status === 'released' ? 'released' : 'in_review',
+    }).eq('id', row.id);
+    setSavingGrade(null);
+    if (error) { toast.error('Could not save: ' + error.message); return; }
+    if (row.grading_status !== 'released') patchRow(row.id, { grading_status: 'in_review' });
+    toast.success('Grading saved (not yet visible to the student)');
+  };
+
+  /** Publish the grade to the student's gradebook and grade record. */
+  const releaseGrade = async (row: any) => {
+    if (!responses || !courseId) return;
+    const t = gradeTotals(row);
+    if (t.graded < t.total && !window.confirm(`${t.total - t.graded} question(s) have no points entered — they will count as 0. Release anyway?`)) return;
+    setSavingGrade(row.id);
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase.from('quiz_attempts').update({
+      question_scores: row.question_scores,
+      instructor_feedback: row.instructor_feedback || null,
+      score: t.earned, max_score: t.possible,
+      grading_status: 'released',
+      graded_by: user?.id ?? null,
+      graded_at: nowIso,
+    }).eq('id', row.id);
+    if (error) { setSavingGrade(null); toast.error('Could not release: ' + error.message); return; }
+
+    const { data: g } = await supabase.from('grades').select('id').eq('quiz_attempt_id', row.id).maybeSingle();
+    if (g?.id) {
+      await supabase.from('grades').update({
+        score: t.earned, max_score: t.possible, graded_at: nowIso,
+        feedback: row.instructor_feedback || 'Graded by instructor',
+      }).eq('id', g.id);
+    } else {
+      await supabase.from('grades').insert({
+        course_id: courseId, user_id: row.user_id, quiz_attempt_id: row.id,
+        score: t.earned, max_score: t.possible, graded_by: user?.id ?? null,
+        feedback: row.instructor_feedback || 'Graded by instructor',
+      });
+    }
+    await supabase.from('notifications').insert({
+      user_id: row.user_id, kind: 'grade',
+      title: `Graded: ${responses.quiz.title}`,
+      body: `${t.earned} / ${t.possible}`,
+      link: `/portal/courses/${courseId}?tab=grades`,
+    });
+    setSavingGrade(null);
+    patchRow(row.id, { grading_status: 'released', score: t.earned, max: t.possible });
+    toast.success('Grade released to the student');
+    load();
   };
 
   /** Human-readable rendering of a stored answer value. */
