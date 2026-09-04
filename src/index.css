@@ -235,3 +235,32 @@
 .animation-delay-400 {
   animation-delay: 400ms;
 }
+/* Course page content: make embedded links obviously clickable */
+.prose a,
+.lms-rich-content a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.prose a:hover,
+.lms-rich-content a:hover {
+  opacity: 0.85;
+}
+.prose .hsa-join-btn,
+.lms-rich-content .hsa-join-btn {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: #319795;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+  margin: 4px 0 12px;
+}
+.prose .hsa-join-btn:hover,
+.lms-rich-content .hsa-join-btn:hover {
+  background: #2a7f7d;
+  color: #ffffff;
+}

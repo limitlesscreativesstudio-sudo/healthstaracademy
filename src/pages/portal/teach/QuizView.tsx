@@ -13,7 +13,7 @@ interface Question {
   options: { text:string }[]; correct_answer: any; points: number;
 }
 interface Quiz { id:string; title:string; due_at:string|null; total_points:number; published:boolean; instructions?: string; }
-interface Stats { attempts:number; submitted:number; avgPct:number; }
+interface Stats { attempts:number; submitted:number; inProgress:number; avgPct:number; }
 
 interface Props { courseId?: string; canEdit?: boolean; }
 
@@ -133,11 +133,12 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         const { data: allAtt } = await supabase.from('quiz_attempts')
           .select('quiz_id,score,max_score,submitted_at').in('quiz_id', data.map(q => q.id));
         const s: Record<string, Stats> = {};
-        data.forEach(q => { s[q.id] = { attempts:0, submitted:0, avgPct:0 }; });
+        data.forEach(q => { s[q.id] = { attempts:0, submitted:0, inProgress:0, avgPct:0 }; });
         const sums: Record<string, {sum:number; n:number}> = {};
         (allAtt ?? []).forEach(a => {
           const st = s[a.quiz_id]; if (!st) return;
           st.attempts++;
+          if (!a.submitted_at) st.inProgress++;
           if (a.submitted_at && a.max_score) {
             st.submitted++;
             const acc = sums[a.quiz_id] ?? {sum:0, n:0};
@@ -153,6 +154,14 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   };
 
   useEffect(() => { load(); }, [courseId, user?.id]);
+
+  // Warn students before they leave with an unfinished (unsubmitted) attempt open.
+  useEffect(() => {
+    if (!taking || results) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [taking, results]);
 
   useEffect(() => {
     if (autoOpened || !routeQuizId || !quizzes.length) return;
@@ -207,6 +216,11 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     setAnswers(local);
     answersRef.current = local;
     const qs = await loadQuestions(q.id);
+    if (!canEdit && qs.length === 0) {
+      setTaking(null);
+      toast.info('This quiz has no questions yet. Your instructor is still building it.');
+      return;
+    }
     setAttemptQs(qs);
     if (!user?.id) { setStartedAt(new Date()); return; }
     // Resume open attempt or create a new one
@@ -447,6 +461,33 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     return Number(val) === Number(q.correct_answer);
   };
 
+
+  /** Instructor: close out a student's unfinished attempt and score what they answered. */
+  const forceSubmit = async (row: { id: string; user_id: string; answers: any }) => {
+    if (!responses || !canEdit) return;
+    if (!window.confirm('Submit this in-progress attempt on the student\'s behalf? It will be scored on the answers saved so far.')) return;
+    let score = 0, max = 0;
+    responses.qs.forEach(q => {
+      max += Number(q.points ?? 1);
+      if (isCorrect(q, row.answers?.[q.id!]) === true) score += Number(q.points ?? 1);
+    });
+    const submitted_at = new Date().toISOString();
+    const { error } = await supabase.from('quiz_attempts')
+      .update({ submitted_at, score, max_score: max }).eq('id', row.id);
+    if (error) { toast.error('Could not submit: ' + error.message); return; }
+    const { data: g } = await supabase.from('grades').select('id').eq('quiz_attempt_id', row.id).maybeSingle();
+    if (g?.id) {
+      await supabase.from('grades').update({ score, max_score: max, graded_at: submitted_at, feedback: 'Submitted by instructor' }).eq('id', g.id);
+    } else if (courseId) {
+      await supabase.from('grades').insert({
+        course_id: courseId, user_id: row.user_id, quiz_attempt_id: row.id,
+        score, max_score: max, feedback: 'Submitted by instructor',
+      });
+    }
+    toast.success('Attempt submitted and scored');
+    setResponses(prev => prev ? { ...prev, rows: prev.rows.map(r => r.id === row.id ? { ...r, submitted_at, score, max } : r) } : prev);
+    load();
+  };
 
   const del = async (q: Quiz) => {
     if (!confirm('Delete this quiz?')) return;
@@ -1092,7 +1133,8 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                                       {Number(q.total_points||0)} pts
                                       {q.due_at && ` • Due ${new Date(q.due_at).toLocaleDateString()}`}
                                       {canEdit && ` • ${allowedFor(q)} attempt${allowedFor(q)===1?'':'s'} allowed`}
-                                      {canEdit && st && ` • ${st.attempts} attempt${st.attempts===1?'':'s'}`}
+                                      {canEdit && st && ` • ${st.submitted} submitted`}
+                                      {canEdit && st && st.inProgress ? <span style={{ color:C.warn, fontWeight:600 }}>{` • ${st.inProgress} in progress`}</span> : ''}
                                       {canEdit && st && st.submitted ? ` • avg ${st.avgPct}%` : ''}
                                       {!canEdit && taken && <span style={{ color:C.success, marginLeft:6, fontWeight:600 }}>✓ Submitted</span>}
                                       {!canEdit && taken && (attemptsLeft(q) > 0
@@ -1113,7 +1155,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                                 </button>
                                 <button onClick={() => openResponses(q)} title="View student responses and answers"
                                   style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>
-                                  Responses{st?.attempts ? ` (${st.attempts})` : ''}
+                                  Responses{st?.attempts ? ` (${st.attempts})` : ''}{st?.inProgress ? ' ⚠️' : ''}
                                 </button>
                                 <button onClick={() => startEdit(q)} style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Edit</button>
                                 <button onClick={() => startTake(q)} title="Preview quiz" aria-label={`Preview ${q.title}`}
@@ -1187,6 +1229,13 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                       <div style={{ fontSize:13, fontWeight:700, color: pct === null ? C.muted : pct >= 75 ? C.success : C.error }}>
                         {r.score !== null && r.max !== null ? `${r.score}/${r.max}${pct !== null ? ` (${pct}%)` : ''}` : 'Not graded'}
                       </div>
+                      {!r.submitted_at && (
+                        <button onClick={(e) => { e.stopPropagation(); forceSubmit(r); }}
+                          title="Submit and score this unfinished attempt"
+                          style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer', color:C.warn, fontWeight:600, flexShrink:0 }}>
+                          Submit for student
+                        </button>
+                      )}
                     </div>
                     {open && (
                       <div style={{ padding:'6px 12px 12px' }}>
