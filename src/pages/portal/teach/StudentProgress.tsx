@@ -88,27 +88,31 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
         if (bestByUserQuiz[k] == null || s > bestByUserQuiz[k]) bestByUserQuiz[k] = s;
       });
 
-      // attendance
-      const { data: att } = await supabase.from('attendance').select('user_id, status').eq('course_id', courseId);
+      // attendance (column is student_id)
+      const { data: att } = await supabase.from('attendance').select('student_id, status').eq('course_id', courseId);
       const attByUser: Record<string, { present: number; total: number }> = {};
       (att ?? []).forEach(a => {
-        const b = attByUser[a.user_id] ?? { present:0, total:0 };
+        const b = attByUser[a.student_id] ?? { present:0, total:0 };
         b.total += 1;
         if (a.status === 'present' || a.status === 'late') b.present += 1;
-        attByUser[a.user_id] = b;
+        attByUser[a.student_id] = b;
       });
 
-      // clinical hours
-      const { data: chs } = await supabase.from('clinical_hours').select('user_id, hours').in('user_id', uids);
+      // clinical hours (column is student_user_id)
+      const { data: chs } = await supabase.from('clinical_hours')
+        .select('student_user_id, hours').in('student_user_id', uids);
       const clinicalByUser: Record<string, number> = {};
-      (chs ?? []).forEach(c => { clinicalByUser[c.user_id] = (clinicalByUser[c.user_id] ?? 0) + Number(c.hours ?? 0); });
+      (chs ?? []).forEach(c => {
+        clinicalByUser[c.student_user_id] = (clinicalByUser[c.student_user_id] ?? 0) + Number(c.hours ?? 0);
+      });
 
-      // skill signoffs (student_skill_signoffs preferred)
-      const { data: sks } = await supabase.from('student_skill_signoffs').select('user_id, status').in('user_id', uids);
+      // skill signoffs (column is student_user_id)
+      const { data: sks } = await supabase.from('student_skill_signoffs')
+        .select('student_user_id, status').in('student_user_id', uids);
       const skillsByUser: Record<string, number> = {};
       (sks ?? []).forEach(s => {
         if (s.status === 'signed' || s.status === 'completed' || s.status === 'passed') {
-          skillsByUser[s.user_id] = (skillsByUser[s.user_id] ?? 0) + 1;
+          skillsByUser[s.student_user_id] = (skillsByUser[s.student_user_id] ?? 0) + 1;
         }
       });
 
