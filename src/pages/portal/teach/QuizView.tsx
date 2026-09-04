@@ -1219,8 +1219,10 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                                       {q.due_at && ` • Due ${new Date(q.due_at).toLocaleDateString()}`}
                                       {canEdit && ` • ${allowedFor(q)} attempt${allowedFor(q)===1?'':'s'} allowed`}
                                       {canEdit && st && ` • ${st.submitted} submitted`}
+                                      {canEdit && st && st.awaiting ? <span style={{ color:C.error, fontWeight:700 }}>{` • ${st.awaiting} to grade`}</span> : ''}
                                       {canEdit && st && st.inProgress ? <span style={{ color:C.warn, fontWeight:600 }}>{` • ${st.inProgress} in progress`}</span> : ''}
-                                      {canEdit && st && st.submitted ? ` • avg ${st.avgPct}%` : ''}
+                                      {canEdit && st && st.released ? ` • avg ${st.avgPct}%` : ''}
+                                      {canEdit && (q as any).answer_key_status === 'unkeyed' ? <span style={{ color:C.muted }}> • no answer key (manual grading)</span> : ''}
                                       {!canEdit && taken && <span style={{ color:C.success, marginLeft:6, fontWeight:600 }}>✓ Submitted</span>}
                                       {!canEdit && taken && (attemptsLeft(q) > 0
                                         ? <span style={{ marginLeft:6 }}>• {attemptsLeft(q)} attempt{attemptsLeft(q)===1?'':'s'} left</span>
