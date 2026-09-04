@@ -598,25 +598,14 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
   const submitAttempt = async () => {
     if (!taking || !user?.id || !attemptId) return;
-    let score = 0, max = 0;
+    // Instructor-graded model: nothing is scored here. We record the answers and
+    // the attempt moves into the instructor's grading queue.
+    let max = 0;
     const perQ: {qid:string; correct:boolean; user:any; expected:any; auto:boolean}[] = [];
     attemptQs.forEach(q => {
       max += q.points;
-      const a = answers[q.id!];
-      let ok = false; let auto = true;
-      if (q.question_type === 'multiple_choice') ok = a !== undefined && Number(a) === Number(q.correct_answer);
-      else if (q.question_type === 'true_false') ok = a !== undefined && Number(a) === Number(q.correct_answer);
-      else if (q.question_type === 'multiple_answers') {
-        const exp = Array.isArray(q.correct_answer) ? [...q.correct_answer].map(Number).sort() : [];
-        const got = Array.isArray(a) ? [...a].map(Number).sort() : [];
-        ok = exp.length > 0 && exp.length === got.length && exp.every((v,i) => v === got[i]);
-      }
-      else auto = false; // manually graded
-      if (auto && ok) score += q.points;
-      perQ.push({ qid:q.id!, correct:ok, user:a, expected:q.correct_answer, auto });
+      perQ.push({ qid:q.id!, correct:false, user:answers[q.id!], expected:null, auto:false });
     });
-    // Submit through the server so the attempt is scored and recorded even
-    // though students may not write score/submitted_at directly (RLS).
     const { data: res, error } = await supabase.functions.invoke('submit-quiz-attempt', {
       body: { attempt_id: attemptId, answers },
     });
@@ -626,12 +615,11 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       toast.error(`Could not submit: ${serverErr || error?.message || 'unknown error'}`);
       return;
     }
-    const finalScore = typeof (res as any)?.score === 'number' ? (res as any).score : score;
     const finalMax = typeof (res as any)?.max_score === 'number' ? (res as any).max_score : max;
     clearLocalDraft(taking.id);
-    setResults({ score: finalScore, max: finalMax, perQ });
+    setResults({ score: null as any, max: finalMax, perQ, awaiting: true } as any);
     setAttemptedIds(s => new Set(s).add(taking.id));
-    toast.success('Quiz submitted and saved');
+    toast.success('Submitted — your instructor will grade this');
   };
 
 
