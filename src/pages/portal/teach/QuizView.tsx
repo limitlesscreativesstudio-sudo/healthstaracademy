@@ -131,19 +131,24 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       if (canEdit) {
         // load analytics for instructors
         const { data: allAtt } = await supabase.from('quiz_attempts')
-          .select('quiz_id,score,max_score,submitted_at').in('quiz_id', data.map(q => q.id));
+          .select('quiz_id,score,max_score,submitted_at,grading_status').in('quiz_id', data.map(q => q.id));
         const s: Record<string, Stats> = {};
-        data.forEach(q => { s[q.id] = { attempts:0, submitted:0, inProgress:0, avgPct:0 }; });
+        data.forEach(q => { s[q.id] = { attempts:0, submitted:0, inProgress:0, awaiting:0, released:0, avgPct:0 }; });
         const sums: Record<string, {sum:number; n:number}> = {};
         (allAtt ?? []).forEach(a => {
           const st = s[a.quiz_id]; if (!st) return;
           st.attempts++;
-          if (!a.submitted_at) st.inProgress++;
-          if (a.submitted_at && a.max_score) {
-            st.submitted++;
-            const acc = sums[a.quiz_id] ?? {sum:0, n:0};
-            acc.sum += (Number(a.score)/Number(a.max_score))*100; acc.n++;
-            sums[a.quiz_id] = acc;
+          if (!a.submitted_at) { st.inProgress++; return; }
+          st.submitted++;
+          if (a.grading_status === 'released') {
+            st.released++;
+            if (a.max_score) {
+              const acc = sums[a.quiz_id] ?? {sum:0, n:0};
+              acc.sum += (Number(a.score)/Number(a.max_score))*100; acc.n++;
+              sums[a.quiz_id] = acc;
+            }
+          } else {
+            st.awaiting++;
           }
         });
         Object.keys(sums).forEach(k => { s[k].avgPct = Math.round(sums[k].sum / sums[k].n); });
