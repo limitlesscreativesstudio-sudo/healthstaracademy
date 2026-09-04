@@ -245,6 +245,9 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
                               <div style={{ fontSize:11, color: left === 0 ? C.error : C.muted }}>
                                 {used} used · {left} left
                               </div>
+                              {c?.awaiting ? (
+                                <div style={{ fontSize:11, color:C.error, fontWeight:700 }}>📝 awaiting grading</div>
+                              ) : null}
                               {c?.inProgress ? (
                                 <div style={{ fontSize:11, color:C.warn, fontWeight:600 }}
                                   title={c.startedAt ? `Started ${new Date(c.startedAt).toLocaleString()}` : undefined}>
