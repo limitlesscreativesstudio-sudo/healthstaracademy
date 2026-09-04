@@ -44,6 +44,8 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all'|'atRisk'|'onTrack'>('all');
+  const [tick, setTick] = useState(0);
+  const [selected, setSelected] = useState<{ userId: string; name: string } | null>(null);
 
   useEffect(() => {
     if (!courseId) { setLoading(false); return; }
