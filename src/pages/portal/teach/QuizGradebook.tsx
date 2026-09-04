@@ -94,6 +94,10 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
     () => Object.values(cells).reduce((n, c) => n + (c.inProgress || 0), 0),
     [cells]
   );
+  const awaitingGrading = useMemo(
+    () => Object.values(cells).reduce((n, c) => n + (c.awaiting || 0), 0),
+    [cells]
+  );
 
   const visibleStudents = useMemo(() => {
     const q = search.trim().toLowerCase();
