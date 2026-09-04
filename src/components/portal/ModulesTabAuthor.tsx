@@ -594,7 +594,7 @@ const ModulesTabAuthor = ({ courseId, isInstructor, openAddOnMount }: { courseId
           <DialogHeader>
             <DialogTitle>{pageView?.title}</DialogTitle>
           </DialogHeader>
-          <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: pageView?.body || "<p class='text-muted-foreground'>Empty page.</p>" }} />
+          <div className="prose prose-sm max-w-none lms-rich-content" dangerouslySetInnerHTML={{ __html: pageView?.body || "<p class='text-muted-foreground'>Empty page.</p>" }} />
           {activeIdx >= 0 && (
             <DialogFooter className="mt-4 border-t border-border pt-3 sm:justify-between gap-2">
               <Button variant="outline" size="sm" disabled={!prevItem} onClick={() => prevItem && openItemById(prevItem.id)}>
