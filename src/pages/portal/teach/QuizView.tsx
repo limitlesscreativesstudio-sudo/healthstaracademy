@@ -155,6 +155,14 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
   useEffect(() => { load(); }, [courseId, user?.id]);
 
+  // Warn students before they leave with an unfinished (unsubmitted) attempt open.
+  useEffect(() => {
+    if (!taking || results) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [taking, results]);
+
   useEffect(() => {
     if (autoOpened || !routeQuizId || !quizzes.length) return;
     const q = quizzes.find(x => x.id === routeQuizId);
