@@ -276,6 +276,15 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
           ))}
         </div>
       )}
+
+      {selected && (
+        <StudentProfilePanel
+          userId={selected.userId}
+          courseId={courseId}
+          name={selected.name}
+          onClose={() => { setSelected(null); setTick(t => t + 1); }}
+        />
+      )}
     </div>
   );
 };
