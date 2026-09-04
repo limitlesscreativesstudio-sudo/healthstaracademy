@@ -1242,7 +1242,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                                 </button>
                                 <button onClick={() => openResponses(q)} title="View student responses and answers"
                                   style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>
-                                  Responses{st?.attempts ? ` (${st.attempts})` : ''}{st?.inProgress ? ' ⚠️' : ''}
+                                  Grade{st?.awaiting ? ` (${st.awaiting})` : st?.attempts ? ` · ${st.attempts}` : ''}{st?.inProgress ? ' ⚠️' : ''}
                                 </button>
                                 <button onClick={() => startEdit(q)} style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Edit</button>
                                 <button onClick={() => startTake(q)} title="Preview quiz" aria-label={`Preview ${q.title}`}
