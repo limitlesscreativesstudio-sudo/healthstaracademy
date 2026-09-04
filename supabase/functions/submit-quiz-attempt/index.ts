@@ -73,37 +73,25 @@ Deno.serve(async (req) => {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // Instructor-graded model: we record the submission and the answers, but we
+    // never score it here. The instructor grades and releases the score.
     const { data: questions } = await admin
       .from("quiz_questions")
-      .select("id, question_type, points, correct_answer")
+      .select("id, points")
       .eq("quiz_id", attempt.quiz_id);
 
-    let score = 0;
-    let max = 0;
-    for (const q of questions ?? []) {
-      const pts = Number(q.points) || 0;
-      max += pts;
-      const ans = (answers as Record<string, unknown>)[q.id];
-      if (ans === undefined || ans === null) continue;
-      if (q.question_type === "multiple_choice") {
-        if (Number(ans) === Number(q.correct_answer)) score += pts;
-      } else if (q.question_type === "true_false") {
-        if (String(ans) === String(q.correct_answer)) score += pts;
-      } else if (q.question_type === "multiple_answers") {
-        const exp = Array.isArray(q.correct_answer) ? [...q.correct_answer].map(Number).sort() : [];
-        const got = Array.isArray(ans) ? [...ans].map(Number).sort() : [];
-        if (exp.length > 0 && exp.length === got.length && exp.every((v, i) => v === got[i])) score += pts;
-      } else if (q.question_type === "short_answer") {
-        if (q.correct_answer && String(ans).trim().toLowerCase() === String(q.correct_answer).trim().toLowerCase()) {
-          score += pts;
-        }
-      }
-    }
+    const max = (questions ?? []).reduce((a, q) => a + (Number(q.points) || 0), 0);
 
     const submittedAt = new Date().toISOString();
     const { error: upErr } = await admin
       .from("quiz_attempts")
-      .update({ answers, score, max_score: max, submitted_at: submittedAt })
+      .update({
+        answers,
+        submitted_at: submittedAt,
+        score: null,
+        max_score: null,
+        grading_status: "awaiting",
+      })
       .eq("id", attemptId);
     if (upErr) {
       return new Response(JSON.stringify({ error: upErr.message }), {
@@ -111,22 +99,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Record the grade once per attempt (idempotent if the client retries).
-    const { data: existingGrade } = await admin
-      .from("grades").select("id").eq("quiz_attempt_id", attemptId).maybeSingle();
-    if (existingGrade) {
-      await admin.from("grades")
-        .update({ score, max_score: max, feedback: "Auto-graded" })
-        .eq("id", existingGrade.id);
-    } else {
-      const { error: gErr } = await admin.from("grades").insert({
-        course_id: quiz.course_id, user_id: userId, quiz_attempt_id: attemptId,
-        score, max_score: max, feedback: "Auto-graded",
-      });
-      if (gErr) console.error("grade insert failed", gErr);
-    }
+    // No grade row is written until the instructor releases a grade.
+    await admin.from("grades").delete().eq("quiz_attempt_id", attemptId);
 
-    return new Response(JSON.stringify({ success: true, score, max_score: max }), {
+    return new Response(JSON.stringify({ success: true, awaiting_grading: true, max_score: max }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

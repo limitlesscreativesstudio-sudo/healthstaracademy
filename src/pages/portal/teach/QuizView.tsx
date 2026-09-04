@@ -13,7 +13,7 @@ interface Question {
   options: { text:string }[]; correct_answer: any; points: number;
 }
 interface Quiz { id:string; title:string; due_at:string|null; total_points:number; published:boolean; instructions?: string; }
-interface Stats { attempts:number; submitted:number; inProgress:number; avgPct:number; }
+interface Stats { attempts:number; submitted:number; inProgress:number; awaiting:number; released:number; avgPct:number; }
 
 interface Props { courseId?: string; canEdit?: boolean; }
 
@@ -61,9 +61,14 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   const [responses, setResponses] = useState<{
     quiz: Quiz;
     qs: Question[];
-    rows: { id:string; user_id:string; name:string; answers:Record<string, any>; score:number|null; max:number|null; submitted_at:string|null; started_at:string }[];
+    rows: {
+      id:string; user_id:string; name:string; answers:Record<string, any>;
+      score:number|null; max:number|null; submitted_at:string|null; started_at:string;
+      grading_status:string; question_scores:Record<string, any>; instructor_feedback:string;
+    }[];
   } | null>(null);
   const [respLoading, setRespLoading] = useState(false);
+  const [savingGrade, setSavingGrade] = useState<string | null>(null);
   const [expandedAttempts, setExpandedAttempts] = useState<Set<string>>(new Set());
   const [startedAt, setStartedAt] = useState<Date | null>(null);
   const [nowTick, setNowTick] = useState<number>(Date.now());
@@ -131,19 +136,24 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       if (canEdit) {
         // load analytics for instructors
         const { data: allAtt } = await supabase.from('quiz_attempts')
-          .select('quiz_id,score,max_score,submitted_at').in('quiz_id', data.map(q => q.id));
+          .select('quiz_id,score,max_score,submitted_at,grading_status').in('quiz_id', data.map(q => q.id));
         const s: Record<string, Stats> = {};
-        data.forEach(q => { s[q.id] = { attempts:0, submitted:0, inProgress:0, avgPct:0 }; });
+        data.forEach(q => { s[q.id] = { attempts:0, submitted:0, inProgress:0, awaiting:0, released:0, avgPct:0 }; });
         const sums: Record<string, {sum:number; n:number}> = {};
         (allAtt ?? []).forEach(a => {
           const st = s[a.quiz_id]; if (!st) return;
           st.attempts++;
-          if (!a.submitted_at) st.inProgress++;
-          if (a.submitted_at && a.max_score) {
-            st.submitted++;
-            const acc = sums[a.quiz_id] ?? {sum:0, n:0};
-            acc.sum += (Number(a.score)/Number(a.max_score))*100; acc.n++;
-            sums[a.quiz_id] = acc;
+          if (!a.submitted_at) { st.inProgress++; return; }
+          st.submitted++;
+          if (a.grading_status === 'released') {
+            st.released++;
+            if (a.max_score) {
+              const acc = sums[a.quiz_id] ?? {sum:0, n:0};
+              acc.sum += (Number(a.score)/Number(a.max_score))*100; acc.n++;
+              sums[a.quiz_id] = acc;
+            }
+          } else {
+            st.awaiting++;
           }
         });
         Object.keys(sums).forEach(k => { s[k].avgPct = Math.round(sums[k].sum / sums[k].n); });
@@ -405,7 +415,8 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     setResponses({ quiz: q, qs: [], rows: [] });
     const [{ data: qs }, { data: rawAtts }, { data: enrs }] = await Promise.all([
       supabase.from('quiz_questions').select('*').eq('quiz_id', q.id).order('position'),
-      supabase.from('quiz_attempts').select('id, user_id, answers, score, max_score, submitted_at, started_at')
+      supabase.from('quiz_attempts')
+        .select('id, user_id, answers, score, max_score, submitted_at, started_at, grading_status, question_scores, instructor_feedback')
         .eq('quiz_id', q.id).order('submitted_at', { ascending: false, nullsFirst: false }),
       supabase.from('enrollments').select('user_id').eq('course_id', courseId).eq('role', 'student'),
     ]);
@@ -432,9 +443,111 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         answers: (a.answers as any) ?? {}, score: a.score === null ? null : Number(a.score),
         max: a.max_score === null ? null : Number(a.max_score),
         submitted_at: a.submitted_at, started_at: a.started_at,
+        grading_status: a.grading_status ?? (a.submitted_at ? 'awaiting' : 'not_submitted'),
+        question_scores: (a.question_scores as any) ?? {},
+        instructor_feedback: a.instructor_feedback ?? '',
       })),
     });
     setRespLoading(false);
+  };
+
+  /** Update one row of the grading panel in place. */
+  const patchRow = (rowId: string, patch: Record<string, any>) =>
+    setResponses(prev => prev ? { ...prev, rows: prev.rows.map(r => r.id === rowId ? { ...r, ...patch } : r) } : prev);
+
+  const setQScore = (rowId: string, qid: string, raw: string) =>
+    setResponses(prev => prev ? {
+      ...prev,
+      rows: prev.rows.map(r => r.id === rowId
+        ? { ...r, question_scores: { ...r.question_scores, [qid]: raw } }
+        : r),
+    } : prev);
+
+  const gradeTotals = (row: { question_scores: Record<string, any> }) => {
+    const qs = responses?.qs ?? [];
+    const possible = qs.reduce((a, q) => a + Number(q.points ?? 1), 0);
+    const earned = qs.reduce((a, q) => {
+      const v = Number(row.question_scores?.[q.id!]);
+      return a + (isFinite(v) ? v : 0);
+    }, 0);
+    const graded = qs.filter(q => {
+      const v = row.question_scores?.[q.id!];
+      return v !== undefined && v !== null && String(v) !== '';
+    }).length;
+    return { earned: Math.round(earned * 100) / 100, possible, graded, total: qs.length };
+  };
+
+  /** Pre-fill points from the answer key, only for quizzes that actually have one. */
+  const suggestPoints = (row: { id: string; answers: any }) => {
+    if (!responses) return;
+    if ((responses.quiz as any).answer_key_status === 'unkeyed') {
+      toast.info('This quiz has no valid answer key — grade each question manually.');
+      return;
+    }
+    const next: Record<string, any> = {};
+    responses.qs.forEach(q => {
+      const ok = isCorrect(q, row.answers?.[q.id!]);
+      if (ok === null) return; // short answer / essay — instructor decides
+      next[q.id!] = ok ? Number(q.points ?? 1) : 0;
+    });
+    patchRow(row.id, { question_scores: { ...(responses.rows.find(r => r.id === row.id)?.question_scores ?? {}), ...next } });
+    toast.info('Suggested points filled in — review before releasing.');
+  };
+
+  /** Save grading progress without showing anything to the student. */
+  const saveGradeDraft = async (row: any) => {
+    setSavingGrade(row.id);
+    const { error } = await supabase.from('quiz_attempts').update({
+      question_scores: row.question_scores,
+      instructor_feedback: row.instructor_feedback || null,
+      grading_status: row.grading_status === 'released' ? 'released' : 'in_review',
+    }).eq('id', row.id);
+    setSavingGrade(null);
+    if (error) { toast.error('Could not save: ' + error.message); return; }
+    if (row.grading_status !== 'released') patchRow(row.id, { grading_status: 'in_review' });
+    toast.success('Grading saved (not yet visible to the student)');
+  };
+
+  /** Publish the grade to the student's gradebook and grade record. */
+  const releaseGrade = async (row: any) => {
+    if (!responses || !courseId) return;
+    const t = gradeTotals(row);
+    if (t.graded < t.total && !window.confirm(`${t.total - t.graded} question(s) have no points entered — they will count as 0. Release anyway?`)) return;
+    setSavingGrade(row.id);
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase.from('quiz_attempts').update({
+      question_scores: row.question_scores,
+      instructor_feedback: row.instructor_feedback || null,
+      score: t.earned, max_score: t.possible,
+      grading_status: 'released',
+      graded_by: user?.id ?? null,
+      graded_at: nowIso,
+    }).eq('id', row.id);
+    if (error) { setSavingGrade(null); toast.error('Could not release: ' + error.message); return; }
+
+    const { data: g } = await supabase.from('grades').select('id').eq('quiz_attempt_id', row.id).maybeSingle();
+    if (g?.id) {
+      await supabase.from('grades').update({
+        score: t.earned, max_score: t.possible, graded_at: nowIso,
+        feedback: row.instructor_feedback || 'Graded by instructor',
+      }).eq('id', g.id);
+    } else {
+      await supabase.from('grades').insert({
+        course_id: courseId, user_id: row.user_id, quiz_attempt_id: row.id,
+        score: t.earned, max_score: t.possible, graded_by: user?.id ?? null,
+        feedback: row.instructor_feedback || 'Graded by instructor',
+      });
+    }
+    await supabase.from('notifications').insert({
+      user_id: row.user_id, kind: 'grade',
+      title: `Graded: ${responses.quiz.title}`,
+      body: `${t.earned} / ${t.possible}`,
+      link: `/portal/courses/${courseId}?tab=grades`,
+    });
+    setSavingGrade(null);
+    patchRow(row.id, { grading_status: 'released', score: t.earned, max: t.possible });
+    toast.success('Grade released to the student');
+    load();
   };
 
   /** Human-readable rendering of a stored answer value. */
@@ -462,30 +575,16 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   };
 
 
-  /** Instructor: close out a student's unfinished attempt and score what they answered. */
+  /** Instructor: close out a student's unfinished attempt so it can be graded. */
   const forceSubmit = async (row: { id: string; user_id: string; answers: any }) => {
     if (!responses || !canEdit) return;
-    if (!window.confirm('Submit this in-progress attempt on the student\'s behalf? It will be scored on the answers saved so far.')) return;
-    let score = 0, max = 0;
-    responses.qs.forEach(q => {
-      max += Number(q.points ?? 1);
-      if (isCorrect(q, row.answers?.[q.id!]) === true) score += Number(q.points ?? 1);
-    });
+    if (!window.confirm('Close out this in-progress attempt on the student\'s behalf? It will move to your grading queue with the answers saved so far.')) return;
     const submitted_at = new Date().toISOString();
     const { error } = await supabase.from('quiz_attempts')
-      .update({ submitted_at, score, max_score: max }).eq('id', row.id);
+      .update({ submitted_at, grading_status: 'awaiting' }).eq('id', row.id);
     if (error) { toast.error('Could not submit: ' + error.message); return; }
-    const { data: g } = await supabase.from('grades').select('id').eq('quiz_attempt_id', row.id).maybeSingle();
-    if (g?.id) {
-      await supabase.from('grades').update({ score, max_score: max, graded_at: submitted_at, feedback: 'Submitted by instructor' }).eq('id', g.id);
-    } else if (courseId) {
-      await supabase.from('grades').insert({
-        course_id: courseId, user_id: row.user_id, quiz_attempt_id: row.id,
-        score, max_score: max, feedback: 'Submitted by instructor',
-      });
-    }
-    toast.success('Attempt submitted and scored');
-    setResponses(prev => prev ? { ...prev, rows: prev.rows.map(r => r.id === row.id ? { ...r, submitted_at, score, max } : r) } : prev);
+    toast.success('Attempt closed out — it is now awaiting your grading');
+    patchRow(row.id, { submitted_at, grading_status: 'awaiting' });
     load();
   };
 
@@ -499,25 +598,14 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
   const submitAttempt = async () => {
     if (!taking || !user?.id || !attemptId) return;
-    let score = 0, max = 0;
+    // Instructor-graded model: nothing is scored here. We record the answers and
+    // the attempt moves into the instructor's grading queue.
+    let max = 0;
     const perQ: {qid:string; correct:boolean; user:any; expected:any; auto:boolean}[] = [];
     attemptQs.forEach(q => {
       max += q.points;
-      const a = answers[q.id!];
-      let ok = false; let auto = true;
-      if (q.question_type === 'multiple_choice') ok = a !== undefined && Number(a) === Number(q.correct_answer);
-      else if (q.question_type === 'true_false') ok = a !== undefined && Number(a) === Number(q.correct_answer);
-      else if (q.question_type === 'multiple_answers') {
-        const exp = Array.isArray(q.correct_answer) ? [...q.correct_answer].map(Number).sort() : [];
-        const got = Array.isArray(a) ? [...a].map(Number).sort() : [];
-        ok = exp.length > 0 && exp.length === got.length && exp.every((v,i) => v === got[i]);
-      }
-      else auto = false; // manually graded
-      if (auto && ok) score += q.points;
-      perQ.push({ qid:q.id!, correct:ok, user:a, expected:q.correct_answer, auto });
+      perQ.push({ qid:q.id!, correct:false, user:answers[q.id!], expected:null, auto:false });
     });
-    // Submit through the server so the attempt is scored and recorded even
-    // though students may not write score/submitted_at directly (RLS).
     const { data: res, error } = await supabase.functions.invoke('submit-quiz-attempt', {
       body: { attempt_id: attemptId, answers },
     });
@@ -527,18 +615,17 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       toast.error(`Could not submit: ${serverErr || error?.message || 'unknown error'}`);
       return;
     }
-    const finalScore = typeof (res as any)?.score === 'number' ? (res as any).score : score;
     const finalMax = typeof (res as any)?.max_score === 'number' ? (res as any).max_score : max;
     clearLocalDraft(taking.id);
-    setResults({ score: finalScore, max: finalMax, perQ });
+    setResults({ score: null as any, max: finalMax, perQ, awaiting: true } as any);
     setAttemptedIds(s => new Set(s).add(taking.id));
-    toast.success('Quiz submitted and saved');
+    toast.success('Submitted — your instructor will grade this');
   };
 
 
   const downloadReview = () => {
     if (!taking || !results) return;
-    const lines = [`Quiz: ${taking.title}`, `Score: ${results.score} / ${results.max} (${Math.round((results.score/Math.max(results.max,1))*100)}%)`, ''];
+    const lines = [`Quiz: ${taking.title}`, `Submitted — awaiting instructor grading (worth ${results.max} points)`, ''];
     attemptQs.forEach((q, i) => {
       const r = results.perQ.find(x => x.qid === q.id!);
       lines.push(`Q${i+1} (${q.points} pt): ${q.prompt}`);
@@ -547,13 +634,8 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         : q.question_type === 'true_false' ? (uAns===0?'True':uAns===1?'False':'(no answer)')
         : q.question_type === 'multiple_answers' ? (Array.isArray(uAns) && uAns.length ? uAns.map((i:number)=>q.options[i]?.text).filter(Boolean).join('; ') : '(no answer)')
         : (uAns ?? '(no answer)');
-      const eText = q.question_type === 'multiple_choice' ? q.options[q.correct_answer]?.text
-        : q.question_type === 'true_false' ? (q.correct_answer===0?'True':'False')
-        : q.question_type === 'multiple_answers' ? (Array.isArray(q.correct_answer) ? q.correct_answer.map((i:number)=>q.options[i]?.text).filter(Boolean).join('; ') : '')
-        : '(manually graded)';
       lines.push(`  Your answer: ${uText}`);
-      lines.push(`  Correct:     ${eText}`);
-      lines.push(`  ${r?.auto ? (r.correct ? '✓ Correct' : '✗ Incorrect') : '⧗ Pending grading'}`);
+      lines.push('  ⧗ Awaiting instructor grading');
       lines.push('');
     });
     const blob = new Blob([lines.join('\n')], { type:'text/plain' });
@@ -711,13 +793,16 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
           )}
           {results ? (
             <div>
-              <div style={{ background:C.white, border:`2px solid ${C.success}`, borderRadius:8, padding:24, textAlign:'center', marginBottom:20 }}>
-                <div style={{ fontSize:48, marginBottom:10 }}>🎉</div>
-                <div style={{ fontSize:22, fontWeight:700, color:C.text, marginBottom:6 }}>{results.score} / {results.max}</div>
-                <div style={{ fontSize:14, color:C.muted, marginBottom:14 }}>{Math.round((results.score/Math.max(results.max,1))*100)}% • {results.perQ.filter(p=>p.auto&&p.correct).length} correct of {results.perQ.filter(p=>p.auto).length} auto-graded</div>
-                <button onClick={downloadReview} style={{ padding:'8px 18px', border:`1px solid ${C.primary}`, borderRadius:5, background:C.white, color:C.primary, fontSize:13, cursor:'pointer', fontWeight:600 }}>⬇ Download review</button>
+              <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:8, padding:24, textAlign:'center', marginBottom:20 }}>
+                <div style={{ fontSize:48, marginBottom:10 }}>✅</div>
+                <div style={{ fontSize:20, fontWeight:700, color:C.text, marginBottom:6 }}>Submitted — awaiting grading</div>
+                <div style={{ fontSize:13.5, color:C.muted, marginBottom:14 }}>
+                  Your answers are saved and recorded. Your instructor grades this work by hand —
+                  your score will appear in Grades once it is released. Worth {results.max} point{results.max === 1 ? '' : 's'}.
+                </div>
+                <button onClick={downloadReview} style={{ padding:'8px 18px', border:`1px solid ${C.primary}`, borderRadius:5, background:C.white, color:C.primary, fontSize:13, cursor:'pointer', fontWeight:600 }}>⬇ Download my answers</button>
               </div>
-              <h3 style={{ fontSize:15, color:C.text, marginBottom:10 }}>Question review</h3>
+              <h3 style={{ fontSize:15, color:C.text, marginBottom:10 }}>Your submitted answers</h3>
               {attemptQs.map((q, qi) => {
                 const r = results.perQ.find(x => x.qid === q.id!);
                 const badgeBg = !r?.auto ? '#FEF3C7' : r.correct ? '#E8F5E9' : '#FDECEA';
@@ -1134,8 +1219,10 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                                       {q.due_at && ` • Due ${new Date(q.due_at).toLocaleDateString()}`}
                                       {canEdit && ` • ${allowedFor(q)} attempt${allowedFor(q)===1?'':'s'} allowed`}
                                       {canEdit && st && ` • ${st.submitted} submitted`}
+                                      {canEdit && st && st.awaiting ? <span style={{ color:C.error, fontWeight:700 }}>{` • ${st.awaiting} to grade`}</span> : ''}
                                       {canEdit && st && st.inProgress ? <span style={{ color:C.warn, fontWeight:600 }}>{` • ${st.inProgress} in progress`}</span> : ''}
-                                      {canEdit && st && st.submitted ? ` • avg ${st.avgPct}%` : ''}
+                                      {canEdit && st && st.released ? ` • avg ${st.avgPct}%` : ''}
+                                      {canEdit && (q as any).answer_key_status === 'unkeyed' ? <span style={{ color:C.muted }}> • no answer key (manual grading)</span> : ''}
                                       {!canEdit && taken && <span style={{ color:C.success, marginLeft:6, fontWeight:600 }}>✓ Submitted</span>}
                                       {!canEdit && taken && (attemptsLeft(q) > 0
                                         ? <span style={{ marginLeft:6 }}>• {attemptsLeft(q)} attempt{attemptsLeft(q)===1?'':'s'} left</span>
@@ -1155,7 +1242,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                                 </button>
                                 <button onClick={() => openResponses(q)} title="View student responses and answers"
                                   style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>
-                                  Responses{st?.attempts ? ` (${st.attempts})` : ''}{st?.inProgress ? ' ⚠️' : ''}
+                                  Grade{st?.awaiting ? ` (${st.awaiting})` : st?.attempts ? ` · ${st.attempts}` : ''}{st?.inProgress ? ' ⚠️' : ''}
                                 </button>
                                 <button onClick={() => startEdit(q)} style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer' }}>Edit</button>
                                 <button onClick={() => startTake(q)} title="Preview quiz" aria-label={`Preview ${q.title}`}
@@ -1208,9 +1295,21 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
               {!respLoading && responses.rows.length === 0 && (
                 <div style={{ padding:24, textAlign:'center', color:C.muted, fontSize:13 }}>No student has taken this quiz yet.</div>
               )}
+              {!respLoading && (responses.quiz as any).answer_key_status === 'unkeyed' && responses.rows.length > 0 && (
+                <div style={{ margin:'8px 0', padding:'9px 12px', background:'#FFF6E8', border:`1px solid ${C.warn}55`, borderRadius:6, fontSize:12.5, color:C.text }}>
+                  ⚠️ This quiz has no valid answer key on file, so nothing can be auto-checked. Award points for each question yourself.
+                </div>
+              )}
               {!respLoading && responses.rows.map(r => {
                 const open = expandedAttempts.has(r.id);
-                const pct = r.score !== null && r.max ? Math.round((r.score / r.max) * 100) : null;
+                const t = gradeTotals(r);
+                const released = r.grading_status === 'released';
+                const pct = released && r.score !== null && r.max ? Math.round((r.score / r.max) * 100) : null;
+                const statusLabel = !r.submitted_at ? 'In progress'
+                  : released ? 'Graded & released'
+                  : r.grading_status === 'in_review' ? 'Grading started'
+                  : 'Awaiting grading';
+                const statusCol = !r.submitted_at ? C.warn : released ? C.success : C.error;
                 return (
                   <div key={r.id} style={{ border:`1px solid ${C.border}`, borderRadius:6, marginTop:8, overflow:'hidden' }}>
                     <div
@@ -1226,14 +1325,15 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                             : `In progress — started ${new Date(r.started_at).toLocaleString()}`}
                         </div>
                       </div>
-                      <div style={{ fontSize:13, fontWeight:700, color: pct === null ? C.muted : pct >= 75 ? C.success : C.error }}>
-                        {r.score !== null && r.max !== null ? `${r.score}/${r.max}${pct !== null ? ` (${pct}%)` : ''}` : 'Not graded'}
+                      <span style={{ fontSize:11, fontWeight:700, color:statusCol, flexShrink:0 }}>{statusLabel}</span>
+                      <div style={{ fontSize:13, fontWeight:700, color: pct === null ? C.muted : pct >= 75 ? C.success : C.error, flexShrink:0 }}>
+                        {released && r.score !== null ? `${r.score}/${r.max}${pct !== null ? ` (${pct}%)` : ''}` : '—'}
                       </div>
                       {!r.submitted_at && (
                         <button onClick={(e) => { e.stopPropagation(); forceSubmit(r); }}
-                          title="Submit and score this unfinished attempt"
+                          title="Close out this unfinished attempt so you can grade it"
                           style={{ padding:'4px 10px', border:`1px solid ${C.border}`, borderRadius:4, background:C.white, fontSize:12, cursor:'pointer', color:C.warn, fontWeight:600, flexShrink:0 }}>
-                          Submit for student
+                          Close out
                         </button>
                       )}
                     </div>
@@ -1241,26 +1341,69 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                       <div style={{ padding:'6px 12px 12px' }}>
                         {responses.qs.map((q, qi) => {
                           const val = r.answers?.[q.id!];
-                          const ok = isCorrect(q, val);
+                          const keyed = (responses.quiz as any).answer_key_status !== 'unkeyed';
+                          const ok = keyed ? isCorrect(q, val) : null;
+                          const raw = r.question_scores?.[q.id!];
                           return (
                             <div key={q.id} style={{ padding:'8px 0', borderTop: qi === 0 ? 'none' : `1px solid ${C.border}` }}>
                               <div style={{ fontSize:12.5, fontWeight:600, color:C.text, marginBottom:4 }}>Q{qi + 1}. {q.prompt}</div>
-                              <div style={{ fontSize:12.5, color:C.text }}>
-                                <strong>Answer:</strong> {answerText(q, val)}{' '}
-                                {ok === null
-                                  ? <span style={{ color:C.muted }}>⧗ manual grading</span>
-                                  : ok
+                              <div style={{ display:'flex', gap:10, alignItems:'flex-start', flexWrap:'wrap' }}>
+                                <div style={{ fontSize:12.5, color:C.text, flex:1, minWidth:200, whiteSpace:'pre-wrap' }}>
+                                  <strong>Answer:</strong> {answerText(q, val)}{' '}
+                                  {ok === null ? null : ok
                                     ? <span style={{ color:C.success, fontWeight:700 }}>✓</span>
                                     : <span style={{ color:C.error, fontWeight:700 }}>✗</span>}
-                              </div>
-                              {ok === false && (
-                                <div style={{ fontSize:12, color:C.muted }}>
-                                  <strong>Correct:</strong> {answerText(q, q.correct_answer)}
+                                  {keyed && ok === false && (
+                                    <div style={{ fontSize:12, color:C.muted }}>
+                                      <strong>Key:</strong> {answerText(q, q.correct_answer)}
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                                <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
+                                  <input
+                                    value={raw === undefined || raw === null ? '' : String(raw)}
+                                    inputMode="decimal"
+                                    placeholder="—"
+                                    onChange={e => setQScore(r.id, q.id!, e.target.value)}
+                                    aria-label={`Points for question ${qi + 1}`}
+                                    style={{ width:56, padding:'4px 6px', border:`1px solid ${C.border}`, borderRadius:4, fontSize:12.5, textAlign:'right' }} />
+                                  <span style={{ fontSize:12, color:C.muted }}>/ {q.points}</span>
+                                </div>
+                              </div>
                             </div>
                           );
                         })}
+
+                        <div style={{ marginTop:12, paddingTop:10, borderTop:`1px solid ${C.border}` }}>
+                          <label style={{ fontSize:12, fontWeight:700, color:C.text, display:'block', marginBottom:4 }}>Feedback for the student</label>
+                          <textarea
+                            value={r.instructor_feedback}
+                            onChange={e => patchRow(r.id, { instructor_feedback: e.target.value })}
+                            rows={2}
+                            placeholder="Optional comments shown with the released grade"
+                            style={{ width:'100%', padding:'7px 9px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:12.5, fontFamily:'inherit', resize:'vertical' }} />
+                          <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:10, flexWrap:'wrap' }}>
+                            <div style={{ fontSize:13, fontWeight:700, color:C.text, marginRight:'auto' }}>
+                              Total: {t.earned} / {t.possible}
+                              <span style={{ fontSize:11.5, fontWeight:400, color:C.muted, marginLeft:8 }}>{t.graded} of {t.total} questions scored</span>
+                            </div>
+                            {(responses.quiz as any).answer_key_status !== 'unkeyed' && (
+                              <button onClick={() => suggestPoints(r)}
+                                style={{ padding:'6px 12px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:12.5, cursor:'pointer' }}>
+                                Suggest points from key
+                              </button>
+                            )}
+                            <button onClick={() => saveGradeDraft(r)} disabled={savingGrade === r.id}
+                              style={{ padding:'6px 12px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:12.5, cursor:'pointer' }}>
+                              {savingGrade === r.id ? 'Saving…' : 'Save draft'}
+                            </button>
+                            <button onClick={() => releaseGrade(r)} disabled={savingGrade === r.id || !r.submitted_at}
+                              title={!r.submitted_at ? 'Close out this attempt first' : 'Publish this grade to the student'}
+                              style={{ padding:'6px 14px', border:'none', borderRadius:5, background: r.submitted_at ? C.primary : C.border, color:'white', fontSize:12.5, fontWeight:700, cursor: r.submitted_at ? 'pointer' : 'not-allowed' }}>
+                              {released ? 'Update released grade' : 'Release grade'}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
