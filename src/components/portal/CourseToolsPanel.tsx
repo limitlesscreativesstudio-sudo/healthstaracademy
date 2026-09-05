@@ -266,9 +266,13 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
       </Section>
 
       <Section title="Reset course for a new cohort"
-        desc="Keeps all course content (modules, pages, files, quizzes, assignments) and clears the selected student records so a duplicated or reused course starts fresh.">
+        desc="Keeps all course content (modules, pages, files, quizzes, assignments). Student records are permanent for CDPH review and stay on file — start a new cohort by duplicating the course instead.">
         {!canEdit ? <div style={{ fontSize: 13, color: C.muted }}>Only instructors and admins can reset a course.</div> : (
           <>
+            <div style={{ background: '#FFF4E5', border: '1px solid #F0D9B5', color: '#7A4E00', borderRadius: 6, padding: '10px 12px', fontSize: 12.5, marginBottom: 12 }}>
+              🔒 Records retention: quiz attempts, grades, attendance, clinical hours, skill sign-offs and student records are kept for 4 years and cannot be cleared here. Duplicate the course for the next cohort.
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 14 }}>
               {([
                 ['quiz_attempts', 'Quiz attempts'],
