@@ -121,7 +121,9 @@ const AdminDashboard = () => {
         {activeTab === "job_pipeline" && <JobPipelineTracker />}
         {activeTab === "emails" && <EmailLog />}
         {activeTab === "webhooks" && <WebhookInfo />}
+        {activeTab === "doctor" && <DiagnosticsTab />}
         {activeTab === "audit" && <AuthAuditLog />}
+
       </div>
     </div>
   );
