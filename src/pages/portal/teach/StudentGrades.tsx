@@ -17,6 +17,8 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
   const [students,    setStudents]    = useState<Student[]>([]);
   const [columns,     setColumns]     = useState<Column[]>([]);
   const [grades,      setGrades]      = useState<GradeMap>({});
+  const [submissions, setSubmissions] = useState<Record<string, { status: string; at: string }>>({});
+
   const [loading,     setLoading]     = useState(true);
   const [editing,     setEditing]     = useState<{ s: string; a: string } | null>(null);
   const [editVal,     setEditVal]     = useState('');
@@ -90,7 +92,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
         ? supabase.from('grades').select('user_id, assignment_id, score').in('assignment_id', asgnIds)
         : Promise.resolve({ data: [] as any[] }),
       qzIds.length
-        ? supabase.from('quiz_attempts').select('user_id, quiz_id, score, submitted_at').in('quiz_id', qzIds).not('submitted_at','is',null)
+        ? supabase.from('quiz_attempts').select('user_id, quiz_id, score, submitted_at, grading_status').in('quiz_id', qzIds).not('submitted_at','is',null)
         : Promise.resolve({ data: [] as any[] }),
     ]);
 
@@ -100,18 +102,25 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
       if (!map[g.user_id]) map[g.user_id] = {};
       map[g.user_id][g.assignment_id] = g.score == null ? null : Number(g.score);
     }
-    // best attempt per user/quiz
+    // best attempt per user/quiz + submission status (so ungraded submissions are still visible)
     const best: Record<string, number> = {};
+    const subs: Record<string, { status: string; at: string }> = {};
     for (const a of (attempts ?? [])) {
       const k = `${a.user_id}|${a.quiz_id}`;
-      const s = Number(a.score ?? 0);
-      if (best[k] == null || s > best[k]) best[k] = s;
+      if (a.score != null) {
+        const s = Number(a.score);
+        if (best[k] == null || s > best[k]) best[k] = s;
+      }
+      const prevAt = subs[k]?.at;
+      if (!prevAt || String(a.submitted_at) > prevAt) subs[k] = { status: a.grading_status ?? 'awaiting', at: String(a.submitted_at) };
     }
+    setSubmissions(subs);
     for (const k of Object.keys(best)) {
       const [uid, qid] = k.split('|');
       if (!map[uid]) map[uid] = {};
       map[uid][qid] = best[k];
     }
+
     setGrades(map);
     setLoading(false);
   };
@@ -397,6 +406,16 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
         </div>
       )}
 
+      {(() => {
+        const awaiting = Object.entries(submissions).filter(([k]) => grades[k.split('|')[0]]?.[k.split('|')[1]] == null).length;
+        if (!awaiting) return null;
+        return (
+          <div style={{ background:'#FFF7E6', border:`1px solid ${C.warn}`, borderRadius:6, padding:'10px 14px', marginBottom:12, fontFamily:'sans-serif', fontSize:13, color:C.text }}>
+            ⏳ <strong>{awaiting}</strong> submitted {awaiting === 1 ? 'quiz' : 'quizzes'} {selfOnly ? 'waiting on your instructor to grade.' : 'awaiting grading — click any ⏳ cell to open and grade it.'}
+          </div>
+        );
+      })()}
+
 
       {!courseId ? (
         <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Open a course to view the gradebook.</div>
@@ -456,21 +475,31 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
                     </td>
                     {visibleCols.map(a => {
                       const g = grades[s.id]?.[a.id];
+                      const sub = a.kind === 'quiz' ? submissions[`${s.id}|${a.id}`] : undefined;
                       const isEd = editing?.s === s.id && editing?.a === a.id;
                       const pctCell = g != null && a.points > 0 ? Math.round((g / a.points) * 100) : null;
                       const editable = canEdit && a.kind === 'assignment';
+                      const goGrade = () => { if (a.kind === 'quiz' && !selfOnly && sub) window.location.href = `/portal/courses/${courseId}/quizzes/${a.id}`; };
                       return (
                         <td key={a.id}
-                          title={a.kind === 'quiz' ? 'Auto-graded from quiz attempt (best)' : (editable ? 'Click to edit' : '')}
-                          onClick={() => { if (!editable) return; setEditing({ s: s.id, a: a.id }); setEditVal(g?.toString() ?? ''); }}
-                          style={{ padding:'7px 9px', textAlign:'center', cursor: editable ? 'pointer' : 'default',
+                          title={sub ? `Submitted ${new Date(sub.at).toLocaleString()}${g == null ? ' — awaiting grading' : ''}` : (a.kind === 'quiz' ? 'No submission yet' : (editable ? 'Click to edit' : ''))}
+                          onClick={() => {
+                            if (editable) { setEditing({ s: s.id, a: a.id }); setEditVal(g?.toString() ?? ''); return; }
+                            goGrade();
+                          }}
+                          style={{ padding:'7px 9px', textAlign:'center', cursor: (editable || (sub && !selfOnly)) ? 'pointer' : 'default',
                             borderBottom:`1px solid ${C.border}`, borderRight:`1px solid ${C.border}`,
-                            background: isEd ? '#EDE8F7' : 'inherit' }}>
+                            background: isEd ? '#EDE8F7' : (g == null && sub ? '#FFF7E6' : 'inherit') }}>
                           {isEd ? (
                             <input autoFocus value={editVal} onChange={e => setEditVal(e.target.value)}
                               onBlur={saveGrade}
                               onKeyDown={e => { if (e.key === 'Enter') saveGrade(); if (e.key === 'Escape') setEditing(null); }}
                               style={{ width:52, textAlign:'center', border:`2px solid ${C.primary}`, borderRadius:3, padding:'2px 4px', fontSize:13 }}/>
+                          ) : g == null && sub ? (
+                            <div>
+                              <div style={{ fontSize:12, fontWeight:700, color:C.warn }}>⏳ Submitted</div>
+                              <div style={{ fontSize:10, color:C.muted }}>{selfOnly ? 'awaiting grading' : 'grade it'}</div>
+                            </div>
                           ) : (
                             <div>
                               <div style={{ fontSize:13, fontWeight:600, color: pctCell != null ? gColor(pctCell) : C.muted }}>
