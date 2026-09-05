@@ -469,7 +469,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
                       const isEd = editing?.s === s.id && editing?.a === a.id;
                       const pctCell = g != null && a.points > 0 ? Math.round((g / a.points) * 100) : null;
                       const editable = canEdit && a.kind === 'assignment';
-                      const goGrade = () => { if (a.kind === 'quiz' && !selfOnly && sub) window.location.href = `/portal/teach?course=${courseId}&tab=quizzes&quiz=${a.id}`; };
+                      const goGrade = () => { if (a.kind === 'quiz' && !selfOnly && sub) window.location.href = `/portal/courses/${courseId}/quizzes/${a.id}`; };
                       return (
                         <td key={a.id}
                           title={sub ? `Submitted ${new Date(sub.at).toLocaleString()}${g == null ? ' — awaiting grading' : ''}` : (a.kind === 'quiz' ? 'No submission yet' : (editable ? 'Click to edit' : ''))}
