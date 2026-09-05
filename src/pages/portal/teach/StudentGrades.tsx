@@ -90,7 +90,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
         ? supabase.from('grades').select('user_id, assignment_id, score').in('assignment_id', asgnIds)
         : Promise.resolve({ data: [] as any[] }),
       qzIds.length
-        ? supabase.from('quiz_attempts').select('user_id, quiz_id, score, submitted_at').in('quiz_id', qzIds).not('submitted_at','is',null)
+        ? supabase.from('quiz_attempts').select('user_id, quiz_id, score, submitted_at, grading_status').in('quiz_id', qzIds).not('submitted_at','is',null)
         : Promise.resolve({ data: [] as any[] }),
     ]);
 
@@ -100,18 +100,25 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
       if (!map[g.user_id]) map[g.user_id] = {};
       map[g.user_id][g.assignment_id] = g.score == null ? null : Number(g.score);
     }
-    // best attempt per user/quiz
+    // best attempt per user/quiz + submission status (so ungraded submissions are still visible)
     const best: Record<string, number> = {};
+    const subs: Record<string, { status: string; at: string }> = {};
     for (const a of (attempts ?? [])) {
       const k = `${a.user_id}|${a.quiz_id}`;
-      const s = Number(a.score ?? 0);
-      if (best[k] == null || s > best[k]) best[k] = s;
+      if (a.score != null) {
+        const s = Number(a.score);
+        if (best[k] == null || s > best[k]) best[k] = s;
+      }
+      const prevAt = subs[k]?.at;
+      if (!prevAt || String(a.submitted_at) > prevAt) subs[k] = { status: a.grading_status ?? 'awaiting', at: String(a.submitted_at) };
     }
+    setSubmissions(subs);
     for (const k of Object.keys(best)) {
       const [uid, qid] = k.split('|');
       if (!map[uid]) map[uid] = {};
       map[uid][qid] = best[k];
     }
+
     setGrades(map);
     setLoading(false);
   };
