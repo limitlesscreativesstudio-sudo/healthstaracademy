@@ -406,6 +406,16 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
         </div>
       )}
 
+      {(() => {
+        const awaiting = Object.entries(submissions).filter(([k]) => grades[k.split('|')[0]]?.[k.split('|')[1]] == null).length;
+        if (!awaiting) return null;
+        return (
+          <div style={{ background:'#FFF7E6', border:`1px solid ${C.warn}`, borderRadius:6, padding:'10px 14px', marginBottom:12, fontFamily:'sans-serif', fontSize:13, color:C.text }}>
+            ⏳ <strong>{awaiting}</strong> submitted {awaiting === 1 ? 'quiz' : 'quizzes'} {selfOnly ? 'waiting on your instructor to grade.' : 'awaiting grading — click any ⏳ cell to open and grade it.'}
+          </div>
+        );
+      })()}
+
 
       {!courseId ? (
         <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Open a course to view the gradebook.</div>
