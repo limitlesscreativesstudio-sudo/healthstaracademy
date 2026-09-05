@@ -17,6 +17,8 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
   const [students,    setStudents]    = useState<Student[]>([]);
   const [columns,     setColumns]     = useState<Column[]>([]);
   const [grades,      setGrades]      = useState<GradeMap>({});
+  const [submissions, setSubmissions] = useState<Record<string, { status: string; at: string }>>({});
+
   const [loading,     setLoading]     = useState(true);
   const [editing,     setEditing]     = useState<{ s: string; a: string } | null>(null);
   const [editVal,     setEditVal]     = useState('');
