@@ -500,9 +500,6 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
                           )}
                         </td>
                       );
-
-                        </td>
-                      );
                     })}
                     <td style={{ padding:'9px', textAlign:'center', borderBottom:`1px solid ${C.border}`, fontWeight:700, position:'sticky', right:0, background: bg }}>
                       <div style={{ fontSize:14, color: gColor(pct) }}>{pct}%</div>
