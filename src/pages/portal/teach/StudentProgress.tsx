@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from './AuthContext';
 import StudentProfilePanel from '@/components/portal/StudentProfilePanel';
-import { isAttended } from '@/lib/attendance';
+import { isAttended, THEORY_HOURS_PER_ATTENDED_DAY } from '@/lib/attendance';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', warn:'#E67E22', error:'#C0392B' } as const;
 
@@ -167,7 +167,7 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
           awaitingGrading,
           attendancePct: attPct,
           attendanceDays: attRec.present,
-          theoryHours: attRec.present * 4,
+          theoryHours: attRec.present * THEORY_HOURS_PER_ATTENDED_DAY,
           clinicalHours: clinical,
           skillsSigned: skills,
           overallPct,
