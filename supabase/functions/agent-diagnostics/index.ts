@@ -323,12 +323,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Persist ──────────────────────────────────────────────────────────────
+    // ── Persist (one open row per distinct issue) ────────────────────────────
     if (findings.length) {
-      await admin.from("agent_findings").insert(
-        findings.map(f => ({ agent: "diagnostics", run_id: runId, status: "open", ...f })),
-      );
+      for (const f of findings) {
+        const { data: existing } = await admin
+          .from("agent_findings").select("id")
+          .eq("agent", "diagnostics").eq("status", "open").eq("title", f.title)
+          .is("target_id", f.target_id ?? null)
+          .limit(1);
+        if (existing?.length) continue;
+        await admin.from("agent_findings")
+          .insert({ agent: "diagnostics", run_id: runId, status: "open", ...f });
+      }
     }
+
     const counts = findings.reduce<Record<string, number>>((a, f) => {
       a[f.severity] = (a[f.severity] ?? 0) + 1; return a;
     }, {});
