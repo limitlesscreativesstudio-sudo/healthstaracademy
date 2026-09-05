@@ -2,6 +2,10 @@ export type AttendanceCode = 'P' | 'A' | 'L' | 'E';
 
 const ATTENDED = new Set(['p', 'present', 'l', 'late']);
 
+// Day-track theory sessions run 6:00 AM–3:00 PM with one non-instructional
+// hour, so each attended class day earns 8 theory hours.
+export const THEORY_HOURS_PER_ATTENDED_DAY = 8;
+
 export const isAttended = (status: string | null | undefined) =>
   ATTENDED.has((status ?? '').trim().toLowerCase());
 

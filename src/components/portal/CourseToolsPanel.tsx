@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { isAttended } from '@/lib/attendance';
+import { isAttended, THEORY_HOURS_PER_ATTENDED_DAY } from '@/lib/attendance';
 
 const C = {
   primary: '#7B4DB5', bg: '#F4F2FA', white: '#FFFFFF', border: '#D4C8E8',
@@ -12,7 +12,6 @@ const C = {
 
 const DEFAULT_THEORY = 60;
 const DEFAULT_CLINICAL = 100;
-const HOURS_PER_SESSION = 4;
 
 interface Row {
   userId: string;
@@ -91,7 +90,7 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
     (att ?? []).forEach(a => {
       const r = acc[a.student_id]; if (!r) return;
       r.totalDays += 1;
-      if (isAttended(a.status)) { r.presentDays += 1; r.theory += HOURS_PER_SESSION; }
+      if (isAttended(a.status)) { r.presentDays += 1; r.theory += THEORY_HOURS_PER_ATTENDED_DAY; }
     });
     const addClinical = (uid: string, hrs: number, verified: boolean) => {
       const r = acc[uid]; if (!r) return;
@@ -201,7 +200,7 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
     <div style={{ maxWidth: 880, fontFamily: 'sans-serif' }}>
       <Section
         title="Hours roll-up"
-        desc={`Theory hours accrue at ${HOURS_PER_SESSION}h per attended class day. Clinical hours roll up from logged and verified clinical shifts. Requirements: ${req.theory}h theory / ${req.clinical}h clinical (${req.program}).`}
+        desc={`Theory hours accrue at ${THEORY_HOURS_PER_ATTENDED_DAY}h per attended class day. Clinical hours roll up from logged and verified clinical shifts. Requirements: ${req.theory}h theory / ${req.clinical}h clinical (${req.program}).`}
       >
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
           <button onClick={exportHours} disabled={!rows.length}
