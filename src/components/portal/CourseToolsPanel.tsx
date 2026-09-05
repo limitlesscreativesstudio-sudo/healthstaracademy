@@ -187,7 +187,7 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
       if (resetOpts.skills) await run('skill sign-offs', supabase.from('student_skill_signoffs').delete().eq('course_id', courseId));
       if (resetOpts.unenroll && uids.length) await run('enrollments', supabase.from('enrollments').delete().eq('course_id', courseId).eq('role', 'student'));
 
-      if (errs.length) toast.error(`Some items could not be cleared — ${errs[0]}`);
+      if (errs.length) toast.error(`Kept for CDPH records — ${errs[0]}`);
       else toast.success('Course reset complete — content kept, student data cleared');
       setConfirmText('');
       await load();
