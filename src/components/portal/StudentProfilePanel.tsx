@@ -1,6 +1,7 @@
 // Slide-over student profile: grades, attendance, clinical hours, skills, submissions.
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { isAttended } from '@/lib/attendance';
 
 const C = {
   primary: '#7B4DB5', bg: '#F4F2FA', white: '#FFFFFF',
@@ -92,7 +93,7 @@ const StudentProfilePanel: React.FC<StudentProfilePanelProps> = ({ userId, cours
   const totalPts = grades.reduce((n, g) => n + g.score, 0);
   const totalMax = grades.reduce((n, g) => n + g.max, 0);
   const pct = totalMax > 0 ? Math.round((totalPts / totalMax) * 1000) / 10 : null;
-  const present = attendance.filter(a => a.status === 'present').length;
+  const present = attendance.filter(a => isAttended(a.status)).length;
   const attPct = attendance.length ? Math.round((present / attendance.length) * 100) : null;
   const clinicalTotal = clinical.reduce((n, c) => n + c.hours, 0);
   const clinicalVerified = clinical.filter(c => c.verified).reduce((n, c) => n + c.hours, 0);
@@ -157,8 +158,8 @@ const StudentProfilePanel: React.FC<StudentProfilePanelProps> = ({ userId, cours
                     {attendance.slice(0, 40).map(a => (
                       <span key={a.date} title={`${a.date} — ${a.status}`}
                         style={{ fontSize: 11, padding: '3px 8px', borderRadius: 20,
-                          background: a.status === 'present' ? '#E8F6EC' : a.status === 'late' ? '#FFF3CD' : '#FDECEA',
-                          color: a.status === 'present' ? C.success : a.status === 'late' ? '#8A6D00' : C.error }}>
+                          background: isAttended(a.status) ? '#E8F6EC' : '#FDECEA',
+                          color: isAttended(a.status) ? C.success : C.error }}>
                         {a.date}
                       </span>
                     ))}
