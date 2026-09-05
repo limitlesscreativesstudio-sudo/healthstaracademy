@@ -22,6 +22,7 @@ import RubricsTab        from './RubricsTab';
 import OutcomesTab       from './OutcomesTab';
 import StudentProgress   from './StudentProgress';
 import AnalyticsTab      from './AnalyticsTab';
+import DiagnosticsTab    from './DiagnosticsTab';
 import Account           from './Account';
 import { useAuth, supabase } from './AuthContext';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
@@ -642,6 +643,7 @@ const NAV_ITEMS = [
   { id:'required',      label:'Required Work',      icon:'📌' },
   { id:'career',        label:'Career Portal',      icon:'💼' },
   { id:'analytics',     label:'New Analytics',      icon:'📈' },
+  { id:'diagnostics',   label:'Portal Doctor',      icon:'🩺' },
   { id:'lucid',         label:'Lucid (Whiteboard)', icon:'✏️' },
   { id:'settings',      label:'Settings',           icon:'⚙️' },
 ];
@@ -904,6 +906,7 @@ const CourseView: React.FC = () => {
     outcomes:      <OutcomesTab courseId={cid} canEdit={tabCan('outcomes')} />,
     rubrics:       <RubricsTab courseId={cid} canEdit={tabCan('rubrics')} />,
     analytics:     <AnalyticsTab courseId={cid} canEdit={tabCan('analytics')} />,
+    diagnostics:   <DiagnosticsTab courseId={cid} canEdit={tabCan('diagnostics')} />,
     lucid:         <Placeholder title="Lucid (Whiteboard)" />,
     settings:      <SettingsTab courseId={cid} />,
     account:       <Account onBackToDashboard={() => { setActiveTab('home'); setShowDashboard(true); }} isAdmin={authUser?.role === 'admin'} />,
