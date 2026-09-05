@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.block_record_deletion() FROM PUBLIC, anon, authenticated;
