@@ -25,29 +25,47 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const url = Deno.env.get("SUPABASE_URL")!;
-  const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const admin = createClient(url, serviceKey);
 
-  // ── Caller must be an admin or an instructor ───────────────────────────────
+  let body: any = {};
+  try { body = await req.json(); } catch { /* no body */ }
+  const courseId: string | null = body?.courseId ?? null;
+  const action: string = body?.action ?? "scan";
+
+  // ── Caller must be an admin, an instructor, or the scheduler ───────────────
   const authHeader = req.headers.get("Authorization") ?? "";
-  const caller = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const { data: userRes } = await caller.auth.getUser();
-  const uid = userRes?.user?.id;
-  if (!uid) return json({ error: "Not signed in" }, 401);
+  const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
+  const scheduled = bearer === serviceKey;
 
-  const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", uid);
-  const roleSet = new Set((roles ?? []).map((r: any) => r.role));
-  const { data: teaching } = await admin
-    .from("enrollments").select("course_id").eq("user_id", uid).eq("role", "teacher");
-  const isStaff = roleSet.has("admin") || roleSet.has("instructor") || (teaching ?? []).length > 0;
-  if (!isStaff) return json({ error: "Not allowed" }, 403);
+  let uid: string | null = null;
+  let isAdmin = false;
+  if (!scheduled) {
+    const caller = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userRes } = await caller.auth.getUser();
+    uid = userRes?.user?.id ?? null;
+    if (!uid) return json({ error: "Not signed in" }, 401);
 
-  let courseId: string | null = null;
-  try {
-    const body = await req.json();
-    courseId = body?.courseId ?? null;
-  } catch { /* no body */ }
+    const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", uid);
+    const roleSet = new Set((roles ?? []).map((r: any) => r.role));
+    const { data: teaching } = await admin
+      .from("enrollments").select("course_id").eq("user_id", uid).eq("role", "teacher");
+    isAdmin = roleSet.has("admin");
+    const isStaff = isAdmin || roleSet.has("instructor") || (teaching ?? []).length > 0;
+    if (!isStaff) return json({ error: "Not allowed" }, 403);
+  }
+
+  // ── Apply a confirmed correction ───────────────────────────────────────────
+  if (action === "fix") {
+    try {
+      const result = await applyFix(admin, String(body?.findingId ?? ""), uid);
+      return json(result, result.ok ? 200 : 400);
+    } catch (e) {
+      return json({ ok: false, error: String(e) }, 500);
+    }
+  }
 
   const findings: Finding[] = [];
   const add = (f: Finding) => findings.push(f);
@@ -55,6 +73,7 @@ Deno.serve(async (req) => {
   const { data: run } = await admin
     .from("agent_runs").insert({ agent: "diagnostics", status: "running" }).select("id").single();
   const runId: string | null = run?.id ?? null;
+
 
   try {
     // ── Courses in scope ─────────────────────────────────────────────────────
