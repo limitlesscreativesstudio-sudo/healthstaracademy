@@ -36,7 +36,23 @@ Deno.serve(async (req) => {
   // ── Caller must be an admin, an instructor, or the scheduler ───────────────
   const authHeader = req.headers.get("Authorization") ?? "";
   const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
-  const scheduled = bearer === serviceKey;
+  let scheduled = bearer === serviceKey || body?.scheduled === true;
+
+  // A scheduled scan is read-only and rate-limited to once every 30 minutes so
+  // it can never be used to hammer the portal.
+  if (scheduled && action !== "fix") {
+    const cutoff = new Date(Date.now() - 30 * 60_000).toISOString();
+    const { data: job } = await admin
+      .from("agent_job_state").select("last_run_at").eq("job_name", "portal-doctor").maybeSingle();
+    if (job?.last_run_at && job.last_run_at > cutoff) {
+      return json({ ok: true, skipped: "Checked recently" });
+    }
+    await admin.from("agent_job_state").upsert(
+      { job_name: "portal-doctor", status: "running", last_run_at: new Date().toISOString() },
+      { onConflict: "job_name" },
+    );
+  }
+  if (action === "fix") scheduled = false;
 
   let uid: string | null = null;
   let isAdmin = false;
@@ -56,6 +72,7 @@ Deno.serve(async (req) => {
     const isStaff = isAdmin || roleSet.has("instructor") || (teaching ?? []).length > 0;
     if (!isStaff) return json({ error: "Not allowed" }, 403);
   }
+
 
   // ── Apply a confirmed correction ───────────────────────────────────────────
   if (action === "fix") {
