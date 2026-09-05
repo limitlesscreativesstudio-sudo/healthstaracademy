@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, Users, GraduationCap, Mail, Activity, RefreshCw, LayoutDashboard, Briefcase, ShieldCheck, Bot, UserPlus } from "lucide-react";
+import { LogOut, Users, GraduationCap, Mail, Activity, RefreshCw, LayoutDashboard, Briefcase, ShieldCheck, Bot, UserPlus, Stethoscope } from "lucide-react";
 import StudentPipeline from "./components/StudentPipeline";
 import CohortManager from "./components/CohortManager";
 import CohortOpsHub from "./components/CohortOpsHub";
@@ -13,8 +13,10 @@ import EmailLog from "./components/EmailLog";
 import WebhookInfo from "./components/WebhookInfo";
 import AuthAuditLog from "./components/AuthAuditLog";
 import AgentsHub from "./components/AgentsHub";
+import DiagnosticsTab from "@/pages/portal/teach/DiagnosticsTab";
 
-type Tab = "pipeline" | "cohorts" | "cohort_hub" | "roster_import" | "job_pipeline" | "emails" | "webhooks" | "audit" | "agents";
+type Tab = "pipeline" | "cohorts" | "cohort_hub" | "roster_import" | "job_pipeline" | "emails" | "webhooks" | "audit" | "agents" | "doctor";
+
 
 
 const AdminDashboard = () => {
