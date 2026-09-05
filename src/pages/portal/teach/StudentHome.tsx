@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import OnboardingChecklist from '@/components/portal/OnboardingChecklist';
+import StudentAssistant from '@/components/portal/StudentAssistant';
+
 import { BookOpen, Calendar, Bell, Briefcase, User, LogOut, GraduationCap } from 'lucide-react';
 
 interface CourseRow {
@@ -166,6 +168,9 @@ const StudentHome: React.FC = () => {
         {!loadingData && (
           <OnboardingChecklist userId={user?.id} courseId={courses[0]?.id} />
         )}
+
+        {!loadingData && <StudentAssistant userId={user?.id} />}
+
 
 
         <section>
