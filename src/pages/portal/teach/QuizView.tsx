@@ -134,13 +134,18 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         setMyAttemptCounts(counts);
       }
       if (canEdit) {
-        // load analytics for instructors
-        const { data: allAtt } = await supabase.from('quiz_attempts')
-          .select('quiz_id,score,max_score,submitted_at,grading_status').in('quiz_id', data.map(q => q.id));
+        // load analytics for instructors — only real enrolled students count,
+        // so staff previews never look like student attempts.
+        const [{ data: allAtt }, { data: enrs }] = await Promise.all([
+          supabase.from('quiz_attempts')
+            .select('quiz_id,user_id,score,max_score,submitted_at,grading_status').in('quiz_id', data.map(q => q.id)),
+          supabase.from('enrollments').select('user_id').eq('course_id', courseId).eq('role', 'student'),
+        ]);
+        const studentIds = new Set((enrs ?? []).map((e: any) => e.user_id));
         const s: Record<string, Stats> = {};
         data.forEach(q => { s[q.id] = { attempts:0, submitted:0, inProgress:0, awaiting:0, released:0, avgPct:0 }; });
         const sums: Record<string, {sum:number; n:number}> = {};
-        (allAtt ?? []).forEach(a => {
+        (allAtt ?? []).filter((a: any) => studentIds.has(a.user_id)).forEach(a => {
           const st = s[a.quiz_id]; if (!st) return;
           st.attempts++;
           if (!a.submitted_at) { st.inProgress++; return; }
@@ -232,7 +237,9 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       return;
     }
     setAttemptQs(qs);
-    if (!user?.id) { setStartedAt(new Date()); return; }
+    // Instructors/admins are only previewing — never record a staff attempt,
+    // otherwise their preview shows up as an "in progress" student attempt.
+    if (!user?.id || canEdit) { setStartedAt(new Date()); return; }
     // Resume open attempt or create a new one
     const { data: open } = await supabase.from('quiz_attempts')
       .select('id, answers, started_at').eq('quiz_id', q.id).eq('user_id', user.id).is('submitted_at', null)
