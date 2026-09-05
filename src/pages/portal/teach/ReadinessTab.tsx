@@ -1,6 +1,7 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { isAttended } from '@/lib/attendance';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -73,12 +74,12 @@ const ReadinessTab: React.FC<Props> = ({ courseId }) => {
       (att ?? []).forEach(a => {
         const r = attBy[a.student_id] = attBy[a.student_id] || { present: 0, total: 0 };
         r.total += 1;
-        if (a.status === 'present' || a.status === 'late') r.present += 1;
+        if (isAttended(a.status)) r.present += 1;
       });
 
       const skillBy: Record<string, number> = {};
       (sos ?? []).forEach(s => {
-        if (s.status === 'completed' || s.status === 'signed_off' || s.status === 'pass') {
+        if (s.status === 'signed' || s.status === 'signed_off' || s.status === 'completed' || s.status === 'passed' || s.status === 'pass') {
           skillBy[s.student_user_id] = (skillBy[s.student_user_id] ?? 0) + 1;
         }
       });

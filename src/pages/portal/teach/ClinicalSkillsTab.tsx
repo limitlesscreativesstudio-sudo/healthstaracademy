@@ -1,6 +1,7 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -105,7 +106,7 @@ const ClinicalSkillsTab: React.FC<Props> = ({ courseId, canEdit = false }) => {
       [selStudent]: { ...(prev[selStudent] || {}), [skill.id]: { status: next, signed_off_at: next === 'signed' ? new Date().toISOString() : null } },
     }));
     const { data: auth } = await supabase.auth.getUser();
-    await supabase.from('student_skill_signoffs').upsert({
+    const { error } = await supabase.from('student_skill_signoffs').upsert({
       student_user_id: selStudent,
       course_id: courseId,
       skill_id: skill.id,
@@ -113,6 +114,17 @@ const ClinicalSkillsTab: React.FC<Props> = ({ courseId, canEdit = false }) => {
       signed_off_by: next === 'signed' ? auth?.user?.id ?? null : null,
       signed_off_at: next === 'signed' ? new Date().toISOString() : null,
     }, { onConflict: 'student_user_id,course_id,skill_id' });
+    if (error) {
+      setSignoffs(prev => ({
+        ...prev,
+        [selStudent]: { ...(prev[selStudent] || {}), [skill.id]: { status: next === 'signed' ? 'pending' : 'signed' } },
+      }));
+      toast.error(`Skill sign-off was not saved: ${error.message}`);
+      setSaving(null);
+      return;
+    }
+    window.dispatchEvent(new CustomEvent('hsa:progress-updated', { detail: { courseId } }));
+    toast.success(next === 'signed' ? 'Skill sign-off saved' : 'Skill sign-off reopened');
     setSaving(null);
   };
 

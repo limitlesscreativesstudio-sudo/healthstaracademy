@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from './AuthContext';
 import StudentProfilePanel from '@/components/portal/StudentProfilePanel';
+import { isAttended } from '@/lib/attendance';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', warn:'#E67E22', error:'#C0392B' } as const;
 
@@ -25,7 +26,11 @@ interface Row {
   quizPct: number;
   quizPassed: number;
   quizTotal: number;
+  quizzesSubmitted: number;
+  awaitingGrading: number;
   attendancePct: number;
+  attendanceDays: number;
+  theoryHours: number;
   clinicalHours: number;
   skillsSigned: number;
   overallPct: number;
@@ -50,7 +55,8 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
 
   useEffect(() => {
     if (!courseId) { setLoading(false); return; }
-    (async () => {
+    let alive = true;
+    const load = async () => {
       setLoading(true);
       // enrollments
       const { data: enrs } = await supabase.from('enrollments')
@@ -81,7 +87,7 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
       const qzIds = (qzs ?? []).map(q => q.id);
       const qzMap: Record<string, number> = Object.fromEntries((qzs ?? []).map(q => [q.id, Number(q.total_points ?? 0)]));
       const { data: attempts } = qzIds.length
-        ? await supabase.from('quiz_attempts').select('user_id, quiz_id, score, submitted_at').in('quiz_id', qzIds).not('submitted_at','is',null)
+        ? await supabase.from('quiz_attempts').select('user_id, quiz_id, score, max_score, submitted_at, grading_status').in('quiz_id', qzIds).not('submitted_at','is',null)
         : { data: [] };
       // best per user/quiz
       const bestByUserQuiz: Record<string, number> = {};
@@ -97,13 +103,13 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
       (att ?? []).forEach(a => {
         const b = attByUser[a.student_id] ?? { present:0, total:0 };
         b.total += 1;
-        if (a.status === 'present' || a.status === 'late') b.present += 1;
+        if (isAttended(a.status)) b.present += 1;
         attByUser[a.student_id] = b;
       });
 
       // clinical hours (column is student_user_id)
       const { data: chs } = await supabase.from('clinical_hours')
-        .select('student_user_id, hours').in('student_user_id', uids);
+        .select('student_user_id, hours').eq('course_id', courseId).in('student_user_id', uids);
       const clinicalByUser: Record<string, number> = {};
       (chs ?? []).forEach(c => {
         clinicalByUser[c.student_user_id] = (clinicalByUser[c.student_user_id] ?? 0) + Number(c.hours ?? 0);
@@ -111,10 +117,10 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
 
       // skill signoffs (column is student_user_id)
       const { data: sks } = await supabase.from('student_skill_signoffs')
-        .select('student_user_id, status').in('student_user_id', uids);
+        .select('student_user_id, status').eq('course_id', courseId).in('student_user_id', uids);
       const skillsByUser: Record<string, number> = {};
       (sks ?? []).forEach(s => {
-        if (s.status === 'signed' || s.status === 'completed' || s.status === 'passed') {
+        if (s.status === 'signed' || s.status === 'signed_off' || s.status === 'completed' || s.status === 'passed' || s.status === 'pass') {
           skillsByUser[s.student_user_id] = (skillsByUser[s.student_user_id] ?? 0) + 1;
         }
       });
@@ -132,6 +138,9 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
           if (best != null && qzMap[q.id] > 0 && (best / qzMap[q.id]) * 100 >= REG.quizPassPct) quizPassed += 1;
         });
         const quizPct = (qzs ?? []).length ? Math.round((quizPassed / (qzs ?? []).length) * 100) : 0;
+        const studentAttempts = (attempts ?? []).filter(a => a.user_id === uid);
+        const quizzesSubmitted = new Set(studentAttempts.map(a => a.quiz_id)).size;
+        const awaitingGrading = studentAttempts.filter(a => a.score == null || a.grading_status === 'awaiting' || a.grading_status === 'awaiting_grading').length;
 
         const attRec = attByUser[uid] ?? { present:0, total:0 };
         const attPct = attRec.total > 0 ? Math.round((attRec.present / attRec.total) * 100) : 0;
@@ -154,7 +163,11 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
           modulesPct: modPct,
           assignmentsPct: asgnPct,
           quizPct, quizPassed, quizTotal: (qzs ?? []).length,
+          quizzesSubmitted,
+          awaitingGrading,
           attendancePct: attPct,
+          attendanceDays: attRec.present,
+          theoryHours: attRec.present * 4,
           clinicalHours: clinical,
           skillsSigned: skills,
           overallPct,
@@ -162,9 +175,30 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
         };
       });
       built.sort((a,b) => b.overallPct - a.overallPct);
-      setRows(built);
-      setLoading(false);
-    })();
+      if (alive) {
+        setRows(built);
+        setLoading(false);
+      }
+    };
+    void load();
+    const refresh = (event?: Event) => {
+      const detail = (event as CustomEvent<{ courseId?: string }>)?.detail;
+      if (!detail?.courseId || detail.courseId === courseId) void load();
+    };
+    const channel = supabase.channel(`student-progress:${courseId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance', filter: `course_id=eq.${courseId}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'grades', filter: `course_id=eq.${courseId}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'clinical_hours', filter: `course_id=eq.${courseId}` }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'student_skill_signoffs', filter: `course_id=eq.${courseId}` }, refresh)
+      .subscribe();
+    window.addEventListener('hsa:progress-updated', refresh);
+    window.addEventListener('focus', refresh);
+    return () => {
+      alive = false;
+      window.removeEventListener('hsa:progress-updated', refresh);
+      window.removeEventListener('focus', refresh);
+      void supabase.removeChannel(channel);
+    };
   }, [courseId, tick]);
 
   const filtered = useMemo(() => {
@@ -257,10 +291,10 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12 }}>
                 {[
-                  { label:'Modules', pct:r.modulesPct, sub:`${r.modulesPct}% items graded` },
+                  { label:'Theory Hours', pct:Math.min(100, Math.round((r.theoryHours/REG.theoryHoursRequired)*100)), sub:`${r.theoryHours}/${REG.theoryHoursRequired} hrs` },
                   { label:'Assignments', pct:r.assignmentsPct, sub:`${r.assignmentsPct}% avg score` },
-                  { label:`Quizzes (${REG.quizPassPct}%+)`, pct:r.quizPct, sub:`${r.quizPassed}/${r.quizTotal} passed` },
-                  { label:`Attendance (min ${REG.attendanceMinPct}%)`, pct:r.attendancePct, sub:`${r.attendancePct}% present` },
+                  { label:`Quizzes (${REG.quizPassPct}%+)`, pct:r.quizPct, sub:`${r.quizzesSubmitted} submitted · ${r.awaitingGrading} awaiting` },
+                  { label:`Attendance (min ${REG.attendanceMinPct}%)`, pct:r.attendancePct, sub:`${r.attendanceDays} days · ${r.attendancePct}%` },
                   { label:`Clinical Hours`, pct:Math.min(100, Math.round((r.clinicalHours/REG.clinicalHoursRequired)*100)), sub:`${r.clinicalHours}/${REG.clinicalHoursRequired} hrs` },
                   { label:`CDPH Skills`, pct:Math.min(100, Math.round((r.skillsSigned/REG.skillsRequired)*100)), sub:`${r.skillsSigned}/${REG.skillsRequired} signed` },
                 ].map(m => (

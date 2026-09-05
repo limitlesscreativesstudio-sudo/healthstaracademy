@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { isAttended } from '@/lib/attendance';
 
 const C = {
   primary: '#7B4DB5', bg: '#F4F2FA', white: '#FFFFFF', border: '#D4C8E8',
@@ -90,7 +91,7 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
     (att ?? []).forEach(a => {
       const r = acc[a.student_id]; if (!r) return;
       r.totalDays += 1;
-      if (a.status === 'present' || a.status === 'late') { r.presentDays += 1; r.theory += HOURS_PER_SESSION; }
+      if (isAttended(a.status)) { r.presentDays += 1; r.theory += HOURS_PER_SESSION; }
     });
     const addClinical = (uid: string, hrs: number, verified: boolean) => {
       const r = acc[uid]; if (!r) return;

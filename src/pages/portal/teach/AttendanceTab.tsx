@@ -1,6 +1,8 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect } from 'react';
 import { supabase } from './AuthContext';
+import { attendanceCode } from '@/lib/attendance';
+import { toast } from 'sonner';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -63,7 +65,7 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
       if (data && data.length > 0) {
         setAttendance(students.map(s => {
           const row = data.find((d: any) => d.student_id === s.id);
-          return { studentId: s.id, status: (row?.status ?? 'P') as Status };
+          return { studentId: s.id, status: attendanceCode(row?.status) };
         }));
       } else {
         setAttendance(students.map(s => ({ studentId: s.id, status: 'P' })));
@@ -81,16 +83,25 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const saveAttendance = async () => {
     if (!courseId) return;
     setSaving(true);
-    for (const row of attendance) {
-      await supabase.from('attendance').upsert({
+    setSaved(false);
+    const results = await Promise.all(attendance.map(row =>
+      supabase.from('attendance').upsert({
         course_id:    courseId,
         student_id:   row.studentId,
         session_date: sessionDate,
         status:       row.status,
-      }, { onConflict: 'course_id,student_id,session_date' });
+      }, { onConflict: 'course_id,student_id,session_date' })
+    ));
+    const failure = results.find(result => result.error)?.error;
+    if (failure) {
+      setSaving(false);
+      toast.error(`Attendance was not saved: ${failure.message}`);
+      return;
     }
     setSaving(false);
     setSaved(true);
+    window.dispatchEvent(new CustomEvent('hsa:progress-updated', { detail: { courseId } }));
+    toast.success('Attendance saved and progress updated');
     setTimeout(() => setSaved(false), 3000);
   };
 
