@@ -82,6 +82,27 @@ const DiagnosticsTab: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ co
     setFindings(p => p.filter(x => x.id !== f.id));
   };
 
+  /** Apply the safe correction for a finding, after the instructor confirms. */
+  const [fixing, setFixing] = useState<string | null>(null);
+  const fix = async (f: Finding) => {
+    if (!f.id) return;
+    if (!window.confirm(`Correct this now?\n\n${f.title}\n\nNo student record is ever deleted.`)) return;
+    setFixing(f.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('agent-diagnostics', {
+        body: { action: 'fix', findingId: f.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success((data as any)?.message ?? 'Corrected');
+      setFindings(p => p.filter(x => x.id !== f.id));
+    } catch (e: any) {
+      toast.error(`Could not correct it: ${e.message ?? e}`);
+    } finally {
+      setFixing(null);
+    }
+  };
+
   const sorted = [...findings].sort((a, b) => SEV[a.severity].rank - SEV[b.severity].rank);
   const counts = sorted.reduce<Record<string, number>>((a, f) => {
     a[f.severity] = (a[f.severity] ?? 0) + 1; return a;
@@ -93,7 +114,7 @@ const DiagnosticsTab: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ co
         <div>
           <h2 style={{ margin:0, fontSize:20, fontWeight:800, color:C.text }}>🩺 Portal Doctor</h2>
           <div style={{ fontSize:13, color:C.muted, marginTop:4 }}>
-            Checks students, instructors, quizzes, grading, modules and links — then tells you exactly what to fix.
+            Runs automatically every 2 hours and on demand. Checks students, instructors, quizzes, grading, modules and links, then offers a one-click correction.
             {lastRun && <> Last checked {lastRun}.</>}
           </div>
         </div>
@@ -153,6 +174,13 @@ const DiagnosticsTab: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ co
                 <div style={{ fontSize:13, color:'#0B5CAD', marginTop:6 }}>👉 {f.suggested_fix}</div>
               )}
             </div>
+            {canEdit && f.id && (
+              <button onClick={() => fix(f)} disabled={fixing === f.id} title="Apply the safe correction"
+                style={{ border:'none', background:'#319795', color:'#fff', borderRadius:6, padding:'5px 12px',
+                         fontSize:12, fontWeight:700, cursor:'pointer', marginRight:6 }}>
+                {fixing === f.id ? 'Fixing…' : 'Confirm & correct'}
+              </button>
+            )}
             {canEdit && (
               <button onClick={() => dismiss(f)} title="Mark as handled"
                 style={{ border:`1px solid ${C.line}`, background:'transparent', borderRadius:6, padding:'4px 10px',

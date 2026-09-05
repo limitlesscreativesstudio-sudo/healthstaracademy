@@ -25,29 +25,64 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const url = Deno.env.get("SUPABASE_URL")!;
-  const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const admin = createClient(url, serviceKey);
 
-  // ── Caller must be an admin or an instructor ───────────────────────────────
+  let body: any = {};
+  try { body = await req.json(); } catch { /* no body */ }
+  const courseId: string | null = body?.courseId ?? null;
+  const action: string = body?.action ?? "scan";
+
+  // ── Caller must be an admin, an instructor, or the scheduler ───────────────
   const authHeader = req.headers.get("Authorization") ?? "";
-  const caller = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const { data: userRes } = await caller.auth.getUser();
-  const uid = userRes?.user?.id;
-  if (!uid) return json({ error: "Not signed in" }, 401);
+  const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
+  let scheduled = bearer === serviceKey || body?.scheduled === true;
 
-  const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", uid);
-  const roleSet = new Set((roles ?? []).map((r: any) => r.role));
-  const { data: teaching } = await admin
-    .from("enrollments").select("course_id").eq("user_id", uid).eq("role", "teacher");
-  const isStaff = roleSet.has("admin") || roleSet.has("instructor") || (teaching ?? []).length > 0;
-  if (!isStaff) return json({ error: "Not allowed" }, 403);
+  // A scheduled scan is read-only and rate-limited to once every 30 minutes so
+  // it can never be used to hammer the portal.
+  if (scheduled && action !== "fix") {
+    const cutoff = new Date(Date.now() - 30 * 60_000).toISOString();
+    const { data: job } = await admin
+      .from("agent_job_state").select("last_run_at").eq("job_name", "portal-doctor").maybeSingle();
+    if (job?.last_run_at && job.last_run_at > cutoff) {
+      return json({ ok: true, skipped: "Checked recently" });
+    }
+    await admin.from("agent_job_state").upsert(
+      { job_name: "portal-doctor", status: "running", last_run_at: new Date().toISOString() },
+      { onConflict: "job_name" },
+    );
+  }
+  if (action === "fix") scheduled = false;
 
-  let courseId: string | null = null;
-  try {
-    const body = await req.json();
-    courseId = body?.courseId ?? null;
-  } catch { /* no body */ }
+  let uid: string | null = null;
+  let isAdmin = false;
+  if (!scheduled) {
+    const caller = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userRes } = await caller.auth.getUser();
+    uid = userRes?.user?.id ?? null;
+    if (!uid) return json({ error: "Not signed in" }, 401);
+
+    const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", uid);
+    const roleSet = new Set((roles ?? []).map((r: any) => r.role));
+    const { data: teaching } = await admin
+      .from("enrollments").select("course_id").eq("user_id", uid).eq("role", "teacher");
+    isAdmin = roleSet.has("admin");
+    const isStaff = isAdmin || roleSet.has("instructor") || (teaching ?? []).length > 0;
+    if (!isStaff) return json({ error: "Not allowed" }, 403);
+  }
+
+
+  // ── Apply a confirmed correction ───────────────────────────────────────────
+  if (action === "fix") {
+    try {
+      const result = await applyFix(admin, String(body?.findingId ?? ""), uid);
+      return json(result, result.ok ? 200 : 400);
+    } catch (e) {
+      return json({ ok: false, error: String(e) }, 500);
+    }
+  }
 
   const findings: Finding[] = [];
   const add = (f: Finding) => findings.push(f);
@@ -55,6 +90,7 @@ Deno.serve(async (req) => {
   const { data: run } = await admin
     .from("agent_runs").insert({ agent: "diagnostics", status: "running" }).select("id").single();
   const runId: string | null = run?.id ?? null;
+
 
   try {
     // ── Courses in scope ─────────────────────────────────────────────────────
@@ -304,12 +340,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Persist ──────────────────────────────────────────────────────────────
+    // ── Persist (one open row per distinct issue) ────────────────────────────
     if (findings.length) {
-      await admin.from("agent_findings").insert(
-        findings.map(f => ({ agent: "diagnostics", run_id: runId, status: "open", ...f })),
-      );
+      for (const f of findings) {
+        const { data: existing } = await admin
+          .from("agent_findings").select("id")
+          .eq("agent", "diagnostics").eq("status", "open").eq("title", f.title)
+          .is("target_id", f.target_id ?? null)
+          .limit(1);
+        if (existing?.length) continue;
+        await admin.from("agent_findings")
+          .insert({ agent: "diagnostics", run_id: runId, status: "open", ...f });
+      }
     }
+
     const counts = findings.reduce<Record<string, number>>((a, f) => {
       a[f.severity] = (a[f.severity] ?? 0) + 1; return a;
     }, {});
@@ -341,3 +385,90 @@ Deno.serve(async (req) => {
     return json({ error: String(e) }, 500);
   }
 });
+
+// ── Confirmed corrections ────────────────────────────────────────────────────
+// The admin sees the issue in a pop-up and confirms; we then apply the safe
+// correction below. Nothing is ever deleted — student records are permanent.
+async function applyFix(admin: any, findingId: string, actorId: string | null) {
+  if (!findingId) return { ok: false, error: "No issue selected" };
+
+  const { data: f } = await admin
+    .from("agent_findings").select("*").eq("id", findingId).maybeSingle();
+  if (!f) return { ok: false, error: "That issue is no longer on file" };
+
+  const t = f.target_table as string | null;
+  const id = f.target_id as string | null;
+  const title = String(f.title ?? "");
+  let done = "";
+
+  const markResolved = async () => {
+    await admin.from("agent_findings").update({
+      status: "resolved", resolved_at: new Date().toISOString(), resolved_by: actorId,
+    }).eq("id", findingId);
+  };
+
+  // Quiz open to students but empty → lock it until questions are added
+  if (t === "quizzes" && id && /no questions/i.test(title)) {
+    await admin.from("quizzes").update({ published: false }).eq("id", id);
+    await admin.from("module_items").update({ published: false }).eq("content_ref", id).eq("item_type", "quiz");
+    done = "Quiz locked until questions are added.";
+  }
+  // Unfinished attempt sitting open → close it so it can be graded
+  else if (t === "quiz_attempts" && id && /stuck open/i.test(title)) {
+    await admin.from("quiz_attempts").update({
+      submitted_at: new Date().toISOString(), grading_status: "awaiting_grading",
+    }).eq("id", id).is("submitted_at", null);
+    done = "Attempt closed and sent to the grading queue.";
+  }
+  // Duplicate module positions → renumber the days
+  else if (t === "modules" && id && /out of order/i.test(title)) {
+    const { data: mods } = await admin
+      .from("modules").select("id,position,created_at").eq("course_id", id)
+      .order("position", { ascending: true }).order("created_at", { ascending: true });
+    let i = 1;
+    for (const m of mods ?? []) {
+      await admin.from("modules").update({ position: i }).eq("id", m.id);
+      i++;
+    }
+    done = `Renumbered ${(mods ?? []).length} modules in order.`;
+  }
+  // Module item pointing at missing content, or open item over a locked quiz
+  else if (t === "module_items" && id && /(Broken|locked)/i.test(title)) {
+    await admin.from("module_items").update({ published: false }).eq("id", id);
+    done = "Item hidden from students until it is re-attached.";
+  }
+  // Student missing their role
+  else if (t === "user_roles" && id) {
+    await admin.from("user_roles").insert({ user_id: id, role: "student" });
+    done = "Student role restored.";
+  }
+  // Student without a linked record used for 4-year record keeping
+  else if (t === "students" && id) {
+    const { data: prof } = await admin
+      .from("profiles").select("full_name").eq("user_id", id).maybeSingle();
+    const { data: au } = await admin.auth.admin.getUserById(id);
+    const name = String(prof?.full_name ?? au?.user?.email ?? "Student").trim();
+    const [first, ...rest] = name.split(/\s+/);
+    await admin.from("students").insert({
+      first_name: first || "Student", last_name: rest.join(" ") || "—",
+      email: au?.user?.email ?? `${id}@unknown.local`,
+      portal_user_id: id, enrollment_status: "enrolled",
+      qualification_status: "qualified", payment_status: "pending",
+    });
+    done = "Student record created and linked.";
+  }
+  // Invitation that was never accepted → re-open it for another send
+  else if (t === "pending_enrollments" && id) {
+    await admin.from("pending_enrollments")
+      .update({ invited_at: new Date().toISOString() }).eq("id", id);
+    done = "Invite refreshed — send it again from People.";
+  }
+
+  if (!done) {
+    await markResolved();
+    return { ok: true, manual: true, message: "Marked as handled. This one needs a person to finish it." };
+  }
+
+  await markResolved();
+  return { ok: true, message: done };
+}

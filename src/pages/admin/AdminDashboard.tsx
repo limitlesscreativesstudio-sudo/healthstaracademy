@@ -14,6 +14,7 @@ import WebhookInfo from "./components/WebhookInfo";
 import AuthAuditLog from "./components/AuthAuditLog";
 import AgentsHub from "./components/AgentsHub";
 import DiagnosticsTab from "@/pages/portal/teach/DiagnosticsTab";
+import PortalDoctorAlert from "@/components/portal/PortalDoctorAlert";
 
 type Tab = "pipeline" | "cohorts" | "cohort_hub" | "roster_import" | "job_pipeline" | "emails" | "webhooks" | "audit" | "agents" | "doctor";
 
@@ -125,6 +126,8 @@ const AdminDashboard = () => {
         {activeTab === "audit" && <AuthAuditLog />}
 
       </div>
+
+      <PortalDoctorAlert />
     </div>
   );
 };
