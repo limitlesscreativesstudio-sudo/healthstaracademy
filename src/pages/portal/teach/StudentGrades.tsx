@@ -465,21 +465,31 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
                     </td>
                     {visibleCols.map(a => {
                       const g = grades[s.id]?.[a.id];
+                      const sub = a.kind === 'quiz' ? submissions[`${s.id}|${a.id}`] : undefined;
                       const isEd = editing?.s === s.id && editing?.a === a.id;
                       const pctCell = g != null && a.points > 0 ? Math.round((g / a.points) * 100) : null;
                       const editable = canEdit && a.kind === 'assignment';
+                      const goGrade = () => { if (a.kind === 'quiz' && !selfOnly && sub) window.location.href = `/portal/teach?course=${courseId}&tab=quizzes&quiz=${a.id}`; };
                       return (
                         <td key={a.id}
-                          title={a.kind === 'quiz' ? 'Auto-graded from quiz attempt (best)' : (editable ? 'Click to edit' : '')}
-                          onClick={() => { if (!editable) return; setEditing({ s: s.id, a: a.id }); setEditVal(g?.toString() ?? ''); }}
-                          style={{ padding:'7px 9px', textAlign:'center', cursor: editable ? 'pointer' : 'default',
+                          title={sub ? `Submitted ${new Date(sub.at).toLocaleString()}${g == null ? ' — awaiting grading' : ''}` : (a.kind === 'quiz' ? 'No submission yet' : (editable ? 'Click to edit' : ''))}
+                          onClick={() => {
+                            if (editable) { setEditing({ s: s.id, a: a.id }); setEditVal(g?.toString() ?? ''); return; }
+                            goGrade();
+                          }}
+                          style={{ padding:'7px 9px', textAlign:'center', cursor: (editable || (sub && !selfOnly)) ? 'pointer' : 'default',
                             borderBottom:`1px solid ${C.border}`, borderRight:`1px solid ${C.border}`,
-                            background: isEd ? '#EDE8F7' : 'inherit' }}>
+                            background: isEd ? '#EDE8F7' : (g == null && sub ? '#FFF7E6' : 'inherit') }}>
                           {isEd ? (
                             <input autoFocus value={editVal} onChange={e => setEditVal(e.target.value)}
                               onBlur={saveGrade}
                               onKeyDown={e => { if (e.key === 'Enter') saveGrade(); if (e.key === 'Escape') setEditing(null); }}
                               style={{ width:52, textAlign:'center', border:`2px solid ${C.primary}`, borderRadius:3, padding:'2px 4px', fontSize:13 }}/>
+                          ) : g == null && sub ? (
+                            <div>
+                              <div style={{ fontSize:12, fontWeight:700, color:C.warn }}>⏳ Submitted</div>
+                              <div style={{ fontSize:10, color:C.muted }}>{selfOnly ? 'awaiting grading' : 'grade it'}</div>
+                            </div>
                           ) : (
                             <div>
                               <div style={{ fontSize:13, fontWeight:600, color: pctCell != null ? gColor(pctCell) : C.muted }}>
@@ -488,6 +498,9 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
                               {pctCell != null && <div style={{ fontSize:10, color:C.muted }}>{pctCell}%</div>}
                             </div>
                           )}
+                        </td>
+                      );
+
                         </td>
                       );
                     })}
