@@ -71,7 +71,9 @@ const AdminDashboard = () => {
     { id: "job_pipeline" as Tab, label: "Job Pipeline", icon: Briefcase },
     { id: "emails" as Tab, label: "Email Log", icon: Mail },
     { id: "webhooks" as Tab, label: "Zapier Setup", icon: Activity },
+    { id: "doctor" as Tab, label: "Site Doctor", icon: Stethoscope },
     { id: "audit" as Tab, label: "Audit Log", icon: ShieldCheck },
+
   ];
 
 
