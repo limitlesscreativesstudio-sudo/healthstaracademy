@@ -79,7 +79,7 @@ const ReadinessTab: React.FC<Props> = ({ courseId }) => {
 
       const skillBy: Record<string, number> = {};
       (sos ?? []).forEach(s => {
-        if (s.status === 'completed' || s.status === 'signed_off' || s.status === 'pass') {
+        if (s.status === 'signed' || s.status === 'signed_off' || s.status === 'completed' || s.status === 'passed' || s.status === 'pass') {
           skillBy[s.student_user_id] = (skillBy[s.student_user_id] ?? 0) + 1;
         }
       });
