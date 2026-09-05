@@ -232,7 +232,9 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       return;
     }
     setAttemptQs(qs);
-    if (!user?.id) { setStartedAt(new Date()); return; }
+    // Instructors/admins are only previewing — never record a staff attempt,
+    // otherwise their preview shows up as an "in progress" student attempt.
+    if (!user?.id || canEdit) { setStartedAt(new Date()); return; }
     // Resume open attempt or create a new one
     const { data: open } = await supabase.from('quiz_attempts')
       .select('id, answers, started_at').eq('quiz_id', q.id).eq('user_id', user.id).is('submitted_at', null)
