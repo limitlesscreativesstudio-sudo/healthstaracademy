@@ -690,6 +690,12 @@ const CourseView: React.FC = () => {
   const [homePageDlgOpen, setHomePageDlgOpen] = useState(false);
   const [syncTick, setSyncTick] = useState(0);
 
+  // "New content" dots in the course menu
+  const { newTabs, markSeen } = useTabActivity(activeCourse?.uuid, syncTick);
+  useEffect(() => {
+    if (activeTab) markSeen(activeTab === 'home' ? 'modules' : activeTab);
+  }, [activeTab, markSeen]);
+
   // Live sync: when ANY instructor saves a change to this course's content,
   // every other open session (instructors and students) refreshes the active
   // tab automatically so everyone always sees the latest version.
