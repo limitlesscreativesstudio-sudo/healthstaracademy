@@ -360,17 +360,40 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
   const saveQuestions = async () => {
     if (!editing) return;
-    await supabase.from('quiz_questions').delete().eq('quiz_id', editing.id);
-    const rows = questions.map((q,i) => ({
-      quiz_id: editing.id, position: i, question_type: q.question_type,
+    // Preserve question ids so already-submitted student answers (keyed by
+    // question id) keep matching. Only questions the instructor actually
+    // removed are deleted, and nothing is deleted before the save succeeds.
+    const payload = questions.map((q, i) => ({
+      position: i, question_type: q.question_type,
       prompt: q.prompt,
-      options: q.question_type === 'true_false' ? [{text:'True'},{text:'False'}] : q.options,
+      options: q.question_type === 'true_false' ? [{ text:'True' }, { text:'False' }] : q.options,
       correct_answer: q.correct_answer, points: q.points,
     }));
-    if (rows.length) {
-      const { error } = await supabase.from('quiz_questions').insert(rows);
+
+    const updates = questions
+      .map((q, i) => (q.id ? { id: q.id, quiz_id: editing.id, ...payload[i] } : null))
+      .filter(Boolean) as any[];
+    const inserts = questions
+      .map((q, i) => (q.id ? null : { quiz_id: editing.id, ...payload[i] }))
+      .filter(Boolean) as any[];
+
+    if (updates.length) {
+      const { error } = await supabase.from('quiz_questions').upsert(updates, { onConflict: 'id' });
       if (error) return toast.error('Failed to save questions');
     }
+    if (inserts.length) {
+      const { error } = await supabase.from('quiz_questions').insert(inserts);
+      if (error) return toast.error('Failed to save questions');
+    }
+
+    const keptIds = questions.map(q => q.id).filter(Boolean) as string[];
+    const { data: existing } = await supabase.from('quiz_questions').select('id').eq('quiz_id', editing.id);
+    const removed = (existing ?? []).map((r: any) => r.id).filter((id: string) => !keptIds.includes(id));
+    if (removed.length) {
+      await supabase.from('quiz_questions').delete().in('id', removed);
+    }
+    const rows = payload;
+
     const total = rows.reduce((a,r) => a + Number(r.points||0), 0);
     const { error: metaErr } = await supabase.from('quizzes').update({
       total_points: total,
