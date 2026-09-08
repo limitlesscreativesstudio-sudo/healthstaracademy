@@ -202,7 +202,9 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
         <div>
           <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text }}>{selfOnly ? 'My Quiz Scores' : 'Quiz Gradebook'}</h2>
           <div style={{ fontSize:12, color:C.muted, marginTop:3 }}>
-            Best score per quiz, attempts remaining{canEdit && !selfOnly ? ', and manual score edits (click a score)' : ''}.
+            {canEdit && !selfOnly
+              ? 'Best score per quiz and attempts remaining. Click any cell to type a score — including for a quiz a student took on paper.'
+              : 'Best score per quiz and attempts remaining.'}
           </div>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
