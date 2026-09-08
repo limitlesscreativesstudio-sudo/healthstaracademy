@@ -381,12 +381,13 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       const { error } = await supabase.from('quiz_questions').upsert(updates, { onConflict: 'id' });
       if (error) return toast.error('Failed to save questions');
     }
+    const keptIds = questions.map(q => q.id).filter(Boolean) as string[];
     if (inserts.length) {
-      const { error } = await supabase.from('quiz_questions').insert(inserts);
+      const { data: added, error } = await supabase.from('quiz_questions').insert(inserts).select('id');
       if (error) return toast.error('Failed to save questions');
+      (added ?? []).forEach((r: any) => keptIds.push(r.id));
     }
 
-    const keptIds = questions.map(q => q.id).filter(Boolean) as string[];
     const { data: existing } = await supabase.from('quiz_questions').select('id').eq('quiz_id', editing.id);
     const removed = (existing ?? []).map((r: any) => r.id).filter((id: string) => !keptIds.includes(id));
     if (removed.length) {
