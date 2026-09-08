@@ -225,8 +225,9 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     retryAttempt.current = 0;
     autoSubmittedRef.current = false;
     // Pull optional time_limit_minutes so we can enforce a countdown.
+    // Instructors/admins are only previewing — the countdown is for students only.
     const { data: full } = await supabase.from('quizzes').select('time_limit_minutes').eq('id', q.id).maybeSingle();
-    setTimeLimitMin((full as any)?.time_limit_minutes ?? null);
+    setTimeLimitMin(canEdit ? null : ((full as any)?.time_limit_minutes ?? null));
     const local = loadLocalDraft(q.id) ?? {};
     setAnswers(local);
     answersRef.current = local;
@@ -1175,7 +1176,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
           if (/^final\s*exam/i.test(s)) return { key:'final', label:'Final Exam', order: 5 };
           if (/^day\s*\d+/i.test(s)) return { key:'day', label:'Day Quizzes', order: 1 };
           if (/^module\s*\d+/i.test(s)) return { key:'module', label:'Module Quizzes', order: 2 };
-          if (/case\s*study|assignment\s*quiz/i.test(s)) return { key:'case', label:'Assignment Quizzes', order: 3 };
+          if (/case\s*study|assignment\s*quiz/i.test(s)) return { key:'case', label:'Case Studies w/ Questions', order: 3 };
           return { key:'other', label:'Other Quizzes', order: 4 };
         };
         const groups: Record<string, { label:string; order:number; items: Quiz[] }> = {};

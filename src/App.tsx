@@ -6,6 +6,7 @@ import GlobalCalendar from './pages/portal/teach/GlobalCalendar';
 import Inbox from './pages/portal/teach/Inbox';
 import HistoryPage from './pages/portal/teach/HistoryPage';
 import HelpPage from './pages/portal/teach/HelpPage';
+import InstructorGuide from './pages/portal/teach/InstructorGuide';
 import { AuthProvider } from './pages/portal/teach/AuthContext';
 import ProtectedRoute from './pages/portal/teach/ProtectedRoute';
 import CreateAccount from './pages/portal/teach/CreateAccount';
@@ -136,6 +137,7 @@ const AppShell = () => {
           <Route path="/portal/inbox" element={<AuthProvider><RoleGuard><Inbox /></RoleGuard></AuthProvider>} />
           <Route path="/portal/history" element={<AuthProvider><RoleGuard><HistoryPage /></RoleGuard></AuthProvider>} />
           <Route path="/portal/help" element={<AuthProvider><RoleGuard><HelpPage /></RoleGuard></AuthProvider>} />
+          <Route path="/portal/instructor-guide" element={<AuthProvider><RoleGuard require="instructor"><InstructorGuide /></RoleGuard></AuthProvider>} />
 
           <Route path="/portal/teach/login"          element={<AuthProvider><PortalLogin /></AuthProvider>} />
           <Route path="/portal/teach/reset" element={<AuthProvider><ForgotPassword /></AuthProvider>} />

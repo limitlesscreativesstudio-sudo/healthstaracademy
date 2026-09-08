@@ -107,9 +107,8 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
   const startEdit = (uid: string, qid: string) => {
     if (!canEdit || selfOnly) return;
     const c = cells[key(uid, qid)];
-    if (!c?.attemptId) { toast.info('No submitted attempt yet — a score can be set once the student submits.'); return; }
     setEditing({ uid, qid });
-    setEditVal(c.score == null ? '' : String(c.score));
+    setEditVal(c?.score == null ? '' : String(c.score));
   };
 
   const saveEdit = async () => {
@@ -119,36 +118,68 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
     const cell = cells[key(uid, qid)];
     const raw = editVal.trim();
     setEditing(null);
-    if (!cell?.attemptId || raw === '') return;
+    if (raw === '') return;
     const score = Number(raw);
-    const max = cell.max ?? quiz?.total_points ?? 0;
+    const max = cell?.max ?? quiz?.total_points ?? 0;
     if (!isFinite(score) || score < 0) { toast.error('Score must be a non-negative number'); return; }
     if (max > 0 && score > max) { toast.error(`Score exceeds max (${max})`); return; }
 
-    const prev = cell.score;
-    setCells(p => ({ ...p, [key(uid, qid)]: { ...p[key(uid, qid)], score } }));
+    const prev = cell?.score ?? null;
+    setCells(p => ({ ...p, [key(uid, qid)]: { ...(p[key(uid, qid)] ?? { attemptId:null, score:null, max:null, used:0, inProgress:0, awaiting:0, startedAt:null }), score, max } }));
 
-    const { error } = await supabase.from('quiz_attempts')
-      .update({ score, max_score: max || null }).eq('id', cell.attemptId);
-    if (error) {
-      setCells(p => ({ ...p, [key(uid, qid)]: { ...p[key(uid, qid)], score: prev } }));
-      toast.error('Save failed: ' + error.message);
-      return;
+    const { data: auth } = await supabase.auth.getUser();
+    const graderId = auth?.user?.id ?? null;
+    const now = new Date().toISOString();
+
+    let attemptId = cell?.attemptId ?? null;
+    let offline = false;
+
+    if (attemptId) {
+      const { error } = await supabase.from('quiz_attempts')
+        .update({ score, max_score: max || null, grading_status: 'released', graded_by: graderId, graded_at: now })
+        .eq('id', attemptId);
+      if (error) {
+        setCells(p => ({ ...p, [key(uid, qid)]: { ...p[key(uid, qid)], score: prev } }));
+        toast.error('Save failed: ' + error.message);
+        return;
+      }
+    } else {
+      // The student took this quiz on paper / away from the computer.
+      // Record an offline attempt so the score is stored permanently.
+      offline = true;
+      const { data: made, error } = await supabase.from('quiz_attempts').insert({
+        quiz_id: qid, user_id: uid, answers: { offline_paper_submission: true },
+        started_at: now, submitted_at: now, score, max_score: max || null,
+        grading_status: 'released', graded_by: graderId, graded_at: now,
+        instructor_feedback: 'Completed on paper — graded and entered by instructor',
+      }).select('id').single();
+      if (error || !made) {
+        setCells(p => ({ ...p, [key(uid, qid)]: { ...p[key(uid, qid)], score: prev } }));
+        toast.error('Save failed: ' + (error?.message ?? 'could not record score'));
+        return;
+      }
+      attemptId = made.id;
+      setCells(p => ({ ...p, [key(uid, qid)]: { ...p[key(uid, qid)], attemptId, used: (p[key(uid, qid)]?.used ?? 0) + 1 } }));
     }
+
+    const feedback = offline
+      ? 'Completed on paper — graded and entered by instructor'
+      : 'Manually adjusted by instructor';
     const { data: g } = await supabase.from('grades')
-      .select('id').eq('quiz_attempt_id', cell.attemptId).maybeSingle();
+      .select('id').eq('quiz_attempt_id', attemptId).maybeSingle();
     if (g?.id) {
       await supabase.from('grades')
-        .update({ score, max_score: max || 0, feedback: 'Manually adjusted by instructor', graded_at: new Date().toISOString() })
+        .update({ score, max_score: max || 0, feedback, graded_at: now })
         .eq('id', g.id);
     } else if (courseId) {
       await supabase.from('grades').insert({
-        course_id: courseId, user_id: uid, quiz_attempt_id: cell.attemptId,
-        score, max_score: max || 0, feedback: 'Manually adjusted by instructor',
+        course_id: courseId, user_id: uid, quiz_attempt_id: attemptId,
+        score, max_score: max || 0, feedback, graded_by: graderId,
       });
     }
-    toast.success('Quiz score updated');
+    toast.success(offline ? 'Paper score recorded and released' : 'Quiz score updated');
   };
+
 
   const rowTotals = (uid: string) => {
     let got = 0, poss = 0;
@@ -171,7 +202,9 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
         <div>
           <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text }}>{selfOnly ? 'My Quiz Scores' : 'Quiz Gradebook'}</h2>
           <div style={{ fontSize:12, color:C.muted, marginTop:3 }}>
-            Best score per quiz, attempts remaining{canEdit && !selfOnly ? ', and manual score edits (click a score)' : ''}.
+            {canEdit && !selfOnly
+              ? 'Best score per quiz and attempts remaining. Click any cell to type a score — including for a quiz a student took on paper.'
+              : 'Best score per quiz and attempts remaining.'}
           </div>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
