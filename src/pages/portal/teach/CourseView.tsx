@@ -1160,7 +1160,11 @@ const CourseView: React.FC = () => {
                   return (
                     <div key={item.id} onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }}
                       style={{ padding:'12px 16px', display:'flex', alignItems:'center', gap:10, cursor:'pointer', background:active?'#EDE8F7':'transparent', color:active?C.primary:C.text, fontFamily:'sans-serif', fontSize:14, fontWeight:active?600:400 }}>
-                      <span>{item.icon}</span>{item.label}
+                      <span>{item.icon}</span>
+                      <span style={{ flex:1 }}>{item.label}</span>
+                      {!active && newTabs[item.id as string] && (
+                        <span title="New content added" style={{ width:8, height:8, borderRadius:'50%', background:'#E53E3E', flexShrink:0 }} />
+                      )}
                     </div>
                   );
                 })}
