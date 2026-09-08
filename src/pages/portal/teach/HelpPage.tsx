@@ -7,6 +7,7 @@ const C = { primary:'#7B4DB5', accent:'#5BC8E8', white:'#FFFFFF', border:'#D4C8E
 
 const HelpPage: React.FC = () => {
   const resources = [
+    { label: 'Instructor Guide to the LMS', desc: 'Full walkthrough for instructors: modules, grading, paper scores, attendance and rosters.', href: '/portal/instructor-guide' },
     { label: 'Portal Overview', desc: 'A quick tour of Dashboard, Courses, Calendar, and Inbox.', href: '/portal' },
     { label: 'Submit an Assignment', desc: 'Step-by-step guide to uploading your work in a course.', href: '/portal/courses' },
     { label: 'Take a Quiz or Exam', desc: 'What to expect during timed quizzes and CNA exams.', href: '/portal/courses' },
