@@ -28,6 +28,7 @@ import { useAuth, supabase } from './AuthContext';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
 import ChooseHomePageDialog from '@/components/portal/ChooseHomePageDialog';
 import HomeRouter from '@/components/portal/HomeRouter';
+import { useTabActivity } from '@/hooks/useTabActivity';
 import ModulesTabAuthor from '@/components/portal/ModulesTabAuthor';
 import { toast, Toaster } from 'sonner';
 import { canEditTab, canViewTab } from '@/lib/portalPermissions';
@@ -689,6 +690,12 @@ const CourseView: React.FC = () => {
   const [homePageDlgOpen, setHomePageDlgOpen] = useState(false);
   const [syncTick, setSyncTick] = useState(0);
 
+  // "New content" dots in the course menu
+  const { newTabs, markSeen } = useTabActivity(activeCourse?.uuid, syncTick);
+  useEffect(() => {
+    if (activeTab) markSeen(activeTab === 'home' ? 'modules' : activeTab);
+  }, [activeTab, markSeen]);
+
   // Live sync: when ANY instructor saves a change to this course's content,
   // every other open session (instructors and students) refreshes the active
   // tab automatically so everyone always sees the latest version.
@@ -1126,7 +1133,10 @@ const CourseView: React.FC = () => {
                     onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = '#f5f3fa'; }}
                     onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                     <span style={{ fontSize:13 }}>{item.icon}</span>
-                    {item.label}
+                    <span style={{ flex:1 }}>{item.label}</span>
+                    {!active && newTabs[item.id as string] && (
+                      <span title="New content added" style={{ width:8, height:8, borderRadius:'50%', background:'#E53E3E', flexShrink:0 }} />
+                    )}
                   </div>
                 );
               })}
@@ -1150,7 +1160,11 @@ const CourseView: React.FC = () => {
                   return (
                     <div key={item.id} onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }}
                       style={{ padding:'12px 16px', display:'flex', alignItems:'center', gap:10, cursor:'pointer', background:active?'#EDE8F7':'transparent', color:active?C.primary:C.text, fontFamily:'sans-serif', fontSize:14, fontWeight:active?600:400 }}>
-                      <span>{item.icon}</span>{item.label}
+                      <span>{item.icon}</span>
+                      <span style={{ flex:1 }}>{item.label}</span>
+                      {!active && newTabs[item.id as string] && (
+                        <span title="New content added" style={{ width:8, height:8, borderRadius:'50%', background:'#E53E3E', flexShrink:0 }} />
+                      )}
                     </div>
                   );
                 })}
