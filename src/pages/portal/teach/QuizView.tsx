@@ -1173,7 +1173,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       ) : (() => {
         const groupOf = (t: string): { key: string; label: string; order: number } => {
           const s = String(t || '').trim();
-          if (/^final\s*exam/i.test(s)) return { key:'final', label:'Final Exam', order: 5 };
+          if (/^(final\s*exam|midterm)/i.test(s)) return { key:'exams', label:'Exams', order: 5 };
           if (/^day\s*\d+/i.test(s)) return { key:'day', label:'Day Quizzes', order: 1 };
           if (/^module\s*\d+/i.test(s)) return { key:'module', label:'Module Quizzes', order: 2 };
           if (/case\s*study|assignment\s*quiz/i.test(s)) return { key:'case', label:'Case Studies w/ Questions', order: 3 };
