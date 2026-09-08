@@ -1,0 +1,1 @@
+GRANT SELECT (enrollment_deadline) ON public.cohorts TO anon;
