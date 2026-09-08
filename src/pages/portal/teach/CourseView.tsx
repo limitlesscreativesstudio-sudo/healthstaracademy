@@ -1133,7 +1133,10 @@ const CourseView: React.FC = () => {
                     onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = '#f5f3fa'; }}
                     onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                     <span style={{ fontSize:13 }}>{item.icon}</span>
-                    {item.label}
+                    <span style={{ flex:1 }}>{item.label}</span>
+                    {!active && newTabs[item.id as string] && (
+                      <span title="New content added" style={{ width:8, height:8, borderRadius:'50%', background:'#E53E3E', flexShrink:0 }} />
+                    )}
                   </div>
                 );
               })}
