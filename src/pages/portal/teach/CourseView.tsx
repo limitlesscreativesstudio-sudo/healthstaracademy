@@ -28,6 +28,7 @@ import { useAuth, supabase } from './AuthContext';
 import ContentViewer, { type ContentSource } from '@/components/portal/ContentViewer';
 import ChooseHomePageDialog from '@/components/portal/ChooseHomePageDialog';
 import HomeRouter from '@/components/portal/HomeRouter';
+import { useTabActivity } from '@/hooks/useTabActivity';
 import ModulesTabAuthor from '@/components/portal/ModulesTabAuthor';
 import { toast, Toaster } from 'sonner';
 import { canEditTab, canViewTab } from '@/lib/portalPermissions';
