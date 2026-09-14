@@ -228,6 +228,17 @@ export const cohortSchedule: CohortSchedule[] = [
 ];
 
 /**
+ * Enrollment is closed for the remainder of 2026 while the business completes
+ * internal work. Only cohorts starting on or after this date accept signups.
+ */
+export const ENROLLMENT_RESUMES_ISO = "2027-01-04";
+
+/** True when a cohort start date falls inside the currently open enrollment window. */
+export function isCohortOpenForSignup(startISO: string): boolean {
+  return String(startISO).slice(0, 10) >= ENROLLMENT_RESUMES_ISO;
+}
+
+/**
  * Returns the next cohort whose deadline hasn't passed yet.
  * Optionally filters by programType (defaults to any).
  */
@@ -238,6 +249,7 @@ export function getNextUpcomingCohort(programType?: "daytime" | "weekend"): Coho
   for (const cohort of cohortSchedule) {
     const cohortType = cohort.programType || "daytime";
     if (programType && cohortType !== programType) continue;
+    if (!isCohortOpenForSignup(cohort.startISO)) continue;
     const deadline = new Date(cohort.deadlineISO + "T23:59:59");
     if (deadline >= today) {
       return cohort;
@@ -249,8 +261,11 @@ export function getNextUpcomingCohort(programType?: "daytime" | "weekend"): Coho
 }
 
 /**
- * Returns all cohorts of a given type.
+ * Returns all cohorts of a given type that are open for signup
+ * (2026 dates are closed out).
  */
 export function getCohortsByType(programType: "daytime" | "weekend"): CohortSchedule[] {
-  return cohortSchedule.filter(c => (c.programType || "daytime") === programType);
+  return cohortSchedule.filter(
+    c => (c.programType || "daytime") === programType && isCohortOpenForSignup(c.startISO),
+  );
 }

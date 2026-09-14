@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCohortsByType, getCohortDeadlines, getCohortApplyByISO, getDeadlineDate, isDeadlinePassed, type CohortSchedule } from "@/data/cohortSchedule";
+import { getCohortsByType, getCohortDeadlines, getCohortApplyByISO, getDeadlineDate, isDeadlinePassed, isCohortOpenForSignup, type CohortSchedule } from "@/data/cohortSchedule";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,7 @@ const COHORT_OPTIONS_QUERY = async () => {
   if (error) throw error;
   return (data ?? []).filter(
     (c: { start_date: string; enrollment_deadline: string | null }) =>
+      isCohortOpenForSignup(c.start_date) &&
       !isDeadlinePassed(c.start_date, c.enrollment_deadline),
   );
 };

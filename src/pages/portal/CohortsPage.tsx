@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
-import { getNextUpcomingCohort, getCohortsByType, resolveApplyByISO, isDeadlinePassed, formatDeadlineLabel } from "@/data/cohortSchedule";
+import { getNextUpcomingCohort, getCohortsByType, resolveApplyByISO, isDeadlinePassed, formatDeadlineLabel, isCohortOpenForSignup } from "@/data/cohortSchedule";
 import cnaStudentsGroup from "@/assets/cna-students-group.png";
 import cohortStudentFemale3 from "@/assets/cohort-student-female-3.jpg";
 import cohortStudentFemale4 from "@/assets/cohort-student-female-4.jpg";
@@ -76,6 +76,8 @@ const CohortsPage = () => {
   today.setHours(0, 0, 0, 0);
   const allCohorts = allCohortsRaw
     .filter(c => new Date(c.start_date + "T00:00:00") >= today)
+    // Remaining 2026 dates are closed out — only next year's cohorts are offered
+    .filter(c => isCohortOpenForSignup(c.start_date))
     .map(c => {
       const pastDeadline = isDeadlinePassed(c.start_date, c.enrollment_deadline);
       return pastDeadline && c.status !== "closed" ? { ...c, status: "closed" } : c;
