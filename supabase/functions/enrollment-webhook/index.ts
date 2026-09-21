@@ -142,10 +142,13 @@ interface PreQualData {
   can_pass_background: boolean;
   has_health_proof: boolean;
   has_transportation?: boolean;
-  // Column N — informational only, never disqualifying
+  // Column M — informational only, never disqualifying
   can_pay_fee: boolean;
-  // Column O
+  // Column N
   selected_cohort_date: string;
+  // Columns O & Q
+  disclaimer_acknowledged?: boolean;
+  consent_given?: boolean;
   // Optional fields
   referral_source?: string;
   event_type?: string;
