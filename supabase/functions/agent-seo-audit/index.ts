@@ -133,6 +133,10 @@ Deno.serve(async (req) => {
     for (const [d, list] of descs) if (list.length > 1)
       findings.push({ severity: "medium", title: "Duplicate meta description", detail: `Used on ${list.length} pages: ${list.join(", ")}`, suggested_fix: "Write a unique description per page." });
 
+    // ── Technical foundations (checked once for the whole site) ──────────────
+    findings.push(...(await technicalAudit(urls)));
+
+
     if (findings.length) {
       const rows = findings.map((f) => ({
         agent: "seo-auditor", run_id: runId, severity: f.severity === "info" ? "low" : f.severity,
