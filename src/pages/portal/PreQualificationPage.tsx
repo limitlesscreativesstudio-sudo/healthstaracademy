@@ -188,6 +188,8 @@ const PreQualificationPage = () => {
         has_diploma: eligibility.has_diploma === "yes",
         can_pay_fee: eligibility.can_pay_fee === "yes",
         selected_cohort_date: selectedCohort,
+        disclaimer_acknowledged: disclaimerAcknowledged,
+        consent_given: consentGiven,
         referral_source: personal.referral_source,
         event_type: "pre_qualification",
         source: "website",
