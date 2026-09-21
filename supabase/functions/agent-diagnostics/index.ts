@@ -4,6 +4,7 @@
 // agent_findings so they can be reviewed and fixed quickly.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/ai-gateway.ts";
+import { notifyAdmin } from "../_shared/notify-admin.ts";
 
 type Severity = "critical" | "high" | "medium" | "low";
 type Finding = {
@@ -365,6 +366,19 @@ Deno.serve(async (req) => {
       await admin.from("agent_runs")
         .update({ status: "success", finished_at: new Date().toISOString(), summary })
         .eq("id", runId);
+    }
+
+    // Email the admins: urgent items right away, everything else in the digest.
+    if (findings.length) {
+      const urgent = findings.filter((f) => f.severity === "critical" || f.severity === "high");
+      const list = (urgent.length ? urgent : findings).slice(0, 20);
+      const safe = (s: unknown) => String(s ?? "").replace(/</g, "&lt;");
+      await notifyAdmin(
+        urgent.length ? `Portal issues need attention (${urgent.length})` : "Portal check-up results",
+        `<p>${safe(summary)}</p><ul>${list.map((f) =>
+          `<li><b>${safe(f.severity)}</b> — ${safe(f.title)}${f.detail ? `<br><span style="color:#666">${safe(f.detail)}</span>` : ""}${f.suggested_fix ? `<br><i>${safe(f.suggested_fix)}</i>` : ""}</li>`).join("")}</ul>`,
+        { mode: urgent.length ? "alert" : "digest", agent: "diagnostics" },
+      );
     }
 
     return json({

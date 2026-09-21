@@ -227,6 +227,36 @@ export type Database = {
           },
         ]
       }
+      agent_notifications: {
+        Row: {
+          agent: string
+          created_at: string
+          html: string
+          id: string
+          mode: string
+          sent_at: string | null
+          subject: string
+        }
+        Insert: {
+          agent?: string
+          created_at?: string
+          html: string
+          id?: string
+          mode?: string
+          sent_at?: string | null
+          subject: string
+        }
+        Update: {
+          agent?: string
+          created_at?: string
+          html?: string
+          id?: string
+          mode?: string
+          sent_at?: string | null
+          subject?: string
+        }
+        Relationships: []
+      }
       agent_runs: {
         Row: {
           agent: string

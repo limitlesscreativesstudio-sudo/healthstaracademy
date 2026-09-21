@@ -261,6 +261,7 @@ STRICT: no text, no logos, no watermarks, no visible name badges, no AI artifact
           : `<p>Scribe just drafted a new post targeting <b>${pick.keyword}</b>.</p>
              <p>Review and one-click publish in <a href="${adminUrl}">Agents Hub → Blog</a>.</p>
              <p>Or turn on <b>Auto-publish</b> there to go fully hands-off.</p>`,
+        { mode: live ? "alert" : "digest", agent: "scribe" },
       );
     }
 

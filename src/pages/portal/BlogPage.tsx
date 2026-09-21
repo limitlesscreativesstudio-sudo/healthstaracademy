@@ -87,6 +87,17 @@ const BlogPage = () => {
       image: studentCareTraining,
     },
     {
+      slug: "hybrid-cna-programs-california",
+      title: "Hybrid CNA Programs in California: How Hybrid CNA Schools Work",
+      excerpt: "What a hybrid CNA program is, how online theory and local clinicals fit together, CDPH approval, cost, and how to pick a hybrid CNA school.",
+      author: "Health Star Academy",
+      date: "September 21, 2026",
+      publishDate: new Date("2026-09-21"),
+      readTime: "9 min read",
+      category: "Hybrid Programs",
+      image: cnaStudentsConfident,
+    },
+    {
       slug: "cna-state-exam-prep-22-skills",
       title: "CNA State Exam Prep: The 22 CDPH Skills Examiners Test",
       excerpt: "A complete breakdown of the 22 CDPH skills tested on the California CNA state exam, study tips, and the #1 reason candidates fail.",
