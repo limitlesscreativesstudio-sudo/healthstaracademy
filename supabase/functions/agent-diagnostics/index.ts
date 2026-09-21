@@ -178,10 +178,31 @@ Deno.serve(async (req) => {
     const quizById = new Map(quizList.map((q: any) => [q.id, q]));
 
     const { data: qq } = quizIds.length
-      ? await admin.from("quiz_questions").select("id,quiz_id").in("quiz_id", quizIds)
+      ? await admin.from("quiz_questions").select("id,quiz_id,question_type,correct_answer").in("quiz_id", quizIds)
       : { data: [] as any[] };
     const qCount = new Map<string, number>();
-    for (const q of qq ?? []) qCount.set(q.quiz_id, (qCount.get(q.quiz_id) ?? 0) + 1);
+    const choiceKeys = new Map<string, string[]>();
+    const AUTO = new Set(["multiple_choice", "true_false", "multiple_answers"]);
+    for (const q of qq ?? []) {
+      qCount.set(q.quiz_id, (qCount.get(q.quiz_id) ?? 0) + 1);
+      if (AUTO.has(String(q.question_type)) && q.correct_answer !== null && q.correct_answer !== undefined) {
+        choiceKeys.set(q.quiz_id, [...(choiceKeys.get(q.quiz_id) ?? []), JSON.stringify(q.correct_answer)]);
+      }
+    }
+
+    // Placeholder answer keys: every choice question marked with the same option.
+    for (const [quizId, keys] of choiceKeys) {
+      if (keys.length >= 4 && new Set(keys).size === 1) {
+        const q = quizList.find((x: any) => x.id === quizId);
+        add({
+          severity: "high", target_table: "quizzes", target_id: quizId,
+          title: `"${q?.title ?? quizId}" has a placeholder answer key`,
+          detail: `All ${keys.length} multiple-choice questions are marked with the same option, so the key is not real. Auto-checking is switched off for this quiz until real answers are entered.`,
+          suggested_fix: "Open the quiz and set the correct answer for each question, then submissions are checked automatically.",
+        });
+      }
+    }
+
 
     for (const q of quizList) {
       const n = qCount.get(q.id) ?? 0;

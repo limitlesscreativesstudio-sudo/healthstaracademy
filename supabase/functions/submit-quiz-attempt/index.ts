@@ -70,7 +70,15 @@ Deno.serve(async (req) => {
       .select("id, points, question_type, correct_answer")
       .eq("quiz_id", attempt.quiz_id);
 
-    // ── Auto-correct every question that has an answer key ───────────────────
+    // ── Auto-correct every question that has a TRUSTWORTHY answer key ────────
+    // Guard: some legacy quizzes were imported with a placeholder key where every
+    // choice question points at option A. Scoring against that would be wrong, so
+    // the whole quiz falls back to instructor grading.
+    const choiceKeys = (questions ?? [])
+      .filter((q) => AUTO_TYPES.has(String(q.question_type)) && q.correct_answer !== null && q.correct_answer !== undefined)
+      .map((q) => JSON.stringify(q.correct_answer));
+    const keySuspect = choiceKeys.length >= 4 && new Set(choiceKeys).size === 1;
+
     const questionScores: Record<string, number> = {};
     const perQuestion: { qid: string; auto: boolean; correct: boolean; points: number }[] = [];
     let max = 0;
@@ -81,7 +89,7 @@ Deno.serve(async (req) => {
       const points = Number(q.points) || 0;
       max += points;
       const keyed = q.correct_answer !== null && q.correct_answer !== undefined;
-      const auto = AUTO_TYPES.has(String(q.question_type)) && keyed;
+      const auto = !keySuspect && AUTO_TYPES.has(String(q.question_type)) && keyed;
       if (!auto) {
         needsHuman = true;
         perQuestion.push({ qid: q.id, auto: false, correct: false, points: 0 });

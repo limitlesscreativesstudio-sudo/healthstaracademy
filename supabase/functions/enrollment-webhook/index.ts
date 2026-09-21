@@ -102,7 +102,7 @@ async function appendToGoogleSheet(
   }
 
   // Append row to Sheet1
-  const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("2025 Responses")}!A:T:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("2025 Responses")}!A:W:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
   const appendRes = await fetch(sheetsUrl, {
     method: "POST",
     headers: {
@@ -142,10 +142,13 @@ interface PreQualData {
   can_pass_background: boolean;
   has_health_proof: boolean;
   has_transportation?: boolean;
-  // Column N — informational only, never disqualifying
+  // Column M — informational only, never disqualifying
   can_pay_fee: boolean;
-  // Column O
+  // Column N
   selected_cohort_date: string;
+  // Columns O & Q
+  disclaimer_acknowledged?: boolean;
+  consent_given?: boolean;
   // Optional fields
   referral_source?: string;
   event_type?: string;
@@ -342,12 +345,15 @@ Deno.serve(async (req) => {
             payload.has_diploma ? "Yes" : "No",                                   // L: Diploma
             payload.can_pay_fee === false ? "No" : "Yes",                          // M: Can Pay $175 Fee
             sanitizeForSheets(payload.selected_cohort_date),                       // N: Cohort Selected
-            sanitizeForSheets(payload.referral_source || "Website"),                // O: How Did You Hear
-            "Yes",                                                                 // P: Consent
-            qualification.status === "qualified" ? "Qualified" : "Disqualified",   // Q: Qualification Category
-            qualification.needsConsent ? "Yes" : "No",                             // R: Parental Consent Needed
-            qualification.needsExam ? "Yes" : "No",                                // S: Entrance Exam Needed
-            qualification.status === "disqualified" ? qualification.notes : "",     // T: Missing Disqualifying Items
+            payload.disclaimer_acknowledged === false ? "No" : "Yes",              // O: False-information disclaimer
+            sanitizeForSheets(payload.referral_source || "Website"),                // P: How Did You Hear
+            payload.consent_given === false ? "No" : "Yes",                        // Q: Consent
+            qualification.status === "qualified" ? "Qualified" : "Disqualified",   // R: Qualification Category
+            qualification.needsConsent ? "Yes" : "No",                             // S: Parental Consent Needed
+            qualification.needsExam ? "Yes" : "No",                                // T: Entrance Exam Needed
+            qualification.status === "disqualified" ? qualification.notes : "",     // U: Missing Disqualifying Items
+            qualification.status === "qualified" && !qualification.needsExam && !qualification.needsConsent ? "Yes" : "No", // V: All Requirements Met
+            "",                                                                    // W: 30-day sent
           ];
           await appendToGoogleSheet(GOOGLE_SERVICE_ACCOUNT_KEY, SPREADSHEET_ID, [row]);
           sheetSynced = true;
