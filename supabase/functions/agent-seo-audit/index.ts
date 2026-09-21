@@ -136,7 +136,8 @@ Deno.serve(async (req) => {
     if (findings.length) {
       const rows = findings.map((f) => ({
         agent: "seo-auditor", run_id: runId, severity: f.severity === "info" ? "low" : f.severity,
-        title: f.title, detail: [f.url, f.detail].filter(Boolean).join(" — "),
+        title: f.title, target_id: f.url ?? null,
+        detail: [f.url, f.detail].filter(Boolean).join(" — "),
         suggested_fix: f.suggested_fix ?? null, status: "open",
       }));
       // Insert in small batches so one bad row can't drop the whole report.
