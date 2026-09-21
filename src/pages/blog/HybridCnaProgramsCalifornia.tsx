@@ -73,10 +73,10 @@ const HybridCnaProgramsCalifornia = () => {
   return (
     <>
       <SEO
-        title="Hybrid CNA Programs in California | Hybrid CNA Schools 2027"
-        description="How hybrid CNA programs work in California — online theory, local clinicals, CDPH approval, $2,499 tuition, 6-week and weekend tracks. Compare hybrid CNA schools."
+        title="Hybrid CNA Training in California | Fast-Track Program"
+        description="Explore CDPH-approved hybrid CNA training with online theory, hands-on clinical practice, small classes and a 6-week fast-track option."
         canonical="/blog/hybrid-cna-programs-california"
-        keywords="hybrid CNA program, hybrid CNA schools, hybrid CNA classes California, online CNA program California, CNA school near me, blended CNA training, CDPH approved CNA program"
+        keywords="hybrid CNA training, hybrid CNA program, hybrid CNA schools, fast-track CNA program, CDPH approved CNA program, state-certified CNA, hands-on clinical training, small class sizes, personalized attention"
         type="article"
         author="Health Star Academy"
         publishedTime={PUBLISHED}
@@ -120,10 +120,11 @@ const HybridCnaProgramsCalifornia = () => {
               <div className="bg-neutral-light rounded-xl p-6 mb-10">
                 <h2 className="font-heading text-lg font-bold text-charcoal mb-2">Short answer</h2>
                 <p className="text-gray-dark leading-relaxed">
-                  A <strong>hybrid CNA program</strong> teaches the state-required nursing theory online through live classes and
+                  <strong>Hybrid CNA training</strong> teaches the state-required nursing theory online through live classes and
                   schedules your hands-on clinical hours at a local skilled nursing facility. In California the program must be
                   approved by CDPH. Health Star Academy runs a CDPH-approved hybrid CNA program with clinicals in Stockton, Lodi
-                  and Hayward, priced at $2,499 with a 6-week daytime or 8-weekend track.
+                  and Hayward, priced at $2,499 with a 6-week fast-track daytime or 8-weekend track. Small class sizes support
+                  personalized attention throughout the path from curiosity to certification.
                 </p>
               </div>
 
@@ -173,7 +174,7 @@ const HybridCnaProgramsCalifornia = () => {
                   "Check whether online classes are live or just recorded videos",
                   "Get the full price in writing: tuition, application fee, scrubs, exam fee",
                   "Ask about the state exam pass rate and career support after graduation",
-                  "Make sure the class size lets you get real hands-on practice time",
+                  "Look for small class sizes, personalized attention and real hands-on clinical practice",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-gray-dark">
                     <CheckCircle2 className="h-5 w-5 text-teal mt-0.5 flex-shrink-0" />
