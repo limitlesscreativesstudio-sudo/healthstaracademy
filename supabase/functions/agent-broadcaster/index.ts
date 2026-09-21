@@ -114,6 +114,7 @@ Output JSON only with keys: title (short internal label under 58 characters, not
          <li><b>Facebook:</b> ${esc((fb.title ?? "Untitled").toString())}</li>
        </ul>
        <p>Open <b>Agents Hub → Social drafts</b> to review and publish (or copy &amp; paste).</p>`,
+      { mode: "digest", agent: "broadcaster" },
     );
 
     return new Response(JSON.stringify({ ok: true, gbp_post_id: gbpPost?.id, facebook_post_id: fbPost?.id }), {

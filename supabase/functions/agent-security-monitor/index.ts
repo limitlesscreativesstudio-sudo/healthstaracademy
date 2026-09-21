@@ -2,6 +2,7 @@
 // Writes findings to agent_findings and notifies admins on critical issues.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/ai-gateway.ts";
+import { notifyAdmin } from "../_shared/notify-admin.ts";
 
 type Finding = {
   agent: string;
@@ -192,6 +193,14 @@ Deno.serve(async (req) => {
         );
         await supabase.from("notifications").insert(notifications);
       }
+
+      const safe = (s: unknown) => String(s ?? "").replace(/</g, "&lt;");
+      await notifyAdmin(
+        critical.length ? `Security issues need attention (${critical.length})` : "Security scan results",
+        `<ul>${fresh.slice(0, 20).map((f) =>
+          `<li><b>${safe(f.severity)}</b> — ${safe(f.title)}${f.detail ? `<br><span style="color:#666">${safe(f.detail)}</span>` : ""}</li>`).join("")}</ul>`,
+        { mode: critical.length ? "alert" : "digest", agent: "security-monitor" },
+      );
     }
 
     await supabase.from("agent_runs").update({

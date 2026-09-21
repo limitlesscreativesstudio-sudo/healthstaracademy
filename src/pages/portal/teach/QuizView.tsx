@@ -630,14 +630,10 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
   const submitAttempt = async () => {
     if (!taking || !user?.id || !attemptId) return;
-    // Instructor-graded model: nothing is scored here. We record the answers and
-    // the attempt moves into the instructor's grading queue.
+    // Questions with an answer key are auto-corrected on the server; anything
+    // written (short answer / essay) still goes to the instructor.
     let max = 0;
-    const perQ: {qid:string; correct:boolean; user:any; expected:any; auto:boolean}[] = [];
-    attemptQs.forEach(q => {
-      max += q.points;
-      perQ.push({ qid:q.id!, correct:false, user:answers[q.id!], expected:null, auto:false });
-    });
+    attemptQs.forEach(q => { max += q.points; });
     const { data: res, error } = await supabase.functions.invoke('submit-quiz-attempt', {
       body: { attempt_id: attemptId, answers },
     });
@@ -647,17 +643,25 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       toast.error(`Could not submit: ${serverErr || error?.message || 'unknown error'}`);
       return;
     }
-    const finalMax = typeof (res as any)?.max_score === 'number' ? (res as any).max_score : max;
+    const r = res as any;
+    const graded: { qid:string; auto:boolean; correct:boolean }[] = Array.isArray(r?.per_question) ? r.per_question : [];
+    const perQ = attemptQs.map(q => {
+      const g = graded.find(x => x.qid === q.id!);
+      return { qid:q.id!, correct: !!g?.correct, user: answers[q.id!], expected: q.correct_answer, auto: !!g?.auto };
+    });
+    const finalMax = typeof r?.max_score === 'number' ? r.max_score : max;
     clearLocalDraft(taking.id);
-    setResults({ score: null as any, max: finalMax, perQ, awaiting: true } as any);
+    setResults({ score: typeof r?.score === 'number' ? r.score : null, max: finalMax, perQ, awaiting: !r?.auto_graded } as any);
     setAttemptedIds(s => new Set(s).add(taking.id));
-    toast.success('Submitted — your instructor will grade this');
+    toast.success(r?.auto_graded ? 'Submitted — your score is ready' : 'Submitted — your instructor will grade this');
   };
 
 
   const downloadReview = () => {
     if (!taking || !results) return;
-    const lines = [`Quiz: ${taking.title}`, `Submitted — awaiting instructor grading (worth ${results.max} points)`, ''];
+    const lines = [`Quiz: ${taking.title}`, (results as any).score !== null && (results as any).score !== undefined
+      ? `Score: ${(results as any).score}/${results.max}`
+      : `Submitted — awaiting instructor grading (worth ${results.max} points)`, ''];
     attemptQs.forEach((q, i) => {
       const r = results.perQ.find(x => x.qid === q.id!);
       lines.push(`Q${i+1} (${q.points} pt): ${q.prompt}`);
@@ -667,7 +671,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         : q.question_type === 'multiple_answers' ? (Array.isArray(uAns) && uAns.length ? uAns.map((i:number)=>q.options[i]?.text).filter(Boolean).join('; ') : '(no answer)')
         : (uAns ?? '(no answer)');
       lines.push(`  Your answer: ${uText}`);
-      lines.push('  ⧗ Awaiting instructor grading');
+      lines.push(r?.auto ? (r.correct ? '  ✓ Correct' : '  ✗ Incorrect') : '  ⧗ Awaiting instructor grading');
       lines.push('');
     });
     const blob = new Blob([lines.join('\n')], { type:'text/plain' });
@@ -827,11 +831,26 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
             <div>
               <div style={{ background:C.white, border:`2px solid ${C.primary}`, borderRadius:8, padding:24, textAlign:'center', marginBottom:20 }}>
                 <div style={{ fontSize:48, marginBottom:10 }}>✅</div>
-                <div style={{ fontSize:20, fontWeight:700, color:C.text, marginBottom:6 }}>Submitted — awaiting grading</div>
-                <div style={{ fontSize:13.5, color:C.muted, marginBottom:14 }}>
-                  Your answers are saved and recorded. Your instructor grades this work by hand —
-                  your score will appear in Grades once it is released. Worth {results.max} point{results.max === 1 ? '' : 's'}.
-                </div>
+                {(results as any).score !== null && (results as any).score !== undefined ? (
+                  <>
+                    <div style={{ fontSize:32, fontWeight:800, color:C.primary, marginBottom:4 }}>
+                      {(results as any).score}/{results.max}
+                      {results.max ? ` (${Math.round(((results as any).score / results.max) * 100)}%)` : ''}
+                    </div>
+                    <div style={{ fontSize:20, fontWeight:700, color:C.text, marginBottom:6 }}>Submitted and scored</div>
+                    <div style={{ fontSize:13.5, color:C.muted, marginBottom:14 }}>
+                      Your answers were checked against the answer key. This score is saved in Grades.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize:20, fontWeight:700, color:C.text, marginBottom:6 }}>Submitted — awaiting grading</div>
+                    <div style={{ fontSize:13.5, color:C.muted, marginBottom:14 }}>
+                      Your answers are saved and recorded. Some questions are graded by your instructor —
+                      your score will appear in Grades once it is released. Worth {results.max} point{results.max === 1 ? '' : 's'}.
+                    </div>
+                  </>
+                )}
                 <button onClick={downloadReview} style={{ padding:'8px 18px', border:`1px solid ${C.primary}`, borderRadius:5, background:C.white, color:C.primary, fontSize:13, cursor:'pointer', fontWeight:600 }}>⬇ Download my answers</button>
               </div>
               <h3 style={{ fontSize:15, color:C.text, marginBottom:10 }}>Your submitted answers</h3>
