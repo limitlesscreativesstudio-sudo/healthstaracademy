@@ -121,10 +121,10 @@ const HomePage = () => {
   return (
     <>
       <SEO
-        title="CNA Training Stockton, Sacramento & Bay Area | Health Star"
-        description="CDPH-approved hybrid CNA training serving Stockton, Sacramento, Lodi & Hayward. 6-week daytime or 8-weekend tracks. Pre-qualify in 2 minutes."
+        title="Hybrid CNA Training in California | Health Star Academy"
+        description="CDPH-approved hybrid CNA training with a 6-week fast-track option, hands-on clinical practice, small classes and personalized attention."
         canonical="/"
-        keywords="CNA training Stockton, CNA classes Sacramento, CNA program Bay Area, CDPH approved CNA, hybrid CNA course California, certified nursing assistant Stockton, Lodi CNA training, Hayward CNA classes, CNA school near me, weekend CNA program"
+        keywords="hybrid CNA training, fast-track CNA program, CDPH approved CNA program, state-certified CNA, hands-on clinical training, small CNA classes, personalized CNA instruction, CNA training Stockton, CNA classes Sacramento, CNA program Bay Area"
         structuredData={buildBreadcrumbSchema([])}
       />
       <main className="pt-28 md:pt-32">
@@ -138,7 +138,7 @@ const HomePage = () => {
             <span className="text-cyan">Journey Today!</span>
           </>
         }
-        subtitle="Enroll in our state-certified hybrid CNA training program"
+        subtitle="Your Path from Curiosity to Certified begins with CDPH-approved hybrid CNA training"
       />
 
       {/* Quick CTA below hero */}
@@ -146,7 +146,7 @@ const HomePage = () => {
         <div className="container-custom">
           <div className="flex flex-col md:flex-row items-center justify-center gap-4">
             <p className="text-primary-foreground font-medium text-center">
-              Complete in just 6 weeks! CDPH Approved Program.
+              Choose our 6-week fast-track program with hands-on clinical training.
             </p>
             <div className="flex gap-3">
               <Button variant="secondary" size="sm" asChild>
@@ -170,7 +170,7 @@ const HomePage = () => {
               Why Choose Health Star Academy?
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
-              State-approved hybrid CNA training – Start in just a few weeks with online classes and in-person clinicals. Serving students from Sacramento, Stockton, the Central Valley, and Bay Area.
+              CDPH-approved hybrid CNA training with small class sizes and personalized attention. Learn theory online, then build confidence through hands-on clinical practice.
             </p>
           </div>
 
