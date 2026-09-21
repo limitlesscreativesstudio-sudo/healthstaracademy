@@ -239,19 +239,25 @@ Deno.serve(async (req) => {
     }
 
     const counts = findings.reduce<Record<string, number>>((a, f) => { a[f.severity] = (a[f.severity] ?? 0) + 1; return a; }, {});
-    const summary = `Audited ${urls.length} pages, ${findings.length} issues (${Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(", ") || "none"})`;
+    const weight: Record<string, number> = { critical: 12, high: 6, medium: 3, low: 1, info: 0 };
+    const penalty = findings.reduce((a, f) => a + (weight[f.severity] ?? 1), 0);
+    const score = Math.max(0, Math.min(100, 100 - penalty));
+    const summary = `Visibility score ${score}/100 — audited ${urls.length} pages, ${findings.length} issues (${Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(", ") || "none"})`;
 
     await admin.from("agent_runs").update({ status: "ok", finished_at: new Date().toISOString(), summary }).eq("id", runId);
 
+    const plan = await actionPlan(findings, score);
     const top = findings.slice(0, 25);
-    const html = `<p>${esc(summary)}</p><ul>${top.map((f) =>
+    const html = `<p><b>Visibility score: ${score}/100</b></p><p>${esc(summary)}</p>
+      ${plan ? `<h3>What to do first</h3><p>${esc(plan).replace(/\n/g, "<br>")}</p>` : ""}
+      <h3>Everything found</h3><ul>${top.map((f) =>
       `<li><b>${esc(f.severity)}</b> — ${esc(f.title)}${f.url ? `<br><a href="${f.url}">${esc(f.url)}</a>` : ""}${f.suggested_fix ? `<br><i>${esc(f.suggested_fix)}</i>` : ""}</li>`).join("")}</ul>
       ${findings.length > top.length ? `<p>+ ${findings.length - top.length} more in Agents Hub.</p>` : ""}`;
 
     const urgent = (counts["critical"] ?? 0) > 0 || (counts["high"] ?? 0) > 0;
     await notifyAdmin("Website SEO audit results", html, { mode: urgent ? "alert" : "digest", agent: "seo-auditor" });
 
-    return json({ ok: true, pages: urls.length, findings: findings.length, counts });
+    return json({ ok: true, pages: urls.length, findings: findings.length, score, counts, plan });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await admin.from("agent_runs").update({ status: "error", finished_at: new Date().toISOString(), summary: msg }).eq("id", runId);
