@@ -71,6 +71,90 @@ function auditPage(url: string, html: string, shell: boolean): Finding[] {
   return out;
 }
 
+// Site-wide technical foundations: crawl rules, discoverability, AI-search
+// readiness, security headers and mobile setup.
+async function technicalAudit(sitemapUrls: string[]): Promise<Finding[]> {
+  const out: Finding[] = [];
+
+  // robots.txt
+  try {
+    const r = await fetch(`${SITE}/robots.txt`);
+    if (!r.ok) {
+      out.push({ severity: "high", title: "No robots.txt file", suggested_fix: "Add a robots.txt that allows crawling and points to the sitemap." });
+    } else {
+      const txt = await r.text();
+      if (/^\s*Disallow:\s*\/\s*$/im.test(txt) && /User-agent:\s*\*/i.test(txt))
+        out.push({ severity: "critical", title: "robots.txt blocks the whole site", suggested_fix: "Remove the site-wide Disallow so search engines can read the pages." });
+      if (!/sitemap:/i.test(txt))
+        out.push({ severity: "medium", title: "robots.txt does not list the sitemap", suggested_fix: `Add "Sitemap: ${SITE}/sitemap.xml".` });
+      if (!/GPTBot|ChatGPT-User|PerplexityBot|ClaudeBot/i.test(txt))
+        out.push({ severity: "low", title: "AI search crawlers are not addressed in robots.txt", suggested_fix: "Add explicit Allow rules for GPTBot, ChatGPT-User, PerplexityBot and ClaudeBot so AI answers can cite the school." });
+    }
+  } catch { out.push({ severity: "high", title: "robots.txt could not be loaded" }); }
+
+  // llms.txt — AI-search readiness
+  try {
+    const r = await fetch(`${SITE}/llms.txt`);
+    if (!r.ok) out.push({ severity: "low", title: "No llms.txt file", suggested_fix: "Add an llms.txt summary so AI assistants describe the program accurately." });
+  } catch { /* ignore */ }
+
+  // Sitemap health
+  if (sitemapUrls.length < 5)
+    out.push({ severity: "high", title: "Sitemap lists very few pages", detail: `${sitemapUrls.length} URL(s) found`, suggested_fix: "List every public page in the sitemap so all of them can be indexed." });
+  const dupes = sitemapUrls.length - new Set(sitemapUrls).size;
+  if (dupes > 0)
+    out.push({ severity: "low", title: `${dupes} duplicate URL(s) in the sitemap`, suggested_fix: "Remove the repeated entries." });
+
+  // Homepage-level technical signals
+  try {
+    const res = await fetch(SITE, { headers: { "User-Agent": "HSA-SEO-Auditor/1.0" } });
+    const html = await res.text();
+    const bytes = new TextEncoder().encode(html).length;
+    if (!/name=["']viewport["']/i.test(html))
+      out.push({ severity: "high", title: "No mobile viewport tag", suggested_fix: "Add the viewport meta tag so phones render the site properly." });
+    if (!/rel=["'](icon|shortcut icon)["']/i.test(html))
+      out.push({ severity: "low", title: "No favicon declared", suggested_fix: "Add a favicon link so the logo shows in browser tabs and results." });
+    if (!/<html[^>]+lang=/i.test(html))
+      out.push({ severity: "low", title: "Page language is not declared", suggested_fix: 'Add lang="en" to the html tag.' });
+    if (bytes > 400_000)
+      out.push({ severity: "medium", title: `Homepage HTML is heavy (${Math.round(bytes / 1024)} KB)`, suggested_fix: "Trim inline content so the page loads faster on phones." });
+    if (!res.headers.get("strict-transport-security"))
+      out.push({ severity: "low", title: "No HTTPS security header", suggested_fix: "Enable Strict-Transport-Security at the host for a small trust and ranking benefit." });
+  } catch { /* already reported per-page */ }
+
+  // http → https and www consistency
+  try {
+    const r = await fetch(SITE.replace("https://", "http://"), { redirect: "manual" });
+    const loc = r.headers.get("location") ?? "";
+    if (r.status < 300 || r.status >= 400 || !loc.startsWith("https://"))
+      out.push({ severity: "medium", title: "Insecure address does not redirect to the secure one", suggested_fix: "Redirect all http:// traffic to https:// so link value is not split." });
+  } catch { /* ignore */ }
+
+  return out;
+}
+
+// Turns the raw findings into a prioritised, plain-language action plan.
+async function actionPlan(findings: Finding[], score: number): Promise<string> {
+  const key = Deno.env.get("LOVABLE_API_KEY");
+  if (!key || !findings.length) return "";
+  try {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: "You advise the owner of a California CNA school on search visibility. Reply in plain language, no jargon, no markdown headings. Give the 5 highest-impact fixes as a numbered list, each one sentence saying what to do and what it wins. Then one sentence on the single biggest opportunity." },
+          { role: "user", content: `Visibility score: ${score}/100.\nIssues:\n${findings.slice(0, 40).map((f) => `- [${f.severity}] ${f.title}${f.url ? ` (${f.url})` : ""}`).join("\n")}` },
+        ],
+      }),
+    });
+    if (!res.ok) { console.error("[seo-audit] ai plan failed", res.status, await res.text()); return ""; }
+    const data = await res.json();
+    return String(data?.choices?.[0]?.message?.content ?? "");
+  } catch (e) { console.error("[seo-audit] ai plan error", e); return ""; }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
