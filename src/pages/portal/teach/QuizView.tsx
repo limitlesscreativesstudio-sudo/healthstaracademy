@@ -869,28 +869,31 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                     <div style={{ padding:14, fontSize:13, color:C.text }}>
                       <p style={{ margin:'0 0 10px' }}>{q.prompt}</p>
                       {q.question_type === 'multiple_choice' && q.options.map((o, oi) => {
-                        const isU = r?.user === oi; const isC = q.correct_answer === oi;
+                        const isU = r?.user === oi;
+                        const isC = isU && r?.auto && r.correct;
+                        const isWrong = isU && r?.auto && !r.correct;
                         return (
-                          <div key={oi} style={{ padding:'6px 10px', borderRadius:4, marginBottom:3, background: isC ? '#E8F5E9' : isU ? '#FDECEA' : 'transparent', color: isC ? C.success : isU ? C.error : C.text }}>
-                            {isC ? '✓ ' : isU ? '✗ ' : '  '}{o.text}{isU && !isC && ' (your answer)'}
+                          <div key={oi} style={{ padding:'6px 10px', borderRadius:4, marginBottom:3, background: isU ? C.bg : 'transparent', color: isC ? C.success : isWrong ? C.error : C.text }}>
+                            {isC ? '✓ ' : isWrong ? '✗ ' : '  '}{o.text}{isU && ' (your answer)'}
                           </div>
                         );
                       })}
                       {q.question_type === 'multiple_answers' && q.options.map((o, oi) => {
-                        const uArr = Array.isArray(r?.user) ? r!.user.map(Number) : [];
-                        const cArr = Array.isArray(q.correct_answer) ? q.correct_answer.map(Number) : [];
-                        const isU = uArr.includes(oi); const isC = cArr.includes(oi);
-                        const mark = isC && isU ? '✓' : isC && !isU ? '·' : !isC && isU ? '✗' : ' ';
-                        const bg = isC ? '#E8F5E9' : isU ? '#FDECEA' : 'transparent';
-                        const col = isC ? C.success : isU ? C.error : C.text;
+                        const uArr = Array.isArray(r?.user) ? r.user.map(Number) : [];
+                        const isU = uArr.includes(oi);
+                        // An incorrect set does not identify which individual choices were wrong.
+                        const isC = isU && r?.auto && r.correct;
+                        const mark = isC ? '✓' : ' ';
+                        const bg = isU ? C.bg : 'transparent';
+                        const col = isC ? C.success : C.text;
                         return (
                           <div key={oi} style={{ padding:'6px 10px', borderRadius:4, marginBottom:3, background:bg, color:col }}>
-                            {mark} {o.text}{isU && !isC && ' (your selection)'}{isC && !isU && ' (missed)'}
+                            {mark} {o.text}{isU && ' (your selection)'}
                           </div>
                         );
                       })}
                       {q.question_type === 'true_false' && (
-                        <div>Your answer: <strong>{r?.user===0?'True':r?.user===1?'False':'—'}</strong> • Correct: <strong>{q.correct_answer===0?'True':'False'}</strong></div>
+                        <div>Your answer: <strong>{r?.user===0?'True':r?.user===1?'False':'—'}</strong></div>
                       )}
                       {(q.question_type === 'short_answer' || q.question_type === 'essay') && (
                         <div style={{ background:C.bg, padding:10, borderRadius:4, whiteSpace:'pre-wrap' }}>{r?.user || <em style={{ color:C.muted }}>(no answer)</em>}</div>
