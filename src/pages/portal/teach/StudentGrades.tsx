@@ -204,6 +204,73 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
     });
     toast.success(`Set ${score} for ${targets.length} student${targets.length === 1 ? '' : 's'} on ${col.name}`);
   };
+  // ── Manual grade entry: pick a student, pick an item, enter a score
+  const [showManual, setShowManual] = useState(false);
+  const [mStudent, setMStudent] = useState('');
+  const [mCol, setMCol] = useState('');
+  const [mScore, setMScore] = useState('');
+  const [mBusy, setMBusy] = useState(false);
+
+  const saveManual = async () => {
+    const col = columns.find(c => c.id === mCol);
+    const stu = students.find(s => s.id === mStudent);
+    if (!courseId || !col || !stu) { toast.error('Choose a student and an item'); return; }
+    const score = Number(mScore.trim());
+    if (mScore.trim() === '' || !isFinite(score) || score < 0) { toast.error('Enter a valid, non-negative score'); return; }
+    if (col.points > 0 && score > col.points) { toast.error(`Score exceeds max (${col.points})`); return; }
+    setMBusy(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const graderId = auth?.user?.id ?? null;
+      const now = new Date().toISOString();
+      if (col.kind === 'assignment') {
+        const { error } = await supabase.from('grades').upsert({
+          course_id: courseId, user_id: stu.id, assignment_id: col.id, score,
+          max_score: col.points || null, graded_at: now,
+        }, { onConflict: 'assignment_id,user_id' });
+        if (error) throw error;
+      } else {
+        const { data: atts, error: aErr } = await supabase.from('quiz_attempts')
+          .select('id, submitted_at, grading_status').eq('quiz_id', col.id).eq('user_id', stu.id)
+          .order('submitted_at', { ascending: false, nullsFirst: true });
+        if (aErr) throw aErr;
+        if ((atts ?? []).some((a: any) => !a.submitted_at)) {
+          throw new Error('This student has an open attempt. Submit it from the quiz Responses panel first.');
+        }
+        let attemptId = (atts ?? []).find((a: any) => a.grading_status !== 'superseded')?.id ?? null;
+        let offline = false;
+        if (attemptId) {
+          const { error } = await supabase.from('quiz_attempts')
+            .update({ score, max_score: col.points || null, grading_status: 'released', graded_by: graderId, graded_at: now })
+            .eq('id', attemptId);
+          if (error) throw error;
+        } else {
+          offline = true;
+          const { data: made, error } = await supabase.from('quiz_attempts').insert({
+            quiz_id: col.id, user_id: stu.id, answers: { offline_paper_submission: true },
+            started_at: now, submitted_at: now, score, max_score: col.points || null,
+            grading_status: 'released', graded_by: graderId, graded_at: now,
+            instructor_feedback: 'Completed on paper — graded and entered by instructor',
+          }).select('id').single();
+          if (error || !made) throw error ?? new Error('Could not record score');
+          attemptId = made.id;
+        }
+        const feedback = offline ? 'Completed on paper — graded and entered by instructor' : 'Manually entered by instructor';
+        const { data: g } = await supabase.from('grades').select('id').eq('quiz_attempt_id', attemptId).maybeSingle();
+        const { error: gErr } = g?.id
+          ? await supabase.from('grades').update({ score, max_score: col.points || 0, feedback, graded_at: now }).eq('id', g.id)
+          : await supabase.from('grades').insert({ course_id: courseId, user_id: stu.id, quiz_attempt_id: attemptId, score, max_score: col.points || 0, feedback, graded_by: graderId });
+        if (gErr) throw gErr;
+      }
+      toast.success(`Saved ${score}/${col.points} for ${stu.name} on ${col.name}`);
+      setMScore('');
+      await load();
+    } catch (e: any) {
+      toast.error('Could not save: ' + (e?.message ?? e));
+    } finally {
+      setMBusy(false);
+    }
+  };
 
   const visibleCols = useMemo(() => {
     const q = colSearch.trim().toLowerCase();
@@ -308,6 +375,12 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
               {f === 'all' ? 'All' : f === 'assignment' ? 'Assignments' : 'Quizzes'}
             </button>
           ))}
+          {canEdit && !selfOnly && (
+            <button onClick={() => setShowManual(v => !v)} aria-expanded={showManual}
+              style={{ padding:'7px 14px', border:'none', borderRadius:5, background:'#319795', color:'white', fontSize:13, fontWeight:600, fontFamily:'sans-serif', cursor:'pointer' }}>
+              ✏️ Add grade
+            </button>
+          )}
           {canEdit && (
             <button onClick={() => setShowBulk(v => !v)} aria-expanded={showBulk}
               style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:showBulk?C.primary:C.white, color:showBulk?'white':C.text, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>
@@ -324,6 +397,49 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
           <button onClick={load} style={{ padding:'7px 14px', border:`1px solid ${C.border}`, borderRadius:5, background:C.white, fontSize:13, fontFamily:'sans-serif', cursor:'pointer' }}>🔄 Refresh</button>
         </div>
       </div>
+
+      {canEdit && !selfOnly && showManual && (() => {
+        const col = columns.find(c => c.id === mCol);
+        const cur = mStudent && mCol ? grades[mStudent]?.[mCol] : null;
+        const field = { padding:'7px 10px', border:`1px solid ${C.border}`, borderRadius:5, fontSize:13 } as const;
+        const lbl = { display:'block', fontSize:11, color:C.muted, marginBottom:3 } as const;
+        return (
+          <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:14, marginBottom:14, fontFamily:'sans-serif' }}>
+            <strong style={{ fontSize:13, color:C.text }}>Add or update a grade</strong>
+            <div style={{ display:'flex', gap:10, flexWrap:'wrap', alignItems:'flex-end', marginTop:10 }}>
+              <div>
+                <label htmlFor="m-stu" style={lbl}>Student</label>
+                <select id="m-stu" value={mStudent} onChange={e => setMStudent(e.target.value)} style={{ ...field, minWidth:200 }}>
+                  <option value="">Select a student…</option>
+                  {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="m-col" style={lbl}>Quiz / assignment</label>
+                <select id="m-col" value={mCol} onChange={e => setMCol(e.target.value)} style={{ ...field, minWidth:240 }}>
+                  <option value="">Select an item…</option>
+                  {columns.map(c => <option key={c.id} value={c.id}>{c.kind === 'quiz' ? '🎯' : '📝'} {c.name} (/{c.points})</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="m-score" style={lbl}>Score{col ? ` (out of ${col.points})` : ''}</label>
+                <input id="m-score" value={mScore} onChange={e => setMScore(e.target.value)} inputMode="decimal"
+                  onKeyDown={e => { if (e.key === 'Enter') saveManual(); }} style={{ ...field, width:90 }} />
+              </div>
+              <button onClick={saveManual} disabled={mBusy}
+                style={{ padding:'8px 16px', border:'none', borderRadius:5, background:'#319795', color:'white', fontSize:13, fontWeight:600, cursor: mBusy ? 'wait' : 'pointer' }}>
+                {mBusy ? 'Saving…' : 'Save grade'}
+              </button>
+            </div>
+            {mStudent && mCol && (
+              <p style={{ fontSize:12, color:C.muted, margin:'8px 0 0' }}>
+                Current score: <strong>{cur == null ? 'none yet' : `${Math.round(cur * 100) / 100} / ${col?.points}`}</strong>
+                {col?.kind === 'quiz' && ' · Saving releases this quiz score to the student. If they never took it online, it is recorded as a paper submission.'}
+              </p>
+            )}
+          </div>
+        );
+      })()}
 
       {canEdit && showBulk && (
         <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:14, marginBottom:14, fontFamily:'sans-serif' }}>
