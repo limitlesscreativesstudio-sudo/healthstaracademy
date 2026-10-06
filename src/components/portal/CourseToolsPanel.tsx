@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { isAttended, THEORY_HOURS_PER_ATTENDED_DAY } from '@/lib/attendance';
+import { isAttended, THEORY_HOURS_PER_ATTENDED_DAY, splitAttendanceHours } from '@/lib/attendance';
 
 const C = {
   primary: '#7B4DB5', bg: '#F4F2FA', white: '#FFFFFF', border: '#D4C8E8',
@@ -76,7 +76,7 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
 
     const [{ data: profs }, { data: att }, { data: ch }, { data: ca }] = await Promise.all([
       supabase.from('profiles').select('user_id, full_name').in('user_id', uids),
-      supabase.from('attendance').select('student_id, status').eq('course_id', courseId),
+      supabase.from('attendance').select('student_id, status, session_date').eq('course_id', courseId),
       supabase.from('clinical_hours').select('student_user_id, hours, verified').eq('course_id', courseId),
       supabase.from('clinical_attendance').select('student_user_id, hours, hours_worked, verified').eq('course_id', courseId),
     ]);
@@ -87,10 +87,16 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
     const acc: Record<string, Row> = {};
     uids.forEach(u => { acc[u] = { userId: u, name: nameBy[u] || 'Student', theory: 0, clinical: 0, clinicalVerified: 0, presentDays: 0, totalDays: 0 }; });
 
-    (att ?? []).forEach(a => {
-      const r = acc[a.student_id]; if (!r) return;
-      r.totalDays += 1;
-      if (isAttended(a.status)) { r.presentDays += 1; r.theory += THEORY_HOURS_PER_ATTENDED_DAY; }
+    const attBy: Record<string, any[]> = {};
+    (att ?? []).forEach(a => { if (acc[a.student_id]) (attBy[a.student_id] ??= []).push(a); });
+    Object.entries(attBy).forEach(([uid, list]) => {
+      const r = acc[uid];
+      const split = splitAttendanceHours(list, req.theory);
+      r.totalDays = list.length;
+      r.presentDays = split.presentDays;
+      r.theory = split.theory;
+      // Present days after theory is complete are instructor-marked clinical time.
+      r.clinical += split.clinical; r.clinicalVerified += split.clinical;
     });
     const addClinical = (uid: string, hrs: number, verified: boolean) => {
       const r = acc[uid]; if (!r) return;
@@ -200,7 +206,7 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
     <div style={{ maxWidth: 880, fontFamily: 'sans-serif' }}>
       <Section
         title="Hours roll-up"
-        desc={`Theory hours accrue at ${THEORY_HOURS_PER_ATTENDED_DAY}h per attended class day. Clinical hours roll up from logged and verified clinical shifts. Requirements: ${req.theory}h theory / ${req.clinical}h clinical (${req.program}).`}
+        desc={`Each present day earns ${THEORY_HOURS_PER_ATTENDED_DAY}h. Hours count toward theory until ${req.theory}h is reached; every present day after that counts toward clinical, plus any logged clinical shifts. Requirements: ${req.theory}h theory / ${req.clinical}h clinical (${req.program}).`}
       >
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
           <button onClick={exportHours} disabled={!rows.length}
