@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from './AuthContext';
+import { quizCountsTowardTotal } from '@/lib/gradePolicy';
 import { toast } from 'sonner';
 
 const C = { primary:'#7B4DB5', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
@@ -8,7 +9,7 @@ const C = { primary:'#7B4DB5', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', 
 const pctColor = (p: number) => p >= 80 ? C.success : p >= 70 ? C.warn : C.error;
 
 interface Props { courseId?: string; canEdit?: boolean; selfOnly?: boolean; }
-interface Quiz { id: string; title: string; total_points: number; attempts_allowed: number; }
+interface Quiz { id: string; title: string; total_points: number; attempts_allowed: number; published?: boolean; }
 interface Student { id: string; name: string; }
 interface Cell { attemptId: string | null; score: number | null; max: number | null; used: number; inProgress: number; awaiting: number; startedAt: string | null; }
 
@@ -49,12 +50,13 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
     setStudents(studs);
 
     const { data: qzs } = await supabase.from('quizzes')
-      .select('id,title,total_points,attempts_allowed,created_at')
+      .select('id,title,total_points,attempts_allowed,published,created_at')
       .eq('course_id', courseId).order('created_at');
     const qList: Quiz[] = (qzs ?? []).map((q: any) => ({
       id: q.id, title: q.title,
       total_points: Number(q.total_points ?? 0),
       attempts_allowed: Math.max(1, Number(q.attempts_allowed ?? 1)),
+      published: !!q.published,
     })).sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
     setQuizzes(qList);
 
@@ -187,6 +189,7 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
   const rowTotals = (uid: string) => {
     let got = 0, poss = 0;
     for (const q of quizzes) {
+      if (!quizCountsTowardTotal(q)) continue;
       const c = cells[key(uid, q.id)];
       if (!c || c.score == null) continue;
       got += c.score; poss += (c.max ?? q.total_points ?? 0);

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from './AuthContext';
+import { quizCountsTowardTotal } from '@/lib/gradePolicy';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#6B5C8A', success:'#127A1B', error:'#C0392B', warn:'#B35C00' } as const;
 
@@ -52,7 +53,7 @@ const AnalyticsTab: React.FC<Props> = ({ courseId, canEdit }) => {
       const [{ data: profs }, { data: asgns }, { data: qzs }, { data: discs }] = await Promise.all([
         uids.length ? supabase.from('profiles').select('user_id, full_name').in('user_id', uids) : Promise.resolve({ data: [] }),
         supabase.from('assignments').select('id,title,points').eq('course_id', courseId),
-        supabase.from('quizzes').select('id,title,total_points').eq('course_id', courseId),
+        supabase.from('quizzes').select('id,title,total_points,published').eq('course_id', courseId),
         supabase.from('discussions').select('id').eq('course_id', courseId),
       ]);
 
@@ -72,7 +73,7 @@ const AnalyticsTab: React.FC<Props> = ({ courseId, canEdit }) => {
 
       const totalPoints =
         (asgns ?? []).reduce((s:number,a:any) => s + Number(a.points ?? 0), 0) +
-        (qzs ?? []).reduce((s:number,q:any) => s + Number(q.total_points ?? 0), 0);
+        (qzs ?? []).filter((q:any) => quizCountsTowardTotal(q)).reduce((s:number,q:any) => s + Number(q.total_points ?? 0), 0);
 
       const bestAttempt: Record<string, { score:number; at:string }> = {};
       (attempts ?? []).forEach((a:any) => {
