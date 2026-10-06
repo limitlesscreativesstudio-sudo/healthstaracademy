@@ -1,5 +1,8 @@
 # Portal updates
 
+- [ ] Keep original case studies intact; remove imported student document entries from Modules and document copies from Pages while retaining Files.
+- [ ] Standardize assessment text rendering and verify original questions, answers, and grades are preserved.
+
 - [x] Match uploaded Module 1–17 quizzes, case studies, and answer keys to existing course content.
 - [x] Add 33 locked revised assessments and 30 verified keys per course across both templates and the active cohort; preserve old question IDs and work.
 - [x] Add student documents to Files, Pages, and module sections; keep 32 reference key files per course instructor-only.
