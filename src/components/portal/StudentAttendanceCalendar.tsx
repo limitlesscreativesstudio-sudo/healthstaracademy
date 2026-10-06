@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import {
   attendanceCode, isAttended, THEORY_HOURS_PER_ATTENDED_DAY,
   REQUIRED_THEORY_HOURS, REQUIRED_CLINICAL_HOURS,
+  attendanceDayHours,
 } from '@/lib/attendance';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22', clinical:'#319795' } as const;
@@ -45,18 +46,10 @@ const StudentAttendanceCalendar: React.FC<Props> = ({ courseId, studentId, name,
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [courseId, studentId]);
 
-  // Per-day hour split: theory until 60h, then clinical.
-  const dayHours = useMemo(() => {
-    const out: Record<string, { theory: number; clinical: number }> = {};
-    let theory = 0;
-    Object.keys(att).sort().forEach(d => {
-      if (!isAttended(att[d])) return;
-      const t = Math.min(Math.max(0, REQUIRED_THEORY_HOURS - theory), THEORY_HOURS_PER_ATTENDED_DAY);
-      theory += t;
-      out[d] = { theory: t, clinical: THEORY_HOURS_PER_ATTENDED_DAY - t };
-    });
-    return out;
-  }, [att]);
+  // Per-day hour split: theory until 60h, then clinical (Fridays = make-up, 0h).
+  const dayHours = useMemo(() =>
+    attendanceDayHours(Object.entries(att).map(([session_date, status]) => ({ session_date, status }))),
+  [att]);
   const loggedByDay = useMemo(() => {
     const m: Record<string, number> = {};
     logged.forEach(l => { m[l.shift_date] = (m[l.shift_date] ?? 0) + Number(l.hours ?? 0); });
@@ -122,7 +115,8 @@ const StudentAttendanceCalendar: React.FC<Props> = ({ courseId, studentId, name,
     const k = ymd(d), st = att[k], h = dayHours[k], man = loggedByDay[k];
     const inRange = range && k >= range.start && k <= range.end;
     let bg = inRange ? C.white : C.bg, fg = C.text, tag = '';
-    if (h) { if (h.clinical > 0 && h.theory > 0) { bg = `linear-gradient(135deg, ${C.primary} 50%, ${C.clinical} 50%)`; fg = '#fff'; tag = `${h.theory}T·${h.clinical}C`; }
+    if (h) { if (h.makeup) { bg = '#FFF4E5'; fg = C.warn; tag = h.theory > 0 ? `${h.theory}T·Makeup` : 'Makeup'; }
+             else if (h.clinical > 0 && h.theory > 0) { bg = `linear-gradient(135deg, ${C.primary} 50%, ${C.clinical} 50%)`; fg = '#fff'; tag = `${h.theory}T·${h.clinical}C`; }
              else if (h.clinical > 0) { bg = C.clinical; fg = '#fff'; tag = `${h.clinical}h C`; }
              else { bg = C.primary; fg = '#fff'; tag = `${h.theory}h T`; } }
     else if (st === 'A') { bg = '#FDECEA'; fg = C.error; tag = 'Absent'; }
@@ -163,8 +157,8 @@ const StudentAttendanceCalendar: React.FC<Props> = ({ courseId, studentId, name,
 
           <div style={{ display:'flex', flexWrap:'wrap', gap:10, fontSize:11, color:C.muted, marginBottom:10 }}>
             <Legend c={C.primary} t="Theory day" /><Legend c={C.clinical} t="Clinical day" /><Legend c="#FDECEA" t="Absent" />
-            <Legend c="#E6F7FC" t="Excused" /><Legend c={C.warn} t="+ added clinical hrs" />
-            {canEdit && <span>· Tap a day to cycle Present → Absent → Late → Excused → clear</span>}
+            <Legend c="#E6F7FC" t="Excused" /><Legend c="#FFF4E5" t="Friday make-up (no clinical hrs)" /><Legend c={C.warn} t="+ added clinical hrs" />
+            {canEdit && <span>· Tap any past day to fix or fill in attendance: Present → Absent → Late → Excused → clear</span>}
           </div>
 
           {months.map(m => {
