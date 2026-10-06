@@ -1,7 +1,8 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect } from 'react';
 import { supabase } from './AuthContext';
-import { attendanceCode } from '@/lib/attendance';
+import { attendanceCode, splitAttendanceHours, REQUIRED_THEORY_HOURS } from '@/lib/attendance';
+import StudentAttendanceCalendar from '@/components/portal/StudentAttendanceCalendar';
 import { toast } from 'sonner';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
@@ -21,6 +22,22 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const [loading,    setLoading]    = useState(true);
   const [saving,     setSaving]     = useState(false);
   const [saved,      setSaved]      = useState(false);
+  const [openStudent, setOpenStudent] = useState<Student | null>(null);
+  const [allAtt, setAllAtt] = useState<any[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Full history for running theory/clinical totals per student
+  useEffect(() => {
+    if (!courseId) return;
+    supabase.from('attendance').select('student_id, session_date, status').eq('course_id', courseId)
+      .then(({ data }) => setAllAtt(data ?? []));
+  }, [courseId, refreshKey]);
+
+  const hoursFor = (sid: string) => {
+    const list = allAtt.filter(a => a.student_id === sid && a.session_date < sessionDate);
+    const before = splitAttendanceHours(list);
+    return { ...before, clinicalToday: before.theory >= REQUIRED_THEORY_HOURS };
+  };
 
   // Load enrolled students
   useEffect(() => {
@@ -100,6 +117,7 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
     }
     setSaving(false);
     setSaved(true);
+    setRefreshKey(k => k + 1);
     window.dispatchEvent(new CustomEvent('hsa:progress-updated', { detail: { courseId } }));
     toast.success('Attendance saved and progress updated');
     setTimeout(() => setSaved(false), 3000);
@@ -173,8 +191,13 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
                   fontSize:12, fontWeight:700, flexShrink:0 }}>{s.initials}</div>
                 {/* Name */}
                 <div style={{ flex:1 }}>
-                  <div style={{ fontSize:13, fontWeight:600, color:C.text, fontFamily:'sans-serif' }}>{s.name}</div>
-                  <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>{s.email}</div>
+                  <button type="button" onClick={() => setOpenStudent(s)} title="Open attendance calendar"
+                    style={{ border:'none', background:'none', padding:0, cursor:'pointer', fontSize:13, fontWeight:600, color:C.primary, fontFamily:'sans-serif', textDecoration:'underline', textAlign:'left' }}>{s.name}</button>
+                  {(() => { const h = hoursFor(s.id); return (
+                    <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>
+                      Theory {h.theory}/{REQUIRED_THEORY_HOURS}h · Clinical {h.clinical}h
+                      {h.clinicalToday && <span style={{ marginLeft:6, padding:'1px 6px', borderRadius:4, background:'#319795', color:'#fff', fontWeight:600 }}>Present = clinical hours</span>}
+                    </div>); })()}
                 </div>
                 {/* Status buttons */}
                 <div style={{ display:'flex', gap:6 }}>
@@ -198,6 +221,11 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
             );
           })}
         </div>
+      )}
+      {openStudent && courseId && (
+        <StudentAttendanceCalendar courseId={courseId} studentId={openStudent.id} name={openStudent.name} canEdit={canEdit}
+          onClose={() => setOpenStudent(null)}
+          onChanged={() => { setRefreshKey(k => k + 1); setSessionDate(d => d); }} />
       )}
     </div>
   );
