@@ -1,5 +1,7 @@
 # Portal updates
 
+- [ ] Audit LMS access, assessment saving, grading, files, notifications, attendance, and course connections; correct confirmed issues and verify live views.
+
 - [x] Keep original case studies intact; remove imported student document entries from Modules and document copies from Pages while retaining Files.
 - [x] Standardize assessment text rendering; preserve question IDs, response formats, answers, and grades. Instructor view verified without runtime errors.
 - [ ] Auto-grade written case-study responses — requires instructor-approved choice versions; existing written submissions cannot safely be converted or exact-text graded.
