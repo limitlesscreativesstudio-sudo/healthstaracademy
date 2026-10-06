@@ -3071,6 +3071,18 @@ export type Database = {
       }
       is_enrolled_in: { Args: { _course_id: string }; Returns: boolean }
       is_instructor_of: { Args: { _course_id: string }; Returns: boolean }
+      record_quiz_submission: {
+        Args: {
+          _answers: Json
+          _attempt_id: string
+          _earned: number
+          _maximum: number
+          _question_scores: Json
+          _released: boolean
+          _user_id: string
+        }
+        Returns: boolean
+      }
       shares_course_as_instructor: {
         Args: { _student_user_id: string }
         Returns: boolean

@@ -43,6 +43,13 @@
       "when": 1791265893561,
       "tag": "0005_align_attempt_start_validation_with_draft_status",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791265954178,
+      "tag": "0006_atomic_quiz_submission_and_files_only_documents",
+      "breakpoints": true
     }
   ]
 }
