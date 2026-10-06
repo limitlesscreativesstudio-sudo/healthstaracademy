@@ -46,7 +46,7 @@ const StudentAttendanceCalendar: React.FC<Props> = ({ courseId, studentId, name,
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [courseId, studentId]);
 
-  // Per-day hour split: theory until 60h, then clinical (Fridays = make-up, 0h).
+  // Per-day hour split: theory until 60h, then clinical.
   const dayHours = useMemo(() =>
     attendanceDayHours(Object.entries(att).map(([session_date, status]) => ({ session_date, status }))),
   [att]);
@@ -115,8 +115,7 @@ const StudentAttendanceCalendar: React.FC<Props> = ({ courseId, studentId, name,
     const k = ymd(d), st = att[k], h = dayHours[k], man = loggedByDay[k];
     const inRange = range && k >= range.start && k <= range.end;
     let bg = inRange ? C.white : C.bg, fg = C.text, tag = '';
-    if (h) { if (h.makeup) { bg = '#FFF4E5'; fg = C.warn; tag = h.theory > 0 ? `${h.theory}T·Makeup` : 'Makeup'; }
-             else if (h.clinical > 0 && h.theory > 0) { bg = `linear-gradient(135deg, ${C.primary} 50%, ${C.clinical} 50%)`; fg = '#fff'; tag = `${h.theory}T·${h.clinical}C`; }
+    if (h) { if (h.clinical > 0 && h.theory > 0) { bg = `linear-gradient(135deg, ${C.primary} 50%, ${C.clinical} 50%)`; fg = '#fff'; tag = `${h.theory}T·${h.clinical}C`; }
              else if (h.clinical > 0) { bg = C.clinical; fg = '#fff'; tag = `${h.clinical}h C`; }
              else { bg = C.primary; fg = '#fff'; tag = `${h.theory}h T`; } }
     else if (st === 'A') { bg = '#FDECEA'; fg = C.error; tag = 'Absent'; }
@@ -157,7 +156,7 @@ const StudentAttendanceCalendar: React.FC<Props> = ({ courseId, studentId, name,
 
           <div style={{ display:'flex', flexWrap:'wrap', gap:10, fontSize:11, color:C.muted, marginBottom:10 }}>
             <Legend c={C.primary} t="Theory day" /><Legend c={C.clinical} t="Clinical day" /><Legend c="#FDECEA" t="Absent" />
-            <Legend c="#E6F7FC" t="Excused" /><Legend c="#FFF4E5" t="Friday make-up (no clinical hrs)" /><Legend c={C.warn} t="+ added clinical hrs" />
+            <Legend c="#E6F7FC" t="Excused" /><Legend c={C.warn} t="+ added clinical hrs" />
             {canEdit && <span>· Tap any past day to fix or fill in attendance: Present → Absent → Late → Excused → clear</span>}
           </div>
 

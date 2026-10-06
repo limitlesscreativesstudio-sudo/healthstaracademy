@@ -1,7 +1,7 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect } from 'react';
 import { supabase } from './AuthContext';
-import { attendanceCode, splitAttendanceHours, REQUIRED_THEORY_HOURS, isFriday } from '@/lib/attendance';
+import { attendanceCode, splitAttendanceHours, REQUIRED_THEORY_HOURS } from '@/lib/attendance';
 import StudentAttendanceCalendar from '@/components/portal/StudentAttendanceCalendar';
 import { toast } from 'sonner';
 
@@ -52,7 +52,7 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
     const list = allAtt.filter(a => a.student_id === sid && a.session_date < sessionDate);
     const before = splitAttendanceHours(list);
     const clinical = before.theory >= REQUIRED_THEORY_HOURS;
-    return { ...before, clinicalToday: clinical && !isFriday(sessionDate), makeupToday: clinical && isFriday(sessionDate) };
+    return { ...before, clinicalToday: clinical };
   };
 
   // Load enrolled students
@@ -231,7 +231,6 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
                     <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>
                       Theory {h.theory}/{REQUIRED_THEORY_HOURS}h · Clinical {h.clinical}h
                       {h.clinicalToday && <span style={{ marginLeft:6, padding:'1px 6px', borderRadius:4, background:'#319795', color:'#fff', fontWeight:600 }}>Present = clinical hours</span>}
-                      {h.makeupToday && <span style={{ marginLeft:6, padding:'1px 6px', borderRadius:4, background:'#FFF4E5', color:'#E67E22', fontWeight:600 }}>Friday make-up · no clinical hours</span>}
                     </div>); })()}
                 </div>
                 {/* Status buttons */}
