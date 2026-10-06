@@ -13,3 +13,4 @@
 - Files-only revised student documents use explicit enrollment-scoped metadata and storage read policies, excluding instructor keys because removing module links must not remove authorized document access.
 - Block manual grade entry while a student has an open attempt because creating a separate paper attempt would consume attempts and split student history.
 - Midterm/Final exams count toward course point totals only while published (src/lib/gradePolicy.ts), because unpublished draft exam versions must not inflate possible points.
+- New cohort copies draw quiz questions from question_bank by quizzes.bank_key (case studies rotate whole scenarios and update the matching "N. Case Study" page); existing courses are never re-rotated, because saved attempts reference question IDs.
