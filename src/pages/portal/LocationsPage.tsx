@@ -265,15 +265,15 @@ const LocationsPage = () => {
             <MapPin className="h-3.5 w-3.5" />
             Coming Soon
           </span>
-          <h2 className="text-3xl font-bold mb-3">Expanding to Los Angeles County</h2>
+          <h2 className="text-3xl font-bold text-primary-foreground mb-3">Expanding to Los Angeles County</h2>
           <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-8">
             Health Star Academy is bringing its CDPH-approved hybrid CNA training to the LA County area — theory online, hands-on clinical hours close to home, with the same small classes and personalized attention. Join the interest list and be the first to know when LA County enrollment opens.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild>
+            <Button asChild variant="secondary">
               <a href="/pre-qualification">Join the LA County Interest List</a>
             </Button>
-            <Button asChild variant="outline">
+            <Button asChild variant="purple-outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-charcoal">
               <a href="/programs">Learn About the Program</a>
             </Button>
           </div>
