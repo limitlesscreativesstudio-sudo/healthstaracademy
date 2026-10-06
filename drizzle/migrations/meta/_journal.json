@@ -57,6 +57,13 @@
       "when": 1791268494018,
       "tag": "0007_revoke_anon_sensitive_functions",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791268742834,
+      "tag": "0008_harden_chat_and_page_images",
+      "breakpoints": true
     }
   ]
 }
