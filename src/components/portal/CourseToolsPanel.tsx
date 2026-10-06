@@ -276,9 +276,6 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
               <label style={{ fontSize:12, fontWeight:700, color:C.text }}>Student's full name</label>
               <input autoFocus value={cert.name} onChange={e => setCert({ ...cert, name: e.target.value })}
                 style={{ width:'100%', boxSizing:'border-box', padding:'9px 10px', border:`1px solid ${C.border}`, borderRadius:6, fontSize:15, margin:'4px 0 12px' }} />
-              <label style={{ fontSize:12, fontWeight:700, color:C.text }}>Completion date</label>
-              <input type="date" value={cert.date} onChange={e => setCert({ ...cert, date: e.target.value })}
-                style={{ width:'100%', boxSizing:'border-box', padding:'8px 10px', border:`1px solid ${C.border}`, borderRadius:6, fontSize:14, margin:'4px 0 12px' }} />
               {!(cert.row.theory >= req.theory && cert.row.clinicalVerified >= req.clinical) && (
                 <div style={{ background:'#FFF3CD', color:'#8A6D00', borderRadius:6, padding:'8px 10px', fontSize:12, marginBottom:10 }}>
                   Hours aren't complete yet ({cert.row.theory}/{req.theory} theory, {cert.row.clinicalVerified}/{req.clinical} clinical).
