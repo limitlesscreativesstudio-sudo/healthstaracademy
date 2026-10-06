@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './AuthContext';
+import { sessionLabels } from '@/lib/attendance';
 import { toast } from 'sonner';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', warn:'#E67E22', success:'#127A1B' } as const;
@@ -55,15 +56,14 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
         evs.push({ id:`a-${a.id}`, refId:a.id, title:a.title, date:new Date(a.due_at), type:isQuiz?'quiz':'assignment', color: isQuiz?C.warn:C.primary, section: a.group_name || null });
       });
       (qz ?? []).forEach(q => evs.push({ id:`q-${q.id}`, refId:q.id, title:q.title, date:new Date(q.due_at), type:'quiz', color:C.warn, section: null }));
-      // Theory (class) sessions run through Sep 11; from Sep 14 sessions are
-      // clinical. Fridays after Sep 11 are not scheduled sessions.
-      const CLINICAL_START = '2026-09-14';
-      const attDates = new Set((att ?? []).map(a => a.session_date));
+      // Labels follow the hours rule: theory until 60h, the crossover day is
+      // split, later days are clinical. No Friday sessions from Sep 11.
+      const attDates = [...new Set((att ?? []).map(a => a.session_date))]
+        .filter(d => !(d >= '2026-09-11' && new Date(d + 'T09:00:00').getDay() === 5));
+      const labels = sessionLabels(attDates);
       attDates.forEach(d => {
-        const dt = new Date(d + 'T09:00:00');
-        if (d >= '2026-09-11' && dt.getDay() === 5) return;
-        const clinical = d >= CLINICAL_START;
-        evs.push({ id:`att-${d}`, refId:'', title: clinical ? 'Clinical Session' : 'Class Session', date: dt, type:'attendance', color: clinical ? '#127A1B' : C.accent, section: null });
+        const L = labels[d];
+        evs.push({ id:`att-${d}`, refId:'', title: L.title, date: new Date(d + 'T09:00:00'), type:'attendance', color: L.kind === 'theory' ? C.accent : L.kind === 'mixed' ? '#B35C00' : '#127A1B', section: null });
       });
       evs.sort((a,b) => a.date.getTime() - b.date.getTime());
       setEvents(evs);
