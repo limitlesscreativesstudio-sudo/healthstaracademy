@@ -76,11 +76,11 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
     // 3) Assignments + Quizzes as columns
     const [{ data: asgns }, { data: qzs }] = await Promise.all([
       supabase.from('assignments').select('id,title,points,created_at').eq('course_id', courseId).order('created_at'),
-      supabase.from('quizzes').select('id,title,total_points,created_at').eq('course_id', courseId).order('created_at'),
+      supabase.from('quizzes').select('id,title,total_points,published,created_at').eq('course_id', courseId).order('created_at'),
     ]);
     const cols: Column[] = [
       ...(asgns ?? []).map((a: any) => ({ id: a.id, name: a.title, points: Number(a.points ?? 0), kind: 'assignment' as const })),
-      ...(qzs ?? []).map((q: any) => ({ id: q.id, name: q.title, points: Number(q.total_points ?? 0), kind: 'quiz' as const })),
+      ...(qzs ?? []).filter((q: any) => quizCountsTowardTotal(q)).map((q: any) => ({ id: q.id, name: q.title, points: Number(q.total_points ?? 0), kind: 'quiz' as const })),
     ].sort((a, b) => natSort(a.name, b.name));
     setColumns(cols);
 
