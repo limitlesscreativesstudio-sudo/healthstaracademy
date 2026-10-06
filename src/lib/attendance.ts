@@ -22,7 +22,13 @@ export const REQUIRED_CLINICAL_HOURS = 100;
 
 export interface HoursSplit { theory: number; clinical: number; presentDays: number }
 
-export interface DayHours { theory: number; clinical: number; kind?: 'theory' | 'makeup' | 'clinical' | 'friday'; day?: number }
+export interface DayHours {
+  theory: number;
+  clinical: number;
+  scheduledTheory?: number;
+  kind?: 'theory' | 'makeup' | 'clinical' | 'friday';
+  day?: number;
+}
 
 // Approved shortened clinical sessions that are exceptions to the normal
 // post-theory Friday exclusion. Keep these explicit so historical hours remain
@@ -32,11 +38,11 @@ const CLINICAL_HOUR_EXCEPTIONS: Record<string, number> = {
 };
 
 // Day-track schedule from the Modules layout: Days 1–8 are theory
-// (Day 1 = 7h, Days 2–7 = 8h, Day 8 = 5h → 60h). Day 9 is a theory make-up
+// (Day 1 = 7h, Days 2–8 = 8h; credited theory remains capped at 60h). Day 9 is a theory make-up
 // day (0h unless theory hours are still owed). Day 10 onward is clinical at
 // 8h/day (Day 22 tops out at the 100h requirement). No Friday sessions once
 // clinical starts.
-export const THEORY_DAY_HOURS = [7, 8, 8, 8, 8, 8, 8, 5];
+export const THEORY_DAY_HOURS = [7, 8, 8, 8, 8, 8, 8, 8];
 
 /**
  * Per-day split of attended days, walked in date order following the
@@ -57,10 +63,11 @@ export function attendanceDayHours(
   for (const d of days) {
     const isFri = new Date(d + 'T12:00:00').getDay() === 5;
     if (theory < theoryRequired) {
-      const h = Math.min(THEORY_DAY_HOURS[idx] ?? THEORY_HOURS_PER_ATTENDED_DAY, theoryRequired - theory);
+      const scheduledTheory = THEORY_DAY_HOURS[idx] ?? THEORY_HOURS_PER_ATTENDED_DAY;
+      const h = Math.min(scheduledTheory, theoryRequired - theory);
       const viaMakeup = idx >= THEORY_DAY_HOURS.length;
       idx++; theory += h; n++;
-      out[d] = { theory: h, clinical: 0, kind: viaMakeup ? 'makeup' : 'theory', day: n };
+      out[d] = { theory: h, clinical: 0, scheduledTheory, kind: viaMakeup ? 'makeup' : 'theory', day: n };
       if (theory >= theoryRequired && !viaMakeup) makeupPending = true;
       continue;
     }
@@ -128,7 +135,7 @@ export function sessionLabels(dates: string[]): Record<string, { title: string; 
     if (h.kind === 'friday') continue;
     const p = h.day ? `Day ${h.day} · ` : '';
     if (h.kind === 'makeup') out[d] = { title: `${p}Theory Make-Up Day`, kind: 'makeup' };
-    else if (h.kind === 'theory') out[d] = { title: `${p}Theory ${h.theory}h`, kind: 'theory' };
+    else if (h.kind === 'theory') out[d] = { title: `${p}Theory ${h.scheduledTheory ?? h.theory}h`, kind: 'theory' };
     else out[d] = { title: `${p}Clinical ${h.clinical}h`, kind: 'clinical' };
   }
   return out;
