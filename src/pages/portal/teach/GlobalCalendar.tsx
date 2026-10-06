@@ -48,14 +48,16 @@ const GlobalCalendar: React.FC = () => {
         evs.push({ id:`a-${a.id}`, refId:a.id, courseId:a.course_id, courseTitle:titleMap[a.course_id]||'', title:a.title, date:new Date(a.due_at), type:isQuiz?'quiz':'assignment', color:isQuiz?C.warn:C.primary });
       });
       (qz ?? []).forEach((q:any) => evs.push({ id:`q-${q.id}`, refId:q.id, courseId:q.course_id, courseTitle:titleMap[q.course_id]||'', title:q.title, date:new Date(q.due_at), type:'quiz', color:C.warn }));
-      const seen = new Set<string>();
+      const byCourse: Record<string, string[]> = {};
       (att ?? []).forEach((a:any) => {
-        const k = `${a.course_id}|${a.session_date}`;
-        if (seen.has(k)) return; seen.add(k);
-        const dt = new Date(a.session_date+'T09:00:00');
-        if (a.session_date >= '2026-09-11' && dt.getDay() === 5) return; // no Friday sessions from Sep 11
-        const clinical = a.session_date >= '2026-09-14';
-        evs.push({ id:`att-${k}`, refId:'', courseId:a.course_id, courseTitle:titleMap[a.course_id]||'', title: clinical ? 'Clinical Session' : 'Class Session', date: dt, type:'attendance', color: clinical ? '#127A1B' : C.accent });
+        if (a.session_date >= '2026-09-11' && new Date(a.session_date+'T09:00:00').getDay() === 5) return; // no Friday sessions from Sep 11
+        (byCourse[a.course_id] ||= []).push(a.session_date);
+      });
+      Object.entries(byCourse).forEach(([cid, dates]) => {
+        const labels = sessionLabels(dates);
+        Object.entries(labels).forEach(([d, L]) => {
+          evs.push({ id:`att-${cid}|${d}`, refId:'', courseId:cid, courseTitle:titleMap[cid]||'', title: L.title, date: new Date(d+'T09:00:00'), type:'attendance', color: L.kind === 'theory' ? C.accent : L.kind === 'mixed' ? '#B35C00' : '#127A1B' });
+        });
       });
       evs.sort((a,b) => a.date.getTime() - b.date.getTime());
       setEvents(evs);
