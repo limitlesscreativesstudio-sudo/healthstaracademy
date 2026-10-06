@@ -92,7 +92,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
         ? supabase.from('grades').select('user_id, assignment_id, score').in('assignment_id', asgnIds)
         : Promise.resolve({ data: [] as any[] }),
       qzIds.length
-        ? supabase.from('quiz_attempts').select('user_id, quiz_id, score, submitted_at, grading_status').in('quiz_id', qzIds).not('submitted_at','is',null)
+        ? supabase.from('quiz_attempts').select('user_id, quiz_id, score, max_score, submitted_at, grading_status').in('quiz_id', qzIds).not('submitted_at','is',null)
         : Promise.resolve({ data: [] as any[] }),
     ]);
 
@@ -107,8 +107,10 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
     const subs: Record<string, { status: string; at: string }> = {};
     for (const a of (attempts ?? [])) {
       const k = `${a.user_id}|${a.quiz_id}`;
-      if (a.score != null) {
-        const s = Number(a.score);
+      if (a.score != null && a.grading_status === 'released') {
+        const column = cols.find(c => c.id === a.quiz_id);
+        const attemptMax = Number(a.max_score);
+        const s = attemptMax > 0 && column ? Number(a.score) / attemptMax * column.points : Number(a.score);
         if (best[k] == null || s > best[k]) best[k] = s;
       }
       const prevAt = subs[k]?.at;

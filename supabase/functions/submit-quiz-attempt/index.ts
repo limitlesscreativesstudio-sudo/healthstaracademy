@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     if (attempt.submitted_at) return json({ error: "Already submitted" }, 400);
 
     const { data: quiz } = await admin
-      .from("quizzes").select("id, course_id").eq("id", attempt.quiz_id).maybeSingle();
+      .from("quizzes").select("id, course_id, answer_key_status").eq("id", attempt.quiz_id).maybeSingle();
     if (!quiz) return json({ error: "Quiz not found" }, 404);
 
     const { data: questions } = await admin
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     const choiceKeys = (questions ?? [])
       .filter((q) => AUTO_TYPES.has(String(q.question_type)) && q.correct_answer !== null && q.correct_answer !== undefined)
       .map((q) => JSON.stringify(q.correct_answer));
-    const keySuspect = choiceKeys.length >= 4 && new Set(choiceKeys).size === 1;
+    const keySuspect = quiz.answer_key_status !== "verified" && choiceKeys.length >= 4 && new Set(choiceKeys).size === 1;
 
     const questionScores: Record<string, number> = {};
     const perQuestion: { qid: string; auto: boolean; correct: boolean; points: number }[] = [];

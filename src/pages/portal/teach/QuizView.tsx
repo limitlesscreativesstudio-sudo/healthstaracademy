@@ -360,6 +360,18 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
   const saveQuestions = async () => {
     if (!editing) return;
+    const [{ data: originals, error: originalError }, { count: attemptCount, error: attemptError }] = await Promise.all([
+      supabase.from('quiz_questions').select('id,question_type,options').eq('quiz_id', editing.id),
+      supabase.from('quiz_attempts').select('id', { count: 'exact', head: true }).eq('quiz_id', editing.id),
+    ]);
+    if (originalError || attemptError) return toast.error('Could not verify saved student work; please try again');
+    if ((attemptCount ?? 0) > 0) {
+      const structuralChange = (originals ?? []).some(original => {
+        const next = questions.find(q => q.id === original.id);
+        return !next || next.question_type !== original.question_type || JSON.stringify(next.options) !== JSON.stringify(original.options);
+      });
+      if (structuralChange) return toast.error('This quiz has saved student work. Use a revised quiz to change question types, remove questions, or change choices.');
+    }
     // Preserve question ids so already-submitted student answers (keyed by
     // question id) keep matching. Only questions the instructor actually
     // removed are deleted, and nothing is deleted before the save succeeds.
@@ -557,18 +569,28 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     }).eq('id', row.id);
     if (error) { setSavingGrade(null); toast.error('Could not release: ' + error.message); return; }
 
-    const { data: g } = await supabase.from('grades').select('id').eq('quiz_attempt_id', row.id).maybeSingle();
+    const { data: g, error: lookupError } = await supabase.from('grades').select('id').eq('quiz_attempt_id', row.id).maybeSingle();
+    let gradeError = lookupError;
     if (g?.id) {
-      await supabase.from('grades').update({
+      const result = await supabase.from('grades').update({
         score: t.earned, max_score: t.possible, graded_at: nowIso,
         feedback: row.instructor_feedback || 'Graded by instructor',
       }).eq('id', g.id);
+      gradeError = result.error;
     } else {
-      await supabase.from('grades').insert({
+      const result = await supabase.from('grades').insert({
         course_id: courseId, user_id: row.user_id, quiz_attempt_id: row.id,
         score: t.earned, max_score: t.possible, graded_by: user?.id ?? null,
         feedback: row.instructor_feedback || 'Graded by instructor',
       });
+      gradeError = gradeError ?? result.error;
+    }
+    if (gradeError) {
+      setSavingGrade(null);
+      patchRow(row.id, { grading_status: 'released', score: t.earned, max: t.possible });
+      toast.error('The quiz grade is saved, but the grade record could not sync. Release again to retry.');
+      load();
+      return;
     }
     await supabase.from('notifications').insert({
       user_id: row.user_id, kind: 'grade',

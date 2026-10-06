@@ -39,6 +39,11 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     return m ? decodeURIComponent(m.split('?')[0]) : null;
   };
   const openFile = (f: CourseFile) => {
+    const assetPath = f.file_url?.split('/course-assets/')[1];
+    if (assetPath) {
+      setViewer({ src: { bucket: 'course-assets', path: decodeURIComponent(assetPath.split('?')[0]) }, name: f.file_name, type: f.file_type });
+      return;
+    }
     const path = pathFromUrl(f.file_url);
     if (path) setViewer({ src: { bucket: 'course-files', path }, name: f.file_name, type: f.file_type });
     else setViewer({ src: { url: f.file_url }, name: f.file_name, type: f.file_type });

@@ -192,7 +192,7 @@ Deno.serve(async (req) => {
 
     // Placeholder answer keys: every choice question marked with the same option.
     for (const [quizId, keys] of choiceKeys) {
-      if (keys.length >= 4 && new Set(keys).size === 1) {
+      if (quizById.get(quizId)?.answer_key_status !== "verified" && keys.length >= 4 && new Set(keys).size === 1) {
         const q = quizList.find((x: any) => x.id === quizId);
         add({
           severity: "high", target_table: "quizzes", target_id: quizId,
@@ -240,7 +240,7 @@ Deno.serve(async (req) => {
         severity: "medium", target_table: "quiz_attempts",
         title: `${strays.length} quiz attempt(s) from people who are not enrolled students`,
         detail: "Staff previews or removed students are inflating quiz counts.",
-        suggested_fix: "Delete these practice attempts so counts show real students only.",
+          suggested_fix: "Exclude non-student attempts from progression counts; preserve their historical records.",
       });
     }
 
