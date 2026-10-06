@@ -217,6 +217,9 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       toast.info(`You've used your ${allowedFor(q)} allowed attempt${allowedFor(q) === 1 ? '' : 's'}. Ask your instructor to allow another attempt.`);
       return;
     }
+    setAnswers({});
+    answersRef.current = {};
+    setAttemptQs([]);
     setTaking(q);
     setResults(null);
     setAttemptId(null);
@@ -298,10 +301,13 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   };
 
   // Persist to localStorage immediately and debounce the server save.
+  // Only keep answers for THIS quiz's questions so a previous quiz's answers can't leak in.
   useEffect(() => {
-    if (!taking || results) return;
-    answersRef.current = answers;
-    writeLocalDraft(taking.id, answers);
+    if (!taking || results || attemptQs.length === 0) return;
+    const ids = new Set(attemptQs.map(q => q.id));
+    const scoped = Object.fromEntries(Object.entries(answers).filter(([k]) => ids.has(k)));
+    answersRef.current = scoped;
+    writeLocalDraft(taking.id, scoped);
     if (!attemptId) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(flushSave, 700);
@@ -657,7 +663,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     let max = 0;
     attemptQs.forEach(q => { max += q.points; });
     const { data: res, error } = await supabase.functions.invoke('submit-quiz-attempt', {
-      body: { attempt_id: attemptId, answers },
+      body: { attempt_id: attemptId, answers: Object.fromEntries(Object.entries(answers).filter(([k]) => attemptQs.some(q => q.id === k))) },
     });
     const serverErr = (res as any)?.error;
     if (error || serverErr) {
