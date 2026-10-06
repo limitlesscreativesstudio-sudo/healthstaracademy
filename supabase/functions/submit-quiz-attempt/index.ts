@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
 
     const { data: questions } = await admin
       .from("quiz_questions")
-      .select("id, points, question_type, correct_answer")
+      .select("id, points, question_type, correct_answer, key_unverified")
       .eq("quiz_id", attempt.quiz_id);
 
     // ── Auto-correct every question that has a TRUSTWORTHY answer key ────────
@@ -89,7 +89,8 @@ Deno.serve(async (req) => {
       const points = Number(q.points) || 0;
       max += points;
       const keyed = q.correct_answer !== null && q.correct_answer !== undefined;
-      const auto = !keySuspect && AUTO_TYPES.has(String(q.question_type)) && keyed;
+      // key_unverified = answer not confirmed by an instructor document; send to instructor.
+      const auto = !keySuspect && !q.key_unverified && AUTO_TYPES.has(String(q.question_type)) && keyed;
       if (!auto) {
         needsHuman = true;
         perQuestion.push({ qid: q.id, auto: false, correct: false, points: 0 });
