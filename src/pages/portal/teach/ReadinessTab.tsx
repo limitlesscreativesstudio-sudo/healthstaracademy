@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { isAttended } from '@/lib/attendance';
+import { countableQuizzes, examFamily } from '@/lib/gradePolicy';
+import { toast } from 'sonner';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
 
@@ -12,13 +14,13 @@ const CRITERIA = [
   { id:'theory',     label:'Final Exam Passed (≥75%)', weight:20 },
   { id:'skills',     label:'Clinical Skills Complete', weight:25 },
   { id:'modules',    label:'All Module Quizzes Passed', weight:20 },
-  { id:'casestudy',  label:'Case Studies Submitted', weight:10 },
-  { id:'paperwork',  label:'Assignments Submitted', weight:10 },
+  { id:'casestudy',  label:'Case Studies Submitted', weight:20 },
 ];
 
 const natural = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
-const ReadinessTab: React.FC<Props> = ({ courseId }) => {
+const ReadinessTab: React.FC<Props> = ({ courseId, canEdit }) => {
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
   const [rows, setRows] = useState<{ userId: string; name: string; met: Record<string, boolean> }[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all'|'ready'|'not'>('all');
@@ -40,26 +42,30 @@ const ReadinessTab: React.FC<Props> = ({ courseId }) => {
 
       const quizList  = (quizzes ?? []).filter(q => q.published);
       const quizIds   = quizList.map(q => q.id);
-      const finalIds  = quizList.filter(q => /final exam/i.test(q.title)).map(q => q.id);
+      const finalIds  = countableQuizzes(quizList).filter(q => examFamily(q.title) === 'final').map(q => q.id);
       const caseIds   = quizList.filter(q => /case study/i.test(q.title)).map(q => q.id);
-      const moduleIds = quizList.filter(q => /module|day/i.test(q.title)).map(q => q.id);
+      const moduleIds = quizList.filter(q => /module|day/i.test(q.title) && /quiz/i.test(q.title) && !/case study|exam/i.test(q.title)).map(q => q.id);
       const asgnIds   = (assignments ?? []).filter(a => a.published).map(a => a.id);
       const skillTotal = (skills ?? []).length;
 
-      const [{ data: profs }, { data: attempts }, { data: subs }, { data: att }, { data: sos }] = await Promise.all([
+      const [{ data: profs }, { data: attempts }, { data: subs }, { data: att }, { data: sos }, { data: ovs }] = await Promise.all([
         supabase.from('profiles').select('user_id, full_name').in('user_id', uids),
-        quizIds.length ? supabase.from('quiz_attempts').select('quiz_id, user_id, score, max_score, submitted_at').in('quiz_id', quizIds) : Promise.resolve({ data: [] }),
+        quizIds.length ? supabase.from('quiz_attempts').select('quiz_id, user_id, score, max_score, submitted_at, grading_status').in('quiz_id', quizIds) : Promise.resolve({ data: [] }),
         asgnIds.length ? supabase.from('submissions').select('assignment_id, user_id').in('assignment_id', asgnIds) : Promise.resolve({ data: [] }),
         supabase.from('attendance').select('student_id, status').eq('course_id', courseId),
         supabase.from('student_skill_signoffs').select('student_user_id, skill_id, status').eq('course_id', courseId),
+        supabase.from('readiness_overrides').select('student_user_id, criterion, met').eq('course_id', courseId),
       ]);
+      const ov: Record<string, boolean> = {};
+      (ovs ?? []).forEach(o => { ov[`${o.student_user_id}|${o.criterion}`] = o.met; });
+      if (!cancelled) setOverrides(ov);
 
       const nameBy: Record<string, string> = {};
       (profs ?? []).forEach(p => { nameBy[p.user_id] = p.full_name || 'Student'; });
 
       const pctBy: Record<string, Record<string, number>> = {};
       (attempts ?? []).forEach(a => {
-        if (!a.submitted_at || !a.max_score) return;
+        if (!a.submitted_at || !a.max_score || a.grading_status === 'superseded') return;
         const pct = Number(a.score ?? 0) / Number(a.max_score);
         pctBy[a.user_id] = pctBy[a.user_id] || {};
         pctBy[a.user_id][a.quiz_id] = Math.max(pctBy[a.user_id][a.quiz_id] ?? 0, pct);
@@ -96,7 +102,6 @@ const ReadinessTab: React.FC<Props> = ({ courseId }) => {
             skills:     skillTotal > 0 && (skillBy[u] ?? 0) >= skillTotal,
             modules:    moduleIds.length > 0 && moduleIds.every(id => (p[id] ?? 0) >= 0.75),
             casestudy:  caseIds.length > 0 && caseIds.every(id => p[id] !== undefined),
-            paperwork:  asgnIds.length > 0 && asgnIds.every(id => subsBy[u]?.has(id)),
           },
         };
       }).sort((x, y) => natural(x.name, y.name));
@@ -108,13 +113,24 @@ const ReadinessTab: React.FC<Props> = ({ courseId }) => {
     return () => { cancelled = true; };
   }, [courseId]);
 
-  const isReady = (r: typeof rows[number]) => CRITERIA.every(c => r.met[c.id]);
+  const metOf = (r: typeof rows[number], c: string) => overrides[`${r.userId}|${c}`] ?? r.met[c];
+  const isReady = (r: typeof rows[number]) => CRITERIA.every(c => metOf(r, c.id));
+  const toggle = async (r: typeof rows[number], c: string) => {
+    if (!canEdit || !courseId) return;
+    const k = `${r.userId}|${c}`;
+    const next = !metOf(r, c);
+    setOverrides(p => ({ ...p, [k]: next }));
+    const { error } = await supabase.from('readiness_overrides').upsert(
+      { course_id: courseId, student_user_id: r.userId, criterion: c, met: next, updated_at: new Date().toISOString() },
+      { onConflict: 'course_id,student_user_id,criterion' });
+    if (error) { setOverrides(p => { const n = { ...p }; delete n[k]; return n; }); toast.error('Could not save: ' + error.message); }
+  };
   const filtered = rows.filter(r => filter === 'all' ? true : filter === 'ready' ? isReady(r) : !isReady(r));
   const readyCount = rows.filter(isReady).length;
 
   const exportCSV = () => {
     const headers = ['Student', ...CRITERIA.map(c => c.label), 'Status'];
-    const data = rows.map(r => [r.name, ...CRITERIA.map(c => r.met[c.id] ? 'Yes' : 'No'), isReady(r) ? 'Ready' : 'Pending']);
+    const data = rows.map(r => [r.name, ...CRITERIA.map(c => metOf(r, c.id) ? 'Yes' : 'No'), isReady(r) ? 'Ready' : 'Pending']);
     const csv = [headers, ...data].map(x => x.map(v => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g,'""')}"` : v).join(',')).join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8;' }));
     const a = document.createElement('a');
@@ -127,7 +143,10 @@ const ReadinessTab: React.FC<Props> = ({ courseId }) => {
   return (
     <div style={{ padding:24 }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
-        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>State Exam Readiness</h2>
+        <div>
+          <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:C.text, fontFamily:'sans-serif' }}>State Exam Readiness</h2>
+          {canEdit && <div style={{ fontSize:12, color:C.muted, fontFamily:'sans-serif', marginTop:3 }}>Boxes fill in automatically. Click any box to check or uncheck it yourself.</div>}
+        </div>
         <button onClick={exportCSV} disabled={!rows.length}
           style={{ padding:'7px 16px', border:'none', borderRadius:5, background:rows.length ? C.primary : C.border, color:'white', fontSize:13, fontFamily:'sans-serif', cursor:rows.length ? 'pointer' : 'default' }}>
           Export Report
@@ -140,7 +159,7 @@ const ReadinessTab: React.FC<Props> = ({ courseId }) => {
           <div style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:6 }}>No students enrolled yet</div>
           <div style={{ fontSize:13, color:C.muted }}>
             Readiness is calculated automatically for each student once they're enrolled in this cohort —
-            attendance, final exam, clinical skills, module quizzes, case studies and assignments.
+            attendance, final exam, clinical skills, module quizzes and case studies.
           </div>
         </div>
       ) : (
@@ -186,10 +205,12 @@ const ReadinessTab: React.FC<Props> = ({ courseId }) => {
                   <div style={{ width:180, fontSize:13, fontWeight:600, color:C.primary, fontFamily:'sans-serif' }}>{r.name}</div>
                   {CRITERIA.map(c => (
                     <div key={c.id} style={{ flex:1, textAlign:'center' }}>
-                      <span role="img" aria-label={`${c.label}: ${r.met[c.id] ? 'met' : 'not met'}`}
-                        style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width:26, height:26, borderRadius:4, border:`2px solid ${r.met[c.id] ? C.success : C.border}`, background:r.met[c.id] ? C.success : 'transparent', fontSize:13, color:'white' }}>
-                        {r.met[c.id] ? '✓' : ''}
-                      </span>
+                      <button type="button" onClick={() => toggle(r, c.id)} disabled={!canEdit}
+                        aria-label={`${c.label}: ${metOf(r, c.id) ? 'met' : 'not met'}`}
+                        title={canEdit ? 'Click to check or uncheck' : undefined}
+                        style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', width:26, height:26, borderRadius:4, border:`2px solid ${metOf(r, c.id) ? C.success : C.border}`, background:metOf(r, c.id) ? C.success : 'transparent', fontSize:13, color:'white', cursor: canEdit ? 'pointer' : 'default', padding:0 }}>
+                        {metOf(r, c.id) ? '✓' : ''}
+                      </button>
                     </div>
                   ))}
                   <div style={{ width:80, textAlign:'center' }}>
