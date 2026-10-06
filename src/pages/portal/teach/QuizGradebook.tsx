@@ -190,8 +190,7 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
 
   const rowTotals = (uid: string) => {
     let got = 0, poss = 0;
-    for (const q of quizzes) {
-      if (!quizCountsTowardTotal(q)) continue;
+    for (const q of countableQuizzes(quizzes)) {
       const c = cells[key(uid, q.id)];
       if (!c || c.score == null) continue;
       got += c.score; poss += (c.max ?? q.total_points ?? 0);
