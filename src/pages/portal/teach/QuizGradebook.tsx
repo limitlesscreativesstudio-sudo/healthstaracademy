@@ -107,6 +107,7 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
   const startEdit = (uid: string, qid: string) => {
     if (!canEdit || selfOnly) return;
     const c = cells[key(uid, qid)];
+    if (c?.inProgress) { toast.error('This student has an open attempt. Submit it from Responses before entering a manual score.'); return; }
     setEditing({ uid, qid });
     setEditVal(c?.score == null ? '' : String(c.score));
   };
@@ -116,6 +117,8 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
     const { uid, qid } = editing;
     const quiz = quizzes.find(q => q.id === qid);
     const cell = cells[key(uid, qid)];
+    const { data: open, error: openError } = await supabase.from('quiz_attempts').select('id').eq('quiz_id', qid).eq('user_id', uid).is('submitted_at', null).limit(1);
+    if (openError || open?.length) { toast.error(openError ? 'Could not check the student attempt. Please try again.' : 'Submit the open attempt from Responses before grading.'); return; }
     const raw = editVal.trim();
     setEditing(null);
     if (raw === '') return;

@@ -108,7 +108,7 @@ const NotificationBell = ({ userId }: { userId: string }) => {
               </div>
             );
             return n.link ? (
-              <Link key={n.id} to={n.link} onClick={() => { setOpen(false); markRead(n.id); }}>{Body}</Link>
+              <Link key={n.id} to={n.link.replace('/portal/teach/courses/', '/portal/courses/')} onClick={() => { setOpen(false); markRead(n.id); }}>{Body}</Link>
             ) : (
               <button key={n.id} className="w-full text-left" onClick={() => markRead(n.id)}>{Body}</button>
             );
