@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './AuthContext';
 import PortalLayout from '@/components/portal/PortalLayout';
+import { sessionLabels } from '@/lib/attendance';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', warn:'#E67E22' } as const;
 
@@ -50,7 +51,7 @@ const GlobalCalendar: React.FC = () => {
       (qz ?? []).forEach((q:any) => evs.push({ id:`q-${q.id}`, refId:q.id, courseId:q.course_id, courseTitle:titleMap[q.course_id]||'', title:q.title, date:new Date(q.due_at), type:'quiz', color:C.warn }));
       const byCourse: Record<string, string[]> = {};
       (att ?? []).forEach((a:any) => {
-        if (a.session_date >= '2026-09-11' && new Date(a.session_date+'T09:00:00').getDay() === 5) return; // no Friday sessions from Sep 11
+        if (a.session_date !== '2026-09-11' && a.session_date > '2026-09-11' && new Date(a.session_date+'T09:00:00').getDay() === 5) return;
         (byCourse[a.course_id] ||= []).push(a.session_date);
       });
       Object.entries(byCourse).forEach(([cid, dates]) => {
