@@ -214,7 +214,8 @@ Deno.serve(async (req) => {
           suggested_fix: "Add questions, or lock the quiz until it is ready.",
         });
       }
-      if (n > 0 && q.answer_key_status === "unkeyed") {
+      // Kept "(previous version — graded)" copies hold student history only; no new submissions.
+      if (n > 0 && q.answer_key_status === "unkeyed" && !/previous version/i.test(String(q.title))) {
         add({
           severity: "low", target_table: "quizzes", target_id: q.id,
           title: `"${q.title}" has no answer key`,
