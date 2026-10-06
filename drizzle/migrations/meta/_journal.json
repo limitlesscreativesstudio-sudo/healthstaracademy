@@ -50,6 +50,13 @@
       "when": 1791265954178,
       "tag": "0006_atomic_quiz_submission_and_files_only_documents",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791268494018,
+      "tag": "0007_revoke_anon_sensitive_functions",
+      "breakpoints": true
     }
   ]
 }
