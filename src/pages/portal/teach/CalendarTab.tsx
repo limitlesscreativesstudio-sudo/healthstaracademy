@@ -61,7 +61,7 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
       const attDates = new Set((att ?? []).map(a => a.session_date));
       attDates.forEach(d => {
         const dt = new Date(d + 'T09:00:00');
-        if (d > '2026-09-11' && dt.getDay() === 5) return;
+        if (d >= '2026-09-11' && dt.getDay() === 5) return;
         const clinical = d >= CLINICAL_START;
         evs.push({ id:`att-${d}`, refId:'', title: clinical ? 'Clinical Session' : 'Class Session', date: dt, type:'attendance', color: clinical ? '#127A1B' : C.accent, section: null });
       });
