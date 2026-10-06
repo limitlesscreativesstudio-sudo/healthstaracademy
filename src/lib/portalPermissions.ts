@@ -27,6 +27,7 @@ export const INSTRUCTOR_EDITABLE_TABS = [
   "calendar",
   "diagnostics",
   "analytics",
+  "settings",
 ] as const;
 
 const INSTRUCTOR_SET = new Set<string>(INSTRUCTOR_EDITABLE_TABS);
