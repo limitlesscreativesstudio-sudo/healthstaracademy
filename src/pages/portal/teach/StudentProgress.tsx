@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from './AuthContext';
+import { quizCountsTowardTotal } from '@/lib/gradePolicy';
 import StudentProfilePanel from '@/components/portal/StudentProfilePanel';
 import { isAttended, splitAttendanceHours, REQUIRED_THEORY_HOURS, REQUIRED_CLINICAL_HOURS } from '@/lib/attendance';
 
@@ -83,7 +84,8 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
         : { data: [] };
 
       // quizzes + best attempts
-      const { data: qzs } = await supabase.from('quizzes').select('id, total_points').eq('course_id', courseId);
+      const { data: qzsAll } = await supabase.from('quizzes').select('id, title, published, total_points').eq('course_id', courseId);
+      const qzs = (qzsAll ?? []).filter((q: any) => quizCountsTowardTotal(q));
       const qzIds = (qzs ?? []).map(q => q.id);
       const qzMap: Record<string, number> = Object.fromEntries((qzs ?? []).map(q => [q.id, Number(q.total_points ?? 0)]));
       const { data: attempts } = qzIds.length
