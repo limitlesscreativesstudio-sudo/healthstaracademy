@@ -120,12 +120,12 @@ const StudentAttendanceCalendar: React.FC<Props> = ({ courseId, studentId, name,
     if (h && h.theory === 0 && h.clinical === 0) { bg = '#E8F5E9'; fg = C.success; tag = 'Done'; }
     else if (h) { if (h.clinical > 0 && h.theory > 0) { bg = `linear-gradient(135deg, ${C.primary} 50%, ${C.clinical} 50%)`; fg = '#fff'; tag = `${h.theory}T·${h.clinical}C`; }
              else if (h.clinical > 0) { bg = C.clinical; fg = '#fff'; tag = `${h.clinical}h C`; }
-             else { bg = C.primary; fg = '#fff'; tag = `${h.theory}h T`; } }
+             else { bg = C.primary; fg = '#fff'; tag = `${h.scheduledTheory ?? h.theory}h T`; } }
     else if (st === 'A') { bg = '#FDECEA'; fg = C.error; tag = 'Absent'; }
     else if (st === 'E') { bg = '#E6F7FC'; fg = '#1A6E85'; tag = 'Excused'; }
     return (
       <button key={k} type="button" onClick={() => cycleDay(k)} disabled={!canEdit}
-        title={`${k}${st ? ' · ' + LABEL[st] : ''}${h ? ` · ${h.theory}h theory, ${h.clinical}h clinical` : ''}${man ? ` · +${man}h logged clinical` : ''}`}
+        title={`${k}${st ? ' · ' + LABEL[st] : ''}${h ? ` · ${h.scheduledTheory ?? h.theory}h theory${h.scheduledTheory && h.scheduledTheory !== h.theory ? ` (${h.theory}h credited toward the ${REQUIRED_THEORY_HOURS}h requirement)` : ''}, ${h.clinical}h clinical` : ''}${man ? ` · +${man}h logged clinical` : ''}`}
         style={{ position:'relative', aspectRatio:'1', minHeight:38, border:`1px solid ${C.border}`, borderRadius:6, background:bg, color:fg,
           cursor: canEdit ? 'pointer' : 'default', padding:2, fontFamily:'sans-serif', textAlign:'left', opacity: inRange ? 1 : .55 }}>
         <div style={{ fontSize:11, fontWeight:700 }}>{d.getDate()}{st === 'L' ? ' ⏱' : ''}</div>
