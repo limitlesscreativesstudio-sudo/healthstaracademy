@@ -1,7 +1,7 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect } from 'react';
 import { supabase } from './AuthContext';
-import { attendanceCode, splitAttendanceHours, REQUIRED_THEORY_HOURS } from '@/lib/attendance';
+import { attendanceCode, splitAttendanceHours, missedDays, REQUIRED_THEORY_HOURS, REQUIRED_CLINICAL_HOURS } from '@/lib/attendance';
 import StudentAttendanceCalendar from '@/components/portal/StudentAttendanceCalendar';
 import { toast } from 'sonner';
 
@@ -52,7 +52,8 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
     const list = allAtt.filter(a => a.student_id === sid && a.session_date < sessionDate);
     const before = splitAttendanceHours(list);
     const clinical = before.theory >= REQUIRED_THEORY_HOURS;
-    return { ...before, clinicalToday: clinical };
+    const miss = missedDays(allAtt.filter(a => a.student_id === sid));
+    return { ...before, clinicalToday: clinical, miss };
   };
 
   // Load enrolled students
@@ -229,7 +230,8 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
                     style={{ border:'none', background:'none', padding:0, cursor:'pointer', fontSize:13, fontWeight:600, color:C.primary, fontFamily:'sans-serif', textDecoration:'underline', textAlign:'left' }}>{s.name}</button>
                   {(() => { const h = hoursFor(s.id); return (
                     <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>
-                      Theory {h.theory}/{REQUIRED_THEORY_HOURS}h · Clinical {h.clinical}h
+                      Theory {h.theory}/{REQUIRED_THEORY_HOURS}h · Clinical {h.clinical}/{REQUIRED_CLINICAL_HOURS}h
+                      {(h.miss.theory > 0 || h.miss.clinical > 0) && <span style={{ marginLeft:6, color:'#C0392B', fontWeight:600 }}>Missed: {h.miss.theory} theory · {h.miss.clinical} clinical</span>}
                       {h.clinicalToday && <span style={{ marginLeft:6, padding:'1px 6px', borderRadius:4, background:'#319795', color:'#fff', fontWeight:600 }}>Present = clinical hours</span>}
                     </div>); })()}
                 </div>

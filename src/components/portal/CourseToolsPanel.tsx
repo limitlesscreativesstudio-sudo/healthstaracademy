@@ -105,6 +105,7 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
     (ch ?? []).forEach(c => addClinical(c.student_user_id, Number(c.hours ?? 0), !!c.verified));
     (ca ?? []).forEach(c => addClinical(c.student_user_id, Number(c.hours ?? c.hours_worked ?? 0), !!c.verified));
 
+    Object.values(acc).forEach(r => { r.theory = Math.min(r.theory, req.theory); r.clinical = Math.min(r.clinical, req.clinical); r.clinicalVerified = Math.min(r.clinicalVerified, req.clinical); });
     setRows(Object.values(acc).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })));
     setLoading(false);
   };
