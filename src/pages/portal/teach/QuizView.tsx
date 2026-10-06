@@ -495,7 +495,13 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     // Only students actually enrolled in this course belong in the responses
     // panel — staff/practice accounts must never surface as students.
     const studentIds = new Set((enrs ?? []).map((e: any) => e.user_id));
-    const atts = (rawAtts ?? []).filter((a: any) => studentIds.has(a.user_id));
+    // Hide blank submissions (closed duplicates, or submitted with no answers and no
+    // released score). Records are kept for compliance; they just don't clutter Responses.
+    const isBlank = (a: any) => a.grading_status === 'superseded' || (
+      a.submitted_at && a.grading_status !== 'released' &&
+      Object.keys((a.answers as any) ?? {}).length === 0
+    );
+    const atts = (rawAtts ?? []).filter((a: any) => studentIds.has(a.user_id) && !isBlank(a));
     const ids = Array.from(new Set(atts.map((a: any) => a.user_id)));
     const nameMap: Record<string, string> = {};
     if (ids.length) {
