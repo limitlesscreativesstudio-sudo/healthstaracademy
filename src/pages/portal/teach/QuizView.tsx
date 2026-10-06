@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase, useAuth } from './AuthContext';
 import { toast } from 'sonner';
+import AssessmentText from '@/components/portal/AssessmentText';
 
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
@@ -766,7 +767,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
 
         {q.instructions && (
           <div style={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:6, padding:'12px 16px', marginBottom:16, fontSize:13, color:C.text, whiteSpace:'pre-wrap' }}>
-            {q.instructions}
+            <AssessmentText text={q.instructions} />
           </div>
         )}
 
@@ -851,7 +852,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
           {!results && (taking as any).instructions && (
             <div style={{ marginBottom:14 }}>
               <h3 style={{ fontSize:16, fontWeight:700, color:C.text, margin:'6px 0 8px' }}>Quiz Instructions</h3>
-              <div style={{ fontSize:13, color:C.text, whiteSpace:'pre-wrap' }}>{(taking as any).instructions}</div>
+              <div className="text-sm"><AssessmentText text={taking.instructions} /></div>
               <hr style={{ border:0, borderTop:`1px solid ${C.border}`, marginTop:12 }} />
             </div>
           )}
@@ -895,7 +896,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                       </span>
                     </div>
                     <div style={{ padding:14, fontSize:13, color:C.text }}>
-                      <p style={{ margin:'0 0 10px' }}>{q.prompt}</p>
+                      <div className="mb-3"><AssessmentText text={q.prompt} /></div>
                       {q.question_type === 'multiple_choice' && q.options.map((o, oi) => {
                         const isU = r?.user === oi;
                         const isC = isU && r?.auto && r.correct;
@@ -942,7 +943,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                     <span style={{ fontSize:12, color:C.muted }}>{q.points} pt{q.points===1?'':'s'}</span>
                   </div>
                   <div style={{ padding:16 }}>
-                    <p style={{ margin:'0 0 12px', fontSize:14, color:C.text }}>{q.prompt}</p>
+                    <div className="mb-3 text-sm"><AssessmentText text={q.prompt} /></div>
                     {q.question_type === 'multiple_choice' && q.options.map((o,oi) => (
                       <label key={oi} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', cursor:'pointer', fontSize:13, color:C.text, borderTop:oi===0?'none':`1px solid ${C.border}` }}>
                         <input type="radio" name={`q-${q.id}`} checked={answers[q.id!]===oi} onChange={() => setAnswers(a => ({ ...a, [q.id!]: oi }))} style={{ accentColor:C.primary }}/>
