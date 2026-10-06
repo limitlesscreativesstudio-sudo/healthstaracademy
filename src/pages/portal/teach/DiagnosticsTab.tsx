@@ -103,6 +103,27 @@ const DiagnosticsTab: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ co
     }
   };
 
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulk, setBulk] = useState<string>('');
+  const toggle = (id: string) => setSelected(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const fixSelected = async () => {
+    const ids = findings.filter(f => f.id && selected.has(f.id)).map(f => f.id!);
+    if (!ids.length) return;
+    if (!window.confirm(`Correct ${ids.length} selected issue${ids.length === 1 ? '' : 's'} now?\n\nNo student record is ever deleted.`)) return;
+    let ok = 0; const failed: string[] = [];
+    for (let i = 0; i < ids.length; i++) {
+      setBulk(`Correcting ${i + 1} of ${ids.length}…`);
+      try {
+        const { data, error } = await supabase.functions.invoke('agent-diagnostics', { body: { action: 'fix', findingId: ids[i] } });
+        if (error || (data as any)?.error) throw new Error((data as any)?.error ?? error?.message);
+        ok++; setFindings(p => p.filter(x => x.id !== ids[i]));
+      } catch { failed.push(ids[i]); }
+    }
+    setBulk(''); setSelected(new Set(failed));
+    if (ok) toast.success(`Corrected ${ok} issue${ok === 1 ? '' : 's'}`);
+    if (failed.length) toast.error(`${failed.length} could not be corrected — still selected`);
+  };
+
   const sorted = [...findings].sort((a, b) => SEV[a.severity].rank - SEV[b.severity].rank);
   const counts = sorted.reduce<Record<string, number>>((a, f) => {
     a[f.severity] = (a[f.severity] ?? 0) + 1; return a;
@@ -161,11 +182,32 @@ const DiagnosticsTab: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ co
         </div>
       )}
 
+      {canEdit && sorted.some(f => f.id) && (() => {
+        const ids = sorted.filter(f => f.id).map(f => f.id!);
+        const all = ids.every(id => selected.has(id));
+        return (
+          <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap', marginBottom:10, background:C.card, border:`1px solid ${C.line}`, borderRadius:10, padding:'8px 12px' }}>
+            <label style={{ display:'flex', gap:6, alignItems:'center', fontSize:13, color:C.text, cursor:'pointer' }}>
+              <input type="checkbox" checked={all} onChange={() => setSelected(all ? new Set() : new Set(ids))} />
+              Select all
+            </label>
+            <span style={{ fontSize:12, color:C.muted }}>{selected.size} selected</span>
+            <button onClick={fixSelected} disabled={!selected.size || !!bulk}
+              style={{ marginLeft:'auto', border:'none', background: !selected.size || bulk ? '#9AA5AD' : '#319795', color:'#fff', borderRadius:6, padding:'7px 14px', fontSize:13, fontWeight:700, cursor: !selected.size || bulk ? 'default' : 'pointer' }}>
+              {bulk || `Confirm & correct selected (${selected.size})`}
+            </button>
+          </div>
+        );
+      })()}
+
       <div style={{ display:'grid', gap:10 }}>
         {sorted.map((f, i) => (
           <div key={f.id ?? i}
             style={{ background:C.card, border:`1px solid ${C.line}`, borderLeft:`4px solid ${SEV[f.severity].fg}`,
                      borderRadius:10, padding:14, display:'flex', gap:12, alignItems:'flex-start' }}>
+            {canEdit && f.id && (
+              <input type="checkbox" aria-label={`Select ${f.title}`} checked={selected.has(f.id)} onChange={() => toggle(f.id!)} style={{ marginTop:4, width:16, height:16 }} />
+            )}
             <div style={{ fontSize:18, lineHeight:'22px' }}>{SEV[f.severity].icon}</div>
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontWeight:700, fontSize:14, color:C.text }}>{f.title}</div>
