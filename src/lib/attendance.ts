@@ -24,6 +24,13 @@ export interface HoursSplit { theory: number; clinical: number; presentDays: num
 
 export interface DayHours { theory: number; clinical: number; kind?: 'theory' | 'makeup' | 'clinical' | 'friday'; day?: number }
 
+// Approved shortened clinical sessions that are exceptions to the normal
+// post-theory Friday exclusion. Keep these explicit so historical hours remain
+// reproducible across calendars, progress, certificates, and grade reporting.
+const CLINICAL_HOUR_EXCEPTIONS: Record<string, number> = {
+  '2026-09-11': 4,
+};
+
 // Day-track schedule from the Modules layout: Days 1–8 are theory
 // (Day 1 = 7h, Days 2–7 = 8h, Day 8 = 5h → 60h). Day 9 is a theory make-up
 // day (0h unless theory hours are still owed). Day 10 onward is clinical at
@@ -58,6 +65,13 @@ export function attendanceDayHours(
       continue;
     }
     if (makeupPending) { makeupPending = false; n++; out[d] = { theory: 0, clinical: 0, kind: 'makeup', day: n }; continue; }
+    const exceptionalClinicalHours = CLINICAL_HOUR_EXCEPTIONS[d];
+    if (exceptionalClinicalHours !== undefined) {
+      const c = Math.min(exceptionalClinicalHours, Math.max(0, clinicalRequired - clinical));
+      clinical += c; n++;
+      out[d] = { theory: 0, clinical: c, kind: 'clinical', day: n };
+      continue;
+    }
     if (isFri) { out[d] = { theory: 0, clinical: 0, kind: 'friday' }; continue; }
     const c = Math.min(THEORY_HOURS_PER_ATTENDED_DAY, Math.max(0, clinicalRequired - clinical));
     clinical += c; n++;

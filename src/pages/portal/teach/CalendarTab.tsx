@@ -56,10 +56,10 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
         evs.push({ id:`a-${a.id}`, refId:a.id, title:a.title, date:new Date(a.due_at), type:isQuiz?'quiz':'assignment', color: isQuiz?C.warn:C.primary, section: a.group_name || null });
       });
       (qz ?? []).forEach(q => evs.push({ id:`q-${q.id}`, refId:q.id, title:q.title, date:new Date(q.due_at), type:'quiz', color:C.warn, section: null }));
-      // Labels follow the hours rule: theory until 60h, the crossover day is
-      // split, later days are clinical. No Friday sessions from Sep 11.
+      // Labels follow the Modules day schedule. Sep 11 is an approved 4-hour
+      // clinical exception; later clinical Fridays remain excluded.
       const attDates = [...new Set((att ?? []).map(a => a.session_date))]
-        .filter(d => !(d >= '2026-09-11' && new Date(d + 'T09:00:00').getDay() === 5));
+        .filter(d => d === '2026-09-11' || !(d > '2026-09-11' && new Date(d + 'T09:00:00').getDay() === 5));
       const labels = sessionLabels(attDates);
       attDates.forEach(d => {
         const L = labels[d];
