@@ -118,11 +118,10 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
     [rows, req],
   );
 
-  const [cert, setCert] = useState<{ row: Row; name: string; date: string; passed: boolean } | null>(null);
+  const [cert, setCert] = useState<{ row: Row; name: string; passed: boolean } | null>(null);
   const esc = (t: string) => t.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]!));
-  const printCertificate = (r: Row, nameIn: string, dateIn: string) => {
+  const printCertificate = (r: Row, nameIn: string) => {
     const name = esc(nameIn.trim());
-    const dateStr = new Date(dateIn + 'T12:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     void r;
     const bg = window.location.origin + certTemplate.url;
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Certificate — ${name}</title>
@@ -135,13 +134,11 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
   .sheet img { position:absolute; inset:0; width:100%; height:100% }
   .name { position:absolute; left:16%; right:16%; bottom:42.5%; text-align:center;
           font-family:'Great Vibes', cursive; color:#333; font-size:${name.length > 22 ? 64 : 80}px; line-height:1; white-space:nowrap }
-  .date { position:absolute; left:59.9%; width:17.6%; top:74.5%; text-align:center;
-          font-family:'Libre Baskerville', Georgia, serif; color:#2f3a5c; font-size:15px }
+          .date { position:absolute; left:59.9%; width:17.6%; top:74.5%; }
 </style></head><body>
 <div class="sheet">
   <img src="${bg}" alt="">
   <div class="name">${name}</div>
-  <div class="date">${dateStr}</div>
 </div>
 <script>
   Promise.all([document.fonts.ready, new Promise(r => { const i = document.querySelector('img'); i.complete ? r() : (i.onload = r, i.onerror = r); })])
@@ -261,7 +258,7 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
                   <span style={{ fontSize: 11, padding: '2px 9px', borderRadius: 20, background: ok ? '#E8F6EC' : '#FFF3CD', color: ok ? C.success : '#8A6D00' }}>
                     {ok ? 'Eligible' : 'Hours incomplete'}
                   </span>
-                  <button onClick={() => setCert({ row: r, name: r.name, date: new Date().toISOString().slice(0,10), passed: false })} disabled={!canEdit}
+                  <button onClick={() => setCert({ row: r, name: r.name, passed: false })} disabled={!canEdit}
                     style={{ padding: '5px 12px', border: 'none', borderRadius: 5, background: ok ? C.primary : C.border, color: '#fff', fontSize: 12, cursor: canEdit ? 'pointer' : 'default' }}>
                     Print certificate
                   </button>
@@ -279,9 +276,6 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
               <label style={{ fontSize:12, fontWeight:700, color:C.text }}>Student's full name</label>
               <input autoFocus value={cert.name} onChange={e => setCert({ ...cert, name: e.target.value })}
                 style={{ width:'100%', boxSizing:'border-box', padding:'9px 10px', border:`1px solid ${C.border}`, borderRadius:6, fontSize:15, margin:'4px 0 12px' }} />
-              <label style={{ fontSize:12, fontWeight:700, color:C.text }}>Completion date</label>
-              <input type="date" value={cert.date} onChange={e => setCert({ ...cert, date: e.target.value })}
-                style={{ width:'100%', boxSizing:'border-box', padding:'8px 10px', border:`1px solid ${C.border}`, borderRadius:6, fontSize:14, margin:'4px 0 12px' }} />
               {!(cert.row.theory >= req.theory && cert.row.clinicalVerified >= req.clinical) && (
                 <div style={{ background:'#FFF3CD', color:'#8A6D00', borderRadius:6, padding:'8px 10px', fontSize:12, marginBottom:10 }}>
                   Hours aren't complete yet ({cert.row.theory}/{req.theory} theory, {cert.row.clinicalVerified}/{req.clinical} clinical).
@@ -293,8 +287,8 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
               </label>
               <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
                 <button onClick={() => setCert(null)} style={{ padding:'8px 14px', border:`1px solid ${C.border}`, background:'#fff', borderRadius:6, cursor:'pointer' }}>Cancel</button>
-                <button disabled={!cert.passed || !cert.name.trim() || !cert.date}
-                  onClick={() => { printCertificate(cert.row, cert.name, cert.date); setCert(null); }}
+                <button disabled={!cert.passed || !cert.name.trim()}
+                  onClick={() => { printCertificate(cert.row, cert.name); setCert(null); }}
                   style={{ padding:'8px 16px', border:'none', borderRadius:6, background: cert.passed && cert.name.trim() ? C.primary : C.border, color:'#fff', fontWeight:700, cursor: cert.passed ? 'pointer' : 'default' }}>
                   Print
                 </button>
