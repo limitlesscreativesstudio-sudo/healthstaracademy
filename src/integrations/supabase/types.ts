@@ -2309,6 +2309,78 @@ export type Database = {
         }
         Relationships: []
       }
+      question_bank: {
+        Row: {
+          active: boolean
+          bank_key: string
+          correct_answer: Json
+          created_at: string
+          id: string
+          kind: string
+          module_number: number | null
+          options: Json
+          prompt: string
+          question_type: string
+          scenario: string | null
+          source_doc: string | null
+          verified: boolean
+        }
+        Insert: {
+          active?: boolean
+          bank_key: string
+          correct_answer: Json
+          created_at?: string
+          id?: string
+          kind?: string
+          module_number?: number | null
+          options?: Json
+          prompt: string
+          question_type?: string
+          scenario?: string | null
+          source_doc?: string | null
+          verified?: boolean
+        }
+        Update: {
+          active?: boolean
+          bank_key?: string
+          correct_answer?: Json
+          created_at?: string
+          id?: string
+          kind?: string
+          module_number?: number | null
+          options?: Json
+          prompt?: string
+          question_type?: string
+          scenario?: string | null
+          source_doc?: string | null
+          verified?: boolean
+        }
+        Relationships: []
+      }
+      question_swap_backup_20261006: {
+        Row: {
+          changed_at: string
+          id: string
+          old_row: Json | null
+          question_id: string | null
+          quiz_id: string | null
+        }
+        Insert: {
+          changed_at?: string
+          id?: string
+          old_row?: Json | null
+          question_id?: string | null
+          quiz_id?: string | null
+        }
+        Update: {
+          changed_at?: string
+          id?: string
+          old_row?: Json | null
+          question_id?: string | null
+          quiz_id?: string | null
+        }
+        Relationships: []
+      }
       quiz_attempts: {
         Row: {
           answers: Json
@@ -2419,6 +2491,7 @@ export type Database = {
         Row: {
           answer_key_status: string
           attempts_allowed: number
+          bank_key: string | null
           course_id: string
           created_at: string
           due_at: string | null
@@ -2434,6 +2507,7 @@ export type Database = {
         Insert: {
           answer_key_status?: string
           attempts_allowed?: number
+          bank_key?: string | null
           course_id: string
           created_at?: string
           due_at?: string | null
@@ -2449,6 +2523,7 @@ export type Database = {
         Update: {
           answer_key_status?: string
           attempts_allowed?: number
+          bank_key?: string | null
           course_id?: string
           created_at?: string
           due_at?: string | null
