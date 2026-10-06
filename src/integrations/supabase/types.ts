@@ -2544,6 +2544,36 @@ export type Database = {
         }
         Relationships: []
       }
+      readiness_overrides: {
+        Row: {
+          course_id: string
+          criterion: string
+          id: string
+          met: boolean
+          set_by: string | null
+          student_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          criterion: string
+          id?: string
+          met: boolean
+          set_by?: string | null
+          student_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          criterion?: string
+          id?: string
+          met?: boolean
+          set_by?: string | null
+          student_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rubric_criteria: {
         Row: {
           created_at: string
