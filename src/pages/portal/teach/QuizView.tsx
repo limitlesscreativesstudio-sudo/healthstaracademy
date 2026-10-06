@@ -117,8 +117,14 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     const { data } = await supabase.from('quizzes').select('*').eq('course_id', courseId).order('created_at');
     const sorted = (data ?? []).slice().sort((a: any, b: any) => {
       const parse = (t: string) => {
-        const m = String(t || '').match(/^\s*(\d+)(?:\.(\d+))?/);
-        return m ? [parseInt(m[1], 10), m[2] ? parseInt(m[2], 10) : 0] : [Number.POSITIVE_INFINITY, 0];
+        const title = String(t || '');
+        const m = title.match(/^\s*(\d+)(?:\.(\d+))?/);
+        if (m) return [parseInt(m[1], 10), m[2] ? parseInt(m[2], 10) : 0];
+        const lower = title.toLowerCase();
+        if (lower.includes('midterm')) return [Number.MAX_SAFE_INTEGER - 3, 0];
+        if (lower.includes('final')) return [Number.MAX_SAFE_INTEGER - 2, 0];
+        if (lower.includes('evaluation')) return [Number.MAX_SAFE_INTEGER - 1, 0];
+        return [Number.POSITIVE_INFINITY, 0];
       };
       const [a1, a2] = parse(a.title);
       const [b1, b2] = parse(b.title);
