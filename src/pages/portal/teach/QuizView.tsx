@@ -1451,6 +1451,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                 const pct = released && r.score !== null && r.max ? Math.round((r.score / r.max) * 100) : null;
                 const statusLabel = !r.submitted_at ? 'In progress'
                   : released ? 'Graded & released'
+                  : r.grading_status === 'superseded' ? 'Closed — duplicate attempt (released score kept)'
                   : r.grading_status === 'in_review' ? 'Grading started'
                   : 'Awaiting grading';
                 const statusCol = !r.submitted_at ? C.warn : released ? C.success : C.error;

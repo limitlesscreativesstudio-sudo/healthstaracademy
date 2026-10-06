@@ -144,7 +144,7 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
         const quizPct = (qzs ?? []).length ? Math.round((quizPassed / (qzs ?? []).length) * 100) : 0;
         const studentAttempts = (attempts ?? []).filter(a => a.user_id === uid);
         const quizzesSubmitted = new Set(studentAttempts.map(a => a.quiz_id)).size;
-        const awaitingGrading = studentAttempts.filter(a => a.score == null || a.grading_status === 'awaiting' || a.grading_status === 'awaiting_grading').length;
+        const awaitingGrading = studentAttempts.filter(a => a.grading_status !== 'superseded' && (a.score == null || a.grading_status === 'awaiting' || a.grading_status === 'awaiting_grading')).length;
 
         const attRec = attByUser[uid] ?? { present:0, total:0 };
         const attPct = attRec.total > 0 ? Math.round((attRec.present / attRec.total) * 100) : 0;
