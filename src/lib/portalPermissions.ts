@@ -2,7 +2,7 @@ export type PortalRole = "admin" | "instructor" | "student";
 
 /**
  * Tabs an instructor may edit. Anything not listed here is admin-only
- * (roster/invites, course settings, analytics), and students may never edit.
+ * (roster/invites, course settings), and students may never edit.
  */
 export const INSTRUCTOR_EDITABLE_TABS = [
   "home",
@@ -26,6 +26,7 @@ export const INSTRUCTOR_EDITABLE_TABS = [
   "rubrics",
   "calendar",
   "diagnostics",
+  "analytics",
 ] as const;
 
 const INSTRUCTOR_SET = new Set<string>(INSTRUCTOR_EDITABLE_TABS);
