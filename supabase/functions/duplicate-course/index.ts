@@ -180,6 +180,52 @@ Deno.serve(async (req) => {
         await db.from("quiz_questions").insert(qq.map((x: any) => ({ ...strip(x), quiz_id: nq.id })));
         bump("quiz_questions", qq.length);
       }
+      // Rotate from the question bank for brand-new copies only (never into existing courses).
+      if (!targetCourseId && q.bank_key) {
+        try { await rotateFromBank(nq.id, q, qq ?? []); } catch (_) { /* keep the copied questions */ }
+      }
+    }
+
+    async function rotateFromBank(quizId: string, src: any, current: any[]) {
+      const { data: pool } = await db.from("question_bank")
+        .select("scenario,prompt,question_type,options,correct_answer,points,position")
+        .eq("bank_key", src.bank_key).eq("active", true).eq("verified", true);
+      if (!pool?.length) return;
+      const shuffle = <T,>(a: T[]) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+      let picked: any[] = [];
+      let scenario: string | null = null;
+      if (String(src.bank_key).endsWith("-case")) {
+        // Case studies rotate as whole scenarios so questions always match their story.
+        const groups = new Map<string, any[]>();
+        for (const r of pool) { const k = r.scenario ?? ""; if (!k) continue; groups.set(k, [...(groups.get(k) ?? []), r]); }
+        if (groups.size < 2) return;
+        scenario = shuffle([...groups.keys()])[0];
+        picked = groups.get(scenario)!.sort((a, b) => a.position - b.position);
+      } else {
+        const n = current.length;
+        if (!n || pool.length <= n) return;
+        picked = shuffle(pool).slice(0, n);
+      }
+      const perPoint = scenario ? 1 : (Number(src.total_points) || picked.length) / picked.length;
+      await db.from("quiz_questions").delete().eq("quiz_id", quizId);
+      await db.from("quiz_questions").insert(picked.map((r, i) => ({
+        quiz_id: quizId, position: i, question_type: r.question_type, prompt: r.prompt,
+        options: r.options, correct_answer: r.correct_answer, points: perPoint, key_unverified: false,
+      })));
+      await db.from("quizzes").update({
+        answer_key_status: "verified",
+        ...(scenario ? { instructions: scenario, total_points: picked.length } : {}),
+      }).eq("id", quizId);
+      if (scenario) {
+        const num = String(src.title).match(/^(\d+)/)?.[1];
+        if (num) {
+          const P = '<p style="margin: 12px 0px; color: rgb(39, 53, 64); font-family: &quot;Lato Extended&quot;, Lato, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif; font-size: 16px;">';
+          const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+          const html = P + esc(scenario) + "</p>" + P + "<br></p>" + picked.map((r, i) => `${P}${i + 1}) ${esc(String(r.prompt))}</p>`).join("");
+          await db.from("lms_pages").update({ body_html: html }).eq("course_id", newCourseId).eq("title", `${num}. Case Study`);
+        }
+      }
+      bump("rotated_quizzes");
     }
 
     // ── Assignments
