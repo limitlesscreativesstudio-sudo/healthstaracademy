@@ -150,7 +150,7 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
         const attPct = attRec.total > 0 ? Math.round((attRec.present / attRec.total) * 100) : 0;
 
         const split = splitAttendanceHours(attListByUser[uid] ?? [], REG.theoryHoursRequired);
-        const clinical = (clinicalByUser[uid] ?? 0) + split.clinical;
+        const clinical = Math.min(REG.clinicalHoursRequired, (clinicalByUser[uid] ?? 0) + split.clinical);
         const skills = skillsByUser[uid] ?? 0;
 
         // Overall = weighted average of milestones vs regulatory targets
