@@ -258,7 +258,7 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
                   <span style={{ fontSize: 11, padding: '2px 9px', borderRadius: 20, background: ok ? '#E8F6EC' : '#FFF3CD', color: ok ? C.success : '#8A6D00' }}>
                     {ok ? 'Eligible' : 'Hours incomplete'}
                   </span>
-                  <button onClick={() => setCert({ row: r, name: r.name, date: new Date().toISOString().slice(0,10), passed: false })} disabled={!canEdit}
+                  <button onClick={() => setCert({ row: r, name: r.name, passed: false })} disabled={!canEdit}
                     style={{ padding: '5px 12px', border: 'none', borderRadius: 5, background: ok ? C.primary : C.border, color: '#fff', fontSize: 12, cursor: canEdit ? 'pointer' : 'default' }}>
                     Print certificate
                   </button>
