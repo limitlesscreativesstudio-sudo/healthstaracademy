@@ -117,8 +117,12 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
     [rows, req],
   );
 
-  const printCertificate = (r: Row) => {
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Certificate — ${r.name}</title>
+  const [cert, setCert] = useState<{ row: Row; name: string; date: string; passed: boolean } | null>(null);
+  const esc = (t: string) => t.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]!));
+  const printCertificate = (r: Row, nameIn: string, dateIn: string) => {
+    const name = esc(nameIn.trim());
+    const dateStr = new Date(dateIn + 'T12:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Certificate — ${name}</title>
 <style>
   @page { size: landscape; margin: 0 }
   body { margin:0; font-family: Georgia, 'Times New Roman', serif; color:#2D1B4E }
@@ -137,13 +141,13 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
   <div class="sub">Health Star Academy</div>
   <h1>Certificate of Completion</h1>
   <div class="sub">This certifies that</div>
-  <div class="name">${r.name}</div>
+  <div class="name">${name}</div>
   <div class="body">has successfully completed all theory and clinical requirements of the
    <strong>${req.program}</strong> program${courseTitle ? ` (${courseTitle})` : ''} at Health Star Academy.</div>
   <div class="hours">Theory hours: ${r.theory.toFixed(1)} / ${req.theory} &nbsp;•&nbsp; Verified clinical hours: ${r.clinicalVerified.toFixed(1)} / ${req.clinical}</div>
   <div class="sigs">
     <div class="sig">Program Director</div>
-    <div class="sig">Date: ${new Date().toLocaleDateString()}</div>
+    <div class="sig">Date: ${dateStr}</div>
   </div>
 </div></body></html>`;
     const w = window.open('', '_blank', 'width=1100,height=800');
@@ -260,14 +264,46 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
                   <span style={{ fontSize: 11, padding: '2px 9px', borderRadius: 20, background: ok ? '#E8F6EC' : '#FFF3CD', color: ok ? C.success : '#8A6D00' }}>
                     {ok ? 'Eligible' : 'Hours incomplete'}
                   </span>
-                  <button onClick={() => printCertificate(r)} disabled={!canEdit}
+                  <button onClick={() => setCert({ row: r, name: r.name, date: new Date().toISOString().slice(0,10), passed: false })} disabled={!canEdit}
                     style={{ padding: '5px 12px', border: 'none', borderRadius: 5, background: ok ? C.primary : C.border, color: '#fff', fontSize: 12, cursor: canEdit ? 'pointer' : 'default' }}>
-                    Generate
+                    Print certificate
                   </button>
                 </div>
               );
             })}
           </>
+        )}
+        {cert && (
+          <div role="dialog" aria-modal="true" onClick={() => setCert(null)}
+            style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.45)', zIndex:4000, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+            <div onClick={e => e.stopPropagation()} style={{ background:'#fff', borderRadius:12, padding:22, width:'min(440px,100%)', fontFamily:'sans-serif' }}>
+              <div style={{ fontSize:17, fontWeight:800, color:C.text, marginBottom:4 }}>Print certificate</div>
+              <div style={{ fontSize:12.5, color:C.muted, marginBottom:14 }}>Check the spelling exactly as it should appear on the certificate.</div>
+              <label style={{ fontSize:12, fontWeight:700, color:C.text }}>Student's full name</label>
+              <input autoFocus value={cert.name} onChange={e => setCert({ ...cert, name: e.target.value })}
+                style={{ width:'100%', boxSizing:'border-box', padding:'9px 10px', border:`1px solid ${C.border}`, borderRadius:6, fontSize:15, margin:'4px 0 12px' }} />
+              <label style={{ fontSize:12, fontWeight:700, color:C.text }}>Completion date</label>
+              <input type="date" value={cert.date} onChange={e => setCert({ ...cert, date: e.target.value })}
+                style={{ width:'100%', boxSizing:'border-box', padding:'8px 10px', border:`1px solid ${C.border}`, borderRadius:6, fontSize:14, margin:'4px 0 12px' }} />
+              {!(cert.row.theory >= req.theory && cert.row.clinicalVerified >= req.clinical) && (
+                <div style={{ background:'#FFF3CD', color:'#8A6D00', borderRadius:6, padding:'8px 10px', fontSize:12, marginBottom:10 }}>
+                  Hours aren't complete yet ({cert.row.theory}/{req.theory} theory, {cert.row.clinicalVerified}/{req.clinical} clinical).
+                </div>
+              )}
+              <label style={{ display:'flex', gap:8, alignItems:'center', fontSize:13, color:C.text, marginBottom:16 }}>
+                <input type="checkbox" checked={cert.passed} onChange={e => setCert({ ...cert, passed: e.target.checked })} />
+                I confirm this student passed the course
+              </label>
+              <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
+                <button onClick={() => setCert(null)} style={{ padding:'8px 14px', border:`1px solid ${C.border}`, background:'#fff', borderRadius:6, cursor:'pointer' }}>Cancel</button>
+                <button disabled={!cert.passed || !cert.name.trim() || !cert.date}
+                  onClick={() => { printCertificate(cert.row, cert.name, cert.date); setCert(null); }}
+                  style={{ padding:'8px 16px', border:'none', borderRadius:6, background: cert.passed && cert.name.trim() ? C.primary : C.border, color:'#fff', fontWeight:700, cursor: cert.passed ? 'pointer' : 'default' }}>
+                  Print
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </Section>
 
