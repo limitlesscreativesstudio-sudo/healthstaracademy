@@ -287,8 +287,8 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
               </label>
               <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
                 <button onClick={() => setCert(null)} style={{ padding:'8px 14px', border:`1px solid ${C.border}`, background:'#fff', borderRadius:6, cursor:'pointer' }}>Cancel</button>
-                <button disabled={!cert.passed || !cert.name.trim() || !cert.date}
-                  onClick={() => { printCertificate(cert.row, cert.name, cert.date); setCert(null); }}
+                <button disabled={!cert.passed || !cert.name.trim()}
+                  onClick={() => { printCertificate(cert.row, cert.name); setCert(null); }}
                   style={{ padding:'8px 16px', border:'none', borderRadius:6, background: cert.passed && cert.name.trim() ? C.primary : C.border, color:'#fff', fontWeight:700, cursor: cert.passed ? 'pointer' : 'default' }}>
                   Print
                 </button>
