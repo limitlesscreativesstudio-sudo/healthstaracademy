@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { isAttended, THEORY_HOURS_PER_ATTENDED_DAY, splitAttendanceHours } from '@/lib/attendance';
+import certTemplate from '@/assets/hsa-certificate-template.png.asset.json';
 
 const C = {
   primary: '#7B4DB5', bg: '#F4F2FA', white: '#FFFFFF', border: '#D4C8E8',
