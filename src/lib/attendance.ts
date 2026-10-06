@@ -89,3 +89,20 @@ export function missedDays(
   }
   return out;
 }
+
+/**
+ * Calendar labels for session days: 8h per day in date order; days within the
+ * 60 theory hours are class sessions, the day that crosses 60h is split
+ * theory/clinical, and every later day is a clinical session.
+ */
+export function sessionLabels(dates: string[]): Record<string, { title: string; kind: 'theory' | 'mixed' | 'clinical' }> {
+  const out: Record<string, { title: string; kind: 'theory' | 'mixed' | 'clinical' }> = {};
+  let cum = 0;
+  for (const d of [...new Set(dates)].sort()) {
+    const before = cum; cum += 8;
+    if (cum <= 60) out[d] = { title: 'Class Session', kind: 'theory' };
+    else if (before < 60) out[d] = { title: `Theory ${60 - before}h + Clinical ${cum - 60}h`, kind: 'mixed' };
+    else out[d] = { title: 'Clinical Session', kind: 'clinical' };
+  }
+  return out;
+}
