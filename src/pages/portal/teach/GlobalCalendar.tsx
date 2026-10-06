@@ -52,7 +52,10 @@ const GlobalCalendar: React.FC = () => {
       (att ?? []).forEach((a:any) => {
         const k = `${a.course_id}|${a.session_date}`;
         if (seen.has(k)) return; seen.add(k);
-        evs.push({ id:`att-${k}`, refId:'', courseId:a.course_id, courseTitle:titleMap[a.course_id]||'', title:'Class Session', date:new Date(a.session_date+'T09:00:00'), type:'attendance', color:C.accent });
+        const dt = new Date(a.session_date+'T09:00:00');
+        if (a.session_date >= '2026-09-11' && dt.getDay() === 5) return; // no Friday sessions from Sep 11
+        const clinical = a.session_date >= '2026-09-14';
+        evs.push({ id:`att-${k}`, refId:'', courseId:a.course_id, courseTitle:titleMap[a.course_id]||'', title: clinical ? 'Clinical Session' : 'Class Session', date: dt, type:'attendance', color: clinical ? '#127A1B' : C.accent });
       });
       evs.sort((a,b) => a.date.getTime() - b.date.getTime());
       setEvents(evs);
