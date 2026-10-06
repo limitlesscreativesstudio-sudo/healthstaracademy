@@ -6,3 +6,5 @@
 - Display released quiz grades using the attempt's original maximum because later assessment edits must not change earned percentages.- Questions flagged key_unverified are never auto-scored because their stored answer was not confirmed by an instructor document.
 - New sign-ups get the student role only when an invite exists (pending enrollment or course invite), because self-registered accounts must not reach the LMS.
 - Quiz answer drafts are scoped to the open quiz's question IDs, because unscoped state leaked one quiz's answers into another attempt.
+- Render authored assessment instructions and prompts through the shared sanitized AssessmentText renderer, because plain interpolation exposes markup and loses case-study structure.
+- Keep imported student assessment documents in lms_files only, without module_items or document-only lms_pages copies, because Modules must open interactive assessments rather than duplicate worksheets.
