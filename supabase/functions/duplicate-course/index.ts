@@ -53,6 +53,19 @@ Deno.serve(async (req) => {
     let newCourseId: string;
     if (targetCourseId) {
       newCourseId = targetCourseId;
+      if (targetCourseId === sourceCourseId) return json({ error: "Choose a different target course" }, 400);
+      const { data: target } = await db.from("courses").select("instructor_id").eq("id", targetCourseId).maybeSingle();
+      const { data: targetEnrollment } = await db.from("enrollments").select("role").eq("course_id", targetCourseId).eq("user_id", caller.id).maybeSingle();
+      if (!target || (!isAdmin && target.instructor_id !== caller.id && !["teacher", "ta", "designer"].includes(String(targetEnrollment?.role ?? "")))) {
+        return json({ error: "Not authorized to update the target course" }, 403);
+      }
+      // Never replace populated courses: old IDs are referenced by saved work,
+      // grades and compliance history. Create a new copy instead.
+      const checks = await Promise.all(["modules", "quizzes", "assignments", "enrollments", "lms_pages", "lms_files", "discussions"].map(table =>
+        db.from(table).select("id", { count: "exact", head: true }).eq("course_id", targetCourseId)
+      ));
+      if (checks.some(result => result.error)) return json({ error: "Could not verify that the target course is empty" }, 500);
+      if (checks.some(result => (result.count ?? 0) > 0)) return json({ error: "This course contains content or enrolled people. Create a new course copy to preserve saved student work." }, 409);
       // Purge any partial content so the fill is exact.
       const { data: oldMods } = await db.from("modules").select("id").eq("course_id", newCourseId);
       const modIds = (oldMods ?? []).map((m: any) => m.id);
@@ -175,7 +188,7 @@ Deno.serve(async (req) => {
       const { data: na } = await db.from("assignments").insert({
         ...strip(a, ["module_item_id"]),
         course_id: newCourseId,
-        rubric_id: a.rubric_id ? (rubricMap.get(a.rubric_id) ?? null) : null,
+        rubric_id: a.rubric_id ? (rubricMap.get(a.rubric_id) ?? a.rubric_id) : null,
       }).select("id").single();
       if (na) { assignmentMap.set(a.id, na.id); bump("assignments"); }
     }
@@ -212,7 +225,7 @@ Deno.serve(async (req) => {
       let newUrl: string | null = f.file_url ?? null;
 
       if (f.storage_path && f.storage_provider !== "drive") {
-        const bucket = String(f.storage_path).startsWith("submissions/") ? "course-assets" : "course-files";
+        const bucket = String(f.storage_path).startsWith("submissions/") || String(f.file_url ?? "").includes("/course-assets/") ? "course-assets" : "course-files";
         const tail = String(f.storage_path).split("/").slice(1).join("/") || String(f.storage_path);
         const candidate = `${newCourseId}/${tail}`;
 
