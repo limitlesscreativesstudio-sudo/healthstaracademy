@@ -80,7 +80,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
       supabase.from('quizzes').select('id,title,total_points,published,created_at').eq('course_id', courseId).order('created_at'),
     ]);
     const cols: Column[] = [
-      ...(asgns ?? []).map((a: any) => ({ id: a.id, name: a.title, points: Number(a.points ?? 0), kind: 'assignment' as const })),
+      // Assignments are physical workbooks and are excluded from the overall grade.
       ...countableQuizzes(qzs ?? []).map((q: any) => ({ id: q.id, name: q.title, points: Number(q.total_points ?? 0), kind: 'quiz' as const })),
     ].sort((a, b) => natSort(a.name, b.name));
     setColumns(cols);
