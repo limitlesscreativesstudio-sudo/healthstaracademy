@@ -1,4 +1,5 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
+import StudentNameQuickOpen from '@/components/portal/StudentNameQuickOpen';
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import AttendanceTab     from './AttendanceTab';
@@ -924,6 +925,7 @@ const CourseView: React.FC = () => {
 
   return (
     <div style={{ display:'flex', minHeight:'100vh', background:C.bg }}>
+      <StudentNameQuickOpen courseId={activeCourse?.uuid} enabled={realCanEdit && !studentView} />
 
       {/* Fixed purple left rail */}
       <div style={{ width:52, background:C.nav, minHeight:'100vh', position:'fixed', left:0, top:0, zIndex:100, display:'flex', flexDirection:'column', alignItems:'center', paddingTop:10 }}>
