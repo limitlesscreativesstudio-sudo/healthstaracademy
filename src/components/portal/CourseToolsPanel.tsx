@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { isAttended, THEORY_HOURS_PER_ATTENDED_DAY, splitAttendanceHours } from '@/lib/attendance';
+import certTemplate from '@/assets/hsa-certificate-template.png.asset.json';
 
 const C = {
   primary: '#7B4DB5', bg: '#F4F2FA', white: '#FFFFFF', border: '#D4C8E8',
@@ -122,34 +123,30 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
   const printCertificate = (r: Row, nameIn: string, dateIn: string) => {
     const name = esc(nameIn.trim());
     const dateStr = new Date(dateIn + 'T12:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    void r;
+    const bg = window.location.origin + certTemplate.url;
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Certificate — ${name}</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Libre+Baskerville&display=swap" rel="stylesheet">
 <style>
-  @page { size: landscape; margin: 0 }
-  body { margin:0; font-family: Georgia, 'Times New Roman', serif; color:#2D1B4E }
-  .sheet { width:100%; min-height:100vh; box-sizing:border-box; padding:60px 70px; display:flex; flex-direction:column;
-           align-items:center; justify-content:center; text-align:center;
-           border:14px double #7B4DB5; background:#fff }
-  h1 { font-size:44px; margin:0 0 6px; letter-spacing:2px }
-  .sub { font-size:15px; letter-spacing:5px; text-transform:uppercase; color:#655480; margin-bottom:34px }
-  .name { font-size:40px; margin:14px 0; border-bottom:2px solid #D4C8E8; padding:0 40px 8px }
-  .body { font-size:16px; max-width:720px; line-height:1.7; color:#3b2b5c }
-  .hours { margin-top:18px; font-size:14px; color:#655480 }
-  .sigs { display:flex; gap:80px; margin-top:52px }
-  .sig { border-top:1.5px solid #2D1B4E; padding-top:6px; font-size:13px; width:240px }
-</style></head><body onload="window.print()">
+  @page { size: 11in 8.5in; margin: 0 }
+  html,body { margin:0; padding:0; background:#fff }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact }
+  .sheet { position:relative; width:11in; height:8.5in; overflow:hidden }
+  .sheet img { position:absolute; inset:0; width:100%; height:100% }
+  .name { position:absolute; left:16%; right:16%; bottom:42.5%; text-align:center;
+          font-family:'Great Vibes', cursive; color:#333; font-size:${name.length > 22 ? 64 : 80}px; line-height:1; white-space:nowrap }
+  .date { position:absolute; left:59.9%; width:17.6%; top:74.5%; text-align:center;
+          font-family:'Libre Baskerville', Georgia, serif; color:#2f3a5c; font-size:15px }
+</style></head><body>
 <div class="sheet">
-  <div class="sub">Health Star Academy</div>
-  <h1>Certificate of Completion</h1>
-  <div class="sub">This certifies that</div>
+  <img src="${bg}" alt="">
   <div class="name">${name}</div>
-  <div class="body">has successfully completed all theory and clinical requirements of the
-   <strong>${req.program}</strong> program${courseTitle ? ` (${courseTitle})` : ''} at Health Star Academy.</div>
-  <div class="hours">Theory hours: ${r.theory.toFixed(1)} / ${req.theory} &nbsp;•&nbsp; Verified clinical hours: ${r.clinicalVerified.toFixed(1)} / ${req.clinical}</div>
-  <div class="sigs">
-    <div class="sig">Program Director</div>
-    <div class="sig">Date: ${dateStr}</div>
-  </div>
-</div></body></html>`;
+  <div class="date">${dateStr}</div>
+</div>
+<script>
+  Promise.all([document.fonts.ready, new Promise(r => { const i = document.querySelector('img'); i.complete ? r() : (i.onload = r, i.onerror = r); })])
+    .then(() => setTimeout(() => window.print(), 300));
+</script></body></html>`;
     const w = window.open('', '_blank', 'width=1100,height=800');
     if (!w) { toast.error('Allow pop-ups to print certificates'); return; }
     w.document.write(html); w.document.close();
