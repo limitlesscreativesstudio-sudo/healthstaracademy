@@ -924,6 +924,7 @@ const CourseView: React.FC = () => {
 
   return (
     <div style={{ display:'flex', minHeight:'100vh', background:C.bg }}>
+      <StudentNameQuickOpen courseId={activeCourse?.uuid} enabled={realCanEdit && !studentView} />
 
       {/* Fixed purple left rail */}
       <div style={{ width:52, background:C.nav, minHeight:'100vh', position:'fixed', left:0, top:0, zIndex:100, display:'flex', flexDirection:'column', alignItems:'center', paddingTop:10 }}>
