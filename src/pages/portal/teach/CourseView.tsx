@@ -1,4 +1,5 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
+import StudentNameQuickOpen from '@/components/portal/StudentNameQuickOpen';
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import AttendanceTab     from './AttendanceTab';
