@@ -118,11 +118,10 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
     [rows, req],
   );
 
-  const [cert, setCert] = useState<{ row: Row; name: string; date: string; passed: boolean } | null>(null);
+  const [cert, setCert] = useState<{ row: Row; name: string; passed: boolean } | null>(null);
   const esc = (t: string) => t.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]!));
-  const printCertificate = (r: Row, nameIn: string, dateIn: string) => {
+  const printCertificate = (r: Row, nameIn: string) => {
     const name = esc(nameIn.trim());
-    const dateStr = new Date(dateIn + 'T12:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     void r;
     const bg = window.location.origin + certTemplate.url;
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Certificate — ${name}</title>
