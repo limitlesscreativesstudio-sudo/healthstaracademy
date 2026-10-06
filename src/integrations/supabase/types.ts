@@ -2319,6 +2319,8 @@ export type Database = {
           kind: string
           module_number: number | null
           options: Json
+          points: number
+          position: number
           prompt: string
           question_type: string
           scenario: string | null
@@ -2334,6 +2336,8 @@ export type Database = {
           kind?: string
           module_number?: number | null
           options?: Json
+          points?: number
+          position?: number
           prompt: string
           question_type?: string
           scenario?: string | null
@@ -2349,6 +2353,8 @@ export type Database = {
           kind?: string
           module_number?: number | null
           options?: Json
+          points?: number
+          position?: number
           prompt?: string
           question_type?: string
           scenario?: string | null
