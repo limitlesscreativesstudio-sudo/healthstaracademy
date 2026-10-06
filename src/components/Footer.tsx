@@ -51,8 +51,12 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
                 Health Star Academy
               </span>
             </Link>
-            <p className="text-gray-medium text-sm leading-relaxed mb-4">
+            <p className="text-gray-medium text-sm leading-relaxed mb-2">
               Empowering the next generation of compassionate healthcare professionals through quality CNA training.
+            </p>
+            <p className="text-cyan text-xs font-semibold flex items-center gap-1.5 mb-4">
+              <MapPin className="h-3.5 w-3.5" />
+              Now expanding to Los Angeles County
             </p>
             <div className="flex gap-3">
               <a

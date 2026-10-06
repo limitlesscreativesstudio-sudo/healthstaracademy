@@ -168,10 +168,10 @@ const LocationsPage = () => {
   return (
     <div className="min-h-screen">
       <SEO 
-        title="CNA Clinical Locations: Stockton, Lodi & Hayward"
-        description="CNA clinical training at partner skilled nursing facilities in Stockton, Lodi, and Bay Area Skilled Nursing (Hayward). Real patients, licensed nurse mentors."
+        title="CNA Clinical Locations: Stockton, Lodi & Hayward — Expanding to LA County"
+        description="CNA clinical training at partner skilled nursing facilities in Stockton, Lodi, and Bay Area Skilled Nursing (Hayward). Now expanding hybrid CNA training to Los Angeles County."
         canonical="/locations"
-        keywords="CNA clinical sites Stockton, Lodi CNA training, Hayward CNA classes, Bay Area Skilled Nursing, Central Valley CNA, CNA training near me California"
+        keywords="CNA clinical sites Stockton, Lodi CNA training, Hayward CNA classes, Bay Area Skilled Nursing, Central Valley CNA, CNA training near me California, CNA program Los Angeles County, CNA classes LA"
         structuredData={[
           {
             "@context": "https://schema.org",
@@ -180,7 +180,7 @@ const LocationsPage = () => {
             "url": "https://www.healthstaracademy.org",
             "telephone": "(209) 323-4169",
             "email": "info@healthstaracademy.org",
-            "areaServed": ["Stockton", "Lodi", "Hayward", "Sacramento", "Bay Area", "Central Valley"],
+            "areaServed": ["Stockton", "Lodi", "Hayward", "Sacramento", "Bay Area", "Central Valley", "Los Angeles County", "Los Angeles"],
             "location": [
               {
                 "@type": "Place",
