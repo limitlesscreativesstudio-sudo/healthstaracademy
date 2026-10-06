@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from './AuthContext';
-import { quizCountsTowardTotal } from '@/lib/gradePolicy';
+import { quizCountsTowardTotal, countableQuizzes } from '@/lib/gradePolicy';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#6B5C8A', success:'#127A1B', error:'#C0392B', warn:'#B35C00' } as const;
 
@@ -73,7 +73,7 @@ const AnalyticsTab: React.FC<Props> = ({ courseId, canEdit }) => {
 
       const totalPoints =
         (asgns ?? []).reduce((s:number,a:any) => s + Number(a.points ?? 0), 0) +
-        (qzs ?? []).filter((q:any) => quizCountsTowardTotal(q)).reduce((s:number,q:any) => s + Number(q.total_points ?? 0), 0);
+        countableQuizzes(qzs ?? []).reduce((s:number,q:any) => s + Number(q.total_points ?? 0), 0);
 
       const bestAttempt: Record<string, { score:number; at:string }> = {};
       (attempts ?? []).forEach((a:any) => {
@@ -85,7 +85,8 @@ const AnalyticsTab: React.FC<Props> = ({ courseId, canEdit }) => {
       const built: Row[] = uids.map((uid:string) => {
         const mySubs = (subs ?? []).filter((s:any) => s.user_id === uid);
         const myGrades = (gradeRows ?? []).filter((g:any) => g.user_id === uid);
-        const myAttempts = Object.keys(bestAttempt).filter(k => k.startsWith(`${uid}|`)).map(k => bestAttempt[k]);
+        const countIds = new Set(countableQuizzes(qzs ?? []).map((q:any) => q.id));
+        const myAttempts = Object.keys(bestAttempt).filter(k => k.startsWith(`${uid}|`) && countIds.has(k.split('|')[1])).map(k => bestAttempt[k]);
         const pts =
           myGrades.reduce((s:number,g:any) => s + Number(g.score ?? 0), 0) +
           myAttempts.reduce((s:number,a:any) => s + Number(a.score ?? 0), 0);

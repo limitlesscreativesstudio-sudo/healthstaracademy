@@ -12,5 +12,5 @@
 - Students may only create ungraded attempts and edit answers before submission; protect grading fields and immutable attempt identity in database triggers because client controls are not authorization.
 - Files-only revised student documents use explicit enrollment-scoped metadata and storage read policies, excluding instructor keys because removing module links must not remove authorized document access.
 - Block manual grade entry while a student has an open attempt because creating a separate paper attempt would consume attempts and split student history.
-- Midterm/Final exams count toward course point totals only while published (src/lib/gradePolicy.ts), because unpublished draft exam versions must not inflate possible points.
+- Midterm/Final exams count toward course point totals only while published, and only one published exam per family (fuzzy title match) counts (src/lib/gradePolicy.ts countableQuizzes), because unpublished drafts and similar-titled duplicate versions must not inflate possible points.
 - New cohort copies draw quiz questions from question_bank by quizzes.bank_key (case studies rotate whole scenarios and update the matching "N. Case Study" page); existing courses are never re-rotated, because saved attempts reference question IDs.
