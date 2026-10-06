@@ -247,7 +247,7 @@ Deno.serve(async (req) => {
 
     // Grading backlog
     const awaiting = attemptList.filter(
-      (a: any) => studentSet.has(a.user_id) && a.submitted_at && a.grading_status !== "released",
+      (a: any) => studentSet.has(a.user_id) && a.submitted_at && a.grading_status !== "released" && a.grading_status !== "superseded",
     );
     const stale = awaiting.filter((a: any) => now - new Date(a.submitted_at).getTime() > 3 * 864e5);
     if (awaiting.length) {
