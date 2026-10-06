@@ -73,6 +73,8 @@ const QuizGradebook: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
         if (!a.submitted_at) {
           cur.inProgress += 1;
           if (!cur.startedAt || a.started_at < cur.startedAt) cur.startedAt = a.started_at;
+        } else if (a.grading_status === 'superseded') {
+          // Closed duplicate attempt — the released score stands.
         } else if (a.grading_status !== 'released') {
           // Submitted but the instructor has not released a grade yet.
           cur.awaiting += 1;

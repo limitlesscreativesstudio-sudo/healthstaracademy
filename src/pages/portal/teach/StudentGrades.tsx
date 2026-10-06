@@ -115,7 +115,7 @@ const StudentGrades: React.FC<Props> = ({ courseId, canEdit, selfOnly }) => {
         if (best[k] == null || s > best[k]) best[k] = s;
       }
       const prevAt = subs[k]?.at;
-      if (!prevAt || String(a.submitted_at) > prevAt) subs[k] = { status: a.grading_status ?? 'awaiting', at: String(a.submitted_at) };
+      if (a.grading_status !== 'superseded' && (!prevAt || String(a.submitted_at) > prevAt)) subs[k] = { status: a.grading_status ?? 'awaiting', at: String(a.submitted_at) };
     }
     setSubmissions(subs);
     for (const k of Object.keys(best)) {
