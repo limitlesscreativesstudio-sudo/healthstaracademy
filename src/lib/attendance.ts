@@ -20,28 +20,50 @@ export const attendanceCode = (status: string | null | undefined): AttendanceCod
 export const REQUIRED_THEORY_HOURS = 60;
 export const REQUIRED_CLINICAL_HOURS = 100;
 
-export interface HoursSplit { theory: number; clinical: number; presentDays: number }
+export interface HoursSplit { theory: number; clinical: number; presentDays: number; makeupDays: number }
+
+/** Fridays (by calendar date) are make-up days once clinical starts. */
+export const isFriday = (isoDate: string) =>
+  !!isoDate && new Date(`${isoDate.slice(0, 10)}T12:00:00Z`).getUTCDay() === 5;
+
+export interface DayHours { theory: number; clinical: number; makeup: boolean }
 
 /**
- * Split attended class days into theory vs clinical hours.
- * Days are walked in date order; each present day earns 8 hours. Hours count
- * toward theory until the theory requirement is met; every hour after that
- * (including the overflow of the day that crosses the line) counts as clinical.
+ * Per-day split of attended days, walked in date order. Each present day earns
+ * 8 hours toward theory until the requirement is met; after that, present days
+ * count as clinical — except Fridays, which are make-up days and earn no
+ * clinical hours.
  */
+export function attendanceDayHours(
+  records: { session_date?: string | null; status: string | null | undefined }[],
+  theoryRequired: number = REQUIRED_THEORY_HOURS,
+): Record<string, DayHours> {
+  const days = Array.from(new Set(records
+    .filter(r => isAttended(r.status))
+    .map(r => r.session_date ?? '')
+    .filter(Boolean))).sort();
+  const out: Record<string, DayHours> = {};
+  let theory = 0;
+  for (const d of days) {
+    const toTheory = Math.min(Math.max(0, theoryRequired - theory), THEORY_HOURS_PER_ATTENDED_DAY);
+    theory += toTheory;
+    const overflow = THEORY_HOURS_PER_ATTENDED_DAY - toTheory;
+    const makeup = overflow > 0 && isFriday(d);
+    out[d] = { theory: toTheory, clinical: makeup ? 0 : overflow, makeup };
+  }
+  return out;
+}
+
 export function splitAttendanceHours(
   records: { session_date?: string | null; status: string | null | undefined }[],
   theoryRequired: number = REQUIRED_THEORY_HOURS,
 ): HoursSplit {
-  const days = records
-    .filter(r => isAttended(r.status))
-    .map(r => r.session_date ?? '')
-    .sort();
-  let theory = 0, clinical = 0;
-  for (const _ of days) {
-    const remaining = Math.max(0, theoryRequired - theory);
-    const toTheory = Math.min(remaining, THEORY_HOURS_PER_ATTENDED_DAY);
-    theory += toTheory;
-    clinical += THEORY_HOURS_PER_ATTENDED_DAY - toTheory;
-  }
-  return { theory, clinical, presentDays: days.length };
+  const map = attendanceDayHours(records, theoryRequired);
+  const v = Object.values(map);
+  return {
+    theory: v.reduce((n, x) => n + x.theory, 0),
+    clinical: v.reduce((n, x) => n + x.clinical, 0),
+    presentDays: v.length,
+    makeupDays: v.filter(x => x.makeup).length,
+  };
 }
