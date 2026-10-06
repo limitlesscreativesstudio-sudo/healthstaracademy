@@ -2373,6 +2373,7 @@ export type Database = {
           correct_answer: Json | null
           created_at: string
           id: string
+          key_unverified: boolean
           options: Json
           points: number
           position: number
@@ -2384,6 +2385,7 @@ export type Database = {
           correct_answer?: Json | null
           created_at?: string
           id?: string
+          key_unverified?: boolean
           options?: Json
           points?: number
           position?: number
@@ -2395,6 +2397,7 @@ export type Database = {
           correct_answer?: Json | null
           created_at?: string
           id?: string
+          key_unverified?: boolean
           options?: Json
           points?: number
           position?: number
