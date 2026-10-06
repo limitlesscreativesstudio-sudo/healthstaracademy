@@ -47,7 +47,8 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const attemptId = typeof body?.attempt_id === "string" ? body.attempt_id : null;
-    const answers = body?.answers && typeof body.answers === "object" ? body.answers : {};
+    if (!body?.answers || typeof body.answers !== "object" || Array.isArray(body.answers)) return json({ error: "Answers must be an object" }, 400);
+    const incomingAnswers = body.answers;
     if (!attemptId) return json({ error: "attempt_id required" }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE);
@@ -62,13 +63,23 @@ Deno.serve(async (req) => {
     if (attempt.submitted_at) return json({ error: "Already submitted" }, 400);
 
     const { data: quiz } = await admin
-      .from("quizzes").select("id, course_id, answer_key_status").eq("id", attempt.quiz_id).maybeSingle();
+      .from("quizzes").select("id, course_id, answer_key_status, published").eq("id", attempt.quiz_id).maybeSingle();
     if (!quiz) return json({ error: "Quiz not found" }, 404);
+    const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", userId);
+    const { data: enrollment } = await admin.from("enrollments").select("role").eq("course_id", quiz.course_id).eq("user_id", userId).maybeSingle();
+    const isAdmin = (roles ?? []).some(r => r.role === "admin");
+    const { data: course } = await admin.from("courses").select("instructor_id").eq("id", quiz.course_id).maybeSingle();
+    const staff = isAdmin || course?.instructor_id === userId || enrollment?.role === "teacher" || enrollment?.role === "ta";
+    if (!staff && (!enrollment || !quiz.published)) return json({ error: "This quiz is locked or you are no longer enrolled" }, 403);
 
-    const { data: questions } = await admin
+    const { data: questions, error: questionError } = await admin
       .from("quiz_questions")
       .select("id, points, question_type, correct_answer, key_unverified")
       .eq("quiz_id", attempt.quiz_id);
+    if (questionError) return json({ error: "Could not load questions. Your attempt remains open." }, 500);
+    if (!questions?.length) return json({ error: "This quiz has no questions yet" }, 409);
+    const questionIds = new Set(questions.map(q => q.id));
+    const answers = Object.fromEntries(Object.entries(incomingAnswers).filter(([id]) => questionIds.has(id)));
 
     // ── Auto-correct every question that has a TRUSTWORTHY answer key ────────
     // Guard: some legacy quizzes were imported with a placeholder key where every
@@ -108,31 +119,12 @@ Deno.serve(async (req) => {
     // Mixed quizzes keep the auto marks but wait for the instructor on the rest.
     const releasedNow = !needsHuman && (questions ?? []).length > 0;
 
-    const { error: upErr } = await admin
-      .from("quiz_attempts")
-      .update({
-        answers,
-        submitted_at: submittedAt,
-        question_scores: questionScores,
-        score: releasedNow ? earned : null,
-        max_score: releasedNow ? max : null,
-        grading_status: releasedNow ? "released" : "awaiting",
-        graded_at: releasedNow ? submittedAt : null,
-      })
-      .eq("id", attemptId);
+    const { data: recorded, error: upErr } = await admin.rpc("record_quiz_submission", {
+      _attempt_id: attemptId, _user_id: userId, _answers: answers,
+      _question_scores: questionScores, _earned: earned, _maximum: max, _released: releasedNow,
+    });
     if (upErr) return json({ error: upErr.message }, 500);
-
-    await admin.from("grades").delete().eq("quiz_attempt_id", attemptId);
-    if (releasedNow) {
-      await admin.from("grades").insert({
-        course_id: quiz.course_id,
-        user_id: userId,
-        quiz_attempt_id: attemptId,
-        score: earned,
-        max_score: max,
-        graded_at: submittedAt,
-      });
-    }
+    if (!recorded) return json({ error: "Already submitted. Your saved submission was not changed." }, 409);
 
     return json({
       success: true,

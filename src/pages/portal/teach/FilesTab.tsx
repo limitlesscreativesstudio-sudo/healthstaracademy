@@ -11,7 +11,7 @@ const ROOT_FOLDER_NAME = 'Health Star Academy Hybrid NATP Sandbox';
 const fileIcon = (t: string) => ({ pdf:'📄', pptx:'📊', ppt:'📊', docx:'📝', doc:'📝', mp4:'🎥', mov:'🎥', jpg:'🖼️', png:'🖼️', xlsx:'📈' }[t.toLowerCase()] ?? '📎');
 const fmtSize  = (b: number) => b > 1048576 ? `${(b/1048576).toFixed(1)} MB` : `${(b/1024).toFixed(0)} KB`;
 
-interface CourseFile { id: string; file_name: string; file_url: string; file_type: string; file_size: number; folder: string | null; folder_id?: string | null; created_at: string; }
+interface CourseFile { id: string; file_name: string; file_url: string; storage_path?: string | null; storage_provider?: string; file_type: string; file_size: number; folder: string | null; folder_id?: string | null; created_at: string; }
 interface CourseFolder { id: string; name: string; position?: number | null; created_at?: string; }
 interface Props { courseId?: string; canEdit?: boolean; }
 
@@ -39,6 +39,11 @@ const FilesTab: React.FC<Props> = ({ courseId, canEdit }) => {
     return m ? decodeURIComponent(m.split('?')[0]) : null;
   };
   const openFile = (f: CourseFile) => {
+    if (f.storage_path && !['drive', 'external'].includes(f.storage_provider ?? '')) {
+      const bucket = f.file_url?.includes('/course-assets/') || f.storage_path.includes('/assessment-revisions-') || f.storage_path.startsWith('submissions/') ? 'course-assets' : 'course-files';
+      setViewer({ src: { bucket, path: f.storage_path }, name: f.file_name, type: f.file_type });
+      return;
+    }
     const assetPath = f.file_url?.split('/course-assets/')[1];
     if (assetPath) {
       setViewer({ src: { bucket: 'course-assets', path: decodeURIComponent(assetPath.split('?')[0]) }, name: f.file_name, type: f.file_type });

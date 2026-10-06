@@ -4,6 +4,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase, useAuth } from './AuthContext';
 import { toast } from 'sonner';
 import AssessmentText from '@/components/portal/AssessmentText';
+import { Button } from '@/components/ui/button';
 
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', error:'#C0392B', warn:'#E67E22' } as const;
@@ -53,6 +54,8 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   const allowedFor = (q: any) => Math.max(1, Number(q?.attempts_allowed ?? 1) || 1);
   const attemptsLeft = (q: any) => allowedFor(q) - (myAttemptCounts[q.id] ?? 0);
   const [saveState, setSaveState] = useState<'idle'|'saving'|'saved'|'error'>('idle');
+  const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [stats, setStats] = useState<Record<string, Stats>>({});
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
@@ -259,9 +262,10 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       toast.info('Resumed your in-progress attempt');
     } else {
       const startIso = new Date().toISOString();
-      const { data: made } = await supabase.from('quiz_attempts').insert({
+      const { data: made, error: startError } = await supabase.from('quiz_attempts').insert({
         quiz_id: q.id, user_id: user.id, answers: local, started_at: startIso,
       }).select('id').single();
+      if (startError || !made) { setTaking(null); toast.error(startError?.message || 'Could not start this attempt. Please try again.'); return; }
       if (made) setAttemptId(made.id);
       setStartedAt(new Date(startIso));
     }
@@ -281,7 +285,12 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   };
 
   const flushSave = async () => {
-    if (!attemptId || inFlight.current) return;
+    if (!attemptId || submittingRef.current || results) return;
+    if (inFlight.current) {
+      if (retryTimer.current) clearTimeout(retryTimer.current);
+      retryTimer.current = setTimeout(flushSave, 250);
+      return;
+    }
     const snapshot = answersRef.current;
     inFlight.current = true;
     setSaveState('saving');
@@ -296,8 +305,14 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
       retryTimer.current = setTimeout(flushSave, delay);
     } else {
       retryAttempt.current = 0;
-      setSaveState('saved');
-      setLastSavedAt(new Date());
+      if (snapshot !== answersRef.current) {
+        setSaveState('saving');
+        if (retryTimer.current) clearTimeout(retryTimer.current);
+        retryTimer.current = setTimeout(flushSave, 0);
+      } else {
+        setSaveState('saved');
+        setLastSavedAt(new Date());
+      }
     }
   };
 
@@ -658,7 +673,11 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
   };
 
   const submitAttempt = async () => {
-    if (!taking || !user?.id || !attemptId) return;
+    if (!taking || !user?.id || !attemptId || submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    if (retryTimer.current) clearTimeout(retryTimer.current);
     // Questions with an answer key are auto-corrected on the server; anything
     // written (short answer / essay) still goes to the instructor.
     let max = 0;
@@ -668,6 +687,9 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     });
     const serverErr = (res as any)?.error;
     if (error || serverErr) {
+      submittingRef.current = false;
+      setSubmitting(false);
+      autoSubmittedRef.current = false;
       console.error('submit-quiz-attempt failed', error, serverErr);
       toast.error(`Could not submit: ${serverErr || error?.message || 'unknown error'}`);
       return;
@@ -682,6 +704,9 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     clearLocalDraft(taking.id);
     setResults({ score: typeof r?.score === 'number' ? r.score : null, max: finalMax, perQ, awaiting: !r?.auto_graded } as any);
     setAttemptedIds(s => new Set(s).add(taking.id));
+    setMyAttemptCounts(prev => ({ ...prev, [taking.id]: (prev[taking.id] ?? 0) + 1 }));
+    setSubmitting(false);
+    submittingRef.current = false;
     toast.success(r?.auto_graded ? 'Submitted — your score is ready' : 'Submitted — your instructor will grade this');
   };
 
@@ -708,6 +733,34 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
     const a = document.createElement('a');
     a.href = url; a.download = `${taking.title.replace(/[^\w]+/g,'_')}_review.txt`;
     a.click(); URL.revokeObjectURL(url);
+  };
+
+  const viewSavedResults = async (quiz: Quiz) => {
+    if (!user?.id || canEdit) return;
+    const { data: attempt, error } = await supabase.from('quiz_attempts')
+      .select('answers,score,max_score,grading_status,question_scores,instructor_feedback')
+      .eq('quiz_id', quiz.id).eq('user_id', user.id).not('submitted_at', 'is', null)
+      .order('submitted_at', { ascending: false }).limit(1).maybeSingle();
+    if (error || !attempt) { toast.error('Could not load your saved results. Please try again.'); return; }
+    const qs = await loadQuestions(quiz.id);
+    const released = attempt.grading_status === 'released';
+    const savedAnswers = (attempt.answers ?? {}) as Record<string, any>;
+    const scores = (attempt.question_scores ?? {}) as Record<string, any>;
+    setAttemptId(null);
+    setTimeLimitMin(null);
+    setAttemptQs(qs);
+    setAnswers(savedAnswers);
+    setTaking(quiz);
+    setViewing(null);
+    setResults({ score: released ? attempt.score : null, max: attempt.max_score ?? quiz.total_points,
+      awaiting: !released, feedback: released ? attempt.instructor_feedback : null,
+      perQ: qs.map(q => {
+        const value = q.id ? scores[q.id] : undefined;
+        const points = typeof value === 'number' ? value : value?.score;
+        return { qid: q.id, user: q.id ? savedAnswers[q.id] : undefined, expected: null,
+          auto: released && typeof points === 'number', correct: typeof points === 'number' && points >= q.points };
+      }),
+    } as any);
   };
 
   if (!courseId) return <div style={{ padding:32, textAlign:'center', color:C.muted, fontFamily:'sans-serif' }}>Select a course.</div>;
@@ -797,6 +850,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
         </div>
 
         <div style={{ textAlign:'center', marginBottom:20 }}>
+          {!canEdit && attemptedIds.has(q.id) && <Button variant="outline" className="mb-3 mr-3" onClick={() => viewSavedResults(q)}>View my submission</Button>}
           {!canEdit && attemptsLeft(q) <= 0 ? (
             <div style={{ display:'inline-block', padding:'10px 20px', borderRadius:6, background:'#f5f3fa', color:C.muted, fontSize:13, fontWeight:600 }}>
               You've used your {allowedFor(q)} allowed attempt{allowedFor(q)===1?'':'s'}. Ask your instructor to allow another attempt.
@@ -868,7 +922,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                     </div>
                     <div style={{ fontSize:20, fontWeight:700, color:C.text, marginBottom:6 }}>Submitted and scored</div>
                     <div style={{ fontSize:13.5, color:C.muted, marginBottom:14 }}>
-                      Your answers were checked against the answer key. This score is saved in Grades.
+                      Your released score is saved in Grades.
                     </div>
                   </>
                 ) : (
@@ -880,6 +934,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                     </div>
                   </>
                 )}
+                {(results as any).feedback && <div className="mb-4 text-left"><h3 className="font-semibold">Instructor feedback</h3><AssessmentText text={(results as any).feedback} /></div>}
                 <button onClick={downloadReview} style={{ padding:'8px 18px', border:`1px solid ${C.primary}`, borderRadius:5, background:C.white, color:C.primary, fontSize:13, cursor:'pointer', fontWeight:600 }}>⬇ Download my answers</button>
               </div>
               <h3 style={{ fontSize:15, color:C.text, marginBottom:10 }}>Your submitted answers</h3>
@@ -1059,7 +1114,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                   Retry now
                 </button>
               )}
-              <button onClick={submitAttempt} style={{ padding:'8px 22px', border:'none', borderRadius:4, background:C.primary, color:'white', fontSize:13, fontWeight:600, cursor:'pointer' }}>Submit Quiz</button>
+               <Button onClick={submitAttempt} disabled={submitting || canEdit}>{submitting ? 'Submitting…' : canEdit ? 'Instructor preview' : 'Submit Quiz'}</Button>
             </div>
           );
         })()}

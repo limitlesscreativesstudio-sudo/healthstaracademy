@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Sparkles } from 'lucide-react';
+import { attendanceCode } from '@/lib/attendance';
 
 type Level = 'action' | 'info' | 'good';
 
@@ -75,7 +76,7 @@ const StudentAssistant: React.FC<{ userId?: string }> = ({ userId }) => {
           title: 'Add your full name to your profile',
           detail: 'Your name appears on your records and certificate, so it must be correct.',
           actionLabel: 'Open profile',
-          onAction: () => navigate('/portal/teach/account'),
+          onAction: () => navigate('/portal/account'),
         });
       } else if (!profile.phone) {
         found.push({
@@ -83,7 +84,7 @@ const StudentAssistant: React.FC<{ userId?: string }> = ({ userId }) => {
           title: 'Add a phone number',
           detail: 'Your instructor uses it to reach you about clinical days and schedule changes.',
           actionLabel: 'Open profile',
-          onAction: () => navigate('/portal/teach/account'),
+          onAction: () => navigate('/portal/account'),
         });
       }
 
@@ -120,19 +121,19 @@ const StudentAssistant: React.FC<{ userId?: string }> = ({ userId }) => {
           title: `${openTodo.length} quiz${openTodo.length > 1 ? 'zes are' : ' is'} open for you to take`,
           detail: `Start with "${next.title}" in ${titleOf(next.course_id)}. You get one attempt unless your instructor gives you another.`,
           actionLabel: 'Go to quizzes',
-          onAction: () => navigate(`/portal/teach?course=${next.course_id}&tab=quizzes`),
+          onAction: () => navigate(`/portal/courses/${next.course_id}?tab=quizzes`),
         });
       }
 
       // 5. Attendance
-      const absences = ((attendance ?? []) as any[]).filter(a => a.status === 'absent');
+      const absences = ((attendance ?? []) as any[]).filter(a => attendanceCode(a.status) === 'A');
       if (absences.length) {
         found.push({
           level: 'action',
           title: `${absences.length} day${absences.length > 1 ? 's' : ''} marked absent`,
           detail: 'Missed hours must be made up to finish the program. Talk to your instructor about a make-up day.',
           actionLabel: 'View attendance',
-          onAction: () => courseIds[0] && navigate(`/portal/teach?course=${courseIds[0]}&tab=attendance`),
+          onAction: () => courseIds[0] && navigate(`/portal/courses/${courseIds[0]}?tab=attendance`),
         });
       }
 
