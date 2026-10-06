@@ -134,13 +134,11 @@ const CourseToolsPanel: React.FC<{ courseId?: string; canEdit?: boolean }> = ({ 
   .sheet img { position:absolute; inset:0; width:100%; height:100% }
   .name { position:absolute; left:16%; right:16%; bottom:42.5%; text-align:center;
           font-family:'Great Vibes', cursive; color:#333; font-size:${name.length > 22 ? 64 : 80}px; line-height:1; white-space:nowrap }
-  .date { position:absolute; left:59.9%; width:17.6%; top:74.5%; text-align:center;
-          font-family:'Libre Baskerville', Georgia, serif; color:#2f3a5c; font-size:15px }
+          .date { position:absolute; left:59.9%; width:17.6%; top:74.5%; }
 </style></head><body>
 <div class="sheet">
   <img src="${bg}" alt="">
   <div class="name">${name}</div>
-  <div class="date">${dateStr}</div>
 </div>
 <script>
   Promise.all([document.fonts.ready, new Promise(r => { const i = document.querySelector('img'); i.complete ? r() : (i.onload = r, i.onerror = r); })])
