@@ -63,7 +63,7 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
       const labels = sessionLabels(attDates);
       attDates.forEach(d => {
         const L = labels[d];
-        evs.push({ id:`att-${d}`, refId:'', title: L.title, date: new Date(d + 'T09:00:00'), type:'attendance', color: L.kind === 'theory' ? C.accent : L.kind === 'mixed' ? '#B35C00' : '#127A1B', section: null });
+        evs.push({ id:`att-${d}`, refId:'', title: L.title, date: new Date(d + 'T09:00:00'), type:'attendance', color: L.kind === 'theory' ? C.accent : L.kind === 'makeup' ? '#B35C00' : '#127A1B', section: null });
       });
       evs.sort((a,b) => a.date.getTime() - b.date.getTime());
       setEvents(evs);
@@ -240,8 +240,9 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
         {[
           ['Assignments', C.primary],
           ['Quizzes/Exams', C.warn],
-          ['Class Sessions', C.accent],
+          ['Theory Sessions', C.accent],
           ['Clinical Sessions', '#127A1B'],
+          ['Make-Up Days', '#B35C00'],
         ].map(([l,c]) => (
           <div key={l as string} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6, fontSize:12, color:C.text }}>
             <div style={{ width:12, height:12, borderRadius:3, background:c as string }}/> {l}

@@ -22,12 +22,18 @@ export const REQUIRED_CLINICAL_HOURS = 100;
 
 export interface HoursSplit { theory: number; clinical: number; presentDays: number }
 
-export interface DayHours { theory: number; clinical: number }
+export interface DayHours { theory: number; clinical: number; kind?: 'theory' | 'makeup' | 'clinical' | 'friday'; day?: number }
+
+// Day-track schedule from the Modules layout: Days 1–8 are theory
+// (Day 1 = 7h, Days 2–7 = 8h, Day 8 = 5h → 60h). Day 9 is a theory make-up
+// day (0h unless theory hours are still owed). Day 10 onward is clinical at
+// 8h/day (Day 22 tops out at the 100h requirement). No Friday sessions once
+// clinical starts.
+export const THEORY_DAY_HOURS = [7, 8, 8, 8, 8, 8, 8, 5];
 
 /**
- * Per-day split of attended days, walked in date order. Each present day earns
- * 8 hours toward theory until the requirement is met; after that, present days
- * count as clinical.
+ * Per-day split of attended days, walked in date order following the
+ * schedule above.
  */
 export function attendanceDayHours(
   records: { session_date?: string | null; status: string | null | undefined }[],
@@ -39,13 +45,23 @@ export function attendanceDayHours(
     .map(r => r.session_date ?? '')
     .filter(Boolean))).sort();
   const out: Record<string, DayHours> = {};
-  let theory = 0, clinical = 0;
+  let theory = 0, clinical = 0, idx = 0, n = 0;
+  let makeupPending = false;
   for (const d of days) {
-    const toTheory = Math.min(Math.max(0, theoryRequired - theory), THEORY_HOURS_PER_ATTENDED_DAY);
-    theory += toTheory;
-    const toClinical = Math.min(Math.max(0, clinicalRequired - clinical), THEORY_HOURS_PER_ATTENDED_DAY - toTheory);
-    clinical += toClinical;
-    out[d] = { theory: toTheory, clinical: toClinical };
+    const isFri = new Date(d + 'T12:00:00').getDay() === 5;
+    if (theory < theoryRequired) {
+      const h = Math.min(THEORY_DAY_HOURS[idx] ?? THEORY_HOURS_PER_ATTENDED_DAY, theoryRequired - theory);
+      const viaMakeup = idx >= THEORY_DAY_HOURS.length;
+      idx++; theory += h; n++;
+      out[d] = { theory: h, clinical: 0, kind: viaMakeup ? 'makeup' : 'theory', day: n };
+      if (theory >= theoryRequired && !viaMakeup) makeupPending = true;
+      continue;
+    }
+    if (makeupPending) { makeupPending = false; n++; out[d] = { theory: 0, clinical: 0, kind: 'makeup', day: n }; continue; }
+    if (isFri) { out[d] = { theory: 0, clinical: 0, kind: 'friday' }; continue; }
+    const c = Math.min(THEORY_HOURS_PER_ATTENDED_DAY, Math.max(0, clinicalRequired - clinical));
+    clinical += c; n++;
+    out[d] = { theory: 0, clinical: c, kind: 'clinical', day: n };
   }
   return out;
 }
@@ -59,7 +75,7 @@ export function splitAttendanceHours(
   return {
     theory: v.reduce((n, x) => n + x.theory, 0),
     clinical: v.reduce((n, x) => n + x.clinical, 0),
-    presentDays: v.length,
+    presentDays: v.filter(x => x.kind !== 'friday').length,
   };
 }
 
@@ -90,19 +106,16 @@ export function missedDays(
   return out;
 }
 
-/**
- * Calendar labels for session days: 8h per day in date order; days within the
- * 60 theory hours are class sessions, the day that crosses 60h is split
- * theory/clinical, and every later day is a clinical session.
- */
-export function sessionLabels(dates: string[]): Record<string, { title: string; kind: 'theory' | 'mixed' | 'clinical' }> {
-  const out: Record<string, { title: string; kind: 'theory' | 'mixed' | 'clinical' }> = {};
-  let cum = 0;
-  for (const d of [...new Set(dates)].sort()) {
-    const before = cum; cum += 8;
-    if (cum <= 60) out[d] = { title: 'Class Session', kind: 'theory' };
-    else if (before < 60) out[d] = { title: `Theory ${60 - before}h + Clinical ${cum - 60}h`, kind: 'mixed' };
-    else out[d] = { title: 'Clinical Session', kind: 'clinical' };
+/** Calendar labels for session days, following attendanceDayHours. */
+export function sessionLabels(dates: string[]): Record<string, { title: string; kind: 'theory' | 'mixed' | 'clinical' | 'makeup' }> {
+  const map = attendanceDayHours(dates.map(session_date => ({ session_date, status: 'P' })));
+  const out: Record<string, { title: string; kind: 'theory' | 'mixed' | 'clinical' | 'makeup' }> = {};
+  for (const [d, h] of Object.entries(map)) {
+    if (h.kind === 'friday') continue;
+    const p = h.day ? `Day ${h.day} · ` : '';
+    if (h.kind === 'makeup') out[d] = { title: `${p}Theory Make-Up Day`, kind: 'makeup' };
+    else if (h.kind === 'theory') out[d] = { title: `${p}Theory ${h.theory}h`, kind: 'theory' };
+    else out[d] = { title: `${p}Clinical ${h.clinical}h`, kind: 'clinical' };
   }
   return out;
 }

@@ -56,7 +56,7 @@ const GlobalCalendar: React.FC = () => {
       Object.entries(byCourse).forEach(([cid, dates]) => {
         const labels = sessionLabels(dates);
         Object.entries(labels).forEach(([d, L]) => {
-          evs.push({ id:`att-${cid}|${d}`, refId:'', courseId:cid, courseTitle:titleMap[cid]||'', title: L.title, date: new Date(d+'T09:00:00'), type:'attendance', color: L.kind === 'theory' ? C.accent : L.kind === 'mixed' ? '#B35C00' : '#127A1B' });
+          evs.push({ id:`att-${cid}|${d}`, refId:'', courseId:cid, courseTitle:titleMap[cid]||'', title: L.title, date: new Date(d+'T09:00:00'), type:'attendance', color: L.kind === 'theory' ? C.accent : L.kind === 'makeup' ? '#B35C00' : '#127A1B' });
         });
       });
       evs.sort((a,b) => a.date.getTime() - b.date.getTime());
@@ -178,7 +178,7 @@ const GlobalCalendar: React.FC = () => {
             ))
           }
           <h3 style={{ fontSize:12, fontWeight:700, color:C.text, textTransform:'uppercase', letterSpacing:0.5, margin:'20px 0 8px' }}>Legend</h3>
-          {[['Assignments', C.primary],['Quizzes/Exams', C.warn],['Class Sessions', C.accent]].map(([l,c]:any) => (
+          {[['Assignments', C.primary],['Quizzes/Exams', C.warn],['Theory Sessions', C.accent]].map(([l,c]:any) => (
             <div key={l} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6, fontSize:12, color:C.text }}>
               <div style={{ width:12, height:12, borderRadius:3, background:c }}/> {l}
             </div>
