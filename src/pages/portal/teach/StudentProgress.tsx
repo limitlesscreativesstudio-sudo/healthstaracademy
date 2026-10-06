@@ -2,14 +2,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from './AuthContext';
 import StudentProfilePanel from '@/components/portal/StudentProfilePanel';
-import { isAttended, THEORY_HOURS_PER_ATTENDED_DAY } from '@/lib/attendance';
+import { isAttended, splitAttendanceHours, REQUIRED_THEORY_HOURS, REQUIRED_CLINICAL_HOURS } from '@/lib/attendance';
 
 const C = { primary:'#7B4DB5', accent:'#5BC8E8', bg:'#F4F2FA', white:'#FFFFFF', border:'#D4C8E8', text:'#2D1B4E', muted:'#655480', success:'#127A1B', warn:'#E67E22', error:'#C0392B' } as const;
 
 // CNA regulatory milestones (CDPH / California)
 const REG = {
-  theoryHoursRequired: 60,      // classroom hours
-  clinicalHoursRequired: 100,   // clinical hands-on
+  theoryHoursRequired: REQUIRED_THEORY_HOURS,      // classroom hours
+  clinicalHoursRequired: REQUIRED_CLINICAL_HOURS,   // clinical hands-on
   skillsRequired: 22,           // 22 CDPH skill checkoffs
   quizPassPct: 75,              // 75% minimum
   attendanceMinPct: 90,         // 90% minimum
@@ -98,8 +98,10 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
       });
 
       // attendance (column is student_id)
-      const { data: att } = await supabase.from('attendance').select('student_id, status').eq('course_id', courseId);
+      const { data: att } = await supabase.from('attendance').select('student_id, status, session_date').eq('course_id', courseId);
       const attByUser: Record<string, { present: number; total: number }> = {};
+      const attListByUser: Record<string, any[]> = {};
+      (att ?? []).forEach(a => { (attListByUser[a.student_id] ??= []).push(a); });
       (att ?? []).forEach(a => {
         const b = attByUser[a.student_id] ?? { present:0, total:0 };
         b.total += 1;
@@ -145,7 +147,8 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
         const attRec = attByUser[uid] ?? { present:0, total:0 };
         const attPct = attRec.total > 0 ? Math.round((attRec.present / attRec.total) * 100) : 0;
 
-        const clinical = clinicalByUser[uid] ?? 0;
+        const split = splitAttendanceHours(attListByUser[uid] ?? [], REG.theoryHoursRequired);
+        const clinical = (clinicalByUser[uid] ?? 0) + split.clinical;
         const skills = skillsByUser[uid] ?? 0;
 
         // Overall = weighted average of milestones vs regulatory targets
@@ -167,7 +170,7 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
           awaitingGrading,
           attendancePct: attPct,
           attendanceDays: attRec.present,
-          theoryHours: attRec.present * THEORY_HOURS_PER_ATTENDED_DAY,
+          theoryHours: split.theory,
           clinicalHours: clinical,
           skillsSigned: skills,
           overallPct,

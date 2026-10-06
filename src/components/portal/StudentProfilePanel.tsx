@@ -1,7 +1,7 @@
 // Slide-over student profile: grades, attendance, clinical hours, skills, submissions.
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { isAttended } from '@/lib/attendance';
+import { isAttended, splitAttendanceHours } from '@/lib/attendance';
 
 const C = {
   primary: '#7B4DB5', bg: '#F4F2FA', white: '#FFFFFF',
@@ -95,8 +95,9 @@ const StudentProfilePanel: React.FC<StudentProfilePanelProps> = ({ userId, cours
   const pct = totalMax > 0 ? Math.round((totalPts / totalMax) * 1000) / 10 : null;
   const present = attendance.filter(a => isAttended(a.status)).length;
   const attPct = attendance.length ? Math.round((present / attendance.length) * 100) : null;
-  const clinicalTotal = clinical.reduce((n, c) => n + c.hours, 0);
-  const clinicalVerified = clinical.filter(c => c.verified).reduce((n, c) => n + c.hours, 0);
+  const attendanceClinical = splitAttendanceHours(attendance.map(a => ({ session_date: a.date, status: a.status }))).clinical;
+  const clinicalTotal = clinical.reduce((n, c) => n + c.hours, 0) + attendanceClinical;
+  const clinicalVerified = clinical.filter(c => c.verified).reduce((n, c) => n + c.hours, 0) + attendanceClinical;
   const skillsDone = skills.filter(s => s.status === 'passed' || s.status === 'completed' || s.status === 'signed_off').length;
 
   const initials = (name || email || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -168,8 +169,8 @@ const StudentProfilePanel: React.FC<StudentProfilePanelProps> = ({ userId, cours
               </Card>
 
               <Card title="Clinical hours"
-                right={clinical.length ? `${clinicalVerified.toFixed(1)} verified / ${clinicalTotal.toFixed(1)} logged` : undefined}>
-                {clinical.length === 0 ? <Empty label="No clinical hours logged." /> : clinical.map(c => (
+                right={(clinical.length || attendanceClinical) ? `${clinicalVerified.toFixed(1)} verified / ${clinicalTotal.toFixed(1)} logged` : undefined}>
+                {clinical.length === 0 && attendanceClinical === 0 ? <Empty label="No clinical hours logged." /> : clinical.map(c => (
                   <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between',
                     fontSize: 12, color: C.text, padding: '4px 0', borderBottom: `1px solid ${C.bg}` }}>
                     <span>{c.date} • {c.site}</span>
