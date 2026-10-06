@@ -55,8 +55,16 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
         evs.push({ id:`a-${a.id}`, refId:a.id, title:a.title, date:new Date(a.due_at), type:isQuiz?'quiz':'assignment', color: isQuiz?C.warn:C.primary, section: a.group_name || null });
       });
       (qz ?? []).forEach(q => evs.push({ id:`q-${q.id}`, refId:q.id, title:q.title, date:new Date(q.due_at), type:'quiz', color:C.warn, section: null }));
+      // Theory (class) sessions run through Sep 11; from Sep 14 sessions are
+      // clinical. Fridays after Sep 11 are not scheduled sessions.
+      const CLINICAL_START = '2026-09-14';
       const attDates = new Set((att ?? []).map(a => a.session_date));
-      attDates.forEach(d => evs.push({ id:`att-${d}`, refId:'', title:'Class Session', date:new Date(d+'T09:00:00'), type:'attendance', color:C.accent, section: null }));
+      attDates.forEach(d => {
+        const dt = new Date(d + 'T09:00:00');
+        if (d > '2026-09-11' && dt.getDay() === 5) return;
+        const clinical = d >= CLINICAL_START;
+        evs.push({ id:`att-${d}`, refId:'', title: clinical ? 'Clinical Session' : 'Class Session', date: dt, type:'attendance', color: clinical ? '#127A1B' : C.accent, section: null });
+      });
       evs.sort((a,b) => a.date.getTime() - b.date.getTime());
       setEvents(evs);
 
@@ -233,6 +241,7 @@ const CalendarTab: React.FC<Props> = ({ courseId, canEdit }) => {
           ['Assignments', C.primary],
           ['Quizzes/Exams', C.warn],
           ['Class Sessions', C.accent],
+          ['Clinical Sessions', '#127A1B'],
         ].map(([l,c]) => (
           <div key={l as string} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6, fontSize:12, color:C.text }}>
             <div style={{ width:12, height:12, borderRadius:3, background:c as string }}/> {l}
