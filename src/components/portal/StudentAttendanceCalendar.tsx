@@ -62,7 +62,7 @@ const StudentAttendanceCalendar: React.FC<Props> = ({ courseId, studentId, name,
     const fromAtt = v.reduce((n, x) => n + x.clinical, 0);
     const manual = logged.reduce((n, l) => n + Number(l.hours ?? 0), 0);
     const crossDay = Object.keys(dayHours).sort().find(d => dayHours[d].clinical > 0);
-    return { theory, fromAtt, manual, clinical: fromAtt + manual, crossDay };
+    return { theory, fromAtt, manual, clinical: Math.min(REQUIRED_CLINICAL_HOURS, fromAtt + manual), crossDay };
   }, [dayHours, logged]);
 
   const months = useMemo(() => {

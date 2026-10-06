@@ -1,7 +1,7 @@
 // Slide-over student profile: grades, attendance, clinical hours, skills, submissions.
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { isAttended, splitAttendanceHours } from '@/lib/attendance';
+import { isAttended, splitAttendanceHours, capClinical } from '@/lib/attendance';
 
 const C = {
   primary: '#7B4DB5', bg: '#F4F2FA', white: '#FFFFFF',
@@ -96,8 +96,8 @@ const StudentProfilePanel: React.FC<StudentProfilePanelProps> = ({ userId, cours
   const present = attendance.filter(a => isAttended(a.status)).length;
   const attPct = attendance.length ? Math.round((present / attendance.length) * 100) : null;
   const attendanceClinical = splitAttendanceHours(attendance.map(a => ({ session_date: a.date, status: a.status }))).clinical;
-  const clinicalTotal = clinical.reduce((n, c) => n + c.hours, 0) + attendanceClinical;
-  const clinicalVerified = clinical.filter(c => c.verified).reduce((n, c) => n + c.hours, 0) + attendanceClinical;
+  const clinicalTotal = capClinical(clinical.reduce((n, c) => n + c.hours, 0) + attendanceClinical);
+  const clinicalVerified = capClinical(clinical.filter(c => c.verified).reduce((n, c) => n + c.hours, 0) + attendanceClinical);
   const skillsDone = skills.filter(s => s.status === 'passed' || s.status === 'completed' || s.status === 'signed_off').length;
 
   const initials = (name || email || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();

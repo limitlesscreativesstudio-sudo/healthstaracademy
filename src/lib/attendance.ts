@@ -32,17 +32,20 @@ export interface DayHours { theory: number; clinical: number }
 export function attendanceDayHours(
   records: { session_date?: string | null; status: string | null | undefined }[],
   theoryRequired: number = REQUIRED_THEORY_HOURS,
+  clinicalRequired: number = REQUIRED_CLINICAL_HOURS,
 ): Record<string, DayHours> {
   const days = Array.from(new Set(records
     .filter(r => isAttended(r.status))
     .map(r => r.session_date ?? '')
     .filter(Boolean))).sort();
   const out: Record<string, DayHours> = {};
-  let theory = 0;
+  let theory = 0, clinical = 0;
   for (const d of days) {
     const toTheory = Math.min(Math.max(0, theoryRequired - theory), THEORY_HOURS_PER_ATTENDED_DAY);
     theory += toTheory;
-    out[d] = { theory: toTheory, clinical: THEORY_HOURS_PER_ATTENDED_DAY - toTheory };
+    const toClinical = Math.min(Math.max(0, clinicalRequired - clinical), THEORY_HOURS_PER_ATTENDED_DAY - toTheory);
+    clinical += toClinical;
+    out[d] = { theory: toTheory, clinical: toClinical };
   }
   return out;
 }
@@ -58,4 +61,31 @@ export function splitAttendanceHours(
     clinical: v.reduce((n, x) => n + x.clinical, 0),
     presentDays: v.length,
   };
+}
+
+/** Hours never count past what the program requires. */
+export const capTheory = (h: number, req: number = REQUIRED_THEORY_HOURS) => Math.min(h, req);
+export const capClinical = (h: number, req: number = REQUIRED_CLINICAL_HOURS) => Math.min(h, req);
+
+/**
+ * Absent days classified by phase: an absence before theory hours are complete
+ * (roughly the first 7–8 class days) is a missed theory day; after, a missed
+ * clinical day.
+ */
+export function missedDays(
+  records: { session_date?: string | null; status: string | null | undefined }[],
+  theoryRequired: number = REQUIRED_THEORY_HOURS,
+): { theory: number; clinical: number; theoryDates: string[]; clinicalDates: string[] } {
+  const byDate = new Map<string, string | null | undefined>();
+  records.forEach(r => { if (r.session_date) byDate.set(r.session_date, r.status); });
+  const out = { theory: 0, clinical: 0, theoryDates: [] as string[], clinicalDates: [] as string[] };
+  let theory = 0;
+  for (const d of [...byDate.keys()].sort()) {
+    const st = byDate.get(d);
+    if (isAttended(st)) { theory = Math.min(theoryRequired, theory + THEORY_HOURS_PER_ATTENDED_DAY); continue; }
+    if (attendanceCode(st) !== 'A') continue;
+    if (theory < theoryRequired) { out.theory++; out.theoryDates.push(d); }
+    else { out.clinical++; out.clinicalDates.push(d); }
+  }
+  return out;
 }
