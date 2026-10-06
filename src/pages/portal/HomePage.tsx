@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
+  MapPin,
 } from "lucide-react";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
@@ -124,7 +125,7 @@ const HomePage = () => {
         title="Hybrid CNA Training in California | Health Star Academy"
         description="CDPH-approved hybrid CNA training with a 6-week fast-track option, hands-on clinical practice, small classes and personalized attention."
         canonical="/"
-        keywords="hybrid CNA training, fast-track CNA program, CDPH approved CNA program, state-certified CNA, hands-on clinical training, small CNA classes, personalized CNA instruction, CNA training Stockton, CNA classes Sacramento, CNA program Bay Area"
+        keywords="hybrid CNA training, fast-track CNA program, CDPH approved CNA program, state-certified CNA, hands-on clinical training, small CNA classes, personalized CNA instruction, CNA training Stockton, CNA classes Sacramento, CNA program Bay Area, CNA training Los Angeles, CNA program LA County, hybrid CNA program California"
         structuredData={buildBreadcrumbSchema([])}
       />
       <main className="pt-28 md:pt-32">
@@ -158,6 +159,32 @@ const HomePage = () => {
                 <Link to="/programs">View Program</Link>
               </Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* LA County Expansion Section */}
+      <section className="py-14 bg-charcoal">
+        <div className="container-custom text-center">
+          <span className="inline-flex items-center gap-2 bg-cyan/15 text-cyan text-xs font-semibold uppercase tracking-wider px-4 py-1.5 rounded-full mb-4">
+            <MapPin className="h-3.5 w-3.5" />
+            Now Expanding
+          </span>
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary-foreground mb-3">
+            Health Star Academy Is Expanding to Los Angeles County
+          </h2>
+          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-8">
+            The same CDPH-approved hybrid CNA training — theory online, hands-on clinical hours close to home — is coming to the LA County area. Join the interest list and be the first to know when enrollment opens near you.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button variant="secondary" size="sm" asChild>
+              <Link to={ENROLLMENT_LINK}>
+                Join the LA County Interest List <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="purple-outline" size="sm" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-charcoal" asChild>
+              <Link to="/programs">Learn About the Program</Link>
+            </Button>
           </div>
         </div>
       </section>

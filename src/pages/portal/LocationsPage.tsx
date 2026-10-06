@@ -168,10 +168,10 @@ const LocationsPage = () => {
   return (
     <div className="min-h-screen">
       <SEO 
-        title="CNA Clinical Locations: Stockton, Lodi & Hayward"
-        description="CNA clinical training at partner skilled nursing facilities in Stockton, Lodi, and Bay Area Skilled Nursing (Hayward). Real patients, licensed nurse mentors."
+        title="CNA Clinical Locations: Stockton, Lodi & Hayward — Expanding to LA County"
+        description="CNA clinical training at partner skilled nursing facilities in Stockton, Lodi, and Bay Area Skilled Nursing (Hayward). Now expanding hybrid CNA training to Los Angeles County."
         canonical="/locations"
-        keywords="CNA clinical sites Stockton, Lodi CNA training, Hayward CNA classes, Bay Area Skilled Nursing, Central Valley CNA, CNA training near me California"
+        keywords="CNA clinical sites Stockton, Lodi CNA training, Hayward CNA classes, Bay Area Skilled Nursing, Central Valley CNA, CNA training near me California, CNA program Los Angeles County, CNA classes LA"
         structuredData={[
           {
             "@context": "https://schema.org",
@@ -180,7 +180,7 @@ const LocationsPage = () => {
             "url": "https://www.healthstaracademy.org",
             "telephone": "(209) 323-4169",
             "email": "info@healthstaracademy.org",
-            "areaServed": ["Stockton", "Lodi", "Hayward", "Sacramento", "Bay Area", "Central Valley"],
+            "areaServed": ["Stockton", "Lodi", "Hayward", "Sacramento", "Bay Area", "Central Valley", "Los Angeles County", "Los Angeles"],
             "location": [
               {
                 "@type": "Place",
@@ -254,6 +254,28 @@ const LocationsPage = () => {
             {bayAreaLocations.map((location) => (
               <LocationItem key={location.city} location={location} />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* LA County Expansion Section */}
+      <section className="py-16 bg-charcoal text-primary-foreground">
+        <div className="container mx-auto px-4 text-center">
+          <span className="inline-flex items-center gap-2 bg-cyan/15 text-cyan text-xs font-semibold uppercase tracking-wider px-4 py-1.5 rounded-full mb-4">
+            <MapPin className="h-3.5 w-3.5" />
+            Coming Soon
+          </span>
+          <h2 className="text-3xl font-bold text-primary-foreground mb-3">Expanding to Los Angeles County</h2>
+          <p className="text-primary-foreground/90 max-w-2xl mx-auto mb-8">
+            Health Star Academy is bringing its CDPH-approved hybrid CNA training to the LA County area — theory online, hands-on clinical hours close to home, with the same small classes and personalized attention. Join the interest list and be the first to know when LA County enrollment opens.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild variant="secondary">
+              <a href="/pre-qualification">Join the LA County Interest List</a>
+            </Button>
+            <Button asChild variant="purple-outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-charcoal">
+              <a href="/programs">Learn About the Program</a>
+            </Button>
           </div>
         </div>
       </section>
