@@ -1,7 +1,7 @@
 // @ts-nocheck — legacy schema mismatches; flagged for refactor
 import React, { useState, useEffect } from 'react';
 import { supabase } from './AuthContext';
-import { attendanceCode, splitAttendanceHours, REQUIRED_THEORY_HOURS } from '@/lib/attendance';
+import { attendanceCode, splitAttendanceHours, REQUIRED_THEORY_HOURS, isFriday } from '@/lib/attendance';
 import StudentAttendanceCalendar from '@/components/portal/StudentAttendanceCalendar';
 import { toast } from 'sonner';
 
@@ -36,7 +36,8 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
   const hoursFor = (sid: string) => {
     const list = allAtt.filter(a => a.student_id === sid && a.session_date < sessionDate);
     const before = splitAttendanceHours(list);
-    return { ...before, clinicalToday: before.theory >= REQUIRED_THEORY_HOURS };
+    const clinical = before.theory >= REQUIRED_THEORY_HOURS;
+    return { ...before, clinicalToday: clinical && !isFriday(sessionDate), makeupToday: clinical && isFriday(sessionDate) };
   };
 
   // Load enrolled students
@@ -140,8 +141,12 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
           </div>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <button aria-label="Previous day" onClick={() => { const d = new Date(sessionDate + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - 1); setSessionDate(d.toISOString().slice(0,10)); }}
+            style={{ border:`1px solid ${C.border}`, background:C.white, borderRadius:5, padding:'7px 10px', cursor:'pointer' }}>‹</button>
           <input aria-label="Session date" type="date" value={sessionDate} onChange={e => setSessionDate(e.target.value)}
             style={{ border:`1px solid ${C.border}`, borderRadius:5, padding:'7px 10px', fontSize:13, fontFamily:'sans-serif' }}/>
+          <button aria-label="Next day" onClick={() => { const d = new Date(sessionDate + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + 1); setSessionDate(d.toISOString().slice(0,10)); }}
+            style={{ border:`1px solid ${C.border}`, background:C.white, borderRadius:5, padding:'7px 10px', cursor:'pointer' }}>›</button>
           {canEdit && (
             <button onClick={saveAttendance} disabled={saving}
               style={{ padding:'8px 20px', border:'none', borderRadius:5, background: saved ? C.success : C.primary,
@@ -197,6 +202,7 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
                     <div style={{ fontSize:11, color:C.muted, fontFamily:'sans-serif' }}>
                       Theory {h.theory}/{REQUIRED_THEORY_HOURS}h · Clinical {h.clinical}h
                       {h.clinicalToday && <span style={{ marginLeft:6, padding:'1px 6px', borderRadius:4, background:'#319795', color:'#fff', fontWeight:600 }}>Present = clinical hours</span>}
+                      {h.makeupToday && <span style={{ marginLeft:6, padding:'1px 6px', borderRadius:4, background:'#FFF4E5', color:'#E67E22', fontWeight:600 }}>Friday make-up · no clinical hours</span>}
                     </div>); })()}
                 </div>
                 {/* Status buttons */}
