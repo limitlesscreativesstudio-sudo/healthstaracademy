@@ -8,3 +8,7 @@
 - Quiz answer drafts are scoped to the open quiz's question IDs, because unscoped state leaked one quiz's answers into another attempt.
 - Render authored assessment instructions and prompts through the shared sanitized AssessmentText renderer, because plain interpolation exposes markup and loses case-study structure.
 - Keep imported student assessment documents in lms_files only, without module_items or document-only lms_pages copies, because Modules must open interactive assessments rather than duplicate worksheets.
+- Commit quiz submission and its grade together through a service-only atomic database function; enforce one grade per attempt because concurrent requests must never overwrite submissions or duplicate marks.
+- Students may only create ungraded attempts and edit answers before submission; protect grading fields and immutable attempt identity in database triggers because client controls are not authorization.
+- Files-only revised student documents use explicit enrollment-scoped metadata and storage read policies, excluding instructor keys because removing module links must not remove authorized document access.
+- Block manual grade entry while a student has an open attempt because creating a separate paper attempt would consume attempts and split student history.
