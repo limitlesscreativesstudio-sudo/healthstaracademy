@@ -33,6 +33,21 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
       .then(({ data }) => setAllAtt(data ?? []));
   }, [courseId, refreshKey]);
 
+  // Weekdays since the first roll call with no attendance saved — easy to back-fill.
+  const missingDays = (() => {
+    const dates = new Set(allAtt.map(a => a.session_date));
+    const sorted = [...dates].sort();
+    if (!sorted.length) return [] as string[];
+    const out: string[] = []; const today = new Date().toISOString().slice(0,10);
+    const d = new Date(sorted[0] + 'T12:00:00Z');
+    while (d.toISOString().slice(0,10) < today) {
+      const k = d.toISOString().slice(0,10), wd = d.getUTCDay();
+      if (wd !== 0 && wd !== 6 && !dates.has(k)) out.push(k);
+      d.setUTCDate(d.getUTCDate() + 1);
+    }
+    return out.slice(-15);
+  })();
+
   const hoursFor = (sid: string) => {
     const list = allAtt.filter(a => a.student_id === sid && a.session_date < sessionDate);
     const before = splitAttendanceHours(list);
@@ -156,6 +171,20 @@ const AttendanceTab: React.FC<Props> = ({ courseId, canEdit }) => {
           )}
         </div>
       </div>
+
+      {canEdit && missingDays.length > 0 && (
+        <div style={{ marginBottom:14, padding:'10px 12px', background:'#FFF4E5', border:'1px solid #F5C58A', borderRadius:6, fontFamily:'sans-serif' }}>
+          <div style={{ fontSize:12, fontWeight:700, color:C.text, marginBottom:6 }}>Days with no attendance recorded — click to fill in:</div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+            {missingDays.map(d => (
+              <button key={d} onClick={() => setSessionDate(d)}
+                style={{ padding:'3px 9px', fontSize:12, borderRadius:4, cursor:'pointer', border:`1px solid ${d === sessionDate ? C.primary : C.border}`, background: d === sessionDate ? C.primary : C.white, color: d === sessionDate ? '#fff' : C.text }}>
+                {new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', timeZone:'UTC' })}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Mark All buttons */}
       {canEdit && (
