@@ -1,9 +1,9 @@
 # Portal updates
 
 ## Approved public SEO fixes
-- [ ] Apply the supplied route metadata, public wording cleanup, and exact school/course schema without portal or data changes.
-- [ ] Assess public-only static rendering safety and add accurate sitemap modification dates.
-- [ ] Verify public headings, tags, wording, portal isolation, and the automatic build.
+- [x] Apply the supplied route metadata, public wording cleanup, and exact school/course schema without portal or data changes.
+- [x] Assess public-only static rendering safety and add sitemap modification dates. Static rendering skipped: shared imports initialize browser-only auth storage; server rendering would require forbidden auth changes, while a browser-based build adds an unverified Chromium hosting dependency. No build/plugin/router/auth changes made.
+- [x] Verify all 21 approved public routes have unique exact metadata, one visible H1, one canonical, matching OG tags and city notices; portal login has no runtime errors and the automatic build passes.
 
 - [x] Add the public Star Chart issue list, embedded Issue 01, exact standalone newsletter HTML, page SEO and footer link without changing existing pages.
 
