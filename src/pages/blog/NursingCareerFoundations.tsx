@@ -216,7 +216,7 @@ const NursingCareerFoundations = () => {
               Every nursing career has to start somewhere, and CNA certification at Health Star Academy provides an exceptional foundation. Our CDPH-approved program combines flexible online learning with hands-on clinical experience at approved facilities in Stockton, Lodi, and Hayward—with plans to expand throughout California.
             </p>
             <p className="text-gray-dark mb-6 leading-relaxed">
-              Our experienced RN instructors understand the nursing career ladder because they've climbed it themselves. They're invested in student success not just through CNA certification but throughout their healthcare careers. Small class sizes ensure individualized attention and support.
+              Our experienced RN instructors understand the nursing career ladder because they've climbed it themselves. They're invested in student success not just through CNA certification but throughout their healthcare careers.
             </p>
             <p className="text-gray-dark mb-6 leading-relaxed">
               We're proud to be accredited by the Better Business Bureau and committed to transparency in all operations. Our job placement support helps graduates connect with employment opportunities, beginning their journey up the nursing career ladder.

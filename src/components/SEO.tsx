@@ -1,4 +1,6 @@
 import { Helmet } from "react-helmet-async";
+import { useLocation } from "react-router-dom";
+import { PUBLIC_SEO } from "@/data/publicSeo";
 
 interface SEOProps {
   title: string;
@@ -25,8 +27,15 @@ const SEO = ({
   robots,
   structuredData,
 }: SEOProps) => {
-  const baseUrl = "https://www.healthstaracademy.org";
-  const fullCanonical = canonical ? `${baseUrl}${canonical}` : baseUrl;
+  const { pathname } = useLocation();
+  const approved = PUBLIC_SEO[pathname];
+  const baseUrl = approved ? "https://healthstaracademy.org" : "https://www.healthstaracademy.org";
+  const fullCanonical = approved ? `${baseUrl}${pathname}` : canonical ? `${baseUrl}${canonical}` : baseUrl;
+  title = approved?.title ?? title;
+  description = approved?.description ?? description;
+  const publicKeywords = keywords?.split(",").map((keyword) => keyword.trim()).filter((keyword) =>
+    !/sacramento|los angeles|\bla\s+county\b|small classes|small class sizes|personalized attention/i.test(keyword)
+  ).join(", ");
 
   return (
     <Helmet>
@@ -34,7 +43,7 @@ const SEO = ({
       <title>{title}</title>
       <meta name="title" content={title} />
       <meta name="description" content={description} />
-      {keywords && <meta name="keywords" content={keywords} />}
+      {publicKeywords && <meta name="keywords" content={publicKeywords} />}
       <link rel="canonical" href={fullCanonical} />
       
       {/* Robots Meta Tag */}
@@ -66,7 +75,7 @@ const SEO = ({
 
       {/* Geo Tags */}
       <meta name="geo.region" content="US-CA" />
-      <meta name="geo.placename" content="Stockton, Sacramento, Bay Area" />
+      <meta name="geo.placename" content="Stockton" />
 
       {/* Structured Data */}
       {structuredData && (

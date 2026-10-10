@@ -99,7 +99,11 @@ const CityLandingPage = () => {
 
       <section className="py-12 bg-background">
         <div className="container mx-auto px-4 max-w-4xl">
-          <h1 className="sr-only">{market.heroHeadline}</h1>
+          {market.slug !== "stockton" && market.slug !== "lodi" && (
+            <p className="text-lg text-foreground/90 leading-relaxed mb-4">
+              Our school is in Stockton. Theory is online; clinical training is in person at partner skilled nursing facilities.
+            </p>
+          )}
           <p className="text-lg text-foreground/90 leading-relaxed">{market.intro}</p>
 
           <div className="grid sm:grid-cols-3 gap-4 mt-8">

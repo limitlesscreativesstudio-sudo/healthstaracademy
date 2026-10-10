@@ -53,8 +53,8 @@ const ContactPage = () => {
   };
 
   const contactInfo = [
-    { icon: Phone, title: "Office", content: "(209) 323-4169", link: "tel:2093234169" },
-    { icon: MessageSquare, title: "Mobile", content: "(916) 208-8097", link: "tel:9162088097" },
+    { icon: Phone, title: "Calls", content: "(209) 323 4169", link: "tel:2093234169" },
+    { icon: MessageSquare, title: "Texts", content: "(916) 208 8097", link: "sms:9162088097" },
     { icon: Mail, title: "Email", content: "info@healthstaracademy.org", link: "mailto:info@healthstaracademy.org" },
     { icon: MapPin, title: "Address", content: "5250 Claremont Avenue, Suite 127\nStockton, CA 95207", link: "https://maps.google.com/?q=5250+Claremont+Avenue+Suite+127+Stockton+CA+95207" },
     { icon: Clock, title: "Office Hours", content: "Mon - Thurs: 9:00 AM - 5:00 PM\nFriday: 9:00 AM - 1:00 PM" },
@@ -84,9 +84,8 @@ const ContactPage = () => {
         imageAlt="Health Star Academy student ready to help patients"
         title={
           <>
-            We're Here to<br />
-            Help You<br />
-            <span className="text-cyan">Get Started</span>
+            Contact<br />
+            <span className="text-cyan">Health Star Academy</span>
           </>
         }
         subtitle="Your Questions Answered • Support Every Step"

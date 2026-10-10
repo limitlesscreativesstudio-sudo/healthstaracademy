@@ -73,8 +73,8 @@ const CareersPage = () => {
           imageAlt="Health Star Academy instructor teaching CNA students"
           title={
             <>
-              Join Our<br />
-              <span className="text-cyan">Team</span>
+              Healthcare Careers<br />
+              <span className="text-cyan">Start With CNA</span>
             </>
           }
           subtitle="Shape the future of healthcare — one student at a time"
