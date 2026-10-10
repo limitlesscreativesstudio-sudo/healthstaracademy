@@ -1,5 +1,7 @@
 # Assessment integrity
 
+- Keep public newsletter issue HTML self-contained and unmodified; embed it through same-origin auto-height iframes so email formatting stays independent of site styles.
+
 - Import changed assessments as locked revised versions; preserve attempted quiz and question IDs because saved answers reference them.
 - A verified answer key bypasses the repeated-choice heuristic because legitimate uploaded keys may mark every answer with the same choice.
 - Course duplication must reject populated targets and authorize both courses because replacement can destroy saved student history.

@@ -92,6 +92,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
                 { name: "CNA Program", path: "/programs" },
                 { name: "Admissions", path: "/programs/admissions" },
                 { name: "Blog", path: "/blog" },
+                { name: "Alumni Newsletter", path: "/star-chart" },
                 { name: "Gallery", path: "/gallery" },
                 { name: "Community Resources", path: "/community-resources" },
                 { name: "Contact", path: "/contact" },

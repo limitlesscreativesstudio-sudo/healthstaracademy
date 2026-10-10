@@ -1,5 +1,7 @@
 # Portal updates
 
+- [x] Add the public Star Chart issue list, embedded Issue 01, exact standalone newsletter HTML, page SEO and footer link without changing existing pages.
+
 - [x] Audit LMS access, assessment saving, grading, files, notifications, attendance, and course connections. Corrected atomic submissions, draft autosave retries, saved-result viewing, manual-grade/open-attempt protection, profile/notification links, attendance normalization, and Files-only document access. Instructor live pages verified; real student submission tests not run against coursework.
 
 - [x] Keep original case studies intact; remove imported student document entries from Modules and document copies from Pages while retaining Files.
