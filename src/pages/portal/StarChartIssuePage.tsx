@@ -20,7 +20,7 @@ const StarChartIssuePage = () => {
   }, [updateHeight]);
 
   return (
-    <main>
+    <main className="pt-28 md:pt-32">
       <Helmet>
         <title>The Star Chart Issue 01 | Health Star Academy</title>
         <meta name="description" content="Explore the Fall 2026 issue of The Star Chart with alumni career advice, CNA renewal reminders and Health Star Academy school news." />

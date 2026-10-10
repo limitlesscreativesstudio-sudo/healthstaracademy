@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 
 const StarChartPage = () => (
-  <main>
+  <main className="pt-28 md:pt-32">
     <Helmet>
       <title>The Star Chart | Health Star Academy Alumni Newsletter</title>
       <meta name="description" content="Read The Star Chart for Health Star Academy alumni career tips, school news and ways to welcome the next generation of CNAs." />
