@@ -168,7 +168,7 @@ const HealthcareCareerPath = () => {
               Our CDPH-approved curriculum covers all 17 required modules, preparing you thoroughly for the state certification exam. Our experienced RN instructors bring real-world healthcare experience to every lesson, ensuring you graduate with practical skills employers value.
             </p>
             <p className="text-gray-dark mb-6 leading-relaxed">
-              We're proud to be accredited by the Better Business Bureau and committed to transparency in all our operations. Every student receives personal attention, with small class sizes that ensure individualized support throughout your training journey.
+              We're proud to be accredited by the Better Business Bureau and committed to transparency in all our operations.
             </p>
 
             <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Taking the First Step: Your Healthcare Journey Starts Now</h2>

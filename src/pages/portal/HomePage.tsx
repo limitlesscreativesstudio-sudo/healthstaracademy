@@ -51,11 +51,6 @@ const HomePage = () => {
       title: "Career Resources",
       description: "Resume support and career guidance. Many graduates secure positions before completing the program.",
     },
-    {
-      icon: Users,
-      title: "Small Class Sizes",
-      description: "Personalized attention with small class sizes ensures you get the support you need to succeed.",
-    },
   ];
 
   const steps = [
@@ -103,7 +98,7 @@ const HomePage = () => {
       role: "Google Review ★★★★★",
     },
     {
-      quote: "Excellent hands-on training at the clinical sites. The small class sizes meant I got personalized attention when I needed it.",
+      quote: "Excellent hands-on training at the clinical sites.",
       name: "David P.",
       role: "Google Review ★★★★★",
     },
@@ -123,7 +118,7 @@ const HomePage = () => {
     <>
       <SEO
         title="Hybrid CNA Training in California | Health Star Academy"
-        description="CDPH-approved hybrid CNA training with a 6-week fast-track option, hands-on clinical practice, small classes and personalized attention."
+        description="CDPH approved hybrid CNA program in Stockton: 60 hours online theory, 100 hours clinical training. Next cohort January 4, 2027. Check eligibility in 2 minutes."
         canonical="/"
         keywords="hybrid CNA training, fast-track CNA program, CDPH approved CNA program, state-certified CNA, hands-on clinical training, small CNA classes, personalized CNA instruction, CNA training Stockton, CNA classes Sacramento, CNA program Bay Area, CNA training Los Angeles, CNA program LA County, hybrid CNA program California"
         structuredData={buildBreadcrumbSchema([])}
@@ -135,8 +130,8 @@ const HomePage = () => {
         imageAlt="Diverse group of Health Star Academy CNA students in clinical training"
         title={
           <>
-            Start Your CNA<br />
-            <span className="text-cyan">Journey Today!</span>
+            Hybrid CNA Training<br />
+            <span className="text-cyan">in Stockton, CA</span>
           </>
         }
         subtitle="Your Path from Curiosity to Certified begins with CDPH-approved hybrid CNA training"
@@ -197,7 +192,7 @@ const HomePage = () => {
               Why Choose Health Star Academy?
             </h2>
             <p className="text-gray-dark max-w-2xl mx-auto">
-              CDPH-approved hybrid CNA training with small class sizes and personalized attention. Learn theory online, then build confidence through hands-on clinical practice.
+              CDPH-approved hybrid CNA training. Learn theory online, then build confidence through hands-on clinical practice.
             </p>
           </div>
 

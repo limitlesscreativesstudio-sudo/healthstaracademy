@@ -1,5 +1,10 @@
 # Portal updates
 
+## Approved public SEO fixes
+- [x] Apply the supplied route metadata, public wording cleanup, and exact school/course schema without portal or data changes.
+- [x] Assess public-only static rendering safety and add sitemap modification dates. Static rendering skipped: shared imports initialize browser-only auth storage; server rendering would require forbidden auth changes, while a browser-based build adds an unverified Chromium hosting dependency. No build/plugin/router/auth changes made.
+- [x] Verify all 21 approved public routes have unique exact metadata, one visible H1, one canonical, matching OG tags and city notices; portal login has no runtime errors and the automatic build passes.
+
 - [x] Add the public Star Chart issue list, embedded Issue 01, exact standalone newsletter HTML, page SEO and footer link without changing existing pages.
 
 - [x] Audit LMS access, assessment saving, grading, files, notifications, attendance, and course connections. Corrected atomic submissions, draft autosave retries, saved-result viewing, manual-grade/open-attempt protection, profile/notification links, attendance normalization, and Files-only document access. Instructor live pages verified; real student submission tests not run against coursework.

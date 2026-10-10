@@ -1,5 +1,7 @@
 # Assessment integrity
 
+- Apply approved marketing metadata through an exact public-path allowlist in the shared SEO helper; leave unlisted route titles/descriptions and all portal code unchanged because marketing edits must remain isolated from the LMS.
+
 - Keep public newsletter issue HTML self-contained and unmodified; embed it through same-origin auto-height iframes so email formatting stays independent of site styles.
 
 - Import changed assessments as locked revised versions; preserve attempted quiz and question IDs because saved answers reference them.
