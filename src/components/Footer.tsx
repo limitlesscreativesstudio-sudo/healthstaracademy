@@ -129,13 +129,13 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
                     href="tel:2093234169"
                     className="text-gray-medium hover:text-primary-foreground transition-colors text-sm"
                   >
-                    (209) 323-4169 (Office)
+                    (209) 323 4169 (Calls)
                   </a>
                   <a
-                    href="tel:9162088097"
+                    href="sms:9162088097"
                     className="text-gray-medium hover:text-primary-foreground transition-colors text-sm"
                   >
-                    (916) 208-8097 (Mobile)
+                    (916) 208 8097 (Texts)
                   </a>
                 </div>
               </li>
