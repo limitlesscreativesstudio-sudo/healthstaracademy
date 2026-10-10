@@ -75,6 +75,8 @@ import NotFound from "./pages/portal/NotFound";
 import ComparePage from "./pages/portal/ComparePage";
 import CompetitorPage from "./pages/portal/CompetitorPage";
 import ConciergeBubble from "./components/agents/ConciergeBubble";
+import StarChartPage from "./pages/portal/StarChartPage";
+import StarChartIssuePage from "./pages/portal/StarChartIssuePage";
 
 const queryClient = new QueryClient();
 
@@ -123,6 +125,8 @@ const AppShell = () => {
           <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/refund-policy" element={<RefundPolicyPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+          <Route path="/star-chart" element={<StarChartPage />} />
+          <Route path="/star-chart/issue-01" element={<StarChartIssuePage />} />
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/portal/login" element={<Navigate to="/portal/teach/login" replace />} />
