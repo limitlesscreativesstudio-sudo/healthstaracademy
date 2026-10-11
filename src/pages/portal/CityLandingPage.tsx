@@ -6,6 +6,7 @@ import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import { CITY_MARKETS, getMarket } from "@/data/cityMarkets";
 import heroImage from "@/assets/hero-programs.jpg";
+import StocktonMarketingContent from "@/components/StocktonMarketingContent";
 
 const CityLandingPage = () => {
   const { city = "" } = useParams();
@@ -79,6 +80,15 @@ const CityLandingPage = () => {
       { name: `CNA Classes ${market.city}`, path: canonical },
     ]),
   ];
+
+  if (market.slug === "stockton") {
+    return (
+      <>
+        <SEO title="CNA Training in Stockton, CA | Health Star Academy" description="CDPH approved hybrid CNA training in Stockton: 60 hours online theory, 100 hours clinical training, 6 week daytime or 8 weekend track. Next cohort January 4, 2027." canonical={canonical} keywords={market.keywords} structuredData={structuredData} />
+        <StocktonMarketingContent />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen">

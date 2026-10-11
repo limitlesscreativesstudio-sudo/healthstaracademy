@@ -33,8 +33,8 @@ export const PUBLIC_SEO: Record<string, { title: string; description: string }> 
     description: "School in Stockton. Clinical training at partner skilled nursing facilities in Stockton, Lodi and Hayward.",
   },
   "/cna-classes/stockton": {
-    title: "CNA Classes in Stockton, CA | Health Star Academy",
-    description: "Hybrid CNA classes based at 5250 Claremont Avenue, Stockton. $2,499 tuition plus $175 enrollment fee; no credit check financing through Denefits.",
+    title: "CNA Training in Stockton, CA | Health Star Academy",
+    description: "CDPH approved hybrid CNA training in Stockton: 60 hours online theory, 100 hours clinical training, 6 week daytime or 8 weekend track. Next cohort January 4, 2027.",
   },
   "/cna-classes/lodi": {
     title: "CNA Training for Lodi Students | Health Star Academy",

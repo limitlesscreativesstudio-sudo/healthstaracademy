@@ -1,5 +1,10 @@
 # Portal updates
 
+## Owner-approved public content, October 10, 2026
+- [x] Add the exact admissions eligibility FAQ and Stockton city content, updating only Stockton metadata. Existing Stockton route and sitemap entry retained.
+- [x] Replace the Locations LA County block and remove the specified instructor sentence. No remaining exact banned public claims found; the SEO helper's exclusion filter retained.
+- [x] Verify public pages, links, single Stockton H1, desktop and phone rendering and automatic build without changing portals or data. Existing admissions content outside the added FAQ remains unchanged.
+
 ## Approved public SEO fixes
 - [x] Apply the supplied route metadata, public wording cleanup, and exact school/course schema without portal or data changes.
 - [x] Assess public-only static rendering safety and add sitemap modification dates. Static rendering skipped: shared imports initialize browser-only auth storage; server rendering would require forbidden auth changes, while a browser-based build adds an unverified Chromium hosting dependency. No build/plugin/router/auth changes made.

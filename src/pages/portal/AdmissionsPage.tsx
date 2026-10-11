@@ -176,6 +176,51 @@ const AdmissionsPage = () => {
         </div>
       </section>
 
+      <section className="section-padding bg-background" aria-labelledby="qualification-faq">
+        <div className="container-custom max-w-3xl space-y-8">
+          <h2 id="qualification-faq" className="font-heading text-3xl md:text-4xl font-bold text-charcoal">Do I qualify?</h2>
+          <div>
+            <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">Do I qualify for the CNA program?</h2>
+            <p className="text-gray-dark leading-relaxed mb-4">If you're thinking about a healthcare career, you may be wondering whether you meet the requirements. Here is the full list for the Health Star Academy CNA program in Stockton. Our CNA program is approved by the California Department of Public Health (CDPH).</p>
+            <p className="text-gray-dark mb-3">To enroll, you need to:</p>
+            <ol className="list-decimal pl-6 space-y-2 text-gray-dark">
+              <li>Be at least 17 years old.</li>
+              <li>Have a high school diploma or GED.</li>
+              <li>Complete a background check with fingerprints.</li>
+              <li>Complete the online theory portion of the program.</li>
+            </ol>
+          </div>
+          <div>
+            <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">Do I need a CPR card before I start?</h2>
+            <p className="text-gray-dark leading-relaxed">No. CPR certification is not required to attend.</p>
+          </div>
+          <div>
+            <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">What is the minimum age for CNA training?</h2>
+            <p className="text-gray-dark leading-relaxed">Our minimum age is 17. That means recent high school graduates can start CNA training right away, as long as they meet the other requirements.</p>
+          </div>
+          <div>
+            <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">Is a background check required?</h2>
+            <p className="text-gray-dark leading-relaxed">Yes. A background check with fingerprints is required. It's a good idea to plan for this early in your enrollment.</p>
+          </div>
+          <div>
+            <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">What is the online theory portion?</h2>
+            <p className="text-gray-dark leading-relaxed">Our CNA program is hybrid. You complete 60 hours of online theory, then 100 hours of in person clinical training at partner skilled nursing facilities in Stockton, Lodi and Hayward. Completing the online theory portion is part of the program, and students receive a laptop to use for the length of their cohort. This matches California's standard for CNA training. Approved programs in California include at least 60 hours of classroom instruction and 100 hours of supervised clinical training.</p>
+          </div>
+          <div>
+            <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">How long does the program take?</h2>
+            <p className="text-gray-dark leading-relaxed">You can finish in as little as 6 weeks on the daytime track. You can also choose the 8 weekend track.</p>
+          </div>
+          <div>
+            <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">How do I find out if I'm eligible?</h2>
+            <p className="text-gray-dark leading-relaxed">Take the 2 minute eligibility check at <Link to="/pre-qualification" className="text-purple hover:underline">healthstaracademy.org/pre-qualification</Link>. When you're ready to apply, complete the enrollment questionnaire on <Link to="/pre-qualification" className="text-purple hover:underline">healthstaracademy.org</Link>. The next cohort starts January 4, 2027. Upcoming start dates and enrollment deadlines are listed at <Link to="/programs/cohorts" className="text-purple hover:underline">healthstaracademy.org/programs/cohorts</Link>.</p>
+          </div>
+          <div>
+            <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">Still have questions?</h2>
+            <p className="text-gray-dark leading-relaxed">Call: <a href="tel:2093234169" className="text-purple hover:underline">(209) 323 4169</a> (calls only). Text: <a href="sms:9162088097" className="text-purple hover:underline">(916) 208 8097</a>. Email: <a href="mailto:info@healthstaracademy.org" className="text-purple hover:underline">info@healthstaracademy.org</a>. Office hours: Monday to Friday, 9:00 am to 2:00 pm. Address: 5250 Claremont Avenue, Sherwood Executive Center, Suite 127, Stockton, CA 95207.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Payment Options */}
       <section className="section-padding bg-background">
         <div className="container-custom">

@@ -1,6 +1,7 @@
 # Assessment integrity
 
 - Apply approved marketing metadata through an exact public-path allowlist in the shared SEO helper; leave unlisted route titles/descriptions and all portal code unchanged because marketing edits must remain isolated from the LMS.
+- Keep Stockton-specific approved marketing content in a dedicated presentation component selected by the existing city page; other city layouts and routing stay unchanged to isolate owner-approved copy changes.
 
 - Keep public newsletter issue HTML self-contained and unmodified; embed it through same-origin auto-height iframes so email formatting stays independent of site styles.
 
