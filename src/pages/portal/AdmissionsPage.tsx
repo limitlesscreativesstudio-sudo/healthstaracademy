@@ -192,7 +192,7 @@ const AdmissionsPage = () => {
           </div>
           <div>
             <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">Do I need a CPR card before I start?</h2>
-            <p className="text-gray-dark leading-relaxed">No. CPR certification is not required to attend.</p>
+            <p className="text-gray-dark leading-relaxed">No. CPR certification is not required to attend, and no CPR certification is required while in the program.</p>
           </div>
           <div>
             <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">What is the minimum age for CNA training?</h2>
@@ -200,7 +200,11 @@ const AdmissionsPage = () => {
           </div>
           <div>
             <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">Is a background check required?</h2>
-            <p className="text-gray-dark leading-relaxed">Yes. A background check with fingerprints is required. It's a good idea to plan for this early in your enrollment.</p>
+            <p className="text-gray-dark leading-relaxed">Yes. A background check with fingerprints is required, and Health Star Academy pays for the background check and fingerprints.</p>
+          </div>
+          <div>
+            <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">Are there health requirements?</h2>
+            <p className="text-gray-dark leading-relaxed">Yes. A TB test, a physical exam and immunizations are required.</p>
           </div>
           <div>
             <h2 className="font-heading text-2xl font-bold text-charcoal mb-4">What is the online theory portion?</h2>
