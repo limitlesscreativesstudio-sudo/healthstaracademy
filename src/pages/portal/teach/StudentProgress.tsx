@@ -23,7 +23,7 @@ interface Row {
   name: string;
   initials: string;
   modulesPct: number;
-  assignmentsPct: number;
+  assignmentsPct: number | null;
   quizPct: number;
   quizPassed: number;
   quizTotal: number;
@@ -157,7 +157,10 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
         const modPct = totalItems > 0 ? Math.min(100, Math.round((asgnGrades.length / totalItems) * 100)) : 0;
         const clinicalPct = Math.min(100, Math.round((clinical / REG.clinicalHoursRequired) * 100));
         const skillsPct = Math.min(100, Math.round((skills / REG.skillsRequired) * 100));
-        const overallPct = Math.round((modPct + asgnPct + quizPct + attPct + clinicalPct + skillsPct) / 6);
+        // Assignments are optional: they only count when the course has some.
+        const hasAsgn = (asgn ?? []).length > 0;
+        const parts = hasAsgn ? [modPct, asgnPct, quizPct, attPct, clinicalPct, skillsPct] : [quizPct, attPct, clinicalPct, skillsPct];
+        const overallPct = Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
 
         const atRisk = attPct < REG.attendanceMinPct || quizPct < 60 || clinicalPct < 50 || skillsPct < 50;
 
@@ -166,7 +169,7 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
           name: nameById[uid] || 'Student',
           initials: (nameById[uid] || 'S').split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase(),
           modulesPct: modPct,
-          assignmentsPct: asgnPct,
+          assignmentsPct: hasAsgn ? asgnPct : null,
           quizPct, quizPassed, quizTotal: (qzs ?? []).length,
           quizzesSubmitted,
           awaitingGrading,
@@ -297,7 +300,7 @@ const StudentProgress: React.FC<Props> = ({ courseId }) => {
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12 }}>
                 {[
                   { label:'Theory Hours', pct:Math.min(100, Math.round((r.theoryHours/REG.theoryHoursRequired)*100)), sub:`${r.theoryHours}/${REG.theoryHoursRequired} hrs` },
-                  { label:'Assignments', pct:r.assignmentsPct, sub:`${r.assignmentsPct}% avg score` },
+                  ...(r.assignmentsPct != null ? [{ label:'Assignments', pct:r.assignmentsPct, sub:`${r.assignmentsPct}% avg score` }] : []),
                   { label:`Quizzes (${REG.quizPassPct}%+)`, pct:r.quizPct, sub:`${r.quizzesSubmitted} submitted · ${r.awaitingGrading} awaiting` },
                   { label:`Attendance (min ${REG.attendanceMinPct}%)`, pct:r.attendancePct, sub:`${r.attendanceDays} days · ${r.attendancePct}%` },
                   { label:`Clinical Hours`, pct:Math.min(100, Math.round((r.clinicalHours/REG.clinicalHoursRequired)*100)), sub:`${r.clinicalHours}/${REG.clinicalHoursRequired} hrs` },
