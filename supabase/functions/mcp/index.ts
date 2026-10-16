@@ -63,11 +63,11 @@ var list_my_courses_default = defineTool({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx) => {
     if (!ctx.isAuthenticated()) throw new ToolError("Not signed in");
-    const { data, error } = await supabaseForUser(ctx).from("courses").select("id,name,code,term,status,start_at,end_at").order("start_at", { ascending: false }).limit(100);
+    const { data, error } = await supabaseForUser(ctx).from("courses").select("id,title,code,term,status,start_at,end_at").order("start_at", { ascending: false }).limit(100);
     if (error) throw new ToolError(error.message);
     const courses = (data ?? []).map((c) => ({
       id: String(c.id),
-      name: String(c.name ?? ""),
+      name: String(c.title ?? ""),
       code: c.code ?? null,
       term: c.term ?? null,
       status: String(c.status ?? ""),

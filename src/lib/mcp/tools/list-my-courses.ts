@@ -11,12 +11,12 @@ export default defineTool({
     if (!ctx.isAuthenticated()) throw new ToolError("Not signed in");
     const { data, error } = await supabaseForUser(ctx)
       .from("courses")
-      .select("id,name,code,term,status,start_at,end_at")
+      .select("id,title,code,term,status,start_at,end_at")
       .order("start_at", { ascending: false })
       .limit(100);
     if (error) throw new ToolError(error.message);
     const courses = (data ?? []).map((c: any) => ({
-      id: String(c.id), name: String(c.name ?? ""), code: c.code ?? null, term: c.term ?? null,
+      id: String(c.id), name: String(c.title ?? ""), code: c.code ?? null, term: c.term ?? null,
       status: String(c.status ?? ""), start_at: c.start_at ?? null, end_at: c.end_at ?? null,
     }));
     return {

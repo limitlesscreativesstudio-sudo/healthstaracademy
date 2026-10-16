@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Star, Plus, ArrowUpDown, Info, BookOpen, Users, Calendar as CalIcon, FileText, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { useWebMCP } from "use-webmcp-tool";
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
 
 type CourseRow = {
   id: string;
@@ -51,6 +53,16 @@ export default function AllCoursesPage() {
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: "favorite", dir: "desc" });
   const [detail, setDetail] = useState<CourseRow | null>(null);
   const [detailData, setDetailData] = useState<{ syllabus:string; enrollmentCount:number; assignments:number; discussions:number; startAt?:string|null; endAt?:string|null } | null>(null);
+
+  useWebMCP({
+    name: "list_courses",
+    description: "List the courses shown on the All Courses page.",
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    execute: () => runWebMCPTool("list_courses", () =>
+      loading ? "Courses are still loading." :
+      rows.length === 0 ? "No courses shown." :
+      rows.map((c) => `${c.id}: ${c.title}${c.term ? ` (${c.term})` : ""} — ${c.status}`).join("\n")),
+  });
 
   const openDetail = async (c: CourseRow) => {
     setDetail(c);
