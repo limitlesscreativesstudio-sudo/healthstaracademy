@@ -1463,7 +1463,7 @@ const QuizView: React.FC<Props> = ({ courseId: courseIdProp, canEdit: canEditPro
                 const statusCol = !r.submitted_at ? C.warn : released ? C.success : C.error;
                 return (
                   <div key={r.id} style={{ border:`1px solid ${C.border}`, borderRadius:6, marginTop:8, overflow:'hidden' }}>
-                    <div
+                    <div data-no-quick-open
                       onClick={() => setExpandedAttempts(prev => { const n = new Set(prev); n.has(r.id) ? n.delete(r.id) : n.add(r.id); return n; })}
                       style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', cursor:'pointer', background:C.bg }}
                     >
