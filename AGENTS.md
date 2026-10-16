@@ -19,3 +19,5 @@
 - Block manual grade entry while a student has an open attempt because creating a separate paper attempt would consume attempts and split student history.
 - Midterm/Final exams count toward course point totals only while published, and only one published exam per family (fuzzy title match) counts (src/lib/gradePolicy.ts countableQuizzes), because unpublished drafts and similar-titled duplicate versions must not inflate possible points.
 - New cohort copies draw quiz questions from question_bank by quizzes.bank_key (case studies rotate whole scenarios and update the matching "N. Case Study" page); existing courses are never re-rotated, because saved attempts reference question IDs.
+
+- MCP server source lives in src/lib/mcp (one tool per file, OAuth via Cloud auth, RLS through caller token); never hand-edit supabase/functions/mcp — it is generated.
