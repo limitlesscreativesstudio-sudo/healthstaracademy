@@ -96,7 +96,7 @@ const CreateAccount: React.FC = () => {
       email: cleanEmail,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/portal/teach/login`,
+        emailRedirectTo: `${window.location.origin}/portal/teach/login${window.location.search}`,
         data: {
           full_name: name.trim(),
           requested_role: role,
