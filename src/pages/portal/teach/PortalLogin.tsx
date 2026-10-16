@@ -252,10 +252,7 @@ const PortalLogin: React.FC = () => {
         </div>
 
         {/* Create account — teachers & admins only */}
-        <a href="/portal/teach/create-account"
-          style={{ display:'block', width:'100%', padding:'11px', border:`1.5px solid ${C.primary}`, borderRadius:6, fontSize:14, fontWeight:600, fontFamily:'sans-serif', color:C.primary, textAlign:'center', textDecoration:'none', background:'transparent', boxSizing:'border-box' }}>
-          Create Instructor / Admin Account
-        </a>
+        <p style={{ fontSize: 13, color: C.muted, fontFamily: 'sans-serif', textAlign: 'center', margin: 0 }}>Accounts are created by invitation only. Contact Health Star Academy for access.</p>
 
         {/* Student note */}
         <div style={{ marginTop:14, padding:'10px 14px', background:'#f0edf7', borderRadius:6, display:'flex', gap:8, alignItems:'flex-start' }}>
