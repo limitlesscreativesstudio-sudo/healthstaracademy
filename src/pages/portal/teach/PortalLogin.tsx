@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, UserRole } from './AuthContext';
 import { lovable } from '@/integrations/lovable';
+import { oauthReturnPath } from '@/lib/oauth-return-path';
 
 const C = {
   nav:'#3D1B6E', primary:'#7B4DB5', accent:'#5BC8E8',
@@ -29,8 +30,9 @@ const PortalLogin: React.FC = () => {
 
   const getRedirect = (role?: UserRole) => {
     const params = new URLSearchParams(window.location.search);
-    const r = params.get('redirect');
-    if (r && r.startsWith('/portal')) return r;
+    const raw = params.get('redirect');
+    const r = raw ? oauthReturnPath(raw) : null;
+    if (r && (r.startsWith('/portal') || r.startsWith('/.lovable/oauth/consent'))) return r;
     if (role === 'student') return '/portal';
     return '/portal/teach';
   };
@@ -219,7 +221,7 @@ const PortalLogin: React.FC = () => {
             setError('');
             setLoading(true);
             const result = await lovable.auth.signInWithOAuth('google', {
-              redirect_uri: `${window.location.origin}/portal/teach/login`,
+              redirect_uri: `${window.location.origin}/portal/teach/login${window.location.search}`,
             });
             if (result.redirected) return;
             if (result.error) {

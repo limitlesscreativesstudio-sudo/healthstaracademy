@@ -9,6 +9,7 @@ import HelpPage from './pages/portal/teach/HelpPage';
 import InstructorGuide from './pages/portal/teach/InstructorGuide';
 import { AuthProvider } from './pages/portal/teach/AuthContext';
 import ProtectedRoute from './pages/portal/teach/ProtectedRoute';
+import OAuthConsent from './pages/OAuthConsent';
 import CreateAccount from './pages/portal/teach/CreateAccount';
 import ForgotPassword from './pages/portal/teach/ForgotPassword';
 import UpdatePassword from './pages/portal/teach/UpdatePassword';
@@ -152,6 +153,7 @@ const AppShell = () => {
           <Route path="/portal/teach/invite" element={<AuthProvider><AcceptInvite /></AuthProvider>} />
           <Route path="/portal/teach/create-account" element={<AuthProvider><CreateAccount /></AuthProvider>} />
           <Route path="/portal/teach" element={<RoleGuard require="instructor" fallback="/portal"><AuthProvider><ProtectedRoute><CourseView /></ProtectedRoute></AuthProvider></RoleGuard>} />
+          <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
