@@ -35,7 +35,9 @@ const StudentNameQuickOpen: React.FC<{ courseId?: string; enabled: boolean }> = 
     if (!enabled) return;
     const match = (el: HTMLElement | null): Stu | null => {
       for (let i = 0; el && i < 3; i++, el = el.parentElement) {
-        if (el.closest('input,textarea,select,[contenteditable="true"],[data-student-panel]')) return null;
+        // Defer to controls that already handle their own clicks (e.g. Attendance
+        // name button, Quiz response headers) or areas that opt out.
+        if (el.closest('input,textarea,select,button,a,[role="button"],[onclick],[contenteditable="true"],[data-student-panel],[data-no-quick-open]')) return null;
         const t = norm(el.innerText || '');
         if (!t || t.length > 80) return null;
         const s = byName.current.get(t);
