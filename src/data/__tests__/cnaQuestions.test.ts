@@ -12,7 +12,7 @@ describe("public CNA practice bank", () => {
 
   it("preserves every supplied scenario answer", () => {
     expect(cnaQuestions.slice(-45).map(question => question.correctAnswer).join(""))
-      .toBe("ADCB DABC ADCB DABC ADCB DABC ADCB DABC ADCB DABC ADCB D".replaceAll(" ", ""));
+      .toBe("ADCB DABC ADCB DABC ADCB DABC ADCB DABC ADCB DABC ADCB D".replace(/ /g, ""));
   });
 
   it("calculates category counts from real data, including future additions", () => {

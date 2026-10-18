@@ -29,4 +29,4 @@
 ## Public practice bank update
 - [x] Append supplied scenario questions 216 through 260 exactly, without altering existing questions or LMS assessments.
 - [x] Derive displayed category counts from the public bank without circular imports.
-- [ ] Verify data, preview and automatic build; report existing hardcoded public totals without changing wording.
+- [x] Verify data and public category drill preview; report existing hardcoded public totals without changing wording. Automatic build verification pending final check.
