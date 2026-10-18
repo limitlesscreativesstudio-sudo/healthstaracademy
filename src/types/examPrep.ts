@@ -23,7 +23,6 @@ export interface CategoryInfo {
   id: QuestionCategory;
   name: string;
   description: string;
-  questionCount: number;
 }
 
 export interface Question {
@@ -101,21 +100,21 @@ export interface UserProgress {
 }
 
 export const CATEGORIES: CategoryInfo[] = [
-  { id: 'patient-rights', name: 'Patient Rights & Ethical Responsibilities', description: 'Rights of residents, informed consent, and ethical decision-making', questionCount: 12 },
-  { id: 'infection-control', name: 'Infection Control & Standard Precautions', description: 'Hand hygiene, PPE, isolation procedures, and preventing disease spread', questionCount: 15 },
-  { id: 'safety-emergency', name: 'Safety & Emergency Procedures', description: 'Fire safety, fall prevention, and emergency response protocols', questionCount: 14 },
-  { id: 'basic-nursing', name: 'Basic Nursing Skills', description: 'Fundamental nursing procedures and bedside care', questionCount: 16 },
-  { id: 'personal-care', name: 'Personal Care Skills', description: 'Bathing, grooming, dressing, and personal hygiene assistance', questionCount: 13 },
-  { id: 'vital-signs', name: 'Vital Signs & Measurements', description: 'Temperature, pulse, respiration, blood pressure, and weight measurements', questionCount: 12 },
-  { id: 'nutrition-hydration', name: 'Nutrition & Hydration', description: 'Feeding assistance, special diets, and fluid intake monitoring', questionCount: 11 },
-  { id: 'elimination', name: 'Elimination & Toileting', description: 'Bowel and bladder care, catheter care, and ostomy assistance', questionCount: 10 },
-  { id: 'mobility', name: 'Range of Motion & Mobility', description: 'Transfers, ambulation, positioning, and exercise assistance', questionCount: 13 },
-  { id: 'mental-health', name: 'Mental Health & Social Needs', description: 'Cognitive impairments, emotional support, and social interaction', questionCount: 10 },
-  { id: 'communication', name: 'Communication & Documentation', description: 'Effective communication, charting, and reporting observations', questionCount: 12 },
-  { id: 'end-of-life', name: 'End-of-Life Care', description: 'Comfort care, hospice, and supporting dying residents and families', questionCount: 8 },
-  { id: 'abuse-neglect', name: 'Abuse, Neglect & Reporting', description: 'Recognizing and reporting abuse, neglect, and exploitation', questionCount: 10 },
-  { id: 'body-mechanics', name: 'Body Mechanics & Positioning', description: 'Proper lifting techniques and resident positioning', questionCount: 11 },
-  { id: 'hipaa', name: 'HIPAA & Confidentiality', description: 'Privacy regulations and protecting resident information', questionCount: 8 },
+  { id: 'patient-rights', name: 'Patient Rights & Ethical Responsibilities', description: 'Rights of residents, informed consent, and ethical decision-making' },
+  { id: 'infection-control', name: 'Infection Control & Standard Precautions', description: 'Hand hygiene, PPE, isolation procedures, and preventing disease spread' },
+  { id: 'safety-emergency', name: 'Safety & Emergency Procedures', description: 'Fire safety, fall prevention, and emergency response protocols' },
+  { id: 'basic-nursing', name: 'Basic Nursing Skills', description: 'Fundamental nursing procedures and bedside care' },
+  { id: 'personal-care', name: 'Personal Care Skills', description: 'Bathing, grooming, dressing, and personal hygiene assistance' },
+  { id: 'vital-signs', name: 'Vital Signs & Measurements', description: 'Temperature, pulse, respiration, blood pressure, and weight measurements' },
+  { id: 'nutrition-hydration', name: 'Nutrition & Hydration', description: 'Feeding assistance, special diets, and fluid intake monitoring' },
+  { id: 'elimination', name: 'Elimination & Toileting', description: 'Bowel and bladder care, catheter care, and ostomy assistance' },
+  { id: 'mobility', name: 'Range of Motion & Mobility', description: 'Transfers, ambulation, positioning, and exercise assistance' },
+  { id: 'mental-health', name: 'Mental Health & Social Needs', description: 'Cognitive impairments, emotional support, and social interaction' },
+  { id: 'communication', name: 'Communication & Documentation', description: 'Effective communication, charting, and reporting observations' },
+  { id: 'end-of-life', name: 'End-of-Life Care', description: 'Comfort care, hospice, and supporting dying residents and families' },
+  { id: 'abuse-neglect', name: 'Abuse, Neglect & Reporting', description: 'Recognizing and reporting abuse, neglect, and exploitation' },
+  { id: 'body-mechanics', name: 'Body Mechanics & Positioning', description: 'Proper lifting techniques and resident positioning' },
+  { id: 'hipaa', name: 'HIPAA & Confidentiality', description: 'Privacy regulations and protecting resident information' },
 ];
 
 export const getCategoryById = (id: QuestionCategory): CategoryInfo | undefined => {
