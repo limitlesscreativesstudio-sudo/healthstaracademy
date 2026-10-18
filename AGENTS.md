@@ -21,3 +21,5 @@
 - New cohort copies draw quiz questions from question_bank by quizzes.bank_key (case studies rotate whole scenarios and update the matching "N. Case Study" page); existing courses are never re-rotated, because saved attempts reference question IDs.
 
 - MCP server source lives in src/lib/mcp (one tool per file, OAuth via Cloud auth, RLS through caller token); never hand-edit supabase/functions/mcp — it is generated.
+
+- Keep public exam-prep category metadata in the types module without counts; derive display counts from the public practice bank with getPracticeCategories to avoid stale counts and circular imports.

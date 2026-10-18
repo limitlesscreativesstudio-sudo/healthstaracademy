@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { CATEGORIES, QuestionCategory, getCategoryById } from "@/types/examPrep";
+import { QuestionCategory, getCategoryById } from "@/types/examPrep";
+import { getPracticeCategories } from "@/data/cnaQuestions";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import { BookOpen, Clock, Target, CheckCircle, XCircle, Bookmark, ArrowLeft, ArrowRight, RotateCcw, Trophy, Brain, Timer } from "lucide-react";
 
 const ModeSelection = () => {
-  const { startQuiz } = useQuiz();
+  const { startQuiz, questions } = useQuiz();
+  const categories = getPracticeCategories(questions);
   const [selectedCategory, setSelectedCategory] = useState<QuestionCategory | null>(null);
   const [questionCount, setQuestionCount] = useState(25);
 
@@ -69,7 +71,7 @@ const ModeSelection = () => {
               onChange={(e) => setSelectedCategory(e.target.value as QuestionCategory)}
             >
               <option value="">Select a category...</option>
-              {CATEGORIES.map(cat => (
+              {categories.map(cat => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>
@@ -98,7 +100,7 @@ const ModeSelection = () => {
         <CardContent className="p-6">
           <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Brain className="w-5 h-5" /> 15 CDPH-Aligned Categories</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-            {CATEGORIES.map(cat => (
+            {categories.map(cat => (
               <Badge key={cat.id} variant="outline" className="justify-center py-2 text-xs">
                 {cat.name.split(' ').slice(0, 2).join(' ')} ({cat.questionCount})
               </Badge>
