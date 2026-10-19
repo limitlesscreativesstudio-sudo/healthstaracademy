@@ -1,5 +1,9 @@
 # Portal updates
 
+## HHA compliance wording
+- [ ] Qualify HHA certificate claims, add priority list notices and update HHA action labels without changing CNA or LMS behavior.
+- [ ] Verify public screens, HHA emails and automatic build.
+
 ## HHA public program path
 - [x] Add isolated HHA questionnaire and program choice while preserving CNA flow.
 - [x] Add program-separated applicant records, HHA sheet and email handling, and pipeline filters.
