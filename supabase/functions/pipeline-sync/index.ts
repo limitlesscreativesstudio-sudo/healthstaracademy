@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
       .from("students").select("*").eq("id", studentId).maybeSingle();
     if (sErr) return json({ error: "db_error", detail: sErr.message }, 500);
     if (!student) return json({ error: "student_not_found" }, 404);
+    if (student.program === "HHA") return json({ ok: true, action: "priority_list_only", note: "HHA enrollment is not open" });
 
     const { data: pipe } = await admin
       .from("job_pipeline").select("stage").eq("student_id", studentId).maybeSingle();

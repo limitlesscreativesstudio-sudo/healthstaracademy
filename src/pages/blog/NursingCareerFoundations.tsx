@@ -104,8 +104,9 @@ const NursingCareerFoundations = () => {
             <p className="text-gray-dark mb-6 leading-relaxed">
               The nursing profession offers a clearly defined career progression with multiple pathways to advancement. Understanding this ladder helps aspiring nurses plan their educational journey while earning income along the way.
             </p>
+            <p className="text-gray-dark mb-6 leading-relaxed"><strong>Step 1: Home Health Aide (HHA), 120 hours.</strong> Pending CDPH approval. Planned for 2027. No prior certification is needed. HHA certification does not grant CNA certification. CNA is a separate program students can take next.</p>
             <p className="text-gray-dark mb-6 leading-relaxed">
-              <strong>Certified Nursing Assistant (CNA):</strong> The entry point for most nursing careers. CNAs provide essential patient care under supervision of licensed nurses. Training typically requires 160 hours, completed in as little as 6 weeks at programs like Health Star Academy. CNAs in California earn competitive wages, typically between $18-25 per hour.
+              <strong>Step 2: Certified Nursing Assistant (CNA):</strong> A separate program for bedside patient care. CNAs provide essential patient care under supervision of licensed nurses. Training typically requires 160 hours, completed in as little as 6 weeks at programs like Health Star Academy. CNAs in California earn competitive wages, typically between $18-25 per hour.
             </p>
             <p className="text-gray-dark mb-6 leading-relaxed">
               <strong>Licensed Vocational Nurse (LVN) / Licensed Practical Nurse (LPN):</strong> LVNs provide a broader scope of patient care, including medication administration, wound care, and care coordination. LVN programs typically require 12-18 months and result in higher compensation, with California LVNs earning $25-35 per hour on average.

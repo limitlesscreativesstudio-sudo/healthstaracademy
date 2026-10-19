@@ -77,6 +77,7 @@ const CnaToRnCalifornia = () => {
                 <strong>Quick answer:</strong> California CNAs can become RNs in <strong>2–4 years</strong>, often while continuing to work. The two main paths are <strong>CNA → LVN → RN</strong> (best for working students) and <strong>CNA → ADN/BSN</strong> (faster but more academic). Most successful nurses use employer tuition reimbursement and stay below $10k total out-of-pocket cost.
               </p>
 
+              <p className="text-gray-dark mb-6 leading-relaxed">The broader pathway begins with Home Health Aide (HHA), then CNA, then LVN or RN. Health Star Academy is preparing a 120 hour HHA program. Pending CDPH approval. Planned for 2027. HHA certification does not grant CNA certification. CNA is a separate program students can take next.</p>
               <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">The Two Main Paths</h2>
 
               <h3 className="font-heading text-xl font-semibold text-charcoal mb-3 mt-6">Path A: CNA → LVN → RN (Working Student Path)</h3>
@@ -155,7 +156,7 @@ const CnaToRnCalifornia = () => {
 
               <div className="bg-neutral-light rounded-xl p-8 my-10 text-center">
                 <h3 className="font-heading text-2xl font-bold text-charcoal mb-3">Start Your Nursing Journey Here</h3>
-                <p className="text-gray-dark mb-6">Health Star Academy's CDPH-approved hybrid CNA program is step one. Many of our graduates go on to LVN and RN — and we cheer them on the whole way.</p>
+                <p className="text-gray-dark mb-6">CNA is a separate next step after HHA, with pathways onward to LVN and RN. Our CNA program remains CDPH approved.</p>
                 <Button variant="default" size="lg" asChild>
                   <Link to="/pre-qualification">Check Eligibility <ArrowRight className="ml-2 h-5 w-5" /></Link>
                 </Button>

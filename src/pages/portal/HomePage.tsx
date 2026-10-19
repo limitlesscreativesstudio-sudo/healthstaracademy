@@ -1,3 +1,4 @@
+import ProgramPaths from "@/components/ProgramPaths";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -157,6 +158,8 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+
+      <ProgramPaths />
 
       {/* LA County Expansion Section */}
       <section className="py-14 bg-charcoal">

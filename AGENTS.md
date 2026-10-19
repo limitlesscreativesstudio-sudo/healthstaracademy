@@ -23,3 +23,5 @@
 - MCP server source lives in src/lib/mcp (one tool per file, OAuth via Cloud auth, RLS through caller token); never hand-edit supabase/functions/mcp — it is generated.
 
 - Keep public exam-prep category metadata in the types module without counts; derive display counts from the public practice bank with getPracticeCategories to avoid stale counts and circular imports.
+
+- Keep HHA in a separate questionnaire and webhook handler using the dependency-free shared HHA contract; persist applicants by email and program and exclude priority-list records from CNA lifecycle automation because one email can apply to both programs.

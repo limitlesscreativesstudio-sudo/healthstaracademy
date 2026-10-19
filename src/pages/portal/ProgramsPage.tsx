@@ -1,3 +1,4 @@
+import ProgramPaths from "@/components/ProgramPaths";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { getCohortsByType } from "@/data/cohortSchedule";
@@ -194,6 +195,8 @@ const ProgramsPage = () => {
         }
         subtitle="CDPH-approved hybrid program with hands-on clinical experience"
       />
+
+      <ProgramPaths />
 
       {/* Program Overview */}
       <section className="py-12 bg-background">

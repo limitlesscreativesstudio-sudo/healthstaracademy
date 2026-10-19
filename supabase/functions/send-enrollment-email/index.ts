@@ -1,3 +1,5 @@
+import { generateHhaEmail } from "./hha-email.ts";
+import { z } from "https://esm.sh/zod@3.23.8";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { resolveApplyByISO, formatDeadlineLabel } from "../_shared/cohort-deadline.ts";
 
@@ -7,6 +9,9 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
+  program?: "CNA" | "HHA";
+  qualification_status?: string;
+  hha_sheet_row?: string[];
   student_id?: string;
   email_type: string;
   student_email: string;
@@ -235,6 +240,7 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
 }
 
 function generateEmail(data: EmailRequest): { subject: string; html: string } {
+  if (data.program === "HHA") return generateHhaEmail(data);
   const firstName = data.student_name.split(" ")[0];
   const cohortFormatted = data.cohort_date ? formatDate(data.cohort_date) : "";
   const orientationFormatted = data.orientation_date ? formatDate(data.orientation_date) : "";
@@ -391,7 +397,7 @@ function generateEmail(data: EmailRequest): { subject: string; html: string } {
       if (data.needs_parent_consent) conditionalNotes.push("Needs parental consent (under 18)");
 
       return {
-        subject: `[Admin] New Pre-Qualification: ${data.student_name} — ${isQualified ? "Qualified" : "Disqualified"}`,
+        subject: `[Admin] CNA New Pre-Qualification: ${data.student_name} — ${isQualified ? "Qualified" : "Disqualified"}`,
         html: getEmailWrapper(`
           <h2 style="color:#1e1b2e;margin:0 0 16px;font-size:22px;">New Pre-Qualification Submission</h2>
           <div style="background-color:${isQualified ? '#f0fdf4' : '#fffbeb'};border-left:4px solid ${statusColor};padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
@@ -476,12 +482,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
     // Authentication: only allow calls with the service role key
     const authHeader = req.headers.get("authorization");
-    if (!authHeader || !authHeader.includes(SUPABASE_SERVICE_ROLE_KEY)) {
+    if (!authHeader || authHeader !== `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -495,10 +501,21 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const data: EmailRequest = await req.json();
+    const raw = await req.json();
+    const schema = z.object({ program: z.enum(["CNA", "HHA"]).optional(), email_type: z.string().min(1).max(60), student_email: z.string().email().max(255), student_name: z.string().min(1).max(201), student_id: z.string().uuid().nullish(), hha_sheet_row: z.array(z.string().max(1000)).length(30).optional() }).passthrough();
+    const parsed = schema.safeParse(raw);
+    if (!parsed.success) return new Response(JSON.stringify({ error: "Invalid email input" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const data = parsed.data as EmailRequest;
+    if (data.student_id) {
+      const { data: applicant } = await supabase.from("students").select("program").eq("id", data.student_id).maybeSingle();
+      if (applicant?.program === "HHA") data.program = "HHA";
+    }
+    if ((data.program === "HHA" && !["hha_qualified", "hha_disqualified", "admin_notification"].includes(data.email_type)) || (data.program !== "HHA" && data.email_type.startsWith("hha_"))) {
+      return new Response(JSON.stringify({ error: "Program email mismatch" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const email = generateEmail(data);
 
-    let emailStatus = "sent";
+    let emailStatus = RESEND_API_KEY ? "sent" : "failed";
 
     if (RESEND_API_KEY) {
       try {
@@ -509,7 +526,7 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Health Star Academy <healthstaracademy01@gmail.com>",
+            from: data.program === "HHA" ? "Health Star Academy <info@healthstaracademy.org>" : "Health Star Academy <healthstaracademy01@gmail.com>",
             to: [data.student_email],
             reply_to: "healthstaracademy01@gmail.com",
             subject: email.subject,

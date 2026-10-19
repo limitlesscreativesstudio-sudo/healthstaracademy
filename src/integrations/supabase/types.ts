@@ -2897,6 +2897,8 @@ export type Database = {
           has_transportation: boolean | null
           has_valid_id: boolean | null
           id: string
+          is_cna: boolean | null
+          is_over_16: boolean | null
           is_over_18: boolean | null
           last_name: string
           needs_entrance_exam: boolean | null
@@ -2905,7 +2907,10 @@ export type Database = {
           payment_method: string | null
           payment_status: string
           phone: string | null
+          physically_able: boolean | null
           portal_user_id: string | null
+          preferred_schedule: string | null
+          program: string
           provisioned_at: string | null
           qualification_notes: string | null
           qualification_status: string
@@ -2914,6 +2919,7 @@ export type Database = {
           selected_cohort_date: string | null
           shipping_address: string | null
           updated_at: string
+          wants_cna_next: boolean | null
         }
         Insert: {
           can_pass_background?: boolean | null
@@ -2931,6 +2937,8 @@ export type Database = {
           has_transportation?: boolean | null
           has_valid_id?: boolean | null
           id?: string
+          is_cna?: boolean | null
+          is_over_16?: boolean | null
           is_over_18?: boolean | null
           last_name: string
           needs_entrance_exam?: boolean | null
@@ -2939,7 +2947,10 @@ export type Database = {
           payment_method?: string | null
           payment_status?: string
           phone?: string | null
+          physically_able?: boolean | null
           portal_user_id?: string | null
+          preferred_schedule?: string | null
+          program?: string
           provisioned_at?: string | null
           qualification_notes?: string | null
           qualification_status?: string
@@ -2948,6 +2959,7 @@ export type Database = {
           selected_cohort_date?: string | null
           shipping_address?: string | null
           updated_at?: string
+          wants_cna_next?: boolean | null
         }
         Update: {
           can_pass_background?: boolean | null
@@ -2965,6 +2977,8 @@ export type Database = {
           has_transportation?: boolean | null
           has_valid_id?: boolean | null
           id?: string
+          is_cna?: boolean | null
+          is_over_16?: boolean | null
           is_over_18?: boolean | null
           last_name?: string
           needs_entrance_exam?: boolean | null
@@ -2973,7 +2987,10 @@ export type Database = {
           payment_method?: string | null
           payment_status?: string
           phone?: string | null
+          physically_able?: boolean | null
           portal_user_id?: string | null
+          preferred_schedule?: string | null
+          program?: string
           provisioned_at?: string | null
           qualification_notes?: string | null
           qualification_status?: string
@@ -2982,6 +2999,7 @@ export type Database = {
           selected_cohort_date?: string | null
           shipping_address?: string | null
           updated_at?: string
+          wants_cna_next?: boolean | null
         }
         Relationships: [
           {

@@ -144,7 +144,7 @@ const BlogPage = () => {
     {
       slug: "cna-vs-hha-vs-medical-assistant",
       title: "CNA vs HHA vs Medical Assistant: Which California Healthcare Role Fits You?",
-      excerpt: "Side-by-side comparison of CNA, HHA, and Medical Assistant — pay, training time, scope, and which path opens the most doors in California.",
+      excerpt: "Compare HHA, CNA and Medical Assistant pathways. HHA: Pending CDPH approval. Planned for 2027.",
       author: "Health Star Academy",
       date: "June 24, 2026",
       publishDate: new Date("2026-06-24"),
