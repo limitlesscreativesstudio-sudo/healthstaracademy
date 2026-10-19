@@ -1,10 +1,12 @@
 # Portal updates
 
 ## HHA public program path
-- [ ] Add isolated HHA questionnaire and program choice while preserving CNA flow.
-- [ ] Add program-separated applicant records, HHA sheet and email handling, and pipeline filters.
-- [ ] Add HHA-first public program and career pathways with pending status and no price or date.
-- [ ] Verify qualification rules, both submission paths, preview and security, then publish.
+- [x] Add isolated HHA questionnaire and program choice while preserving CNA flow.
+- [x] Add program-separated applicant records, HHA sheet and email handling, and pipeline filters.
+- [x] Add HHA-first public program and career pathways with pending status and no price or date.
+- [x] Verify qualification rules, both real submission paths, same-email isolation, signed-in pipeline readback, desktop/mobile preview and automatic build.
+- [ ] Deliver HHA confirmation and admin emails: blocked by unverified sender domain in Resend. Templates are deployed and failures displayed honestly.
+- [ ] Request publication after final security check.
 
 ## Owner-approved public content, October 10, 2026
 - [x] Add the exact admissions eligibility FAQ and Stockton city content, updating only Stockton metadata. Existing Stockton route and sitemap entry retained.
