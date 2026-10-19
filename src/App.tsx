@@ -44,6 +44,7 @@ import HowToBecomeCnaCalifornia from "./pages/blog/HowToBecomeCnaCalifornia";
 import FastCnaCertificationBayArea from "./pages/blog/FastCnaCertificationBayArea";
 import CdphApprovedCnaSacramento from "./pages/blog/CdphApprovedCnaSacramento";
 import HybridCnaClassesStockton from "./pages/blog/HybridCnaClassesStockton";
+import Programs2027HhaAndCna from "./pages/blog/Programs2027HhaAndCna";
 import HybridCnaProgramsCalifornia from "./pages/blog/HybridCnaProgramsCalifornia";
 import CnaStateExamPrep22Skills from "./pages/blog/CnaStateExamPrep22Skills";
 import CnaSalaryCalifornia2026 from "./pages/blog/CnaSalaryCalifornia2026";
@@ -111,6 +112,7 @@ const AppShell = () => {
           <Route path="/blog/fast-cna-certification-bay-area" element={<FastCnaCertificationBayArea />} />
           <Route path="/blog/cdph-approved-cna-training-sacramento" element={<CdphApprovedCnaSacramento />} />
           <Route path="/blog/hybrid-cna-classes-near-stockton" element={<HybridCnaClassesStockton />} />
+          <Route path="/blog/programs-2027-hha-and-cna" element={<Programs2027HhaAndCna />} />
           <Route path="/blog/hybrid-cna-programs-california" element={<HybridCnaProgramsCalifornia />} />
           <Route path="/blog/cna-state-exam-prep-22-skills" element={<CnaStateExamPrep22Skills />} />
           <Route path="/blog/cna-salary-california-2026" element={<CnaSalaryCalifornia2026 />} />

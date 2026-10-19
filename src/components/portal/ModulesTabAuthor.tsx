@@ -35,7 +35,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 
-type Module = { id: string; title: string; position: number; published: boolean };
+type Module = { id: string; title: string; position: number; published: boolean; theory_hours?: number | null; clinical_hours?: number | null };
 type ModuleItem = {
   id: string; module_id: string; title: string; item_type: string;
   content_ref: string | null; url: string | null; position: number; published: boolean;
@@ -653,6 +653,11 @@ const SortableModule = ({
         </button>
         <div className="font-semibold flex-1 min-w-0">
           <InlineTitle value={m.title} disabled={!isInstructor} label="module title" onSave={(t) => onRenameModule?.(t)} />
+          {(m.theory_hours != null || m.clinical_hours != null) && (
+            <div className="text-xs font-normal text-muted-foreground mt-0.5">
+              {Number(m.theory_hours ?? 0)} theory hrs · {Number(m.clinical_hours ?? 0)} clinical hrs
+            </div>
+          )}
         </div>
         {isInstructor && !m.published && (
           <span className="text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1.5 py-0.5">Unpublished</span>

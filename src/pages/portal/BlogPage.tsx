@@ -43,6 +43,17 @@ const BlogPage = () => {
 
   const allArticles = [
     {
+      slug: "programs-2027-hha-and-cna",
+      title: "Our Programs for 2027: Start With HHA, Grow Into CNA",
+      excerpt: "Our career pathway now starts with Home Health Aide (pending CDPH approval, planned for 2027) and continues to our CDPH approved hybrid CNA program.",
+      author: "Health Star Academy",
+      date: "October 19, 2026",
+      publishDate: new Date("2026-10-19"),
+      readTime: "5 min read",
+      category: "Programs",
+      image: cnaStudentsConfident,
+    },
+    {
       slug: "how-to-become-cna-in-california",
       title: "How to Become a CNA in California: Step-by-Step Certification Guide",
       excerpt: "The complete 2026 guide to becoming a Certified Nursing Assistant in California — CDPH requirements, training hours, state exam, costs, and timeline.",

@@ -1165,8 +1165,10 @@ export type Database = {
           license: string | null
           nav_order: Json
           nav_visibility: Json
+          program: string
           start_at: string | null
           status: string
+          status_note: string | null
           syllabus_html: string
           syllabus_name: string | null
           syllabus_show_summary: boolean
@@ -1194,8 +1196,10 @@ export type Database = {
           license?: string | null
           nav_order?: Json
           nav_visibility?: Json
+          program?: string
           start_at?: string | null
           status?: string
+          status_note?: string | null
           syllabus_html?: string
           syllabus_name?: string | null
           syllabus_show_summary?: boolean
@@ -1223,8 +1227,10 @@ export type Database = {
           license?: string | null
           nav_order?: Json
           nav_visibility?: Json
+          program?: string
           start_at?: string | null
           status?: string
+          status_note?: string | null
           syllabus_html?: string
           syllabus_name?: string | null
           syllabus_show_summary?: boolean
@@ -1915,29 +1921,35 @@ export type Database = {
       }
       modules: {
         Row: {
+          clinical_hours: number | null
           course_id: string
           created_at: string
           id: string
           position: number
           published: boolean
+          theory_hours: number | null
           title: string
           updated_at: string
         }
         Insert: {
+          clinical_hours?: number | null
           course_id: string
           created_at?: string
           id?: string
           position?: number
           published?: boolean
+          theory_hours?: number | null
           title: string
           updated_at?: string
         }
         Update: {
+          clinical_hours?: number | null
           course_id?: string
           created_at?: string
           id?: string
           position?: number
           published?: boolean
+          theory_hours?: number | null
           title?: string
           updated_at?: string
         }
