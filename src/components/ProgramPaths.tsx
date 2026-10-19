@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { HeartHandshake, GraduationCap, ArrowRight } from "lucide-react";
-import { HHA_STATUS } from "../../supabase/functions/_shared/hha";
+import { HHA_STATUS, HHA_PRIORITY_NOTICE } from "../../supabase/functions/_shared/hha";
 export default function ProgramPaths() {
   return <section className="section-padding bg-neutral-light"><div className="container-custom">
     <h2 className="font-heading text-3xl font-bold text-charcoal mb-6">Choose your healthcare program</h2>
@@ -13,6 +13,7 @@ export default function ProgramPaths() {
         <p className="text-gray-dark mb-4">Your first step into healthcare. No prior certification needed. Train to care for clients in their homes.</p>
         <p className="text-sm text-gray-dark mb-6">The planned program combines classroom theory and supervised clinical practice taught by Registered Nurses. Minimum age 16. HHA certification does not grant CNA certification. CNA is a separate program you can take next.</p>
         <Button asChild className="mt-auto h-auto whitespace-normal"><Link to="/pre-qualification?program=hha">Join the HHA priority list <ArrowRight className="ml-2 h-4 w-4 shrink-0" /></Link></Button>
+        <p className="text-sm text-muted-foreground mt-3">{HHA_PRIORITY_NOTICE}</p>
       </article>
       <article className="rounded-lg border border-purple/30 bg-background p-6 flex flex-col items-start">
         <GraduationCap className="h-8 w-8 text-purple mb-4" />

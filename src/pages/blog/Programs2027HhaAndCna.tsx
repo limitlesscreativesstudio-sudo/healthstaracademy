@@ -4,6 +4,7 @@ import { ArrowRight, ArrowLeft, Calendar, User, Clock, CheckCircle2, Phone, Mess
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import cnaStudentsConfident from "@/assets/cna-students-confident.jpg";
+import { HHA_PRIORITY_NOTICE } from "../../../supabase/functions/_shared/hha";
 
 const PATH = "/blog/programs-2027-hha-and-cna";
 const TITLE = "Our Programs for 2027: Start With HHA, Grow Into CNA";
@@ -75,7 +76,7 @@ const Programs2027HhaAndCna = () => {
                     "Minimum age 16, with parental consent required under 18.",
                     "59 hours of classroom theory and 61 hours of supervised clinical practice.",
                     "Taught by Registered Nurses at approved home health, skilled nursing, or hospital sites, with an emphasis on care in the home.",
-                    "After you complete the program and pass the program exam, Health Star Academy submits graduates to CDPH for the Home Health Aide certificate.",
+                    "Once the program is approved by CDPH, graduates who complete it and pass the program exam will be submitted to CDPH for the Home Health Aide certificate.",
                     "No start date or price has been set yet.",
                   ].map((t) => (
                     <li key={t} className="flex gap-3 text-gray-dark"><CheckCircle2 className="h-5 w-5 text-cyan shrink-0 mt-0.5" />{t}</li>
@@ -84,6 +85,7 @@ const Programs2027HhaAndCna = () => {
                 <Button size="lg" asChild>
                   <Link to="/pre-qualification?program=hha">Join the HHA priority list <ArrowRight className="ml-2 h-5 w-5" /></Link>
                 </Button>
+                <p className="text-sm text-muted-foreground mt-3">{HHA_PRIORITY_NOTICE}</p>
               </section>
 
               <section className="rounded-2xl border border-border bg-neutral-light p-6 md:p-8 shadow-soft mb-10">
