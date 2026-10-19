@@ -25,3 +25,4 @@
 - Keep public exam-prep category metadata in the types module without counts; derive display counts from the public practice bank with getPracticeCategories to avoid stale counts and circular imports.
 
 - Keep HHA in a separate questionnaire and webhook handler using the dependency-free shared HHA contract; persist applicants by email and program and exclude priority-list records from CNA lifecycle automation because one email can apply to both programs.
+- Courses carry a program (CNA default, HHA); draft HHA courses are blocked from cohorts and student enrollment by database triggers because the HHA program is not yet approved.
