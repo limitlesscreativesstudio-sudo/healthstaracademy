@@ -6,7 +6,7 @@
 - [x] Add HHA-first public program and career pathways with pending status and no price or date.
 - [x] Verify qualification rules, both real submission paths, same-email isolation, signed-in pipeline readback, desktop/mobile preview and automatic build.
 - [ ] Deliver HHA confirmation and admin emails: blocked by unverified sender domain in Resend. Templates are deployed and failures displayed honestly.
-- [ ] Request publication after final security check.
+- [x] Request publication after final security check; email sender verification remains an external blocker.
 
 ## Owner-approved public content, October 10, 2026
 - [x] Add the exact admissions eligibility FAQ and Stockton city content, updating only Stockton metadata. Existing Stockton route and sitemap entry retained.
