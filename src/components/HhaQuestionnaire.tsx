@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { HHA_QUESTIONS, HHA_STATUS, type HhaApplication, type HhaAnswerKey } from "../../supabase/functions/_shared/hha";
+import { HHA_QUESTIONS, HHA_STATUS, HHA_PRIORITY_NOTICE, type HhaApplication, type HhaAnswerKey } from "../../supabase/functions/_shared/hha";
 import { hhaPersonalSchema } from "@/lib/hhaValidation";
 import { useToast } from "@/hooks/use-toast";
 import SEO from "@/components/SEO";
@@ -56,6 +56,7 @@ export default function HhaQuestionnaire({ onChangeProgram }: { onChangeProgram:
             {HHA_QUESTIONS.flatMap(q => "reason" in q && result.qualification_notes.includes(q.reason) ? [<div key={q.key} className="border border-border rounded-lg p-5"><h3 className="font-semibold mb-2">{q.reason}</h3><p className="text-sm text-gray-dark"><strong>How to resolve: </strong>{q.resolution}</p></div>] : [])}
             <Button onClick={() => { setResult(null); setStep(2); }}>Review answers</Button>
           </>}
+          <p className="text-sm text-muted-foreground">{HHA_PRIORITY_NOTICE}</p>
           {!result.email_sent && <p className="text-muted-foreground">Your application is saved. The confirmation email could not be delivered. Please contact admissions if you need a copy.</p>}
           {result.needs_consent && <p className="text-gray-dark">Parental consent is required because you are under 18.</p>}
           {result.needs_exam && <p className="text-gray-dark">Without a diploma or GED, an entrance exam score of 70 or above is required.</p>}
@@ -72,6 +73,7 @@ export default function HhaQuestionnaire({ onChangeProgram }: { onChangeProgram:
             <div className="flex gap-3"><Checkbox id="hha-consent" checked={consent} onCheckedChange={v => setConsent(v === true)} /><Label htmlFor="hha-consent" className="leading-relaxed">I consent to Health Star Academy collecting and processing my personal information for enrollment purposes in accordance with the <a href="/privacy-policy" className="text-purple underline">Privacy Policy</a>. A non refundable program application fee is required if you meet eligibility and wish to proceed with full enrollment. *</Label></div>
           </div>}
           <div className="flex justify-between gap-3 mt-8"><Button variant="outline" onClick={() => step === 1 ? onChangeProgram() : setStep(step - 1)}><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button>{step < 3 ? <Button disabled={step === 1 ? !personalValid : !answered} onClick={() => { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Next <ArrowRight className="ml-2 h-4 w-4" /></Button> : <Button disabled={!schedule || !disclaimer || !consent || busy} onClick={submit}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Submit questionnaire</Button>}</div>
+          <p className="text-sm text-muted-foreground mt-3">{HHA_PRIORITY_NOTICE}</p>
         </>}
       </div></section>
     </main>

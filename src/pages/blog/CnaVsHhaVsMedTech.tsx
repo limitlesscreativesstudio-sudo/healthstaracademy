@@ -112,6 +112,7 @@ const CnaVsHhaVsMedTech = () => {
               <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Step 1: Home Health Aide (HHA)</h2>
               <p className="text-gray-dark mb-6">Pending CDPH approval. Planned for 2027. The planned 120 hour program prepares students to care for clients in their homes. No prior certification is needed. Minimum age 16.</p>
               <Button asChild><Link to="/pre-qualification?program=hha">Join the HHA priority list</Link></Button>
+              <p className="text-sm text-muted-foreground mt-3">Joining the priority list is not enrollment. No payment is collected and no classes are scheduled until CDPH approves the program.</p>
 
               <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Step 2: Certified Nursing Assistant (CNA)</h2>
               <ul className="list-disc pl-6 space-y-2 text-gray-dark mb-6">

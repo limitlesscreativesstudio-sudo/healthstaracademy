@@ -1,4 +1,5 @@
 export const HHA_STATUS = "Pending CDPH approval. Planned for 2027.";
+export const HHA_PRIORITY_NOTICE = "Joining the priority list is not enrollment. No payment is collected and no classes are scheduled until CDPH approves the program.";
 export const HHA_QUESTIONS = [
   { key: "is_over_16", label: "Are you at least 16 years old?", note: "CDPH minimum age for HHA", reason: "Minimum age of 16 not met", resolution: "You can apply when you are at least 16 years old." },
   { key: "is_under_18", label: "Are you under 18?", note: "If yes, parental consent is required" },
