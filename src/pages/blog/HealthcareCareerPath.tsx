@@ -78,7 +78,7 @@ const HealthcareCareerPath = () => {
               One of the most attractive aspects of healthcare careers is the clear progression path available to dedicated professionals. Unlike many industries where advancement opportunities are limited, healthcare offers a well-defined ladder that allows individuals to climb from entry-level positions to advanced roles through education, experience, and certification.
             </p>
             <p className="text-gray-dark mb-6 leading-relaxed">
-              The healthcare career ladder typically begins with foundational roles such as Certified Nursing Assistants (CNAs), Medical Assistants, and Home Health Aides. These positions require minimal initial training but provide invaluable hands-on experience working directly with patients. From these entry points, motivated individuals can pursue Licensed Vocational Nurse (LVN) or Licensed Practical Nurse (LPN) certifications, eventually progressing to Registered Nurse (RN) positions and beyond.
+              The pathway can begin with Home Health Aide (HHA), then Certified Nursing Assistant (CNA), followed by Licensed Vocational Nurse (LVN), Registered Nurse (RN), and further nursing roles. Health Star Academy is preparing a 120 hour HHA program. Pending CDPH approval. Planned for 2027. HHA certification does not grant CNA certification. CNA is a separate program students can take next.
             </p>
             <p className="text-gray-dark mb-6 leading-relaxed">
               What makes healthcare unique is that employers often support professional development. Many healthcare facilities offer tuition reimbursement programs, flexible scheduling for students, and internal advancement opportunities. This means you can start earning while learning, building your career step by step without accumulating massive educational debt.
@@ -94,7 +94,7 @@ const HealthcareCareerPath = () => {
               <p className="text-center text-sm text-gray-dark bg-neutral-light py-3 italic">CNAs make a meaningful difference in patients' lives every day</p>
             </div>
 
-            <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Why Becoming a CNA Is the Smartest First Step</h2>
+            <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">CNA as the Next Step in Your Healthcare Career</h2>
             <p className="text-gray-dark mb-6 leading-relaxed">
               For individuals serious about building a healthcare career, becoming a Certified Nursing Assistant represents the ideal entry point. CNA certification offers numerous advantages that make it the preferred starting position for aspiring healthcare professionals.
             </p>

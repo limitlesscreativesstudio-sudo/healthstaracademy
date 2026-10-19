@@ -56,6 +56,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (studErr) return json({ error: "db_error", detail: studErr.message }, 500);
     if (!student) return json({ error: "student_not_found" }, 404);
+    if (student.program === "HHA") return json({ ok: true, action: "priority_list_only", note: "HHA enrollment is not open" });
 
     // ---- Find or invite auth user ----
     let portalUserId = student.portal_user_id as string | null;

@@ -1,5 +1,11 @@
 # Portal updates
 
+## HHA public program path
+- [ ] Add isolated HHA questionnaire and program choice while preserving CNA flow.
+- [ ] Add program-separated applicant records, HHA sheet and email handling, and pipeline filters.
+- [ ] Add HHA-first public program and career pathways with pending status and no price or date.
+- [ ] Verify qualification rules, both submission paths, preview and security, then publish.
+
 ## Owner-approved public content, October 10, 2026
 - [x] Add the exact admissions eligibility FAQ and Stockton city content, updating only Stockton metadata. Existing Stockton route and sitemap entry retained.
 - [x] Replace the Locations LA County block and remove the specified instructor sentence. No remaining exact banned public claims found; the SEO helper's exclusion filter retained.

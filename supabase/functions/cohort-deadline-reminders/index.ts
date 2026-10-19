@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
       const { data: students } = await supabase
         .from("students")
         .select("id, first_name, last_name, email, enrollment_status")
-        .eq("cohort_id", c.id);
+        .eq("cohort_id", c.id).eq("program", "CNA");
 
       const pending = (students ?? []).filter(
         (s) => !["enrolled", "completed", "withdrawn", "rejected"].includes(

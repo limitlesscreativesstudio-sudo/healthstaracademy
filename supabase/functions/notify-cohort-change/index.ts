@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 const SPREADSHEET_ID = "1E5B5-Zi1q7EEZmuDzE6PCQifrH49EZUdEfwFShhPByA";
-const SHEET_RANGE = "A2:U"; // Rows 2..end, cols A (timestamp) through U
+const SHEET_RANGE = "2025 Responses!A2:U"; // Rows 2..end, cols A (timestamp) through U
 
 // --- Google service-account JWT helpers ---
 function base64url(str: string): string {

@@ -23,7 +23,7 @@ const CnaVsHhaVsMedTech = () => {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
-      { "@type": "Question", "name": "What is the difference between a CNA and an HHA?", "acceptedAnswer": { "@type": "Answer", "text": "A CNA (Certified Nursing Assistant) is state-certified through CDPH and can work in hospitals, skilled nursing facilities, and home health. An HHA (Home Health Aide) is an add-on certification CNAs can earn — HHA-only certification limits you to in-home care and pays less." }},
+      { "@type": "Question", "name": "What is the difference between a CNA and an HHA?", "acceptedAnswer": { "@type": "Answer", "text": "A CNA (Certified Nursing Assistant) is state-certified through CDPH and can work in hospitals, skilled nursing facilities, and home health. HHA prepares students for care in clients’ homes. Health Star Academy is preparing a 120 hour HHA program. Pending CDPH approval. Planned for 2027. HHA certification does not grant CNA certification. CNA is a separate program." }},
       { "@type": "Question", "name": "Is a Medical Assistant the same as a CNA?", "acceptedAnswer": { "@type": "Answer", "text": "No. Medical Assistants work in doctor's offices doing clinical and clerical tasks — injections, blood draws, scheduling. CNAs work bedside in hospitals and nursing facilities providing direct patient care. MAs are not licensed in California; CNAs are state-certified." }},
       { "@type": "Question", "name": "Which has the highest pay: CNA, HHA, or MA?", "acceptedAnswer": { "@type": "Answer", "text": "In California 2026: CNAs $20–$32/hr, Medical Assistants $19–$26/hr, HHAs $18–$24/hr. CNAs typically earn the most because of hospital shift differentials and union jobs." }},
       { "@type": "Question", "name": "Which role is the best stepping stone to RN?", "acceptedAnswer": { "@type": "Answer", "text": "CNA. Most California nursing schools prefer or require prior CNA experience for LVN and ADN programs. CNAs work bedside with nurses — direct exposure to nursing scope of practice." }}
@@ -74,7 +74,7 @@ const CnaVsHhaVsMedTech = () => {
               </div>
 
               <p className="text-gray-dark mb-6 leading-relaxed text-lg">
-                <strong>Quick answer:</strong> CNA offers the best pay, broadest job market, and clearest path to RN. HHA is the fastest and cheapest credential but limited to in-home work. Medical Assistant fits clinic-based, office-hour preferences. In California 2026, CNA is the most career-flexible choice for almost everyone.
+                <strong>Quick answer:</strong> The pathway can begin with Home Health Aide (HHA), followed by CNA and further nursing education. Our 120 hour HHA program is in preparation. Pending CDPH approval. Planned for 2027. No HHA price or start date has been announced. HHA certification does not grant CNA certification. CNA is a separate program students can take next.
               </p>
 
               <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Side-by-Side Comparison</h2>
@@ -83,24 +83,24 @@ const CnaVsHhaVsMedTech = () => {
                   <thead className="bg-neutral-light">
                     <tr>
                       <th className="text-left p-3 font-semibold text-charcoal"></th>
-                      <th className="text-left p-3 font-semibold text-charcoal">CNA</th>
                       <th className="text-left p-3 font-semibold text-charcoal">HHA</th>
+                      <th className="text-left p-3 font-semibold text-charcoal">CNA</th>
                       <th className="text-left p-3 font-semibold text-charcoal">Medical Assistant</th>
                     </tr>
                   </thead>
                   <tbody className="text-gray-dark">
                     {[
-                      ["State certified?", "Yes (CDPH)", "Yes (CDPH)", "No (employer cert only)"],
+                      ["Program status", "Yes (CDPH)", "Pending CDPH approval. Planned for 2027.", "No (employer cert only)"],
                       ["Training hours", "160 hrs", "120 hrs", "720+ hrs"],
-                      ["Time to complete", "6 weeks", "4 weeks", "6–12 months"],
-                      ["Tuition range", "$1.2k–$3.5k", "$700–$1.5k", "$4k–$15k"],
+                      ["Time to complete", "6 weeks", "Not announced", "6–12 months"],
+                      ["Tuition range", "$1.2k–$3.5k", "Not announced", "$4k–$15k"],
                       ["Hourly pay 2026", "$20–$32", "$18–$24", "$19–$26"],
                       ["Where you work", "Hospitals, SNFs, home health", "Patient homes only", "Clinics, doctor's offices"],
-                      ["Schedule", "Shift work, weekends", "Daytime, flexible", "Office hours, M–F"],
+                      ["Schedule", "Shift work, weekends", "Preferred schedule collected", "Office hours, M–F"],
                       ["Pathway to RN", "Strongest", "Limited", "Indirect"],
                     ].map((row, i) => (
                       <tr key={i} className="border-t border-border">
-                        {row.map((cell, j) => (
+                        {[row[0], row[2], row[1], row[3]].map((cell, j) => (
                           <td key={j} className={`p-3 ${j === 0 ? "font-semibold text-charcoal" : ""}`}>{cell}</td>
                         ))}
                       </tr>
@@ -109,20 +109,16 @@ const CnaVsHhaVsMedTech = () => {
                 </table>
               </div>
 
-              <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Choose CNA If You Want…</h2>
+              <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Step 1: Home Health Aide (HHA)</h2>
+              <p className="text-gray-dark mb-6">Pending CDPH approval. Planned for 2027. The planned 120 hour program prepares students to care for clients in their homes. No prior certification is needed. Minimum age 16.</p>
+              <Button asChild><Link to="/pre-qualification?program=hha">Join the HHA priority list</Link></Button>
+
+              <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Step 2: Certified Nursing Assistant (CNA)</h2>
               <ul className="list-disc pl-6 space-y-2 text-gray-dark mb-6">
                 <li>The highest paying entry-level healthcare role</li>
                 <li>Job flexibility — hospitals, SNFs, hospice, home health all open</li>
                 <li>A real path to LVN, RN, or specialty roles (dialysis, surgical tech)</li>
                 <li>Union benefits at Bay Area hospitals (Kaiser, Sutter, Stanford)</li>
-              </ul>
-
-              <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Choose HHA If You Want…</h2>
-              <ul className="list-disc pl-6 space-y-2 text-gray-dark mb-6">
-                <li>The cheapest, fastest credential</li>
-                <li>To work one-on-one in people's homes</li>
-                <li>Flexible daytime hours, no shift work</li>
-                <li>To care for a family member professionally (IHSS pays HHAs)</li>
               </ul>
 
               <div className="my-10 rounded-xl overflow-hidden shadow-soft">
@@ -137,16 +133,16 @@ const CnaVsHhaVsMedTech = () => {
                 <li>To eventually move into clinic administration or coding</li>
               </ul>
 
-              <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">The Smart Move: Start as a CNA, Add Endorsements Later</h2>
+              <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Your Pathway: HHA, CNA, Then Further Education</h2>
               <p className="text-gray-dark mb-6 leading-relaxed">
-                Many of our graduates start as CNAs, then layer on HHA, phlebotomy, EKG, or pursue LVN/RN — using employer tuition reimbursement to pay for further education. The CNA credential opens doors the other two simply don't.
+                HHA can be a first step, followed by a separate CNA program and then further education such as LVN or RN. Pending CDPH approval. Planned for 2027. Each credential has its own requirements.
               </p>
 
               <h2 className="font-heading text-2xl font-bold text-charcoal mb-4 mt-10">Frequently Asked Questions</h2>
               <div className="space-y-5 mb-6">
                 <div>
                   <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Can I become a CNA and HHA at the same time?</h3>
-                  <p className="text-gray-dark">Yes — CNAs in California can apply for HHA certification through a short bridge add-on. Many home-health agencies prefer dual-certified candidates.</p>
+                  <p className="text-gray-dark">Our planned 120 hour HHA program is separate from CNA. Pending CDPH approval. Planned for 2027. HHA completion does not grant CNA certification.</p>
                 </div>
                 <div>
                   <h3 className="font-heading font-semibold text-lg text-charcoal mb-2">Do I need a high school diploma for CNA training?</h3>

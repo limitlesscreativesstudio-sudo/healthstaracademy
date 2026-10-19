@@ -1,0 +1,2 @@
+ALTER TABLE public.students DROP CONSTRAINT students_email_key;
+COMMENT ON CONSTRAINT students_email_program_key ON public.students IS 'Applicant email is unique per program; all enrollment upserts use email,program.';

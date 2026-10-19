@@ -9,6 +9,12 @@ import { RefreshCw, Search, ChevronDown, ChevronUp, UserPlus, CheckCircle2, Down
 
 interface Student {
   id: string;
+  program: string;
+  preferred_schedule: string | null;
+  can_pay_fee: boolean | null;
+  is_cna: boolean | null;
+  wants_cna_next: boolean | null;
+  qualification_notes: string | null;
   first_name: string;
   last_name: string;
   email: string;
@@ -68,6 +74,7 @@ const StudentPipeline = () => {
   const [enrolledCounts, setEnrolledCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filterProgram, setFilterProgram] = useState("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [provisioning, setProvisioning] = useState<string | null>(null);
@@ -78,6 +85,7 @@ const StudentPipeline = () => {
     if (filterStatus !== "all") {
       query = query.eq("enrollment_status", filterStatus);
     }
+    if (filterProgram !== "all") query = query.eq("program", filterProgram);
     const [{ data, error }, { data: cohortRows }] = await Promise.all([
       query,
       supabase.from("cohorts").select("id,name,start_date,capacity,status,program_type,is_template").order("start_date"),
@@ -99,7 +107,7 @@ const StudentPipeline = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchStudents(); }, [filterStatus]);
+  useEffect(() => { fetchStudents(); }, [filterStatus, filterProgram]);
 
   const assignCohort = async (studentId: string, cohortId: string) => {
     const target = cohortId === "none" ? null : cohortId;
@@ -184,7 +192,7 @@ const StudentPipeline = () => {
       return;
     }
     const headers = [
-      "Last Name","First Name","Email","Phone","Enrollment Status","Payment Status",
+      "Program","Last Name","First Name","Email","Phone","Enrollment Status","Payment Status",
       "Cohort Date","Orientation Date","Entrance Exam Needed","Parent Consent Needed",
       "Scrub Top","Scrub Bottom","Portal Provisioned","Created At",
     ];
@@ -193,7 +201,7 @@ const StudentPipeline = () => {
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const rows = filtered.map(s => [
-      s.last_name, s.first_name, s.email, s.phone ?? "",
+      s.program, s.last_name, s.first_name, s.email, s.phone ?? "",
       s.enrollment_status, s.payment_status,
       s.selected_cohort_date ?? "", s.orientation_date ?? "",
       s.needs_entrance_exam ? "Yes" : "No",
@@ -227,6 +235,7 @@ const StudentPipeline = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search students..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
         </div>
+        <Select value={filterProgram} onValueChange={setFilterProgram}><SelectTrigger aria-label="Filter by program" className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All programs</SelectItem><SelectItem value="HHA">HHA</SelectItem><SelectItem value="CNA">CNA</SelectItem></SelectContent></Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Filter by status" />
@@ -265,6 +274,7 @@ const StudentPipeline = () => {
             >
               <span className="font-medium text-foreground flex items-center gap-1.5">
                 {student.first_name} {student.last_name}
+                <Badge variant="outline">{student.program}</Badge>
                 {student.provisioned_at && (
                   <CheckCircle2 className="h-3.5 w-3.5 text-green-600" aria-label="Portal provisioned" />
                 )}
@@ -282,7 +292,8 @@ const StudentPipeline = () => {
               {expandedId === student.id ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
             </div>
 
-            {expandedId === student.id && (
+            {expandedId === student.id && student.program === "HHA" && <div className="p-4 space-y-2 bg-muted/20"><p className="font-semibold">Pending CDPH approval. Planned for 2027.</p><p>Preferred schedule: {student.preferred_schedule}</p><p>{student.qualification_notes}</p><p>Application fee readiness: {student.can_pay_fee ? "Yes" : "No"}</p><p>Currently CNA: {student.is_cna ? "Yes" : "No"}. Interested in CNA next: {student.wants_cna_next ? "Yes" : "No"}.</p><p>Parental consent needed: {student.needs_parent_consent ? "Yes" : "No"}. Entrance exam needed: {student.needs_entrance_exam ? "Yes" : "No"}.</p></div>}
+            {expandedId === student.id && student.program !== "HHA" && (
               <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/20 animate-fade-in">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Phone</p>

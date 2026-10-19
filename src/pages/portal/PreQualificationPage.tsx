@@ -1,5 +1,7 @@
+import HhaQuestionnaire from "@/components/HhaQuestionnaire";
+import ProgramChoice from "@/components/ProgramChoice";
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getCohortsByType, getCohortDeadlines, getCohortApplyByISO, getDeadlineDate, isDeadlinePassed, isCohortOpenForSignup, type CohortSchedule } from "@/data/cohortSchedule";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -109,7 +111,7 @@ const getEndDate = (startDateStr: string) => {
   return `${mm}/${dd}/${yy}`;
 };
 
-const PreQualificationPage = () => {
+const CnaQuestionnaire = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [step, setStep] = useState<FormStep>(1);
@@ -933,4 +935,11 @@ const PreQualificationPage = () => {
   );
 };
 
+const PreQualificationPage = () => {
+  const [params, setParams] = useSearchParams();
+  const program = params.get("program");
+  if (program === "hha") return <HhaQuestionnaire onChangeProgram={() => setParams({})} />;
+  if (program === "cna") return <CnaQuestionnaire />;
+  return <ProgramChoice onSelect={selected => setParams({ program: selected })} />;
+};
 export default PreQualificationPage;

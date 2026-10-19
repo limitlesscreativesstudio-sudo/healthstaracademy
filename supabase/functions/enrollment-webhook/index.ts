@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://esm.sh/zod@3.23.8";
+import { handleHhaSubmission, HhaSchema } from "./hha-handler.ts";
 
 // Input validation schemas
 const PreQualSchema = z.object({
@@ -38,7 +39,8 @@ function sanitizeForSheets(str: string): string {
 async function appendToGoogleSheet(
   serviceAccountKey: string,
   spreadsheetId: string,
-  values: string[][]
+  values: string[][],
+  range = "2025 Responses!A:W"
 ) {
   // Try to parse, logging first chars on failure for debugging
   let key;
@@ -46,7 +48,7 @@ async function appendToGoogleSheet(
     const trimmed = serviceAccountKey.trim();
     key = JSON.parse(trimmed);
   } catch (e) {
-    console.error("Failed to parse service account key. First 20 chars:", JSON.stringify(serviceAccountKey.substring(0, 20)));
+    console.error("Failed to parse Google service account configuration");
     throw e;
   }
 
@@ -102,7 +104,7 @@ async function appendToGoogleSheet(
   }
 
   // Append row to Sheet1
-  const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent("2025 Responses")}!A:W:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const sheetsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
   const appendRes = await fetch(sheetsUrl, {
     method: "POST",
     headers: {
@@ -224,8 +226,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET");
 
     // Authentication: require either a valid JWT, a valid webhook secret, or anon key for public submissions
@@ -248,7 +250,7 @@ Deno.serve(async (req) => {
         authenticated = true;
       } else {
         // Path 2b: Check for admin user JWT
-        const supabaseAuth = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        const supabaseAuth = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
           global: { headers: { Authorization: authHeader } },
         });
         const { data, error: authError } = await supabaseAuth.auth.getUser(token);
@@ -282,6 +284,19 @@ Deno.serve(async (req) => {
     
     // Parse and validate input
     const rawPayload = await req.json();
+    if (rawPayload.program !== undefined && rawPayload.program !== "CNA" && rawPayload.program !== "HHA") {
+      return new Response(JSON.stringify({ error: "Invalid program" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (rawPayload.program === "HHA") {
+      const parsed = HhaSchema.safeParse(rawPayload);
+      if (!parsed.success) return new Response(JSON.stringify({ error: "Invalid HHA input", details: parsed.error.issues.map(i => i.message) }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return handleHhaSubmission(parsed.data, supabase, appendToGoogleSheet, corsHeaders);
+    }
+    // HHA records cannot enter the existing CNA lifecycle through an ID based event.
+    if (rawPayload.student_id && rawPayload.event_type !== "pre_qualification") {
+      const { data: applicant } = await supabase.from("students").select("program").eq("id", rawPayload.student_id).maybeSingle();
+      if (applicant?.program === "HHA") return new Response(JSON.stringify({ error: "HHA enrollment is not open" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const parseResult = PreQualSchema.safeParse(rawPayload);
     if (!parseResult.success) {
       return new Response(
@@ -370,6 +385,7 @@ Deno.serve(async (req) => {
       let studentId: string | null = null;
       try {
         const studentRow = {
+          program: "CNA",
           first_name: payload.first_name,
           last_name: payload.last_name,
           email: payload.email.toLowerCase(),
@@ -395,7 +411,7 @@ Deno.serve(async (req) => {
         };
         const { data: upserted, error: upsertErr } = await supabase
           .from("students")
-          .upsert(studentRow, { onConflict: "email" })
+          .upsert(studentRow, { onConflict: "email,program" })
           .select("id")
           .single();
         if (upsertErr) {
@@ -452,6 +468,7 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             email_type: "admin_notification",
+            program: "CNA",
             student_email: "healthstaracademy01@gmail.com",
             student_name: `${payload.first_name} ${payload.last_name}`,
             cohort_date: payload.selected_cohort_date,

@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
             .update({ status: "accepted", accepted_at: new Date().toISOString() })
             .eq("course_id", cid).eq("email", email);
         }
-        if (cohortId) await admin.from("students").update({ cohort_id: cohortId }).eq("email", email);
+        if (cohortId) await admin.from("students").update({ cohort_id: cohortId }).eq("email", email).eq("program", "CNA");
 
         results.push({
           email, ok: true,
