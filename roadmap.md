@@ -1,8 +1,8 @@
 # Portal updates
 
 ## HHA compliance wording
-- [ ] Qualify HHA certificate claims, add priority list notices and update HHA action labels without changing CNA or LMS behavior.
-- [ ] Verify public screens, HHA emails and automatic build.
+- [x] Qualify the HHA graduate certificate claim and add priority list notices to public HHA controls, questionnaire, results and emails. Existing HHA buttons contain no apply or enroll labels; CNA and LMS behavior unchanged.
+- [x] Verify public notices, desktop and phone result presentation with simulated responses, both email previews, 20 existing rule tests and automatic build. Updated email function deployed; website not published.
 
 ## HHA public program path
 - [x] Add isolated HHA questionnaire and program choice while preserving CNA flow.
