@@ -18,6 +18,8 @@ type CourseRow = {
   status: string;
   color: string | null;
   instructor_id: string;
+  program?: string | null;
+  status_note?: string | null;
 };
 
 type SortKey = "favorite" | "title" | "nickname" | "term" | "enrolled_as" | "published";
@@ -88,7 +90,7 @@ export default function AllCoursesPage() {
     (async () => {
       setLoading(true);
       // Instructor: their courses. Student: enrolled courses. Admin: all.
-      let coursesQuery = supabase.from("courses").select("id,title,code,term,status,color,instructor_id");
+      let coursesQuery = supabase.from("courses").select("id,title,code,term,status,color,instructor_id,program,status_note");
       if (!isAdmin) {
         if (isInstructor) {
           coursesQuery = coursesQuery.eq("instructor_id", user.id);
@@ -108,7 +110,7 @@ export default function AllCoursesPage() {
         if (missing.length) {
           const { data: extra } = await supabase
             .from("courses")
-            .select("id,title,code,term,status,color,instructor_id")
+            .select("id,title,code,term,status,color,instructor_id,program,status_note")
             .in("id", missing);
           if (extra?.length) list = [...list, ...(extra as CourseRow[])];
         }
@@ -254,7 +256,15 @@ export default function AllCoursesPage() {
                         >
                           {nick || c.title}
                         </Link>
+                        {c.program === "HHA" && !pub && (
+                          <span className="text-[10px] uppercase tracking-wide font-semibold rounded px-1.5 py-0.5 bg-secondary text-secondary-foreground shrink-0">Draft</span>
+                        )}
                       </div>
+                      {c.program === "HHA" && !pub && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {c.status_note || "Draft: awaiting textbooks and instructor access"}. Modules will be built once textbooks arrive and instructor access is granted.
+                        </p>
+                      )}
                     </td>
                     <td className="py-3 px-4">
                       {editingNick === c.id ? (
