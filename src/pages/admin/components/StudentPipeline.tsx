@@ -183,6 +183,7 @@ const StudentPipeline = () => {
   };
 
   const filtered = students.filter(s =>
+    (filterProgram === "all" || s.program === filterProgram) &&
     `${s.first_name} ${s.last_name} ${s.email}`.toLowerCase().includes(search.toLowerCase())
   );
 
