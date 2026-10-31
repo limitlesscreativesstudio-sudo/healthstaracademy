@@ -15,7 +15,7 @@
     "directory": "../dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/sitemap.xml", "/portal", "/portal/*", "/admin", "/admin/*", "/~oauth/*"]
+    "run_worker_first": ["/api/*", "/sitemap.xml", "/staff/*", "/portal", "/portal/*", "/admin", "/admin/*", "/~oauth/*"]
   },
   "kv_namespaces": [{ "binding": "HSA", "id": "7227461d415542269db0fefe807e791c" }],
   "ai": { "binding": "AI" },

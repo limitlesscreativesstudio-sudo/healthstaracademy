@@ -547,6 +547,40 @@ async function sitemap(req: Request, env: Env): Promise<Response> {
   return new Response(xml, { headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
 }
 
+
+// ---------- private inbox for staff ----------
+
+function esc(v: unknown): string {
+  return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+}
+
+async function inbox(req: Request, env: Env): Promise<Response> {
+  const page = (body: string) =>
+    new Response(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Health Star Inbox</title>
+<style>body{font-family:system-ui,sans-serif;background:#f6f5fb;color:#1f1d2b;margin:0;padding:24px}main{max-width:900px;margin:0 auto}h1{color:#5b2a86}h2{margin-top:32px}.card{background:#fff;border-radius:12px;padding:16px 18px;margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.08)}.muted{color:#6b6880;font-size:14px}.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;background:#ece4f7;color:#5b2a86}.warn{background:#fdecc8;color:#7a4b00}input,button{font-size:16px;padding:10px 12px;border-radius:8px;border:1px solid #cfc8de}button{background:#5b2a86;color:#fff;border:0}</style></head><body><main>${body}</main></body></html>`,
+      { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } });
+  const form = `<h1>Health Star Academy inbox</h1><form method="post"><input type="password" name="key" placeholder="Inbox key" autocomplete="current-password"> <button>Open</button></form>`;
+  if (req.method !== "POST") return page(form);
+  const key = String((await req.formData()).get("key") ?? "");
+  if (!env.ADMIN_KEY || key !== env.ADMIN_KEY) return page(`${form}<p class="muted">That key did not match.</p>`);
+
+  const contacts = (await env.HSA.list({ prefix: "contact/" })).keys.map((k) => k.name).sort().reverse().slice(0, 100);
+  const apps = (await env.HSA.list({ prefix: "app/" })).keys.map((k) => k.name).sort().reverse().slice(0, 100);
+  let html = `<h1>Health Star Academy inbox</h1><p class="muted">Contact messages and applications received by the website. Newest first.</p><h2>Contact messages (${contacts.length})</h2>`;
+  for (const k of contacts) {
+    const m = JSON.parse((await env.HSA.get(k)) ?? "{}");
+    html += `<div class="card"><b>${esc(m.name)}</b> <span class="tag">${esc(m.interest || "general")}</span><div class="muted">${esc(new Date(m.received_at).toLocaleString("en-US", { timeZone: "America/Los_Angeles" }))} · ${esc(m.email)} · ${esc(m.phone)}</div><p>${esc(m.message).replace(/\n/g, "<br>")}</p></div>`;
+  }
+  html += `<h2>Applications (${apps.length})</h2>`;
+  for (const k of apps) {
+    const a = JSON.parse((await env.HSA.get(k)) ?? "{}");
+    const p = a.payload ?? {};
+    const status = a.status === "delivered" ? `<span class="tag">in the enrollment system</span>` : `<span class="tag warn">waiting, will deliver automatically</span>`;
+    html += `<div class="card"><b>${esc(p.first_name)} ${esc(p.last_name)}</b> ${status} <span class="tag">${esc(p.program || "CNA")}</span><div class="muted">${esc(new Date(a.received_at).toLocaleString("en-US", { timeZone: "America/Los_Angeles" }))} · ${esc(p.email)} · ${esc(p.phone)}${p.selected_cohort_date ? ` · cohort ${esc(p.selected_cohort_date)}` : ""}</div></div>`;
+  }
+  return page(html);
+}
+
 // ---------- router ----------
 
 export default {
@@ -561,6 +595,7 @@ export default {
     }
 
     if (path === "/sitemap.xml") return sitemap(req, env);
+    if (path === "/staff/inbox") return inbox(req, env);
 
     if (path.startsWith("/api/")) {
       try {
