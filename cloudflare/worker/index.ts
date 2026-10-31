@@ -16,7 +16,25 @@ interface Env {
 }
 
 const CHAT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
-const WRITER_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+const WRITER_MODELS = ["@cf/openai/gpt-oss-120b", "@cf/meta/llama-3.3-70b-instruct-fp8-fast"];
+
+/** Text from any Workers AI response shape (chat, completions or responses style). */
+function aiText(out: any): string {
+  if (!out) return "";
+  if (typeof out === "string") return out;
+  if (typeof out.response === "string") return out.response;
+  if (typeof out.output_text === "string") return out.output_text;
+  const choice = out.choices?.[0];
+  if (choice?.message?.content) return String(choice.message.content);
+  if (Array.isArray(out.output)) {
+    return out.output
+      .flatMap((o: any) => (Array.isArray(o.content) ? o.content : []))
+      .filter((c: any) => c.type === "output_text" || c.type === "text")
+      .map((c: any) => c.text)
+      .join("");
+  }
+  return "";
+}
 const PHONE = "(209) 323 4169";
 
 // ---------- helpers ----------
@@ -426,33 +444,39 @@ ${next ? `- ${next}` : ""}
 General knowledge about the CNA role in California is fine, but give no salary figures or numbers that are not listed above.
 
 Return exactly this format and nothing else:
-TITLE: (at most 60 characters, includes the keyword)
+TITLE: (a compelling headline of at most 60 characters that includes the keyword naturally)
 META: (at most 155 characters, includes the keyword and a benefit)
 TLDR: (two plain sentences)
 CATEGORY: (one of: Stockton, Lodi, Hayward, Sacramento, Bay Area, Exam Prep, Career Guide, Financing)
 READ_TIME: (for example 7 min read)
 BODY:
-(1000 to 1500 words of markdown: an intro paragraph, 5 to 7 sections with ## headings, bullet lists where useful, and a final ## Frequently Asked Questions section with 4 questions as ### headings. Include these internal links written as markdown links: [start your pre qualification](/pre-qualification), [upcoming cohorts](/programs/cohorts), and [CNA classes in ${cityTitle}](/cna-classes/${pick.city}). No H1 and no images.)`;
+(1300 to 1700 words of markdown, do not stop early: an intro paragraph, 5 to 7 sections with ## headings, bullet lists where useful, and a final ## Frequently Asked Questions section with 4 questions as ### headings. Include these internal links written as markdown links: [start your pre qualification](/pre-qualification), [upcoming cohorts](/programs/cohorts), and [CNA classes in ${cityTitle}](/cna-classes/${pick.city}). No H1 and no images.)`;
 
+  const system = "You are a careful healthcare education copywriter. You follow formatting and fact rules exactly and always write the full requested length.";
   let text = "";
-  try {
-    const out: any = await env.AI.run(WRITER_MODEL as any, {
-      messages: [
-        { role: "system", content: "You are a careful healthcare education copywriter. You follow formatting and fact rules exactly." },
-        { role: "user", content: prompt },
-      ],
-      max_tokens: 3500,
-      temperature: 0.6,
-    } as any);
-    text = String(out?.response ?? out?.choices?.[0]?.message?.content ?? "");
-  } catch (e) {
-    return { error: `writer failed: ${e instanceof Error ? e.message : String(e)}` };
+  const errors: string[] = [];
+  for (const model of WRITER_MODELS) {
+    try {
+      const out: any = model.includes("gpt-oss")
+        ? await env.AI.run(model as any, { instructions: system, input: prompt, reasoning: { effort: "low" } } as any)
+        : await env.AI.run(model as any, {
+            messages: [{ role: "system", content: system }, { role: "user", content: prompt }],
+            max_tokens: 4000,
+            temperature: 0.6,
+          } as any);
+      text = aiText(out);
+      if (/^BODY:/mi.test(text) && text.length > 4000) break;
+      errors.push(`${model}: short output (${text.length})`);
+    } catch (e) {
+      errors.push(`${model}: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
+  if (!text) return { error: `writer failed: ${errors.join(" | ")}` };
 
   const title = noDashes(field(text, "TITLE")).slice(0, 90);
   const bodyIdx = text.search(/^BODY:\s*$/mi);
   const body = bodyIdx >= 0 ? text.slice(bodyIdx).replace(/^BODY:\s*/i, "").trim() : "";
-  if (!title || body.length < 1500) return { error: "writer returned an incomplete post" };
+  if (!title || body.length < 4000) return { error: `writer returned an incomplete post (${body.length} characters)` };
 
   let slug = slugify(title);
   for (let n = 2; (await env.HSA.get(`blog/${slug}`)) || (await env.HSA.get(`dbpost/${slug}`)); n++) slug = `${slugify(title)}-${n}`;
