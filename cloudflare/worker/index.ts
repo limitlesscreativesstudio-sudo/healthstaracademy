@@ -3,6 +3,7 @@
 // application intake with automatic retry, contact messages, cohort and blog backups,
 // the chat bubble, and the weekly blog writer (Cloudflare Workers AI).
 import { qualifyHha, type HhaAnswers } from "../../supabase/functions/_shared/hha";
+import { cohortSchedule } from "../../src/data/cohortSchedule";
 
 interface Env {
   ASSETS: Fetcher;
@@ -276,6 +277,11 @@ async function conciergeFacts(env: Env): Promise<string> {
     const open = (cached?.cohorts ?? []).filter((c: any) => c.status === "open" && c.program_type === "daytime" && c.start_date >= today);
     if (open[0]) next = `Next daytime cohort starts ${open[0].start_date}${open[0].enrollment_deadline ? `, apply by ${open[0].enrollment_deadline} at 11:59 PM` : ""}.`;
   } catch { /* ignore */ }
+  if (!next) {
+    const now = new Date().toISOString().slice(0, 10);
+    const c = cohortSchedule.find((x) => (x.programType ?? "daytime") === "daytime" && x.deadlineISO >= now);
+    if (c) next = `Next daytime cohort starts ${c.startDate}; apply by ${c.deadline} at 11:59 PM.`;
+  }
   return next;
 }
 
