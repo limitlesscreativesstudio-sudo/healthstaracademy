@@ -37,7 +37,7 @@ import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
 import studentBloodPressure from "@/assets/student-blood-pressure.jpg";
-import { supabase } from "@/integrations/supabase/client";
+import { loadPublicCohorts, submitEnrollment } from "@/lib/hsaCloud";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -46,14 +46,9 @@ const COHORT_OPTIONS_QUERY = async () => {
   // (stored deadline wins over the legacy start-minus-14 rule).
   const todayISO = new Date().toISOString().slice(0, 10);
 
-  const { data, error } = await supabase
-    .from("cohorts")
-    .select("id, name, start_date, status, capacity, program_type, enrollment_deadline")
-    .eq("status", "open")
-    .eq("program_type", "daytime")
-    .gte("start_date", todayISO)
-    .order("start_date", { ascending: true });
-  if (error) throw error;
+  const data = (await loadPublicCohorts()).filter(
+    (c) => c.status === "open" && c.program_type === "daytime" && c.start_date >= todayISO,
+  );
   return (data ?? []).filter(
     (c: { start_date: string; enrollment_deadline: string | null }) =>
       isCohortOpenForSignup(c.start_date) &&
@@ -197,11 +192,7 @@ const CnaQuestionnaire = () => {
         source: "website",
       };
 
-      const { data, error } = await supabase.functions.invoke("enrollment-webhook", {
-        body: payload,
-      });
-
-      if (error) throw error;
+      const data = await submitEnrollment(payload);
 
       setNeedsExam(data.needs_exam || false);
       setNeedsConsent(data.needs_consent || false);

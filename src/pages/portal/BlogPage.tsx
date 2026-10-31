@@ -5,7 +5,7 @@ import { ArrowRight, Calendar, Clock, Instagram, Facebook, Sparkles } from "luci
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBlogList } from "@/lib/hsaCloud";
 import studentsVitalsPractice from "@/assets/students-vitals-practice.jpg";
 import instructorTeachingMannequin from "@/assets/instructor-teaching-mannequin.jpg";
 import cnaStudentsConfident from "@/assets/cna-students-confident.jpg";
@@ -19,11 +19,7 @@ const BlogPage = () => {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("blog_drafts")
-        .select("slug,title,tldr,meta_description,category,read_time,published_at,hero_image_url")
-        .eq("status", "published")
-        .order("published_at", { ascending: false });
+      const data = await loadBlogList().catch(() => null);
       if (data) {
         setAiPosts(data.map((p: any) => ({
           slug: p.slug,

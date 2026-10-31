@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { submitEnrollment } from "@/lib/hsaCloud";
 import { HHA_QUESTIONS, HHA_STATUS, HHA_PRIORITY_NOTICE, type HhaApplication, type HhaAnswerKey } from "../../supabase/functions/_shared/hha";
 import { hhaPersonalSchema } from "@/lib/hhaValidation";
 import { useToast } from "@/hooks/use-toast";
@@ -29,9 +29,9 @@ export default function HhaQuestionnaire({ onChangeProgram }: { onChangeProgram:
     if (!personalValid || !answered || !schedule || !disclaimer || !consent || busy) return;
     setBusy(true);
     try {
-      const { data, error } = await supabase.functions.invoke("enrollment-webhook", { body: { ...personal, ...answers, program: "HHA", preferred_schedule: schedule, disclaimer_acknowledged: disclaimer, consent_given: consent, referral_source: referral, event_type: "pre_qualification", source: "website" } });
-      if (error || !data?.success) throw new Error("Submission failed");
-      setResult(data);
+      const data = await submitEnrollment({ ...personal, ...answers, program: "HHA", preferred_schedule: schedule, disclaimer_acknowledged: disclaimer, consent_given: consent, referral_source: referral, event_type: "pre_qualification", source: "website" });
+      if (!data?.success) throw new Error("Submission failed");
+      setResult({ ...data, email_sent: !!data.email_sent });
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       toast({ title: "Submission not completed", description: "Please try again or call (209) 323 4169.", variant: "destructive" });

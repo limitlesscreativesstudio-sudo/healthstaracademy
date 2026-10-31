@@ -19,6 +19,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cloudPost } from "@/lib/hsaCloud";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumbs";
@@ -39,13 +40,22 @@ const ContactPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    toast({
-      title: "Inquiry Submitted!",
-      description: "An admissions advisor will contact you within one business hour.",
-    });
+    try {
+      await cloudPost("/api/contact", { ...formData, page: "/contact" });
+      setIsSubmitted(true);
+      toast({
+        title: "Inquiry Submitted!",
+        description: "An admissions advisor will contact you within one business hour.",
+      });
+    } catch {
+      toast({
+        title: "Message not sent",
+        description: "Please try again, or call (209) 323 4169.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (field: string, value: string) => {

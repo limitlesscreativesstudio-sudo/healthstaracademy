@@ -105,7 +105,7 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
         <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
           <p style="color:#166534;margin:0;font-size:15px;">🌟 <strong>Good news:</strong> Once you have your valid ID, you can reapply immediately! We'd love to welcome you into our program.</p>
         </div>
-        ${getButtonHtml("Reapply When Ready", "https://healthstar-launchpad.lovable.app/pre-qualification")}
+        ${getButtonHtml("Reapply When Ready", "https://healthstaracademy.org/pre-qualification")}
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you have questions or need assistance, please don't hesitate to call us at <strong>(209) 323-4169</strong> or email <strong>info@healthstaracademy.org</strong>. We're here to help!</p>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We're rooting for you! 💜<br><strong>Health Star Academy Admissions Team</strong></p>
       `,
@@ -131,7 +131,7 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
         <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
           <p style="color:#166534;margin:0;font-size:15px;">🌟 <strong>Good news:</strong> Once you have your replacement card, you can reapply immediately! We'd love to welcome you into our program.</p>
         </div>
-        ${getButtonHtml("Reapply When Ready", "https://healthstar-launchpad.lovable.app/pre-qualification")}
+        ${getButtonHtml("Reapply When Ready", "https://healthstaracademy.org/pre-qualification")}
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you have questions or need assistance, please don't hesitate to call us at <strong>(209) 323-4169</strong> or email <strong>info@healthstaracademy.org</strong>. We're here to help!</p>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We're rooting for you! 💜<br><strong>Health Star Academy Admissions Team</strong></p>
       `,
@@ -158,7 +158,7 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
         <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
           <p style="color:#166534;margin:0;font-size:15px;">🌟 <strong>Don't give up:</strong> Many people with past records successfully become CNAs. We encourage you to explore your options — we're here to support you every step of the way.</p>
         </div>
-        ${getButtonHtml("Reapply When Ready", "https://healthstar-launchpad.lovable.app/pre-qualification")}
+        ${getButtonHtml("Reapply When Ready", "https://healthstaracademy.org/pre-qualification")}
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you have questions or need guidance, please don't hesitate to call us at <strong>(209) 323-4169</strong> or email <strong>info@healthstaracademy.org</strong>. We're here to help!</p>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We believe in second chances and we believe in you! 💜<br><strong>Health Star Academy Admissions Team</strong></p>
       `,
@@ -185,7 +185,7 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
         <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
           <p style="color:#166534;margin:0;font-size:15px;">🌟 <strong>Good news:</strong> Once you have your health documentation, you can reapply immediately! We'd love to welcome you into our program.</p>
         </div>
-        ${getButtonHtml("Reapply When Ready", "https://healthstar-launchpad.lovable.app/pre-qualification")}
+        ${getButtonHtml("Reapply When Ready", "https://healthstaracademy.org/pre-qualification")}
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you have questions or need help finding affordable health services in your area, please call us at <strong>(209) 323-4169</strong> or email <strong>info@healthstaracademy.org</strong>. We're here to help!</p>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We're rooting for you! 💜<br><strong>Health Star Academy Admissions Team</strong></p>
       `,
@@ -212,7 +212,7 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
         <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
           <p style="color:#166534;margin:0;font-size:15px;">🌟 <strong>Good news:</strong> Once you've arranged reliable transportation, you can reapply immediately! We'd love to welcome you into our program.</p>
         </div>
-        ${getButtonHtml("Reapply When Ready", "https://healthstar-launchpad.lovable.app/pre-qualification")}
+        ${getButtonHtml("Reapply When Ready", "https://healthstaracademy.org/pre-qualification")}
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you'd like help exploring transportation options or connecting with other students in your area, please call us at <strong>(209) 323-4169</strong> or email <strong>info@healthstaracademy.org</strong>. We're here to help!</p>
         <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We're rooting for you! 💜<br><strong>Health Star Academy Admissions Team</strong></p>
       `,
@@ -232,7 +232,7 @@ function getDisqualificationContent(firstName: string, notes: string): { subject
       <div style="background-color:#f0fdf4;border-left:4px solid #22c55e;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0;">
         <p style="color:#166534;margin:0;font-size:15px;">🌟 If your circumstances change, we warmly encourage you to reapply! We'd love to welcome you into our program.</p>
       </div>
-      ${getButtonHtml("Reapply When Ready", "https://healthstar-launchpad.lovable.app/pre-qualification")}
+      ${getButtonHtml("Reapply When Ready", "https://healthstaracademy.org/pre-qualification")}
       <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">If you have questions, please call us at <strong>(209) 323-4169</strong> or email <strong>info@healthstaracademy.org</strong>. We're here to help!</p>
       <p style="color:#4a4a5a;line-height:1.7;font-size:15px;">We're rooting for you! 💜<br><strong>Health Star Academy Admissions Team</strong></p>
     `,

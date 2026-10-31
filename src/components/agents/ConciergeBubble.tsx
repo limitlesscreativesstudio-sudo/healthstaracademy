@@ -4,6 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { MessageCircle, X, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HSA_API } from "@/lib/hsaCloud";
 
 const SESSION_KEY = "hsa_concierge_session";
 
@@ -28,8 +29,7 @@ const ConciergeBubble = () => {
 
   const transport = useRef(
     new DefaultChatTransport({
-      api: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/agent-concierge`,
-      headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+      api: `${HSA_API}/api/concierge`,
       body: { sessionToken: sessionToken.current },
     })
   );

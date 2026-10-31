@@ -12,7 +12,7 @@ import cohortStudentFemale3 from "@/assets/cohort-student-female-3.jpg";
 import cohortStudentFemale4 from "@/assets/cohort-student-female-4.jpg";
 import cohortStudentMale2 from "@/assets/cohort-student-male-2.jpg";
 import cohortStudentMale3 from "@/assets/cohort-student-male-3.jpg";
-import { supabase } from "@/integrations/supabase/client";
+import { loadPublicCohorts } from "@/lib/hsaCloud";
 import { useQuery } from "@tanstack/react-query";
 import {
   COHORTS_PAUSED,
@@ -38,15 +38,7 @@ interface CohortRow {
   payment_plan_link: string;
 }
 
-const fetchCohorts = async (): Promise<CohortRow[]> => {
-  const { data, error } = await supabase
-    .from("cohorts")
-    // Only marketing-safe columns are readable publicly (internal notes/min_to_run are restricted)
-    .select("id, name, start_date, status, capacity, program_type, enrollment_deadline, paid_in_full_link, payment_plan_link")
-    .order("start_date", { ascending: true });
-  if (error) throw error;
-  return (data as CohortRow[]) || [];
-};
+const fetchCohorts = async (): Promise<CohortRow[]> => (await loadPublicCohorts()) as CohortRow[];
 
 const formatDate = (dateStr: string) => {
   const d = new Date(dateStr + "T00:00:00");

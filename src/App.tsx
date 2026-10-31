@@ -76,6 +76,7 @@ import NotFound from "./pages/portal/NotFound";
 import ComparePage from "./pages/portal/ComparePage";
 import CompetitorPage from "./pages/portal/CompetitorPage";
 import ConciergeBubble from "./components/agents/ConciergeBubble";
+import PortalHandoff from "./components/PortalHandoff";
 import StarChartPage from "./pages/portal/StarChartPage";
 import StarChartIssuePage from "./pages/portal/StarChartIssuePage";
 
@@ -173,6 +174,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
+          <PortalHandoff />
           <AppShell />
         </BrowserRouter>
       </TooltipProvider>

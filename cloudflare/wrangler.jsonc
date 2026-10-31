@@ -1,0 +1,30 @@
+// Health Star Academy public site on Cloudflare Workers.
+// Built and deployed by Cloudflare Workers Builds from this repository:
+//   build:  VITE_PORTAL_ORIGIN=https://healthstaracademy.org VITE_HSA_API_BASE= npm run build
+//   deploy: npx wrangler deploy -c cloudflare/wrangler.jsonc
+// The Lovable build ignores this folder.
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "healthstaracademy",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "../dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/sitemap.xml", "/portal", "/portal/*", "/admin", "/admin/*", "/~oauth/*"]
+  },
+  "kv_namespaces": [{ "binding": "HSA", "id": "7227461d415542269db0fefe807e791c" }],
+  "ai": { "binding": "AI" },
+  "triggers": { "crons": ["*/15 * * * *", "0 17 * * 2"] },
+  "observability": { "enabled": true },
+  "vars": {
+    "SUPABASE_URL": "https://pguwdjjpeogrxldcrvof.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBndXdkampwZW9ncnhsZGNydm9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5NjkyNDUsImV4cCI6MjA4NjU0NTI0NX0.Ls1XUwIs_RNvencZ0pQhozYa4IyngotIZV08HPbtQu4",
+    "PORTAL_ORIGIN": "https://healthstaracademy.org",
+    "SITE_ORIGIN": "https://healthstaracademy.org"
+  }
+}

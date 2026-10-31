@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { supabase } from "@/integrations/supabase/client";
+import { loadBlogPost } from "@/lib/hsaCloud";
 import HeroBanner from "@/components/HeroBanner";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
@@ -25,12 +25,7 @@ const AgentBlogPost = () => {
   useEffect(() => {
     (async () => {
       if (!slug) return;
-      const { data } = await supabase
-        .from("blog_drafts")
-        .select("*")
-        .eq("slug", slug)
-        .eq("status", "published")
-        .maybeSingle();
+      const data = await loadBlogPost(slug);
       if (!data) { setNotFound(true); setLoading(false); return; }
       setPost(data as Post);
       setLoading(false);
