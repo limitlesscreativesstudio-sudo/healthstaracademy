@@ -441,7 +441,8 @@ STRICT FACT RULE: use only these facts about Health Star Academy and do not inve
 - Applicants bring the original physical government ID and Social Security card, and proof of good health (physical exam and TB test or chest X ray).
 - Clinical training sites in Stockton, Lodi and Hayward. Office at 5250 Claremont Avenue, Suite 127, Stockton. Phone ${PHONE}.
 ${next ? `- ${next}` : ""}
-General knowledge about the CNA role in California is fine, but give no salary figures or numbers that are not listed above.
+General knowledge about the CNA role in California is fine when written as general information (for example "CNAs in California commonly..."), but give no salary figures or numbers that are not listed above.
+Never describe for Health Star Academy: how the weeks are divided, which clinical units or facilities students rotate through, who supervises clinicals, what career support includes, instructor activities, employer partnerships, pass rates, class sizes, or anything else not in the fact list. Say only "career support" for career help.
 
 Return exactly this format and nothing else:
 TITLE: (a compelling headline of at most 60 characters that includes the keyword naturally)
@@ -475,7 +476,22 @@ BODY:
 
   const title = noDashes(field(text, "TITLE")).slice(0, 90);
   const bodyIdx = text.search(/^BODY:\s*$/mi);
-  const body = bodyIdx >= 0 ? text.slice(bodyIdx).replace(/^BODY:\s*/i, "").trim() : "";
+  let body = bodyIdx >= 0 ? text.slice(bodyIdx).replace(/^BODY:\s*/i, "").trim() : "";
+
+  // Fact check pass: remove anything about Health Star Academy that is not in the fact list.
+  if (body.length >= 4000) {
+    const factList = prompt.slice(prompt.indexOf("STRICT FACT RULE"), prompt.indexOf("Return exactly this format"));
+    const checkPrompt = `${factList}
+Below is a blog post. Edit it so that every statement about Health Star Academy is directly supported by the fact list above. Delete or rewrite as general information any Health Star Academy claim that is not supported (for example how weeks are divided, clinical units, what career support includes, instructor activities, employer networks). Keep the structure, headings, links, length and warm voice. Do not add new claims. Do not use dash punctuation. Return only the corrected markdown, with no preface.
+
+${body}`;
+    try {
+      const checked: any = await env.AI.run(WRITER_MODELS[0] as any, { instructions: "You are a meticulous fact checker and editor.", input: checkPrompt, reasoning: { effort: "medium" } } as any);
+      const fixed = aiText(checked).trim();
+      if (fixed.length > body.length * 0.7) body = fixed;
+    } catch { /* keep the first draft */ }
+  }
+  body = body.replace(/^#{2,4}\s*Introduction\s*\n+/i, "");
   if (!title || body.length < 4000) return { error: `writer returned an incomplete post (${body.length} characters)` };
 
   let slug = slugify(title);
