@@ -491,7 +491,10 @@ ${body}`;
       if (fixed.length > body.length * 0.7) body = fixed;
     } catch { /* keep the first draft */ }
   }
-  body = body.replace(/^#{2,4}\s*Introduction\s*\n+/i, "");
+  body = noDashes(body.replace(/^#{2,4}\s*Introduction\s*\n+/i, ""))
+    .replace(/\bflexibility\b/gi, "freedom")
+    .replace(/\bflexible\b/gi, "convenient")
+    .replace(/\bjob placement\b/gi, "career support");
   if (!title || body.length < 4000) return { error: `writer returned an incomplete post (${body.length} characters)` };
 
   let slug = slugify(title);
