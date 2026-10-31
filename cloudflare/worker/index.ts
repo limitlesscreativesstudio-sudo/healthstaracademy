@@ -280,7 +280,7 @@ async function conciergeFacts(env: Env): Promise<string> {
   if (!next) {
     const now = new Date().toISOString().slice(0, 10);
     const c = cohortSchedule.find((x) => (x.programType ?? "daytime") === "daytime" && x.deadlineISO >= now);
-    if (c) next = `Next daytime cohort starts ${c.startDate}; apply by ${c.deadline} at 11:59 PM.`;
+    if (c) next = `Next daytime cohort start date: ${c.startDate}. Application deadline: ${c.deadline} at 11:59 PM.`;
   }
   return next;
 }
@@ -324,6 +324,7 @@ async function handleConcierge(req: Request, env: Env, ctx: ExecutionContext): P
     messages: [{ role: "system", content: system }, ...messages],
     stream: true,
     max_tokens: 600,
+    temperature: 0.3,
   } as any)) as ReadableStream<Uint8Array>;
 
   const encoder = new TextEncoder();
